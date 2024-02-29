@@ -99,10 +99,24 @@ export class ChatHandler implements IDisposable {
     }
   }
 
+  /**
+   * A function called before transferring the message to the panel(s).
+   * Can be useful if some actions are required on the message.
+   */
+  protected formatChatMessage(
+    message: ChatService.IChatMessage
+  ): ChatService.IChatMessage {
+    return message;
+  }
+
   private _onMessage(message: ChatService.IMessage): void {
     // resolve promise from `sendMessage()`
     if (message.type === 'msg' && message.sender.id === this.id) {
       this._sendResolverQueue.shift()?.(message.id);
+    }
+
+    if (message.type === 'msg') {
+      message = this.formatChatMessage(message as ChatService.IChatMessage);
     }
 
     // call listeners in serial
