@@ -2,12 +2,9 @@ import getpass
 import json
 import time
 import uuid
-from asyncio import AbstractEventLoop
-from dataclasses import asdict
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import Dict, List
 
 from jupyter_server.base.handlers import APIHandler as BaseAPIHandler, JupyterHandler
-from jupyter_server.utils import url_path_join
 from langchain.pydantic_v1 import ValidationError
 from tornado import web, websocket
 
