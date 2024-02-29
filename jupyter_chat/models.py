@@ -8,7 +8,8 @@ DEFAULT_CHUNK_OVERLAP = 100
 
 # the type of message used to chat with the agent
 class ChatRequest(BaseModel):
-    prompt: str
+    body: str
+    id: str
 
 
 class ChatUser(BaseModel):

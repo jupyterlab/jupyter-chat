@@ -3,17 +3,17 @@ import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import React from 'react';
 
 import { Chat } from '../components/chat';
-import { ChatHandler } from '../chat-handler';
 import { chatIcon } from '../icons';
+import { IChatModel } from '../model';
 
 export function buildChatSidebar(
-  chatHandler: ChatHandler,
+  chatModel: IChatModel,
   themeManager: IThemeManager | null,
   rmRegistry: IRenderMimeRegistry
 ): ReactWidget {
   const ChatWidget = ReactWidget.create(
     <Chat
-      chatHandler={chatHandler}
+      model={chatModel}
       themeManager={themeManager}
       rmRegistry={rmRegistry}
     />

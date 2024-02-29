@@ -150,11 +150,13 @@ class ChatHandler(JupyterHandler, websocket.WebSocketHandler):
             return
 
         # message broadcast to chat clients
-        chat_message_id = str(uuid.uuid4())
+        if not chat_request.id:
+            chat_request.id = str(uuid.uuid4())
+
         chat_message = ChatMessage(
-            id=chat_message_id,
+            id=chat_request.id,
             time=time.time(),
-            body=chat_request.prompt,
+            body=chat_request.body,
             sender=self.chat_client,
         )
 
