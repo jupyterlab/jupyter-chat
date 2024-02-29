@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
-
+import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { Avatar, Box, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
+import React, { useState, useEffect } from 'react';
 
-import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { RendermimeMarkdown } from './rendermime-markdown';
 import { ChatService } from '../services';
 

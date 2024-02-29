@@ -11,14 +11,14 @@ import {
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
-import { ChatService } from '../services';
+import { useStackingAlert } from './mui-extras/stacking-alert';
 import { ServerInfoState, useServerInfo } from './settings/use-server-info';
 import { minifyUpdate } from './settings/minify';
-import { useStackingAlert } from './mui-extras/stacking-alert';
+import { ChatService } from '../services';
 
-// /**
-//  * Component that returns the settings view in the chat panel.
-//  */
+/**
+ * Component that returns the settings view in the chat panel.
+ */
 export function ChatSettings(): JSX.Element {
   // state fetched on initial render
   const server = useServerInfo();

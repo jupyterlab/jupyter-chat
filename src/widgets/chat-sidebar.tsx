@@ -1,11 +1,10 @@
+import { IThemeManager, ReactWidget } from '@jupyterlab/apputils';
+import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import React from 'react';
-import { ReactWidget } from '@jupyterlab/apputils';
-import type { IThemeManager } from '@jupyterlab/apputils';
 
 import { Chat } from '../components/chat';
-import { chatIcon } from '../icons';
 import { ChatHandler } from '../chat-handler';
-import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
+import { chatIcon } from '../icons';
 
 export function buildChatSidebar(
   chatHandler: ChatHandler,

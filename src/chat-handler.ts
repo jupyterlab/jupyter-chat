@@ -1,6 +1,7 @@
+import { URLExt } from '@jupyterlab/coreutils';
 import { IDisposable } from '@lumino/disposable';
 import { ServerConnection } from '@jupyterlab/services';
-import { URLExt } from '@jupyterlab/coreutils';
+
 import { requestAPI } from './handler';
 import { ChatService } from './services';
 
