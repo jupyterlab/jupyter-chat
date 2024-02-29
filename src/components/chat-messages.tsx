@@ -3,63 +3,55 @@ import React, { useState, useEffect } from 'react';
 import { Avatar, Box, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
 
-import { AiService } from '../handler';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
-import { Jupyternaut } from '../icons';
 import { RendermimeMarkdown } from './rendermime-markdown';
-import { useCollaboratorsContext } from '../contexts/collaborators-context';
+import { ChatService } from '../services';
 
 type ChatMessagesProps = {
   rmRegistry: IRenderMimeRegistry;
-  messages: AiService.ChatMessage[];
+  messages: ChatService.IChatMessage[];
 };
 
-type ChatMessageHeaderProps = {
-  message: AiService.ChatMessage;
+export type ChatMessageHeaderProps = ChatService.IUser & {
   timestamp: string;
   sx?: SxProps<Theme>;
 };
 
 export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
-  const collaborators = useCollaboratorsContext();
-
   const sharedStyles: SxProps<Theme> = {
     height: '24px',
     width: '24px'
   };
 
-  let avatar: JSX.Element;
-  if (props.message.type === 'human') {
-    const bgcolor = collaborators?.[props.message.client.username]?.color;
-    avatar = (
-      <Avatar
+  const bgcolor = props.color;
+  const avatar = props.avatar_url ? (
+    <Avatar
+      sx={{
+        ...sharedStyles,
+        ...(bgcolor && { bgcolor })
+      }}
+      src={props.avatar_url}
+    ></Avatar>
+  ) : props.initials ? (
+    <Avatar
+      sx={{
+        ...sharedStyles,
+        ...(bgcolor && { bgcolor })
+      }}
+    >
+      <Typography
         sx={{
-          ...sharedStyles,
-          ...(bgcolor && { bgcolor })
+          fontSize: 'var(--jp-ui-font-size1)',
+          color: 'var(--jp-ui-inverse-font-color1)'
         }}
       >
-        <Typography
-          sx={{
-            fontSize: 'var(--jp-ui-font-size1)',
-            color: 'var(--jp-ui-inverse-font-color1)'
-          }}
-        >
-          {props.message.client.initials}
-        </Typography>
-      </Avatar>
-    );
-  } else {
-    avatar = (
-      <Avatar sx={{ ...sharedStyles, bgcolor: 'var(--jp-jupyter-icon-color)' }}>
-        <Jupyternaut display="block" height="100%" width="100%" />
-      </Avatar>
-    );
-  }
+        {props.initials}
+      </Typography>
+    </Avatar>
+  ) : null;
 
   const name =
-    props.message.type === 'human'
-      ? props.message.client.display_name
-      : 'Jupyternaut';
+    props.display_name ?? props.name ?? (props.username || 'User undefined');
 
   return (
     <Box
@@ -138,7 +130,7 @@ export function ChatMessages(props: ChatMessagesProps): JSX.Element {
         // extra div needed to ensure each bubble is on a new line
         <Box key={i} sx={{ padding: 4 }}>
           <ChatMessageHeader
-            message={message}
+            {...message.sender}
             timestamp={timestamps[message.id]}
             sx={{ marginBottom: 3 }}
           />

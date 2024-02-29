@@ -1,18 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { AiService } from '../../handler';
+import { ChatService } from '../../services';
 
 type ServerInfoProperties = {
-  config: AiService.DescribeConfigResponse;
-  lmProviders: AiService.ListProvidersResponse;
-  emProviders: AiService.ListProvidersResponse;
-  lmProvider: AiService.ListProvidersEntry | null;
-  emProvider: AiService.ListProvidersEntry | null;
-  lmLocalId: string;
+  config: ChatService.DescribeConfigResponse;
 };
 
 type ServerInfoMethods = {
   refetchAll: () => Promise<void>;
-  refetchApiKeys: () => Promise<void>;
 };
 
 export enum ServerInfoState {
@@ -52,26 +46,8 @@ export function useServerInfo(): ServerInfo {
 
   const fetchServerInfo = useCallback(async () => {
     try {
-      const [config, lmProviders, emProviders] = await Promise.all([
-        AiService.getConfig(),
-        AiService.listLmProviders(),
-        AiService.listEmProviders()
-      ]);
-      const lmGid = config.model_provider_id;
-      const emGid = config.embeddings_provider_id;
-      const lmProvider =
-        lmGid === null ? null : getProvider(lmGid, lmProviders);
-      const emProvider =
-        emGid === null ? null : getProvider(emGid, emProviders);
-      const lmLocalId = lmGid === null ? '' : getLocalId(lmGid);
-      setServerInfoProps({
-        config,
-        lmProviders,
-        emProviders,
-        lmProvider,
-        emProvider,
-        lmLocalId
-      });
+      const config = await ChatService.getConfig();
+      setServerInfoProps({ config });
 
       setState(ServerInfoState.Ready);
     } catch (e) {
@@ -84,23 +60,6 @@ export function useServerInfo(): ServerInfo {
       setState(ServerInfoState.Error);
     }
   }, []);
-
-  const refetchApiKeys = useCallback(async () => {
-    if (!serverInfoProps) {
-      // this should never happen.
-      return;
-    }
-
-    const config = await AiService.getConfig();
-    setServerInfoProps({
-      ...serverInfoProps,
-      config: {
-        ...serverInfoProps.config,
-        api_keys: config.api_keys,
-        last_read: config.last_read
-      }
-    });
-  }, [serverInfoProps]);
 
   /**
    * Effect: fetch server info on initial render
@@ -121,39 +80,7 @@ export function useServerInfo(): ServerInfo {
     return {
       state,
       ...serverInfoProps,
-      refetchAll: fetchServerInfo,
-      refetchApiKeys
+      refetchAll: fetchServerInfo
     };
-  }, [state, serverInfoProps, error, refetchApiKeys]);
-}
-
-function getProvider(
-  gid: string,
-  providers: AiService.ListProvidersResponse
-): AiService.ListProvidersEntry | null {
-  const providerId = getProviderId(gid);
-  const provider = providers.providers.find(p => p.id === providerId);
-  return provider ?? null;
-}
-
-function getProviderId(gid: string) {
-  if (!gid) {
-    return null;
-  }
-
-  const components = gid.split(':');
-  if (components.length < 2) {
-    return null;
-  }
-
-  return components[0];
-}
-
-function getLocalId(gid: string) {
-  const components = gid.split(':');
-  if (components.length < 2) {
-    return '';
-  }
-
-  return components[1];
+  }, [state, serverInfoProps, error]);
 }

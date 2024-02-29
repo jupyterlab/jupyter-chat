@@ -1,4 +1,4 @@
-import { minifyPatchObject } from '../minify';
+import { minifyPatchObject } from '../components/settings/minify';
 
 const COMPLEX_OBJECT = {
   primitive: 0,

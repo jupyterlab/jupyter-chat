@@ -1,8 +1,8 @@
-.jp-ai-rendermime-markdown .jp-RenderedHTMLCommon {
+.jp-chat-rendermime-markdown .jp-RenderedHTMLCommon {
   padding-right: 0;
 }
 
-.jp-ai-rendermime-markdown pre {
+.jp-chat-rendermime-markdown pre {
   background-color: var(--jp-cell-editor-background);
   overflow-x: auto;
   white-space: pre;
@@ -11,12 +11,12 @@
   border: var(--jp-border-width) solid var(--jp-cell-editor-border-color);
 }
 
-.jp-ai-rendermime-markdown pre > code {
+.jp-chat-rendermime-markdown pre > code {
   background-color: inherit;
   overflow-x: inherit;
   white-space: inherit;
 }
 
-.jp-ai-rendermime-markdown mjx-container {
+.jp-chat-rendermime-markdown mjx-container {
   font-size: 119%;
 }

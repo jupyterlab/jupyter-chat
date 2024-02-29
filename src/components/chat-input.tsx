@@ -5,9 +5,6 @@ import {
   SxProps,
   TextField,
   Theme,
-  FormGroup,
-  FormControlLabel,
-  Checkbox,
   IconButton,
   InputAdornment
 } from '@mui/material';
@@ -17,11 +14,6 @@ type ChatInputProps = {
   value: string;
   onChange: (newValue: string) => unknown;
   onSend: () => unknown;
-  hasSelection: boolean;
-  includeSelection: boolean;
-  toggleIncludeSelection: () => unknown;
-  replaceSelection: boolean;
-  toggleReplaceSelection: () => unknown;
   sendWithShiftEnter: boolean;
   sx?: SxProps<Theme>;
 };
@@ -60,7 +52,7 @@ export function ChatInput(props: ChatInputProps): JSX.Element {
           variant="outlined"
           multiline
           onKeyDown={handleKeyDown}
-          placeholder="Ask Jupyternaut"
+          placeholder="Start chatting"
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
@@ -82,28 +74,6 @@ export function ChatInput(props: ChatInputProps): JSX.Element {
           helperText={props.value.length > 2 ? helperText : ' '}
         />
       </Box>
-      {props.hasSelection && (
-        <FormGroup sx={{ display: 'flex', flexDirection: 'row' }}>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={props.includeSelection}
-                onChange={props.toggleIncludeSelection}
-              />
-            }
-            label="Include selection"
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={props.replaceSelection}
-                onChange={props.toggleReplaceSelection}
-              />
-            }
-            label="Replace selection"
-          />
-        </FormGroup>
-      )}
     </Box>
   );
 }

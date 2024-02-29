@@ -1,9 +1,10 @@
 import { IDisposable } from '@lumino/disposable';
 import { ServerConnection } from '@jupyterlab/services';
 import { URLExt } from '@jupyterlab/coreutils';
-import { AiService, requestAPI } from './handler';
+import { requestAPI } from './handler';
+import { ChatService } from './services';
 
-const CHAT_SERVICE_URL = 'api/ai/chats';
+const CHAT_SERVICE_URL = 'api/chat';
 
 export class ChatHandler implements IDisposable {
   /**
@@ -19,7 +20,7 @@ export class ChatHandler implements IDisposable {
   /**
    * Create a new chat handler.
    */
-  constructor(options: AiService.IOptions = {}) {
+  constructor(options: ChatHandler.IOptions = {}) {
     this.serverSettings =
       options.serverSettings ?? ServerConnection.makeSettings();
   }
@@ -37,38 +38,30 @@ export class ChatHandler implements IDisposable {
    * Sends a message across the WebSocket. Promise resolves to the message ID
    * when the server sends the same message back, acknowledging receipt.
    */
-  public sendMessage(message: AiService.ChatRequest): Promise<string> {
+  public sendMessage(message: ChatService.ChatRequest): Promise<string> {
     return new Promise(resolve => {
       this._socket?.send(JSON.stringify(message));
       this._sendResolverQueue.push(resolve);
     });
   }
 
-  /**
-   * Returns a Promise that resolves to the agent's reply, given the message ID
-   * of the human message. Should only be called once per message.
-   */
-  public replyFor(messageId: string): Promise<AiService.AgentChatMessage> {
-    return new Promise(resolve => {
-      this._replyForResolverDict[messageId] = resolve;
-    });
-  }
-
-  public addListener(handler: (message: AiService.Message) => void): void {
+  public addListener(handler: (message: ChatService.IMessage) => void): void {
     this._listeners.push(handler);
   }
 
-  public removeListener(handler: (message: AiService.Message) => void): void {
+  public removeListener(
+    handler: (message: ChatService.IMessage) => void
+  ): void {
     const index = this._listeners.indexOf(handler);
     if (index > -1) {
       this._listeners.splice(index, 1);
     }
   }
 
-  public async getHistory(): Promise<AiService.ChatHistory> {
-    let data: AiService.ChatHistory = { messages: [] };
+  public async getHistory(): Promise<ChatService.ChatHistory> {
+    let data: ChatService.ChatHistory = { messages: [] };
     try {
-      data = await requestAPI('chats/history', {
+      data = await requestAPI('history', {
         method: 'GET'
       });
     } catch (e) {
@@ -106,19 +99,10 @@ export class ChatHandler implements IDisposable {
     }
   }
 
-  private _onMessage(message: AiService.Message): void {
+  private _onMessage(message: ChatService.IMessage): void {
     // resolve promise from `sendMessage()`
-    if (message.type === 'human' && message.client.id === this.id) {
+    if (message.type === 'msg' && message.sender.id === this.id) {
       this._sendResolverQueue.shift()?.(message.id);
-    }
-
-    // resolve promise from `replyFor()` if it exists
-    if (
-      message.type === 'agent' &&
-      message.reply_to in this._replyForResolverDict
-    ) {
-      this._replyForResolverDict[message.reply_to](message);
-      delete this._replyForResolverDict[message.reply_to];
     }
 
     // call listeners in serial
@@ -129,15 +113,6 @@ export class ChatHandler implements IDisposable {
    * Queue of Promise resolvers pushed onto by `send()`
    */
   private _sendResolverQueue: ((value: string) => void)[] = [];
-
-  /**
-   * Dictionary mapping message IDs to Promise resolvers, inserted into by
-   * `replyFor()`.
-   */
-  private _replyForResolverDict: Record<
-    string,
-    (value: AiService.AgentChatMessage) => void
-  > = {};
 
   private _onClose(e: CloseEvent, reject: any) {
     reject(new Error('Chat UI websocket disconnected'));
@@ -168,7 +143,7 @@ export class ChatHandler implements IDisposable {
       socket.onmessage = msg =>
         msg.data && this._onMessage(JSON.parse(msg.data));
 
-      const listenForConnection = (message: AiService.Message) => {
+      const listenForConnection = (message: ChatService.IMessage) => {
         if (message.type !== 'connection') {
           return;
         }
@@ -184,4 +159,13 @@ export class ChatHandler implements IDisposable {
   private _isDisposed = false;
   private _socket: WebSocket | null = null;
   private _listeners: ((msg: any) => void)[] = [];
+}
+
+export namespace ChatHandler {
+  /**
+   * The instantiation options for a data registry handler.
+   */
+  export interface IOptions {
+    serverSettings?: ServerConnection.ISettings;
+  }
 }

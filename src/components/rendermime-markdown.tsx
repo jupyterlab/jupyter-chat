@@ -5,7 +5,7 @@ import { CopyButton } from './copy-button';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 
 const MD_MIME_TYPE = 'text/markdown';
-const RENDERMIME_MD_CLASS = 'jp-ai-rendermime-markdown';
+const RENDERMIME_MD_CLASS = 'jp-chat-rendermime-markdown';
 
 type RendermimeMarkdownProps = {
   markdownStr: string;

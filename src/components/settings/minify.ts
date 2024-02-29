@@ -1,4 +1,4 @@
-import { AiService } from '../../handler';
+import { ChatService } from '../../services';
 
 /**
  * Function that minimizes the `UpdateConfigRequest` object prior to submission.
@@ -6,10 +6,10 @@ import { AiService } from '../../handler';
  * configuration.
  */
 export function minifyUpdate(
-  config: AiService.DescribeConfigResponse,
-  update: AiService.UpdateConfigRequest
-): AiService.UpdateConfigRequest {
-  return minifyPatchObject(config, update) as AiService.UpdateConfigRequest;
+  config: ChatService.DescribeConfigResponse,
+  update: ChatService.UpdateConfigRequest
+): ChatService.UpdateConfigRequest {
+  return minifyPatchObject(config, update) as ChatService.UpdateConfigRequest;
 }
 
 /**

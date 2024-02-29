@@ -1,18 +1,11 @@
-# expose jupyter_ai_magics ipython extension
-# DO NOT REMOVE.
-from jupyter_ai_magics import load_ipython_extension, unload_ipython_extension
+try:
+    from ._version import __version__
+except ImportError:
+    # Fallback when using the package in dev mode without installing
+    # in editable mode with pip. It is highly recommended to install
+    # the package from a stable release or in editable mode: https://pip.pypa.io/en/stable/topics/local-project-installs/#editable-installs
+    import warnings
+    warnings.warn("Importing 'jupyter_chat' outside a proper installation.")
+    __version__ = "dev"
 
-# expose jupyter_ai_magics providers
-# DO NOT REMOVE.
-from jupyter_ai_magics.providers import *
-
-from ._version import __version__
-from .extension import AiExtension
-
-
-def _jupyter_labextension_paths():
-    return [{"src": "labextension", "dest": "@jupyter-ai/core"}]
-
-
-def _jupyter_server_extension_points():
-    return [{"module": "jupyter_ai", "app": AiExtension}]
+from .extension import ChatExtension

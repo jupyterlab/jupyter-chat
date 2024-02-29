@@ -1,0 +1,8 @@
+{
+  "jupyter.lab.shortcuts": [],
+  "title": "@jupyter/chat",
+  "description": "@jupyter/chat settings.",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}
