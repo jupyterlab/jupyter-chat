@@ -10,17 +10,17 @@ import { JlThemeProvider } from './jl-theme-provider';
 import { ChatMessages } from './chat-messages';
 import { ChatInput } from './chat-input';
 import { ChatSettings } from './chat-settings';
-import { ChatHandler } from '../chat-handler';
 import { ScrollContainer } from './scroll-container';
+import { IChatModel } from '../model';
 import { ChatService } from '../services';
 
 type ChatBodyProps = {
-  chatHandler: ChatHandler;
+  chatModel: IChatModel;
   rmRegistry: IRenderMimeRegistry;
 };
 
 function ChatBody({
-  chatHandler,
+  chatModel,
   rmRegistry: renderMimeRegistry
 }: ChatBodyProps): JSX.Element {
   const [messages, setMessages] = useState<ChatService.IChatMessage[]>([]);
@@ -34,7 +34,8 @@ function ChatBody({
     async function fetchHistory() {
       try {
         const [history, config] = await Promise.all([
-          chatHandler.getHistory(),
+          chatModel.getHistory?.() ??
+            new Promise<ChatService.ChatHistory>(r => r({ messages: [] })),
           ChatService.getConfig()
         ]);
         setSendWithShiftEnter(config.send_with_shift_enter ?? false);
@@ -45,13 +46,13 @@ function ChatBody({
     }
 
     fetchHistory();
-  }, [chatHandler]);
+  }, [chatModel]);
 
   /**
    * Effect: listen to chat messages
    */
   useEffect(() => {
-    function handleChatEvents(message: ChatService.IMessage) {
+    function handleChatEvents(_: IChatModel, message: ChatService.IMessage) {
       if (message.type === 'connection') {
         return;
       } else if (message.type === 'clear') {
@@ -62,11 +63,11 @@ function ChatBody({
       setMessages(messageGroups => [...messageGroups, message]);
     }
 
-    chatHandler.addListener(handleChatEvents);
+    chatModel.incomingMessage.connect(handleChatEvents);
     return function cleanup() {
-      chatHandler.removeListener(handleChatEvents);
+      chatModel.incomingMessage.disconnect(handleChatEvents);
     };
-  }, [chatHandler]);
+  }, [chatModel]);
 
   // no need to append to messageGroups imperatively here. all of that is
   // handled by the listeners registered in the effect hooks above.
@@ -74,7 +75,7 @@ function ChatBody({
     setInput('');
 
     // send message to backend
-    chatHandler.sendMessage({ prompt: input });
+    chatModel.sendMessage({ body: input });
   };
 
   return (
@@ -100,7 +101,7 @@ function ChatBody({
 }
 
 export type ChatProps = {
-  chatHandler: ChatHandler;
+  chatModel: IChatModel;
   themeManager: IThemeManager | null;
   rmRegistry: IRenderMimeRegistry;
   chatView?: ChatView;
@@ -147,10 +148,7 @@ export function Chat(props: ChatProps): JSX.Element {
         </Box>
         {/* body */}
         {view === ChatView.Chat && (
-          <ChatBody
-            chatHandler={props.chatHandler}
-            rmRegistry={props.rmRegistry}
-          />
+          <ChatBody chatModel={props.chatModel} rmRegistry={props.rmRegistry} />
         )}
         {view === ChatView.Settings && <ChatSettings />}
       </Box>

@@ -1,27 +1,27 @@
 import { URLExt } from '@jupyterlab/coreutils';
-import { IDisposable } from '@lumino/disposable';
 import { ServerConnection } from '@jupyterlab/services';
+import { UUID } from '@lumino/coreutils';
 
 import { requestAPI } from './handler';
-import { ChatService } from './services';
+import { ChatModel, IChatModel } from '../model';
+import { ChatService } from '../services';
 
 const CHAT_SERVICE_URL = 'api/chat';
 
-export class ChatHandler implements IDisposable {
+/**
+ * An implementation of the chat model based on websocket handler.
+ */
+export class WebSocketHandler extends ChatModel {
   /**
    * The server settings used to make API requests.
    */
   readonly serverSettings: ServerConnection.ISettings;
 
   /**
-   * ID of the connection. Requires `await initialize()`.
-   */
-  id = '';
-
-  /**
    * Create a new chat handler.
    */
-  constructor(options: ChatHandler.IOptions = {}) {
+  constructor(options: WebSocketHandler.IOptions = {}) {
+    super(options);
     this.serverSettings =
       options.serverSettings ?? ServerConnection.makeSettings();
   }
@@ -31,7 +31,7 @@ export class ChatHandler implements IDisposable {
    * resolved when server acknowledges connection and sends the client ID. This
    * must be awaited before calling any other method.
    */
-  public async initialize(): Promise<void> {
+  async initialize(): Promise<void> {
     await this._initialize();
   }
 
@@ -39,27 +39,15 @@ export class ChatHandler implements IDisposable {
    * Sends a message across the WebSocket. Promise resolves to the message ID
    * when the server sends the same message back, acknowledging receipt.
    */
-  public sendMessage(message: ChatService.ChatRequest): Promise<string> {
+  sendMessage(message: ChatService.ChatRequest): Promise<boolean> {
+    message.id = UUID.uuid4();
     return new Promise(resolve => {
       this._socket?.send(JSON.stringify(message));
-      this._sendResolverQueue.push(resolve);
+      this._sendResolverQueue.set(message.id!, resolve);
     });
   }
 
-  public addListener(handler: (message: ChatService.IMessage) => void): void {
-    this._listeners.push(handler);
-  }
-
-  public removeListener(
-    handler: (message: ChatService.IMessage) => void
-  ): void {
-    const index = this._listeners.indexOf(handler);
-    if (index > -1) {
-      this._listeners.splice(index, 1);
-    }
-  }
-
-  public async getHistory(): Promise<ChatService.ChatHistory> {
+  async getHistory(): Promise<ChatService.ChatHistory> {
     let data: ChatService.ChatHistory = { messages: [] };
     try {
       data = await requestAPI('history', {
@@ -72,21 +60,10 @@ export class ChatHandler implements IDisposable {
   }
 
   /**
-   * Whether the chat handler is disposed.
-   */
-  get isDisposed(): boolean {
-    return this._isDisposed;
-  }
-
-  /**
    * Dispose the chat handler.
    */
   dispose(): void {
-    if (this.isDisposed) {
-      return;
-    }
-    this._isDisposed = true;
-    this._listeners = [];
+    super.dispose();
 
     // Clean up socket.
     const socket = this._socket;
@@ -100,34 +77,14 @@ export class ChatHandler implements IDisposable {
     }
   }
 
-  /**
-   * A function called before transferring the message to the panel(s).
-   * Can be useful if some actions are required on the message.
-   */
-  protected formatChatMessage(
-    message: ChatService.IChatMessage
-  ): ChatService.IChatMessage {
-    return message;
-  }
-
-  private _onMessage(message: ChatService.IMessage): void {
+  onMessage(message: ChatService.IMessage): void {
     // resolve promise from `sendMessage()`
     if (message.type === 'msg' && message.sender.id === this.id) {
-      this._sendResolverQueue.shift()?.(message.id);
+      this._sendResolverQueue.get(message.id)?.(true);
     }
 
-    if (message.type === 'msg') {
-      message = this.formatChatMessage(message as ChatService.IChatMessage);
-    }
-
-    // call listeners in serial
-    this._listeners.forEach(listener => listener(message));
+    super.onMessage(message);
   }
-
-  /**
-   * Queue of Promise resolvers pushed onto by `send()`
-   */
-  private _sendResolverQueue: ((value: string) => void)[] = [];
 
   private _onClose(e: CloseEvent, reject: any) {
     reject(new Error('Chat UI websocket disconnected'));
@@ -156,31 +113,39 @@ export class ChatHandler implements IDisposable {
       socket.onclose = e => this._onClose(e, reject);
       socket.onerror = e => reject(e);
       socket.onmessage = msg =>
-        msg.data && this._onMessage(JSON.parse(msg.data));
+        msg.data && this.onMessage(JSON.parse(msg.data));
 
-      const listenForConnection = (message: ChatService.IMessage) => {
+      const listenForConnection = (
+        _: IChatModel,
+        message: ChatService.IMessage
+      ) => {
         if (message.type !== 'connection') {
           return;
         }
         this.id = message.client_id;
         resolve();
-        this.removeListener(listenForConnection);
+        this.incomingMessage.disconnect(listenForConnection);
       };
 
-      this.addListener(listenForConnection);
+      this.incomingMessage.connect(listenForConnection);
     });
   }
 
-  private _isDisposed = false;
   private _socket: WebSocket | null = null;
-  private _listeners: ((msg: any) => void)[] = [];
+  /**
+   * Queue of Promise resolvers pushed onto by `send()`
+   */
+  private _sendResolverQueue = new Map<string, (value: boolean) => void>();
 }
 
-export namespace ChatHandler {
+/**
+ * The websocket namespace.
+ */
+export namespace WebSocketHandler {
   /**
    * The instantiation options for a data registry handler.
    */
-  export interface IOptions {
+  export interface IOptions extends ChatModel.IOptions {
     serverSettings?: ServerConnection.ISettings;
   }
 }

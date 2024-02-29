@@ -1,4 +1,4 @@
-import { requestAPI } from './handler';
+import { requestAPI } from './handlers/handler';
 
 export namespace ChatService {
   export interface IUser {
@@ -35,7 +35,8 @@ export namespace ChatService {
   };
 
   export type ChatRequest = {
-    prompt: string;
+    body: string;
+    id?: string;
   };
 
   export type DescribeConfigResponse = {

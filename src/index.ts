@@ -1,4 +1,5 @@
-export * from './chat-handler';
+export * from './handlers/websocket-handler';
+export * from './model';
 export * from './services';
 export * from './widgets/chat-error';
 export * from './widgets/chat-sidebar';
