@@ -75,7 +75,7 @@ function ChatBody({
     setInput('');
 
     // send message to backend
-    chatModel.sendMessage({ body: input });
+    chatModel.addMessage({ body: input });
   };
 
   return (
