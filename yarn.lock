@@ -1310,7 +1310,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/runtime@npm:^7.12.5, @babel/runtime@npm:^7.18.3, @babel/runtime@npm:^7.20.6, @babel/runtime@npm:^7.23.9, @babel/runtime@npm:^7.5.5, @babel/runtime@npm:^7.8.4, @babel/runtime@npm:^7.8.7":
+"@babel/runtime@npm:^7.12.5, @babel/runtime@npm:^7.18.3, @babel/runtime@npm:^7.23.9, @babel/runtime@npm:^7.5.5, @babel/runtime@npm:^7.8.4, @babel/runtime@npm:^7.8.7":
   version: 7.23.9
   resolution: "@babel/runtime@npm:7.23.9"
   dependencies:
@@ -2253,7 +2253,10 @@ __metadata:
     "@jupyterlab/services": ^7.0.5
     "@jupyterlab/testutils": ^4.0.0
     "@jupyterlab/ui-components": ^4.0.5
-    "@mui/icons-material": 5.11.0
+    "@lumino/coreutils": ^2.1.2
+    "@lumino/disposable": ^2.1.2
+    "@lumino/signaling": ^2.1.2
+    "@mui/icons-material": ^5.11.0
     "@mui/material": ^5.11.0
     "@types/jest": ^29.2.0
     "@types/json-schema": ^7.0.11
@@ -3564,11 +3567,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/icons-material@npm:5.11.0":
-  version: 5.11.0
-  resolution: "@mui/icons-material@npm:5.11.0"
+"@mui/icons-material@npm:^5.11.0":
+  version: 5.15.11
+  resolution: "@mui/icons-material@npm:5.15.11"
   dependencies:
-    "@babel/runtime": ^7.20.6
+    "@babel/runtime": ^7.23.9
   peerDependencies:
     "@mui/material": ^5.0.0
     "@types/react": ^17.0.0 || ^18.0.0
@@ -3576,7 +3579,7 @@ __metadata:
   peerDependenciesMeta:
     "@types/react":
       optional: true
-  checksum: 764c1185b3432f0228f3c5217b0e218b10f106fa96d305dfc62c0ef5afd2a7a087b0d664fd0a8171282e195c18d3ee073d5f037901a2bed1a1519a70fbb0501c
+  checksum: 4403988af419b0ebdbcc61413f58f12fe44dc069d3245cf80aec05fd31fb2f5d38f0d87799aa538f5441c36d87df2f5fbc1168aa03e2704dd423ccd4febf864b
   languageName: node
   linkType: hard
 
