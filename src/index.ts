@@ -3,3 +3,4 @@ export * from './model';
 export * from './services';
 export * from './widgets/chat-error';
 export * from './widgets/chat-sidebar';
+export * from './widgets/chat-widget';
