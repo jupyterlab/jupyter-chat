@@ -31,20 +31,25 @@ function ChatBody({
    * Effect: fetch history and config on initial render
    */
   useEffect(() => {
-    async function fetchHistory() {
-      try {
-        const [history, config] = await Promise.all([
-          chatModel.getHistory?.() ??
-            new Promise<ChatService.ChatHistory>(r => r({ messages: [] })),
-          ChatService.getConfig()
-        ]);
-        setSendWithShiftEnter(config.send_with_shift_enter ?? false);
-        setMessages(history.messages);
-      } catch (e) {
-        console.error(e);
-      }
+    async function getConfig() {
+      ChatService.getConfig()
+        .then(config =>
+          setSendWithShiftEnter(config.send_with_shift_enter ?? false)
+        )
+        .catch(e => console.error(e));
     }
 
+    async function fetchHistory() {
+      if (!chatModel.getHistory) {
+        return;
+      }
+      chatModel
+        .getHistory()
+        .then(history => setMessages(history.messages))
+        .catch(e => console.error(e));
+    }
+
+    getConfig();
     fetchHistory();
   }, [chatModel]);
 
@@ -59,7 +64,6 @@ function ChatBody({
         setMessages([]);
         return;
       }
-
       setMessages(messageGroups => [...messageGroups, message]);
     }
 
