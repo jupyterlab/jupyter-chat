@@ -4,9 +4,16 @@ import { UUID } from '@lumino/coreutils';
 
 import { requestAPI } from './handler';
 import { ChatModel, IChatModel } from '../model';
-import { ChatService } from '../services';
+import { IChatHistory, IMessage, INewMessage } from '../types';
 
 const CHAT_SERVICE_URL = 'api/chat';
+
+export type ConnectionMessage = {
+  type: 'connection';
+  client_id: string;
+};
+
+type GenericMessage = IMessage | ConnectionMessage;
 
 /**
  * An implementation of the chat model based on websocket handler.
@@ -39,7 +46,7 @@ export class WebSocketHandler extends ChatModel {
    * Sends a message across the WebSocket. Promise resolves to the message ID
    * when the server sends the same message back, acknowledging receipt.
    */
-  addMessage(message: ChatService.ChatRequest): Promise<boolean> {
+  addMessage(message: INewMessage): Promise<boolean> {
     message.id = UUID.uuid4();
     return new Promise(resolve => {
       this._socket?.send(JSON.stringify(message));
@@ -47,8 +54,8 @@ export class WebSocketHandler extends ChatModel {
     });
   }
 
-  async getHistory(): Promise<ChatService.ChatHistory> {
-    let data: ChatService.ChatHistory = { messages: [] };
+  async getHistory(): Promise<IChatHistory> {
+    let data: IChatHistory = { messages: [] };
     try {
       data = await requestAPI('history', {
         method: 'GET'
@@ -77,7 +84,7 @@ export class WebSocketHandler extends ChatModel {
     }
   }
 
-  onMessage(message: ChatService.IMessage): void {
+  onMessage(message: IMessage): void {
     // resolve promise from `sendMessage()`
     if (message.type === 'msg' && message.sender.id === this.id) {
       this._sendResolverQueue.get(message.id)?.(true);
@@ -115,10 +122,7 @@ export class WebSocketHandler extends ChatModel {
       socket.onmessage = msg =>
         msg.data && this.onMessage(JSON.parse(msg.data));
 
-      const listenForConnection = (
-        _: IChatModel,
-        message: ChatService.IMessage
-      ) => {
+      const listenForConnection = (_: IChatModel, message: GenericMessage) => {
         if (message.type !== 'connection') {
           return;
         }

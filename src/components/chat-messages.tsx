@@ -4,14 +4,14 @@ import type { SxProps, Theme } from '@mui/material';
 import React, { useState, useEffect } from 'react';
 
 import { RendermimeMarkdown } from './rendermime-markdown';
-import { ChatService } from '../services';
+import { IChatMessage, IUser } from '../types';
 
 type ChatMessagesProps = {
   rmRegistry: IRenderMimeRegistry;
-  messages: ChatService.IChatMessage[];
+  messages: IChatMessage[];
 };
 
-export type ChatMessageHeaderProps = ChatService.IUser & {
+export type ChatMessageHeaderProps = IUser & {
   timestamp: string;
   sx?: SxProps<Theme>;
 };

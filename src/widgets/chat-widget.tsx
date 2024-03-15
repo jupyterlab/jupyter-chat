@@ -7,7 +7,7 @@ import { chatIcon } from '../icons';
 import { IChatModel } from '../model';
 
 export class ChatWidget extends ReactWidget {
-  constructor(options: ChatWidget.IOptions) {
+  constructor(options: Chat.IOptions) {
     super();
 
     this.id = 'jupyter-chat::widget';
@@ -35,9 +35,5 @@ export class ChatWidget extends ReactWidget {
 }
 
 export namespace ChatWidget {
-  export interface IOptions {
-    chatModel: IChatModel;
-    themeManager: IThemeManager | null;
-    rmRegistry: IRenderMimeRegistry;
-  }
+  export interface IOptions extends Chat.IOptions {}
 }
