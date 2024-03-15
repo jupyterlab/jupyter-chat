@@ -10,15 +10,7 @@ import {
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 
-type ChatInputProps = {
-  value: string;
-  onChange: (newValue: string) => unknown;
-  onSend: () => unknown;
-  sendWithShiftEnter: boolean;
-  sx?: SxProps<Theme>;
-};
-
-export function ChatInput(props: ChatInputProps): JSX.Element {
+export function ChatInput(props: ChatInput.IProps): JSX.Element {
   function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
     if (
       event.key === 'Enter' &&
@@ -76,4 +68,20 @@ export function ChatInput(props: ChatInputProps): JSX.Element {
       </Box>
     </Box>
   );
+}
+
+/**
+ * The chat input namespace.
+ */
+export namespace ChatInput {
+  /**
+   * The properties of the react element.
+   */
+  export interface IProps {
+    value: string;
+    onChange: (newValue: string) => unknown;
+    onSend: () => unknown;
+    sendWithShiftEnter: boolean;
+    sx?: SxProps<Theme>;
+  }
 }
