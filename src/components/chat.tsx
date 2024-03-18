@@ -14,12 +14,12 @@ import { IChatMessage, IMessage } from '../types';
 import { IThemeManager } from '@jupyterlab/apputils';
 
 type ChatBodyProps = {
-  chatModel: IChatModel;
+  model: IChatModel;
   rmRegistry: IRenderMimeRegistry;
 };
 
 function ChatBody({
-  chatModel,
+  model,
   rmRegistry: renderMimeRegistry
 }: ChatBodyProps): JSX.Element {
   const [messages, setMessages] = useState<IChatMessage[]>([]);
@@ -30,17 +30,17 @@ function ChatBody({
    */
   useEffect(() => {
     async function fetchHistory() {
-      if (!chatModel.getHistory) {
+      if (!model.getHistory) {
         return;
       }
-      chatModel
+      model
         .getHistory()
         .then(history => setMessages(history.messages))
         .catch(e => console.error(e));
     }
 
     fetchHistory();
-  }, [chatModel]);
+  }, [model]);
 
   /**
    * Effect: listen to chat messages
@@ -55,11 +55,11 @@ function ChatBody({
       }
     }
 
-    chatModel.incomingMessage.connect(handleChatEvents);
+    model.incomingMessage.connect(handleChatEvents);
     return function cleanup() {
-      chatModel.incomingMessage.disconnect(handleChatEvents);
+      model.incomingMessage.disconnect(handleChatEvents);
     };
-  }, [chatModel]);
+  }, [model]);
 
   // no need to append to messageGroups imperatively here. all of that is
   // handled by the listeners registered in the effect hooks above.
@@ -67,7 +67,7 @@ function ChatBody({
     setInput('');
 
     // send message to backend
-    chatModel.addMessage({ body: input });
+    model.addMessage({ body: input });
   };
 
   return (
@@ -86,7 +86,7 @@ function ChatBody({
           paddingBottom: 0,
           borderTop: '1px solid var(--jp-border-color1)'
         }}
-        sendWithShiftEnter={chatModel.config.sendWithShiftEnter ?? false}
+        sendWithShiftEnter={model.config.sendWithShiftEnter ?? false}
       />
     </>
   );
@@ -130,7 +130,7 @@ export function Chat(props: Chat.IOptions): JSX.Element {
         </Box>
         {/* body */}
         {view === Chat.ChatView.Chat && (
-          <ChatBody chatModel={props.chatModel} rmRegistry={props.rmRegistry} />
+          <ChatBody model={props.model} rmRegistry={props.rmRegistry} />
         )}
         {view === Chat.ChatView.Settings && props.settingsPanel && (
           <props.settingsPanel />
@@ -151,7 +151,7 @@ export namespace Chat {
     /**
      * The chat model.
      */
-    chatModel: IChatModel;
+    model: IChatModel;
     /**
      * The theme manager.
      */

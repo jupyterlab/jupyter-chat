@@ -14,22 +14,29 @@ export class ChatWidget extends ReactWidget {
     this.title.icon = chatIcon;
     this.title.caption = 'Jupyter Chat'; // TODO: i18n
 
-    this._chatModel = options.chatModel;
+    this._model = options.model;
     this._themeManager = options.themeManager;
     this._rmRegistry = options.rmRegistry;
+  }
+
+  /**
+   * Gte the model of the widget.
+   */
+  get model(): IChatModel {
+    return this._model;
   }
 
   render() {
     return (
       <Chat
-        chatModel={this._chatModel}
+        model={this._model}
         themeManager={this._themeManager}
         rmRegistry={this._rmRegistry}
       />
     );
   }
 
-  private _chatModel: IChatModel;
+  private readonly _model: IChatModel;
   private _themeManager: IThemeManager | null;
   private _rmRegistry: IRenderMimeRegistry;
 }

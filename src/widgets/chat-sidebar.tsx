@@ -13,7 +13,7 @@ export function buildChatSidebar(
 ): ReactWidget {
   const ChatWidget = ReactWidget.create(
     <Chat
-      chatModel={chatModel}
+      model={chatModel}
       themeManager={themeManager}
       rmRegistry={rmRegistry}
     />
