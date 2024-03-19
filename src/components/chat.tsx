@@ -96,9 +96,8 @@ export function Chat(props: Chat.IOptions): JSX.Element {
   const [view, setView] = useState<Chat.ChatView>(
     props.chatView || Chat.ChatView.Chat
   );
-  console.log('Instantiate a chat');
   return (
-    <JlThemeProvider themeManager={props.themeManager}>
+    <JlThemeProvider themeManager={props.themeManager ?? null}>
       <Box
         // root box should not include padding as it offsets the vertical
         // scrollbar to the left
@@ -153,13 +152,13 @@ export namespace Chat {
      */
     model: IChatModel;
     /**
-     * The theme manager.
-     */
-    themeManager: IThemeManager | null;
-    /**
      * The rendermime registry.
      */
     rmRegistry: IRenderMimeRegistry;
+    /**
+     * The theme manager.
+     */
+    themeManager?: IThemeManager | null;
     /**
      * The view to render.
      */
