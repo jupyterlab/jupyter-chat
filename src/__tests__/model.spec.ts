@@ -14,7 +14,7 @@ describe('test chat model', () => {
 
     it('should dispose a ChatModel', () => {
       const model = new ChatModel();
-      model.dispose()
+      model.dispose();
       expect(model.isDisposed).toBeTruthy();
     });
   });
@@ -25,7 +25,7 @@ describe('test chat model', () => {
         message.body = 'formatted msg';
         return message;
       }
-    };
+    }
 
     let model: IChatModel;
     let messages: IMessage[];
@@ -34,21 +34,19 @@ describe('test chat model', () => {
       id: 'message1',
       time: Date.now() / 1000,
       body: 'message test',
-      sender: { id: 'user'}
+      sender: { id: 'user' }
     } as IChatMessage;
 
     beforeEach(() => {
       messages = [];
-    })
+    });
 
     it('should signal incoming message', () => {
       model = new ChatModel();
-      model.incomingMessage.connect(
-        (sender: IChatModel, message: IMessage) => {
-          expect(sender).toBe(model);
-          messages.push(message);
-        }
-      );
+      model.incomingMessage.connect((sender: IChatModel, message: IMessage) => {
+        expect(sender).toBe(model);
+        messages.push(message);
+      });
       model.onMessage(msg);
       expect(messages).toHaveLength(1);
       expect(messages[0]).toBe(msg);
@@ -56,19 +54,16 @@ describe('test chat model', () => {
 
     it('should format message', () => {
       model = new TestChat();
-      model.incomingMessage.connect(
-        (sender: IChatModel, message: IMessage) => {
-          expect(sender).toBe(model);
-          messages.push(message);
-        }
-      );
-      model.onMessage({...msg} as IChatMessage);
+      model.incomingMessage.connect((sender: IChatModel, message: IMessage) => {
+        expect(sender).toBe(model);
+        messages.push(message);
+      });
+      model.onMessage({ ...msg } as IChatMessage);
       expect(messages).toHaveLength(1);
       expect(messages[0]).not.toBe(msg);
       expect((messages[0] as IChatMessage).body).toBe('formatted msg');
-    })
-
-  })
+    });
+  });
 
   describe('model config', () => {
     it('should have empty config', () => {
@@ -77,8 +72,8 @@ describe('test chat model', () => {
     });
 
     it('should allow config', () => {
-      const model = new ChatModel({config: {sendWithShiftEnter: true}});
+      const model = new ChatModel({ config: { sendWithShiftEnter: true } });
       expect(model.config.sendWithShiftEnter).toBeTruthy();
     });
-  })
+  });
 });

@@ -2,9 +2,12 @@
  * Example of [Jest](https://jestjs.io/docs/getting-started) unit tests
  */
 
-import { IRenderMimeRegistry, RenderMimeRegistry } from "@jupyterlab/rendermime";
-import { ChatModel, IChatModel } from "../model";
-import { ChatWidget } from "../widgets/chat-widget";
+import {
+  IRenderMimeRegistry,
+  RenderMimeRegistry
+} from '@jupyterlab/rendermime';
+import { ChatModel, IChatModel } from '../model';
+import { ChatWidget } from '../widgets/chat-widget';
 
 describe('test chat widget', () => {
   let model: IChatModel;
@@ -13,7 +16,7 @@ describe('test chat widget', () => {
   beforeEach(() => {
     model = new ChatModel();
     rmRegistry = new RenderMimeRegistry();
-  })
+  });
 
   describe('model instantiation', () => {
     it('should create a ChatModel', () => {
@@ -23,7 +26,7 @@ describe('test chat widget', () => {
 
     it('should dispose a ChatModel', () => {
       const widget = new ChatWidget({ model, rmRegistry });
-      widget.dispose()
+      widget.dispose();
       expect(widget.isDisposed).toBeTruthy();
     });
 
