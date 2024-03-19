@@ -15,7 +15,7 @@ export class ChatWidget extends ReactWidget {
     this.title.caption = 'Jupyter Chat'; // TODO: i18n
 
     this._model = options.model;
-    this._themeManager = options.themeManager;
+    this._themeManager = options?.themeManager || null;
     this._rmRegistry = options.rmRegistry;
   }
 
