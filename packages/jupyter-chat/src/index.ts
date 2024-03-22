@@ -1,4 +1,3 @@
-export * from './handlers/websocket-handler';
 export * from './icons';
 export * from './model';
 export * from './types';
