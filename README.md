@@ -4,6 +4,9 @@
 
 A chat package for Jupyterlab extension, but also an extension for Jupyterab.
 
+A lot of the components of this chat project come from
+[jupyter-ai](https://github.com/jupyterlab/jupyter-ai).
+
 ## Composition
 
 ### Typescript package
