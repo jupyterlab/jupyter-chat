@@ -35,11 +35,13 @@ jobs:
         set -eux
         jlpm run test
 
+    - name: Build packages
+      run: jlpm build
+
     - name: Package the extension
       working-directory: packages/jupyter-chat-extension
       run: |
         set -eux
-
         pip install build
         python -m build
         pip uninstall -y "jupyter_chat_extension" jupyterlab
