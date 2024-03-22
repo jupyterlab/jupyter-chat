@@ -39,6 +39,9 @@ test = [
     "pytest-cov",
     "pytest-jupyter[server]>=0.6.0"
 ]
+dev = [
+    "hatch"
+]
 
 [tool.hatch.version]
 source = "nodejs"

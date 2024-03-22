@@ -30,24 +30,25 @@ jobs:
         jlpm
         jlpm run lint:check
 
-    - name: Test the extension
+    - name: Test the packages
       run: |
         set -eux
         jlpm run test
 
-    - name: Package the project
+    - name: Package the extension
+      working-directory: packages/jupyter-chat-extension
       run: |
         set -eux
 
         pip install build
         python -m build
-        pip uninstall -y "jupyter_chat" jupyterlab
+        pip uninstall -y "jupyter_chat_extension" jupyterlab
 
     - name: Upload project packages
       uses: actions/upload-artifact@v3
       with:
         name: package-artifacts
-        path: dist/jupyter_chat*
+        path: packages/jupyter-chat-extension/dist/jupyter_chat_extension*
         if-no-files-found: error
 
   check_links:
