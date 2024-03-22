@@ -3,8 +3,8 @@ import { ServerConnection } from '@jupyterlab/services';
 import { UUID } from '@lumino/coreutils';
 
 import { requestAPI } from './handler';
-import { ChatModel, IChatModel } from '../model';
-import { IChatHistory, IMessage, INewMessage } from '../types';
+import { ChatModel, IChatModel } from '@jupyter/chat';
+import { IChatHistory, IMessage, INewMessage } from '@jupyter/chat';
 
 const CHAT_SERVICE_URL = 'api/chat';
 

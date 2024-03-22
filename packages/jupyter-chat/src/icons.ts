@@ -5,6 +5,6 @@ import { LabIcon } from '@jupyterlab/ui-components';
 import chatSvgStr from '../style/icons/chat.svg';
 
 export const chatIcon = new LabIcon({
-  name: 'jupyter-ai::chat',
+  name: 'jupyter-chat::chat',
   svgstr: chatSvgStr
 });
