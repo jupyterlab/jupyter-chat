@@ -51,7 +51,10 @@ function ChatBody({
         setMessages([]);
         return;
       } else if (message.type === 'msg') {
-        setMessages((messageGroups: IChatMessage[]) => [...messageGroups, message]);
+        setMessages((messageGroups: IChatMessage[]) => [
+          ...messageGroups,
+          message
+        ]);
       }
     }
 
