@@ -51,7 +51,7 @@ function ChatBody({
         setMessages([]);
         return;
       } else if (message.type === 'msg') {
-        setMessages(messageGroups => [...messageGroups, message]);
+        setMessages((messageGroups: IMessage[]) => [...messageGroups, message]);
       }
     }
 
