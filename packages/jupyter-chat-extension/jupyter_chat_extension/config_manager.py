@@ -16,11 +16,15 @@ from traitlets.config import Configurable
 Logger = Union[logging.Logger, logging.LoggerAdapter]
 
 # default path to config
-DEFAULT_CONFIG_PATH = os.path.join(jupyter_data_dir(), "jupyter_chat", "config.json")
+DEFAULT_CONFIG_PATH = os.path.join(
+    jupyter_data_dir(),
+    "jupyter_chat_extension",
+    "config.json"
+)
 
 # default path to config JSON Schema
 DEFAULT_SCHEMA_PATH = os.path.join(
-    jupyter_data_dir(), "jupyter_chat", "config_schema.json"
+    jupyter_data_dir(), "jupyter_chat_extension", "config_schema.json"
 )
 
 # default no. of spaces to use when formatting config

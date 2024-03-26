@@ -23,7 +23,7 @@ type ScrollContainerProps = {
  */
 export function ScrollContainer(props: ScrollContainerProps): JSX.Element {
   const id = useMemo(
-    () => 'jupyter-ai-scroll-container-' + Date.now().toString(),
+    () => 'jupyter-chat-scroll-container-' + Date.now().toString(),
     []
   );
 

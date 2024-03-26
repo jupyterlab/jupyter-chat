@@ -6,7 +6,7 @@ import { expect, test } from '@jupyterlab/galata';
  */
 test.use({ autoGoto: false });
 
-test('should emit an activation console message', async ({ page }) => {
+test('should be tested', async ({ page }) => {
   // TODO: Add tests
 
   expect(1).toBe(1);
