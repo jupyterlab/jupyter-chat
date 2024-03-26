@@ -2,7 +2,7 @@
 // Distributed under the terms of the Modified BSD License.
 /**
  * @packageDocumentation
- * @module collaboration-extension
+ * @module chat-extension
  */
 
 import {
