@@ -1,5 +1,5 @@
 {
-    "name": "@jupyter/chat-extension",
+    "name": "jupyter-chat-extension",
     "version": "0.1.0",
     "description": "A chat extension for Jupyterlab",
     "keywords": [

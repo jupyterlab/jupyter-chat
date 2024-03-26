@@ -5,7 +5,7 @@
 A chat extension for Jupyterlab
 
 This package is composed of a Python package named `jupyter_chat_extension`
-for the server side and a NPM package named `@jupyter/chat-extension`
+for the server side and a NPM package named `jupyter-chat-extension`
 
 ![screenshot](screenshot.png 'chat extension')
 

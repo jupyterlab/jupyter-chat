@@ -11,7 +11,7 @@ except ImportError:
 from .extension import ChatExtension
 
 def _jupyter_labextension_paths():
-    return [{"src": "labextension", "dest": "@jupyter/chat-extension"}]
+    return [{"src": "labextension", "dest": "jupyter-chat-extension"}]
 
 
 def _jupyter_server_extension_points():

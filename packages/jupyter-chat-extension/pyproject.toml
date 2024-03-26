@@ -51,8 +51,8 @@ artifacts = ["jupyter_chat_extension/labextension"]
 exclude = [".github", "binder"]
 
 [tool.hatch.build.targets.wheel.shared-data]
-"jupyter_chat_extension/labextension" = "share/jupyter/labextensions/@jupyter/chat-extension"
-"install.json" = "share/jupyter/labextensions/@jupyter/chat-extension/install.json"
+"jupyter_chat_extension/labextension" = "share/jupyter/labextensions/jupyter-chat-extension"
+"install.json" = "share/jupyter/labextensions/jupyter-chat-extension/install.json"
 "jupyter-config/server-config" = "etc/jupyter/jupyter_server_config.d"
 "jupyter-config/nb-config" = "etc/jupyter/jupyter_notebook_config.d"
 

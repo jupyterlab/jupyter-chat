@@ -22,7 +22,7 @@ used by a jupyterlab extension.
 The Jupyterlab extension is located in *packages/jupyter-chat-extension*.
 
 It is composed of a Python package named `jupyter_chat_extension`
-for the server side and a NPM package named `@jupyter/chat-extension`.
+for the server side and a NPM package named `jupyter-chat-extension`.
 
 This extension is an implementation of the `@jupyter/chat` package, relying on
 websocket for the communication between server and front end.
