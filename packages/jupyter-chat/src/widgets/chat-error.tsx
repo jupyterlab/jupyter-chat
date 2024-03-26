@@ -30,9 +30,9 @@ export function buildErrorWidget(
       </Box>
     </JlThemeProvider>
   );
-  ErrorWidget.id = 'jupyter-ai::chat';
+  ErrorWidget.id = 'jupyter-chat::chat';
   ErrorWidget.title.icon = chatIcon;
-  ErrorWidget.title.caption = 'Jupyter AI Chat'; // TODO: i18n
+  ErrorWidget.title.caption = 'Jupyter Chat'; // TODO: i18n
 
   return ErrorWidget;
 }
