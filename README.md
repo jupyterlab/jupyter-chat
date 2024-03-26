@@ -11,7 +11,7 @@ A lot of the components of this chat project come from
 
 ### Typescript package
 
-The typescript package is located in *packages/jupyter-chat* and build an NPM
+The typescript package is located in *packages/jupyter-chat* and builds an NPM
 package named `@jupyter/chat`.
 
 This package provides a frontend library (using react), and is intended to be
