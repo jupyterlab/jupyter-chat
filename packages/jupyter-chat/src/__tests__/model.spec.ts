@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) Jupyter Development Team.
+ * Distributed under the terms of the Modified BSD License.
+ */
+
 /**
  * Example of [Jest](https://jestjs.io/docs/getting-started) unit tests
  */

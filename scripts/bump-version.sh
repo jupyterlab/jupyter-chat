@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (c) Jupyter Development Team.
+# Distributed under the terms of the Modified BSD License.
+
 
 # script that bumps version for all projects regardless of whether they were
 # changed since last release. needed because `lerna version` only bumps versions for projects
