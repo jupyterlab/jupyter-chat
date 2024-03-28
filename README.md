@@ -30,5 +30,3 @@ websocket for the communication between server and front end.
 ## Contributing
 
 See the contributing part of each package for details.
-
-TESTING LICENSE WORKFLOW
