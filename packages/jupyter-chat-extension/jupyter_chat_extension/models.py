@@ -1,3 +1,6 @@
+# Copyright (c) Jupyter Development Team.
+# Distributed under the terms of the Modified BSD License.
+
 from typing import Any, Dict, List, Literal, Optional, Union
 
 from langchain.pydantic_v1 import BaseModel, validator

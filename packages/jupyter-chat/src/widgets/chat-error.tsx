@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) Jupyter Development Team.
+ * Distributed under the terms of the Modified BSD License.
+ */
+
 import { IThemeManager, ReactWidget } from '@jupyterlab/apputils';
 import { Alert, Box } from '@mui/material';
 import React from 'react';

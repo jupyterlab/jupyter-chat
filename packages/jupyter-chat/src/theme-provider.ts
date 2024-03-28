@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) Jupyter Development Team.
+ * Distributed under the terms of the Modified BSD License.
+ */
+
 import { Theme, createTheme } from '@mui/material/styles';
 
 function getCSSVariable(name: string): string {
