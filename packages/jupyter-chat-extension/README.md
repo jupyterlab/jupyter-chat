@@ -1,6 +1,6 @@
 # jupyter_chat_extension
 
-[![Github Actions Status](https://github.com/QuantStack/jupyter-chat/workflows/Build/badge.svg)](https://github.com/QuantStack/jupyter-chat/actions/workflows/build.yml)
+[![Github Actions Status](https://github.com/jupyterlab-contrib/jupyter-chat/workflows/Build/badge.svg)](https://github.com/jupyterlab-contrib/jupyter-chat/actions/workflows/build.yml)
 
 A chat extension for Jupyterlab
 

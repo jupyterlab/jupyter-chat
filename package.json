@@ -8,9 +8,9 @@
         "jupyterlab",
         "jupyterlab-extension"
     ],
-    "homepage": "https://github.com/QuantStack/jupyter-chat",
+    "homepage": "https://github.com/jupyterlab-contrib/jupyter-chat",
     "bugs": {
-        "url": "https://github.com/QuantStack/jupyter-chat/issues"
+        "url": "https://github.com/jupyterlab-contrib/jupyter-chat/issues"
     },
     "license": "BSD-3-Clause",
     "author": {
@@ -19,7 +19,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/QuantStack/jupyter-chat.git"
+        "url": "https://github.com/jupyterlab-contrib/jupyter-chat.git"
     },
     "workspaces": [
         "packages/*"
