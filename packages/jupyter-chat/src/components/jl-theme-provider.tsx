@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) Jupyter Development Team.
+ * Distributed under the terms of the Modified BSD License.
+ */
+
 import React, { useState, useEffect } from 'react';
 import type { IThemeManager } from '@jupyterlab/apputils';
 import { Theme, ThemeProvider, createTheme } from '@mui/material/styles';

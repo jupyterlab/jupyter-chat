@@ -1,8 +1,6 @@
-// Copyright (c) Jupyter Development Team.
-// Distributed under the terms of the Modified BSD License.
-/**
- * @packageDocumentation
- * @module chat-extension
+/*
+ * Copyright (c) Jupyter Development Team.
+ * Distributed under the terms of the Modified BSD License.
  */
 
 import {

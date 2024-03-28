@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) Jupyter Development Team.
+ * Distributed under the terms of the Modified BSD License.
+ */
+
 import React, { useState, useMemo, useCallback } from 'react';
 import { Alert, AlertColor, Collapse } from '@mui/material';
 

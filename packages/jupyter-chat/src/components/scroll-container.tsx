@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) Jupyter Development Team.
+ * Distributed under the terms of the Modified BSD License.
+ */
+
 import React, { useEffect, useMemo } from 'react';
 import { Box, SxProps, Theme } from '@mui/material';
 

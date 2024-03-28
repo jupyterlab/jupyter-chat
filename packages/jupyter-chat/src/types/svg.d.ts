@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) Jupyter Development Team.
+ * Distributed under the terms of the Modified BSD License.
+ */
+
 // Excerpted from @jupyterlab/ui-components
 
 // including this file in a package allows for the use of import statements
