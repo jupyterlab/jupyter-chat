@@ -53,12 +53,12 @@
         "watch:src": "tsc -w --sourceMap"
     },
     "dependencies": {
-        "chat-jupyter": "^0.1.0",
         "@jupyterlab/apputils": "^4.0.5",
         "@jupyterlab/coreutils": "^6.0.5",
         "@jupyterlab/rendermime": "^4.0.5",
         "@jupyterlab/services": "^7.0.5",
-        "@lumino/coreutils": "^2.1.2"
+        "@lumino/coreutils": "^2.1.2",
+        "chat-jupyter": "^0.1.0"
     },
     "devDependencies": {
         "@jupyterlab/builder": "^4.0.0",
