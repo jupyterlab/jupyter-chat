@@ -1,5 +1,5 @@
 {
-    "name": "@jupyter/chat-root",
+    "name": "chat-jupyter-root",
     "version": "0.1.0",
     "description": "A chat package for Jupyterlab extension",
     "private": true,
