@@ -11,7 +11,7 @@ import {
 import { ReactWidget, IThemeManager } from '@jupyterlab/apputils';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 
-import { buildChatSidebar, buildErrorWidget } from '@jupyter/chat';
+import { buildChatSidebar, buildErrorWidget } from 'chat-jupyter';
 
 import { WebSocketHandler } from './handlers/websocket-handler';
 
