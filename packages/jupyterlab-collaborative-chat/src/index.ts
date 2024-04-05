@@ -15,17 +15,28 @@ const plugin: JupyterFrontEndPlugin<void> = {
   description: 'A chat extension based on shared documents',
   autoStart: true,
   optional: [ISettingRegistry],
-  activate: (app: JupyterFrontEnd, settingRegistry: ISettingRegistry | null) => {
-    console.log('JupyterLab extension jupyterlab-collaborative-chat is activated!');
+  activate: (
+    app: JupyterFrontEnd,
+    settingRegistry: ISettingRegistry | null
+  ) => {
+    console.log(
+      'JupyterLab extension jupyterlab-collaborative-chat is activated!'
+    );
 
     if (settingRegistry) {
       settingRegistry
         .load(plugin.id)
         .then(settings => {
-          console.log('jupyterlab-collaborative-chat settings loaded:', settings.composite);
+          console.log(
+            'jupyterlab-collaborative-chat settings loaded:',
+            settings.composite
+          );
         })
         .catch(reason => {
-          console.error('Failed to load settings for jupyterlab-collaborative-chat.', reason);
+          console.error(
+            'Failed to load settings for jupyterlab-collaborative-chat.',
+            reason
+          );
         });
     }
 
