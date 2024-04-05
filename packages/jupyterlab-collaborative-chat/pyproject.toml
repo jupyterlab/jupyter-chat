@@ -76,9 +76,6 @@ npm = ["jlpm"]
 source_dir = "src"
 build_dir = "jupyterlab_collaborative_chat/labextension"
 
-[tool.jupyter-releaser.options]
-version_cmd = "hatch version"
-
 [tool.jupyter-releaser.hooks]
 before-build-npm = [
     "python -m pip install 'jupyterlab>=4.0.0,<5'",
