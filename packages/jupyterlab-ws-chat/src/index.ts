@@ -10,30 +10,67 @@ import {
 } from '@jupyterlab/application';
 import { ReactWidget, IThemeManager } from '@jupyterlab/apputils';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
-
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { buildChatSidebar, buildErrorWidget } from 'chat-jupyter';
 
 import { WebSocketHandler } from './handlers/websocket-handler';
 
+const pluginId = 'jupyterlab-ws-chat:chat';
 /**
  * Initialization of the @jupyterlab/chat extension.
  */
 const chat: JupyterFrontEndPlugin<void> = {
-  id: '@jupyter-extension:chat',
+  id: pluginId,
   description: 'A chat extension for Jupyterlab',
   autoStart: true,
-  optional: [ILayoutRestorer, IThemeManager],
+  optional: [ILayoutRestorer, ISettingRegistry, IThemeManager],
   requires: [IRenderMimeRegistry],
   activate: async (
     app: JupyterFrontEnd,
     rmRegistry: IRenderMimeRegistry,
     restorer: ILayoutRestorer | null,
+    settingsRegistry: ISettingRegistry | null,
     themeManager: IThemeManager | null
   ) => {
     /**
      * Initialize chat handler, open WS connection
      */
     const chatHandler = new WebSocketHandler();
+
+    /**
+     * Load the settings.
+     */
+    let sendWithShiftEnter = false;
+
+    function loadSetting(setting: ISettingRegistry.ISettings): void {
+      // Read the settings and convert to the correct type
+      sendWithShiftEnter = setting.get('sendWithShiftEnter')
+        .composite as boolean;
+      chatHandler.config = { sendWithShiftEnter };
+    }
+
+    // Wait for the application to be restored and
+    // for the settings to be loaded
+    Promise.all([app.restored, settingsRegistry?.load(pluginId)])
+      .then(([, settings]) => {
+        if (!settings) {
+          console.warn(
+            'The SettingsRegistry is not loaded for the chat extension'
+          );
+          return;
+        }
+
+        // Read the settings
+        loadSetting(settings);
+
+        // Listen for the plugin setting changes
+        settings.changed.connect(loadSetting);
+      })
+      .catch(reason => {
+        console.error(
+          `Something went wrong when reading the settings.\n${reason}`
+        );
+      });
 
     let chatWidget: ReactWidget | null = null;
     try {
@@ -44,13 +81,14 @@ const chat: JupyterFrontEndPlugin<void> = {
     }
 
     /**
-     * Add Chat widget to right sidebar
+     * Add Chat widget to left sidebar
      */
-    app.shell.add(chatWidget, 'left', { rank: 2000 });
+    app.shell.add(chatWidget as ReactWidget, 'left', { rank: 2000 });
 
     if (restorer) {
-      restorer.add(chatWidget, 'jupyter-chat');
+      restorer.add(chatWidget as ReactWidget, 'jupyter-chat');
     }
+
     console.log('Chat extension initialized');
   }
 };
