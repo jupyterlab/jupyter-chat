@@ -8,5 +8,8 @@ pip install jupyterlab~=4.0
 jlpm install
 jlpm build
 
-# install chat extension
+# install the collaborative chat extension
+pip install -e packages/jupyterlab-collaborative-chat[test]
+
+# install websocket chat extension
 pip install -e packages/jupyterlab-ws-chat[test]

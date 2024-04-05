@@ -37,6 +37,7 @@ fields = ["description", "authors", "urls"]
 [tool.jupyter-releaser.options]
 version_cmd = "../../scripts/bump-version.sh"
 python_packages = [
+    "packages/jupyterlab-collaboration-chat",
     "packages/jupyterlab-ws-chat"
 ]
 

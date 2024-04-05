@@ -1,0 +1,8 @@
+{
+  "jupyter.lab.shortcuts": [],
+  "title": "jupyterlab-collaborative-chat",
+  "description": "jupyterlab-collaborative-chat settings.",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}
