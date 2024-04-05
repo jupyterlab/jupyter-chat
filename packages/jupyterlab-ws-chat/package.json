@@ -1,5 +1,5 @@
 {
-    "name": "jupyter-chat-extension",
+    "name": "jupyterlab-ws-chat",
     "version": "0.1.0",
     "description": "A chat extension for Jupyterlab",
     "keywords": [
@@ -102,12 +102,12 @@
                     "pip"
                 ],
                 "base": {
-                    "name": "jupyter_chat_extension"
+                    "name": "jupyterlab_ws_chat"
                 }
             }
         },
         "extension": true,
-        "outputDir": "jupyter_chat_extension/labextension",
+        "outputDir": "jupyterlab_ws_chat/labextension",
         "schemaDir": "schema"
     },
     "eslintIgnore": [

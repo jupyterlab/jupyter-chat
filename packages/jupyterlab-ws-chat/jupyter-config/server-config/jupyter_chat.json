@@ -1,7 +1,7 @@
 {
   "ServerApp": {
     "jpserver_extensions": {
-      "jupyter_chat_extension": true
+      "jupyterlab_ws_chat": true
     }
   }
 }

@@ -6,7 +6,7 @@ requires = ["hatchling>=1.5.0", "jupyterlab>=4.0.0,<5", "hatch-nodejs-version>=0
 build-backend = "hatchling.build"
 
 [project]
-name = "jupyter_chat_extension"
+name = "jupyterlab_ws_chat"
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.8"
@@ -50,26 +50,26 @@ source = "nodejs"
 fields = ["description", "authors", "urls"]
 
 [tool.hatch.build.targets.sdist]
-artifacts = ["jupyter_chat_extension/labextension"]
+artifacts = ["jupyterlab_ws_chat/labextension"]
 exclude = [".github", "binder"]
 
 [tool.hatch.build.targets.wheel.shared-data]
-"jupyter_chat_extension/labextension" = "share/jupyter/labextensions/jupyter-chat-extension"
-"install.json" = "share/jupyter/labextensions/jupyter-chat-extension/install.json"
+"jupyterlab_ws_chat/labextension" = "share/jupyter/labextensions/jupyterlab-ws-chat"
+"install.json" = "share/jupyter/labextensions/jupyterlab-ws-chat/install.json"
 "jupyter-config/server-config" = "etc/jupyter/jupyter_server_config.d"
 "jupyter-config/nb-config" = "etc/jupyter/jupyter_notebook_config.d"
 
 [tool.hatch.build.hooks.version]
-path = "jupyter_chat_extension/_version.py"
+path = "jupyterlab_ws_chat/_version.py"
 
 [tool.hatch.build.hooks.jupyter-builder]
 dependencies = ["hatch-jupyter-builder>=0.5"]
 build-function = "hatch_jupyter_builder.npm_builder"
 ensured-targets = [
-    "jupyter_chat_extension/labextension/static/style.js",
-    "jupyter_chat_extension/labextension/package.json",
+    "jupyterlab_ws_chat/labextension/static/style.js",
+    "jupyterlab_ws_chat/labextension/package.json",
 ]
-skip-if-exists = ["jupyter_chat_extension/labextension/static/style.js"]
+skip-if-exists = ["jupyterlab_ws_chat/labextension/static/style.js"]
 
 [tool.hatch.build.hooks.jupyter-builder.build-kwargs]
 build_cmd = "build:prod"
@@ -79,7 +79,7 @@ npm = ["jlpm"]
 build_cmd = "install:extension"
 npm = ["jlpm"]
 source_dir = "src"
-build_dir = "jupyter_chat_extension/labextension"
+build_dir = "jupyterlab_ws_chat/labextension"
 
 [tool.jupyter-releaser.hooks]
 before-build-npm = [

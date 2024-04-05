@@ -1,11 +1,11 @@
-# jupyter_chat_extension
+# jupyterlab_ws_chat
 
 [![Github Actions Status](https://github.com/jupyterlab-contrib/jupyter-chat/workflows/Build/badge.svg)](https://github.com/jupyterlab-contrib/jupyter-chat/actions/workflows/build.yml)
 
 A chat extension for Jupyterlab
 
-This package is composed of a Python package named `jupyter_chat_extension`
-for the server side and a NPM package named `jupyter-chat-extension`
+This package is composed of a Python package named `jupyterlab_ws_chat`
+for the server side and a NPM package named `jupyterlab-ws-chat`
 
 ![screenshot](screenshot.png 'chat extension')
 
@@ -18,7 +18,7 @@ for the server side and a NPM package named `jupyter-chat-extension`
 To install the package, execute:
 
 ```bash
-pip install jupyter_chat_extension
+pip install jupyterlab_ws_chat
 ```
 
 ## Uninstall
@@ -26,7 +26,7 @@ pip install jupyter_chat_extension
 To remove the package, execute:
 
 ```bash
-pip uninstall jupyter_chat_extension
+pip uninstall jupyterlab_ws_chat
 ```
 
 ## Contributing
@@ -41,7 +41,7 @@ The `jlpm` command is JupyterLab's pinned version of
 
 ```bash
 # Clone the repo to your local environment
-# Change directory to the jupyter-chat/jupyter-chat-extension directory
+# Change directory to the jupyter-chat/jupyterlab-ws-chat directory
 # Install package in development mode
 pip install -e ".[test]"
 # Rebuild Typescript source after making changes
@@ -53,7 +53,7 @@ By default, the `jlpm build` command generates the source maps for this package 
 ### Development uninstall
 
 ```bash
-pip uninstall jupyter_chat_extension
+pip uninstall jupyterlab_ws_chat
 ```
 
 ### Testing the package
@@ -71,7 +71,7 @@ pip install -e ".[test]"
 To execute them, run:
 
 ```sh
-pytest -vv -r ap --cov jupyter_chat_extension
+pytest -vv -r ap --cov jupyterlab_ws_chat
 ```
 
 #### Frontend tests

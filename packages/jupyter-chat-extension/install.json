@@ -1,5 +1,0 @@
-{
-  "packageManager": "python",
-  "packageName": "jupyter_chat_extension",
-  "uninstallInstructions": "Use your Python package manager (pip, conda, etc.) to uninstall jupyter_chat_extension"
-}
