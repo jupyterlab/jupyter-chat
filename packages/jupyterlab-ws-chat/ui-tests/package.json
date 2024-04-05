@@ -1,7 +1,7 @@
 {
-    "name": "jupyter-chat-extension-ui-tests",
+    "name": "jupyterlab-ws-chat-ui-tests",
     "version": "1.0.0",
-    "description": "jupyter-chat-extension Integration Tests",
+    "description": "jupyterlab-ws-chat Integration Tests",
     "private": true,
     "scripts": {
         "start": "jupyter lab --config jupyter_server_test_config.py",

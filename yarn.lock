@@ -9690,9 +9690,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jupyter-chat-extension@workspace:packages/jupyter-chat-extension":
+"jupyterlab-ws-chat@workspace:packages/jupyterlab-ws-chat":
   version: 0.0.0-use.local
-  resolution: "jupyter-chat-extension@workspace:packages/jupyter-chat-extension"
+  resolution: "jupyterlab-ws-chat@workspace:packages/jupyterlab-ws-chat"
   dependencies:
     "@jupyterlab/apputils": ^4.0.5
     "@jupyterlab/builder": ^4.0.0

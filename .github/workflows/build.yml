@@ -39,18 +39,18 @@ jobs:
       run: jlpm build
 
     - name: Package the extension
-      working-directory: packages/jupyter-chat-extension
+      working-directory: packages/jupyterlab-ws-chat
       run: |
         set -eux
         pip install build
         python -m build
-        pip uninstall -y "jupyter_chat_extension" jupyterlab
+        pip uninstall -y "jupyterlab_ws_chat" jupyterlab
 
     - name: Upload project packages
       uses: actions/upload-artifact@v3
       with:
         name: package-artifacts
-        path: packages/jupyter-chat-extension/dist/jupyter_chat_extension*
+        path: packages/jupyterlab-ws-chat/dist/jupyterlab_ws_chat*
         if-no-files-found: error
 
   check_links:

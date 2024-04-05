@@ -9,4 +9,4 @@ jlpm install
 jlpm build
 
 # install chat extension
-pip install -e packages/jupyter-chat-extension[test]
+pip install -e packages/jupyterlab-ws-chat[test]

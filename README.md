@@ -19,10 +19,10 @@ used by a jupyterlab extension.
 
 ### Jupyterab extension
 
-The Jupyterlab extension is located in *packages/jupyter-chat-extension*.
+The Jupyterlab extension is located in *packages/jupyterlab-ws-chat*.
 
-It is composed of a Python package named `jupyter_chat_extension`
-for the server side and a NPM package named `jupyter-chat-extension`.
+It is composed of a Python package named `jupyterlab_ws_chat`
+for the server side and a NPM package named `jupyterlab-ws-chat`.
 
 This extension is an implementation of the `chat-jupyter` package, relying on
 websocket for the communication between server and front end.
