@@ -26,7 +26,9 @@
     ],
     "scripts": {
         "build": "lerna run build --stream",
-        "build:core": "lerna run build --stream --scope \"@jupyter-ai/core\"",
+        "build:core": "lerna run build --stream --scope \"chat-jupyter\"",
+        "build:collaborative": "lerna run build --scope=jupyterlab-collaborative-chat --include-filtered-dependencies",
+        "build:websocket": "lerna run build --scope=jupyterlab-ws-chat --include-filtered-dependencies",
         "build:prod": "lerna run build:prod --stream",
         "clean": "lerna run clean",
         "clean:all": "lerna run clean:all",
