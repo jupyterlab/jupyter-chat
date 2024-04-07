@@ -26,7 +26,11 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-    "jupyter_server>=2.0.1,<3"
+    "jupyterlab~=4.0",
+    "jupyter_collaboration",
+    "jupyter_server>=2.0.1,<3",
+    "jupyter_ydoc>=2.0.0,<3.0.0",
+    "pycrdt"
 ]
 dynamic = ["version", "description", "authors", "urls", "keywords"]
 
@@ -86,3 +90,6 @@ before-build-python = ["jlpm clean:all"]
 
 [tool.check-wheel-contents]
 ignore = ["W002"]
+
+[project.entry-points.jupyter_ydoc]
+chat = "jupyterlab_collaborative_chat.ychat:YChat"

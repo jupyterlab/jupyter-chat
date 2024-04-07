@@ -57,10 +57,20 @@
         "watch:labextension": "jupyter labextension watch ."
     },
     "dependencies": {
+        "@jupyter/collaboration": "^2.0.11",
+        "@jupyter/docprovider": "^2.0.11",
         "@jupyterlab/application": "^4.0.5",
+        "@jupyterlab/apputils": "^4.0.5",
         "@jupyterlab/coreutils": "^6.0.5",
+        "@jupyterlab/docregistry": "^4.0.5",
+        "@jupyterlab/rendermime": "^4.0.5",
         "@jupyterlab/services": "^7.0.5",
-        "@jupyterlab/settingregistry": "^4.0.5"
+        "@jupyterlab/settingregistry": "^4.0.5",
+        "@lumino/coreutils": "^2.1.0",
+        "@lumino/signaling": "^2.1.0",
+        "chat-jupyter": "0.1.0",
+        "y-protocols": "^1.0.5",
+        "yjs": "^13.5.40"
     },
     "devDependencies": {
         "@jupyterlab/builder": "^4.0.0",
