@@ -47,8 +47,8 @@ jobs:
         extension: [collaborative, websocket]
     name: Build ${{ matrix.extension }} chat extension
     env:
-      PACKAGE: fromJSON('["jupyterlab_ws_chat", "jupyterlab_${{ matrix.extension }}_chat"]')[matrix.extension == 'websocket']
-      DIRECTORY: fromJSON('["packages/jupyterlab-ws-chat", "packages/jupyterlab-${{ matrix.extension }}-chat"]')[matrix.extension == 'websocket']
+      PACKAGE: ${{ fromJSON('["jupyterlab_ws_chat", "jupyterlab_${{ matrix.extension }}_chat"]')[matrix.extension == 'websocket'] }}
+      DIRECTORY: ${{ fromJSON('["packages/jupyterlab-ws-chat", "packages/jupyterlab-${{ matrix.extension }}-chat"]')[matrix.extension == 'websocket'] }}
 
     steps:
     - name: Checkout
