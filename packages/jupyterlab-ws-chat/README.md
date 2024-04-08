@@ -7,7 +7,7 @@ A chat extension for Jupyterlab
 This package is composed of a Python package named `jupyterlab_ws_chat`
 for the server side and a NPM package named `jupyterlab-ws-chat`
 
-![screenshot](screenshot.png 'chat extension')
+![screenshot](screenshot.png 'WS chat extension')
 
 ## Requirements
 

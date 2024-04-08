@@ -7,6 +7,11 @@ This extension is composed of a Python package named `jupyterlab_collaborative_c
 for the server extension and a NPM package named `jupyterlab-collaborative-chat`
 for the frontend extension.
 
+This extension registers a `YChat` shared document, and associate the document to a
+chat widget in the front end.
+
+![screenshot](screenshot.gif 'collaborative chat extension')
+
 ## Requirements
 
 - JupyterLab >= 4.0.0
