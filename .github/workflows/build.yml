@@ -72,7 +72,7 @@ jobs:
     - name: Upload package
       uses: actions/upload-artifact@v3
       with:
-        name: package-artifacts
+        name: jupyterlab_${{ matrix.extension }}_chat-artifacts
         path: packages/jupyterlab-${{ matrix.extension }}-chat/dist/jupyterlab_${{ matrix.extension }}_chat*
         if-no-files-found: error
 
