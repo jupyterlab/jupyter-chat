@@ -54,12 +54,12 @@
         "watch:src": "tsc -w --sourceMap"
     },
     "dependencies": {
-        "@jupyterlab/apputils": "^4.0.5",
-        "@jupyterlab/coreutils": "^6.0.5",
-        "@jupyterlab/rendermime": "^4.0.5",
-        "@jupyterlab/services": "^7.0.5",
-        "@jupyterlab/settingregistry": "^4.0.5",
-        "@lumino/coreutils": "^2.1.2",
+        "@jupyterlab/apputils": "^4.0.0",
+        "@jupyterlab/coreutils": "^6.0.0",
+        "@jupyterlab/rendermime": "^4.0.0",
+        "@jupyterlab/services": "^7.0.0",
+        "@jupyterlab/settingregistry": "^4.0.0",
+        "@lumino/coreutils": "^2.0.0",
         "chat-jupyter": "^0.1.0"
     },
     "devDependencies": {
