@@ -20,6 +20,7 @@ import {
   createToolbarFactory,
   showErrorMessage
 } from '@jupyterlab/apputils';
+import { PathExt } from '@jupyterlab/coreutils';
 import { ILauncher } from '@jupyterlab/launcher';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { IObservableList } from '@jupyterlab/observables';
@@ -34,15 +35,17 @@ import {
   ChatWidgetFactory,
   CollaborativeChatModelFactory
 } from './factory';
-import { chatFileType, CommandIDs, IWidgetConfig } from './token';
-import { CollaborativeChatWidget } from './widget';
+import { CollaborativeChatModel } from './model';
+import { chatFileType, CommandIDs, IChatPanel, IWidgetConfig } from './token';
+import { ChatPanel, CollaborativeChatWidget } from './widget';
 import { YChat } from './ychat';
 
 const FACTORY = 'Chat';
 
 const pluginIds = {
   chatCommands: 'jupyterlab-collaborative-chat:commands',
-  docFactories: 'jupyterlab-collaborative-chat:factories'
+  docFactories: 'jupyterlab-collaborative-chat:factories',
+  chatPanel: 'jupyterlab-collaborative-chat:chat-panel'
 };
 
 /**
@@ -194,17 +197,20 @@ export const docFactories: JupyterFrontEndPlugin<IWidgetConfig> = {
 };
 
 /**
- * Extension registering the chat file type.
+ * Extension providing the commands, menu and laucher.
  */
-export const chatCommands: JupyterFrontEndPlugin<void> = {
+const chatCommands: JupyterFrontEndPlugin<void> = {
   id: pluginIds.chatCommands,
   description: 'The commands to create or open a chat',
   autoStart: true,
-  requires: [ICollaborativeDrive],
-  optional: [ICommandPalette, ILauncher],
+  requires: [ICollaborativeDrive, IGlobalAwareness, IWidgetConfig],
+  optional: [IChatPanel, ICommandPalette, ILauncher],
   activate: (
     app: JupyterFrontEnd,
     drive: ICollaborativeDrive,
+    awareness: Awareness,
+    widgetConfig: IWidgetConfig,
+    chatPanel: ChatPanel | null,
     commandPalette: ICommandPalette | null,
     launcher: ILauncher | null
   ) => {
@@ -221,6 +227,7 @@ export const chatCommands: JupyterFrontEndPlugin<void> = {
       caption: 'Create a chat',
       icon: args => (args.isPalette ? undefined : chatIcon),
       execute: async args => {
+        const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
         let name: string | null = (args.name as string) ?? null;
         let filepath = '';
         if (!name) {
@@ -276,11 +283,11 @@ export const chatCommands: JupyterFrontEndPlugin<void> = {
           filepath = model.path;
         }
 
-        return commands.execute(CommandIDs.openChat, { filepath });
+        return commands.execute(CommandIDs.openChat, { filepath, inSidePanel });
       }
     });
 
-    /**
+    /*
      * Command to open a chat.
      *
      * args:
@@ -289,6 +296,7 @@ export const chatCommands: JupyterFrontEndPlugin<void> = {
     commands.addCommand(CommandIDs.openChat, {
       label: 'Open a chat',
       execute: async args => {
+        const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
         let filepath: string | null = (args.filepath as string) ?? null;
         if (filepath === null) {
           filepath = (
@@ -317,10 +325,43 @@ export const chatCommands: JupyterFrontEndPlugin<void> = {
           return;
         }
 
-        commands.execute('docmanager:open', {
-          path: `RTC:${filepath}`,
-          factory: FACTORY
-        });
+        if (inSidePanel && chatPanel) {
+          // The chat is opened in the chat panel.
+          const model = await drive.get(filepath);
+
+          /**
+           * Create a share model from the chat file
+           */
+          const sharedModel = drive.sharedModelFactory.createNew({
+            path: model.path,
+            format: model.format,
+            contentType: chatFileType.contentType,
+            collaborative: true
+          }) as YChat;
+
+          /**
+           * Initialize the chat model with the share model
+           */
+          const chat = new CollaborativeChatModel({
+            awareness,
+            sharedModel,
+            widgetConfig
+          });
+
+          /**
+           * Add a chat widget to the side panel.
+           */
+          chatPanel.addChat(
+            chat,
+            PathExt.basename(model.name, chatFileType.extensions[0])
+          );
+        } else {
+          // The chat is opened in the main area
+          commands.execute('docmanager:open', {
+            path: `RTC:${filepath}`,
+            factory: 'chat-factory'
+          });
+        }
       }
     });
 
@@ -348,4 +389,50 @@ export const chatCommands: JupyterFrontEndPlugin<void> = {
   }
 };
 
-export default [chatCommands, docFactories];
+/*
+ * Extension providing a chat panel.
+ */
+const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
+  id: pluginIds.chatPanel,
+  description: 'A chat extension for Jupyter',
+  autoStart: true,
+  provides: IChatPanel,
+  requires: [ICollaborativeDrive, IRenderMimeRegistry],
+  optional: [ILayoutRestorer, IThemeManager],
+  activate: (
+    app: JupyterFrontEnd,
+    drive: ICollaborativeDrive,
+    rmRegistry: IRenderMimeRegistry,
+    restorer: ILayoutRestorer | null,
+    themeManager: IThemeManager | null
+  ): ChatPanel => {
+    const { commands } = app;
+
+    /**
+     * Add Chat widget to left sidebar
+     */
+    const chatPanel = new ChatPanel({
+      commands,
+      drive,
+      rmRegistry,
+      themeManager
+    });
+    chatPanel.id = 'JupyterCollaborationChat:sidepanel';
+    chatPanel.title.icon = chatIcon;
+    chatPanel.title.caption = 'Jupyter Chat'; // TODO: i18n/
+
+    app.shell.add(chatPanel, 'left', {
+      rank: 2000
+    });
+
+    if (restorer) {
+      restorer.add(chatPanel, 'jupyter-chat');
+    }
+
+    console.log('Collaborative chat initialized');
+
+    return chatPanel;
+  }
+};
+
+export default [chatCommands, docFactories, chatPanel];
