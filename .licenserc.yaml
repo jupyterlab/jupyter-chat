@@ -20,7 +20,7 @@ header:
     - '*.map.js'
     - '*.bundle.js'
     - '**/.*'
-    - 'binder/postBuild'
+    - '**/binder/postBuild'
     - 'coverage'
     - 'LICENSE'
     - 'yarn.lock'

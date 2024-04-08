@@ -38,7 +38,7 @@ jobs:
     - name: Build packages
       run: jlpm build
 
-    - name: Package the extension
+    - name: Package jupyterlab_ws_chat
       working-directory: packages/jupyterlab-ws-chat
       run: |
         set -eux
@@ -46,11 +46,26 @@ jobs:
         python -m build
         pip uninstall -y "jupyterlab_ws_chat" jupyterlab
 
-    - name: Upload project packages
+    - name: Upload jupyterlab_ws_chat packages
       uses: actions/upload-artifact@v3
       with:
         name: package-artifacts
         path: packages/jupyterlab-ws-chat/dist/jupyterlab_ws_chat*
+        if-no-files-found: error
+
+    - name: Package jupyterlab_collaborative_chat
+      working-directory: packages/jupyterlab-collaborative-chat
+      run: |
+        set -eux
+        pip install build
+        python -m build
+        pip uninstall -y "jupyterlab_collaborative_chat" jupyterlab
+
+    - name: Upload jupyterlab_collaborative_chat packages
+      uses: actions/upload-artifact@v3
+      with:
+        name: package-artifacts
+        path: packages/jupyterlab-collaborative-chat/dist/jupyterlab_collaborative_chat*
         if-no-files-found: error
 
   check_links:
