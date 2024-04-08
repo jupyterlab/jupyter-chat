@@ -50,8 +50,9 @@ jobs:
     steps:
     - name: Create variables
       run: |
-        [ "${{ matrix.extension }}" = "websocket" ] && echo PACKAGE="jupyterlab-ws-chat" || echo PACKAGE="jupyterlab-${{ matrix.extension }}-chat" >> $GITHUB_ENV
-        [ "${{ matrix.extension }}" = "websocket" ] && echo DIRECTORY="packages/jupyterlab-ws-chat" || echo DIRECTORY="packages/jupyterlab-${{ matrix.extension }}-chat" >> $GITHUB_ENV
+        [ "${{ matrix.extension }}" = "websocket" ] && echo "PACKAGE=jupyterlab-ws-chat" || echo "PACKAGE=jupyterlab-${{ matrix.extension }}-chat" >> $GITHUB_ENV
+        [ "${{ matrix.extension }}" = "websocket" ] && echo "DIRECTORY=packages/jupyterlab-ws-chat" || echo "DIRECTORY=packages/jupyterlab-${{ matrix.extension }}-chat" >> $GITHUB_ENV
+        echo $GITHUB_ENV
     - name: Checkout
       uses: actions/checkout@v3
 
