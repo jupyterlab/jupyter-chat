@@ -47,7 +47,7 @@ before-build-npm = [
     "YARN_ENABLE_IMMUTABLE_INSTALLS=0 jlpm",
     "jlpm build:prod"
 ]
-before-build-python = ["jlpm clean:all"]
+before-build-python = ["jlpm clean"]
 
 [tool.check-wheel-contents]
 ignore = ["W002"]
