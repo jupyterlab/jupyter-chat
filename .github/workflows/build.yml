@@ -44,16 +44,10 @@ jobs:
     needs: build_jupyter-chat
     strategy:
       matrix:
-        extension: [collaborative, websocket]
+        extension: [collaborative, ws]
     name: Build ${{ matrix.extension }} chat extension
 
     steps:
-    - name: Create variables
-      run: |
-        [ "${{ matrix.extension }}" = "websocket" ] && echo "PACKAGE=jupyterlab_ws_chat" || echo "PACKAGE=jupyterlab_${{ matrix.extension }}_chat" >> $GITHUB_ENV
-        [ "${{ matrix.extension }}" = "websocket" ] && echo "DIRECTORY=packages/jupyterlab-ws-chat" || echo "DIRECTORY=packages/jupyterlab-${{ matrix.extension }}-chat" >> $GITHUB_ENV
-        echo $GITHUB_ENV
-
     - name: Checkout
       uses: actions/checkout@v3
 
@@ -68,19 +62,18 @@ jobs:
         jlpm install
         jlpm build:${{ matrix.extension }}
 
-    - name: Package $PACKAGE
-      working-directory: $DIRECTORY
+    - name: Package extension
       run: |
         set -eux
-        pip install build
-        python -m build
-        pip uninstall -y "$PACKAGE" jupyterlab
+        pip install build packages/jupyterlab-${{ matrix.extension }}-chat
+        python -m build packages/jupyterlab-${{ matrix.extension }}-chat
+        pip uninstall -y "jupyterlab_${{ matrix.extension }}_chat" jupyterlab
 
-    - name: Upload $PACKAGE package
+    - name: Upload package
       uses: actions/upload-artifact@v3
       with:
         name: package-artifacts
-        path: $DIRECTORY/dist/$PACKAGE*
+        path: packages/jupyterlab-${{ matrix.extension }}-chat/dist/jupyterlab_${{ matrix.extension }}_chat*
         if-no-files-found: error
 
   check_links:

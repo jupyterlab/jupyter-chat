@@ -4,9 +4,6 @@
 
 EXTENSION=$1
 
-[ "${EXTENSION}" = "websocket" ] && PACKAGE="jupyterlab-ws-chat" || PACKAGE="jupyterlab-${EXTENSION}-chat"
-
-
 # install core packages
 pip install jupyterlab~=4.0
 jlpm install
@@ -19,6 +16,7 @@ if [ -z "${EXTENSION}" ]; then
   # install websocket chat extension
   pip install -e packages/jupyterlab-ws-chat[test]
 else
+  PACKAGE="jupyterlab-${EXTENSION}-chat"
   jlpm build:${EXTENSION}
   pip install -e packages/${PACKAGE}[test]
 fi
