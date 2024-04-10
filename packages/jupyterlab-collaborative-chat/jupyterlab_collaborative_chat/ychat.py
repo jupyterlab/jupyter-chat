@@ -47,7 +47,10 @@ class YChat(YBaseDoc):
         :param value: The content of the document.
         :type value: str
         """
-        contents = json.loads(value)
+        try:
+            contents = json.loads(value)
+        except json.JSONDecodeError:
+            contents = dict()
         if "messages" in contents.keys():
             with self._ydoc.transaction():
                 for v in contents["messages"]:

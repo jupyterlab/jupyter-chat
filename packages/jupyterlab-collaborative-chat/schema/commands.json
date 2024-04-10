@@ -1,0 +1,28 @@
+{
+  "title": "Jupyter collaborative chat",
+  "description": "Configuration for the chat commands",
+  "type": "object",
+  "jupyter.lab.menus": {
+    "main": [
+      {
+        "id": "jp-mainmenu-file",
+        "items": [
+          {
+            "type": "submenu",
+            "submenu": {
+              "id": "jp-mainmenu-file-new",
+              "items": [
+                {
+                  "command": "collaborative-chat:create",
+                  "rank": 10
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "properties": {},
+  "additionalProperties": false
+}

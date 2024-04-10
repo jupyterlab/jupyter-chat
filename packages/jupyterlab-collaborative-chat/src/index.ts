@@ -10,16 +10,26 @@ import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
-import { IThemeManager, WidgetTracker } from '@jupyterlab/apputils';
+import {
+  ICommandPalette,
+  IThemeManager,
+  InputDialog,
+  WidgetTracker,
+  showErrorMessage
+} from '@jupyterlab/apputils';
+import { ILauncher } from '@jupyterlab/launcher';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { Awareness } from 'y-protocols/awareness';
 
 import { ChatWidgetFactory, CollaborativeChatModelFactory } from './factory';
-import { IChatFileType } from './token';
+import { CommandIDs, IChatFileType } from './token';
 import { CollaborativeChatWidget } from './widget';
 import { YChat } from './ychat';
+import { Contents } from '@jupyterlab/services';
+import { chatIcon } from 'chat-jupyter';
 
 const pluginIds = {
+  chatCreation: 'jupyterlab-collaborative-chat:commands',
   chatDocument: 'jupyterlab-collaborative-chat:chat-document'
 };
 
@@ -106,4 +116,156 @@ export const chatDocument: JupyterFrontEndPlugin<IChatFileType> = {
   }
 };
 
-export default chatDocument;
+/**
+ * Extension registering the chat file type.
+ */
+export const chatCreation: JupyterFrontEndPlugin<void> = {
+  id: pluginIds.chatCreation,
+  description: 'The commands to create or open a chat',
+  autoStart: true,
+  requires: [IChatFileType, ICollaborativeDrive],
+  optional: [ICommandPalette, ILauncher],
+  activate: (
+    app: JupyterFrontEnd,
+    chatFileType: IChatFileType,
+    drive: ICollaborativeDrive,
+    commandPalette: ICommandPalette | null,
+    launcher: ILauncher | null
+  ) => {
+    const { commands } = app;
+
+    /**
+     * Command to create a new chat.
+     *
+     * args:
+     *  name: the name of the chat to create.
+     */
+    commands.addCommand(CommandIDs.createChat, {
+      label: args => (args.isPalette ? 'Create a new chat' : 'Chat'),
+      caption: 'Create a chat',
+      icon: args => (args.isPalette ? undefined : chatIcon),
+      execute: async args => {
+        let name: string | null = (args.name as string) ?? null;
+        let filepath = '';
+        if (!name) {
+          name = (
+            await InputDialog.getText({
+              label: 'Name',
+              placeholder: 'untitled',
+              title: 'Name of the chat'
+            })
+          ).value;
+        }
+        // no-op if the dialog has been cancelled.
+        // Fill the filepath if the dialog has been validated with content,
+        // otherwise create a new untitled chat (empty filepath).
+        if (name === null) {
+          return;
+        } else if (name) {
+          if (name.endsWith(chatFileType.extensions[0])) {
+            filepath = name;
+          } else {
+            filepath = `${name}${chatFileType.extensions[0]}`;
+          }
+        }
+
+        let fileExist = true;
+        await drive.get(filepath, { content: false }).catch(() => {
+          fileExist = false;
+        });
+
+        // Create a new file if it does not exists
+        if (!fileExist) {
+          // Create a new untitled chat.
+          let model: Contents.IModel | null = await drive.newUntitled({
+            type: 'file',
+            ext: chatFileType.extensions[0]
+          });
+          // Rename it if a name has been provided.
+          if (filepath) {
+            model = await drive.rename(model.path, filepath);
+          }
+
+          if (!model) {
+            showErrorMessage(
+              'Error creating a chat',
+              'An error occured while creating the chat'
+            );
+            return '';
+          }
+
+          filepath = model.path;
+        }
+        return commands.execute(CommandIDs.openChat, { filepath });
+      }
+    });
+
+    /**
+     * Command to open a chat.
+     *
+     * args:
+     *  filepath - the chat file to open.
+     */
+    commands.addCommand(CommandIDs.openChat, {
+      label: 'Open a chat',
+      execute: async args => {
+        let filepath: string | null = (args.filepath as string) ?? null;
+        if (!filepath) {
+          filepath = (
+            await InputDialog.getText({
+              label: 'File path',
+              placeholder: '/path/to/the/chat/file',
+              title: 'Path of the chat'
+            })
+          ).value;
+        }
+
+        if (!filepath) {
+          return;
+        }
+
+        let fileExist = true;
+        await drive.get(filepath, { content: false }).catch(() => {
+          fileExist = false;
+        });
+
+        if (!fileExist) {
+          showErrorMessage(
+            'Error opening chat',
+            `'${filepath}' is not a valid path`
+          );
+          return;
+        }
+
+        commands.execute('docmanager:open', {
+          path: `RTC:${filepath}`,
+          factory: 'chat-factory'
+        });
+      }
+    });
+
+    // Add the commands to the palette
+    if (commandPalette) {
+      commandPalette.addItem({
+        category: 'Chat',
+        command: CommandIDs.createChat,
+        args: { isPalette: true }
+      });
+      commandPalette.addItem({
+        category: 'Chat',
+        command: CommandIDs.openChat
+      });
+    }
+
+    // Add the create command to the launcher
+    if (launcher) {
+      launcher.add({
+        command: CommandIDs.createChat,
+        category: 'Chat',
+        rank: 1
+      });
+    }
+  }
+};
+
+export default [chatDocument, chatCreation];
