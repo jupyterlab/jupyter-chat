@@ -25,6 +25,9 @@ export const CommandIDs = {
   /**
    * Create a chat file.
    */
-  createChat: 'collaborativeChat:create',
-  openChat: 'collaborativeChat:open'
+  createChat: 'collaborative-chat:create',
+  /**
+   * Open a chat file.
+   */
+  openChat: 'collaborative-chat:open'
 };

@@ -17,6 +17,7 @@ import {
   WidgetTracker,
   showErrorMessage
 } from '@jupyterlab/apputils';
+import { ILauncher } from '@jupyterlab/launcher';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { Awareness } from 'y-protocols/awareness';
 
@@ -25,9 +26,10 @@ import { CommandIDs, IChatFileType } from './token';
 import { CollaborativeChatWidget } from './widget';
 import { YChat } from './ychat';
 import { Contents } from '@jupyterlab/services';
+import { chatIcon } from 'chat-jupyter';
 
 const pluginIds = {
-  chatCreation: 'jupyterlab-collaborative-chat:creation',
+  chatCreation: 'jupyterlab-collaborative-chat:commands',
   chatDocument: 'jupyterlab-collaborative-chat:chat-document'
 };
 
@@ -122,12 +124,13 @@ export const chatCreation: JupyterFrontEndPlugin<void> = {
   description: 'The commands to create or open a chat',
   autoStart: true,
   requires: [IChatFileType, ICollaborativeDrive],
-  optional: [ICommandPalette],
+  optional: [ICommandPalette, ILauncher],
   activate: (
     app: JupyterFrontEnd,
     chatFileType: IChatFileType,
     drive: ICollaborativeDrive,
-    commandPalette: ICommandPalette
+    commandPalette: ICommandPalette | null,
+    launcher: ILauncher | null
   ) => {
     const { commands } = app;
 
@@ -138,7 +141,9 @@ export const chatCreation: JupyterFrontEndPlugin<void> = {
      *  name: the name of the chat to create.
      */
     commands.addCommand(CommandIDs.createChat, {
-      label: 'Create a chat',
+      label: args => (args.isPalette ? 'Create a new chat' : 'Chat'),
+      caption: 'Create a chat',
+      icon: args => (args.isPalette ? undefined : chatIcon),
       execute: async args => {
         let name: string | null = (args.name as string) ?? null;
         let filepath = '';
@@ -239,14 +244,25 @@ export const chatCreation: JupyterFrontEndPlugin<void> = {
       }
     });
 
+    // Add the commands to the palette
     if (commandPalette) {
       commandPalette.addItem({
         category: 'Chat',
-        command: CommandIDs.createChat
+        command: CommandIDs.createChat,
+        args: { isPalette: true }
       });
       commandPalette.addItem({
         category: 'Chat',
         command: CommandIDs.openChat
+      });
+    }
+
+    // Add the create command to the launcher
+    if (launcher) {
+      launcher.add({
+        command: CommandIDs.createChat,
+        category: 'Chat',
+        rank: 1
       });
     }
   }
