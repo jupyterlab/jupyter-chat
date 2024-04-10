@@ -17,3 +17,14 @@ export const IChatFileType = new Token<IChatFileType>(
  * Chat file type.
  */
 export type IChatFileType = DocumentRegistry.IFileType;
+
+/**
+ * Command ids.
+ */
+export const CommandIDs = {
+  /**
+   * Create a chat file.
+   */
+  createChat: 'collaborativeChat:create',
+  openChat: 'collaborativeChat:open'
+};
