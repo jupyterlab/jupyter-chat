@@ -5,17 +5,21 @@
 
 import { IJupyterLabPageFixture, expect, test } from '@jupyterlab/galata';
 
-async function fillModal(page: IJupyterLabPageFixture, text='', button: 'Ok' | 'Cancel' = 'Ok') {
+async function fillModal(
+  page: IJupyterLabPageFixture,
+  text = '',
+  button: 'Ok' | 'Cancel' = 'Ok'
+) {
   const dialog = page.getByRole('dialog');
   await dialog.getByRole('textbox').pressSequentially(text);
-  await dialog.getByRole('button').filter({ hasText: button}).click();
+  await dialog.getByRole('button').filter({ hasText: button }).click();
 }
 
 test.describe('#commandPalette', () => {
   const name = 'my-chat';
 
   test.beforeEach(async ({ page }) => {
-    await page.keyboard.press("Control+Shift+c");
+    await page.keyboard.press('Control+Shift+c');
   });
 
   test.afterEach(async ({ page }) => {
@@ -27,12 +31,16 @@ test.describe('#commandPalette', () => {
   });
 
   test('should have 2 commands in palette', async ({ page }) => {
-    await expect(page.locator(
-      '#modal-command-palette li[data-command^="collaborative-chat"]'
-    )).toHaveCount(2);
+    await expect(
+      page.locator(
+        '#modal-command-palette li[data-command^="collaborative-chat"]'
+      )
+    ).toHaveCount(2);
   });
 
-  test('should create a chat with name from command palette', async ({ page }) => {
+  test('should create a chat with name from command palette', async ({
+    page
+  }) => {
     await page
       .locator(
         '#modal-command-palette li[data-command="collaborative-chat:create"]'
@@ -45,7 +53,9 @@ test.describe('#commandPalette', () => {
     await expect(page.activity.getTabLocator(`${name}.chat`)).toBeVisible();
   });
 
-  test('should create an untitled chat from command palette', async ({ page }) => {
+  test('should create an untitled chat from command palette', async ({
+    page
+  }) => {
     await page
       .locator(
         '#modal-command-palette li[data-command="collaborative-chat:create"]'
