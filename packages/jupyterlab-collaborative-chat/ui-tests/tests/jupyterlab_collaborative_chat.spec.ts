@@ -83,3 +83,39 @@ test.describe('#commandPalette', () => {
     await expect(page.activity.getTabLocator(`${name}.chat`)).toBeVisible();
   });
 });
+
+test.describe('#menuNew', () => {
+  test('should have an entry in main menu -> new', async ({ page }) => {
+    const menu = await page.menu.open('File>New');
+    expect(await menu?.screenshot()).toMatchSnapshot('menu-new.png');
+  });
+
+  test('should open modal create from the menu', async ({ page }) => {
+    await page.menu.clickMenuItem('File>New>Chat');
+    await expect(page.locator('dialog .jp-Dialog-header')).toHaveText(
+      'Create a new chat'
+    );
+  });
+});
+
+test.describe('#launcher', () => {
+  test('should have a launcher item in section', async ({ page }) => {
+    // Chat section
+    await expect(
+      page.locator('.jp-Launcher-sectionTitle:text("Chat")')
+    ).toHaveCount(1);
+
+    // Chat tile
+    const tile = page
+      .locator('.jp-LauncherCard[data-category="Chat"]')
+      .getByTitle('Create a chat');
+    expect(await tile.screenshot()).toMatchSnapshot('launcher-tile.png');
+  });
+
+  test('should open modal create from the launcher', async ({ page }) => {
+    await page.locator('.jp-LauncherCard').getByTitle('Create a chat').click();
+    await expect(page.locator('dialog .jp-Dialog-header')).toHaveText(
+      'Create a new chat'
+    );
+  });
+});
