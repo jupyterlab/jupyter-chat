@@ -152,7 +152,7 @@ export const chatCreation: JupyterFrontEndPlugin<void> = {
             await InputDialog.getText({
               label: 'Name',
               placeholder: 'untitled',
-              title: 'Name of the chat'
+              title: 'Create a new chat'
             })
           ).value;
         }
@@ -170,9 +170,13 @@ export const chatCreation: JupyterFrontEndPlugin<void> = {
         }
 
         let fileExist = true;
-        await drive.get(filepath, { content: false }).catch(() => {
+        if (filepath) {
+          await drive.get(filepath, { content: false }).catch(() => {
+            fileExist = false;
+          });
+        } else {
           fileExist = false;
-        });
+        }
 
         // Create a new file if it does not exists
         if (!fileExist) {
@@ -193,9 +197,9 @@ export const chatCreation: JupyterFrontEndPlugin<void> = {
             );
             return '';
           }
-
           filepath = model.path;
         }
+
         return commands.execute(CommandIDs.openChat, { filepath });
       }
     });
@@ -210,7 +214,7 @@ export const chatCreation: JupyterFrontEndPlugin<void> = {
       label: 'Open a chat',
       execute: async args => {
         let filepath: string | null = (args.filepath as string) ?? null;
-        if (!filepath) {
+        if (filepath === null) {
           filepath = (
             await InputDialog.getText({
               label: 'File path',
