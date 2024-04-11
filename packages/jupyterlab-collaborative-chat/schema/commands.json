@@ -14,7 +14,7 @@
               "items": [
                 {
                   "command": "collaborative-chat:create",
-                  "rank": 10
+                  "rank": 50
                 }
               ]
             }

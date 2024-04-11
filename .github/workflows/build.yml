@@ -76,6 +76,64 @@ jobs:
         path: packages/jupyterlab-${{ matrix.extension }}-chat/dist/jupyterlab_${{ matrix.extension }}_chat*
         if-no-files-found: error
 
+  integration-tests:
+    name: ${{ matrix.extension }} integration tests
+    needs: build_extensions
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        extension: [collaborative, ws]
+
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/pw-browsers
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Base Setup
+      uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+
+    - name: Download extension package
+      uses: actions/download-artifact@v3
+      with:
+        name: jupyterlab_${{ matrix.extension }}_chat-artifacts
+
+    - name: Install the extension
+      run: |
+        set -eux
+        python -m pip install "jupyterlab>=4.0.0,<5" jupyterlab_${{ matrix.extension }}_chat*.whl
+    - name: Install dependencies
+      working-directory: packages/jupyterlab-${{ matrix.extension }}-chat/ui-tests
+      env:
+        YARN_ENABLE_IMMUTABLE_INSTALLS: 0
+        PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+      run: jlpm install
+
+    - name: Set up browser cache
+      uses: actions/cache@v3
+      with:
+        path: |
+          ${{ github.workspace }}/pw-browsers
+        key: ${{ runner.os }}-${{ hashFiles('ui-tests/yarn.lock') }}
+
+    - name: Install browser
+      run: jlpm playwright install chromium
+      working-directory: packages/jupyterlab-${{ matrix.extension }}-chat/ui-tests
+
+    - name: Execute integration tests
+      working-directory: packages/jupyterlab-${{ matrix.extension }}-chat/ui-tests
+      run: |
+        jlpm playwright test
+    - name: Upload Playwright Test report
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: jupyterlab_${{ matrix.extension }}_chat-playwright-tests
+        path: |
+          packages/jupyterlab-${{ matrix.extension }}-chat/ui-tests/test-results
+          packages/jupyterlab-${{ matrix.extension }}-chat/ui-tests/playwright-report
+
   check_links:
     name: Check Links
     runs-on: ubuntu-latest

@@ -8,6 +8,7 @@ node_modules/
 .ipynb_checkpoints
 *.tsbuildinfo
 jupyter_chat/labextension
+.jupyter_ystore.db
 # Version file is handled by hatchling
 jupyter_chat/_version.py
 
