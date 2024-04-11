@@ -688,9 +688,7 @@ test.describe('#chatPanel', () => {
     test('should contain the chat panel icon', async ({ page }) => {
       const chatIcon = page.getByTitle('Jupyter Chat');
       expect(chatIcon).toHaveCount(1);
-      expect(await chatIcon.screenshot()).toMatchSnapshot(
-        'chat_icon.png'
-      );
+      expect(await chatIcon.screenshot()).toMatchSnapshot('chat_icon.png');
     });
 
     test('chat panel should contain a toolbar', async ({ page }) => {
@@ -709,7 +707,7 @@ test.describe('#chatPanel', () => {
       const content = panel.locator('.jp-SidePanel-content');
       await expect(content).toBeEmpty();
     });
-  })
+  });
 
   test.describe('#chatCreation', () => {
     const name = 'my-chat';
@@ -727,7 +725,7 @@ test.describe('#chatPanel', () => {
       await dialog.waitFor();
     });
 
-    test.afterEach(async ({ page })=> {
+    test.afterEach(async ({ page }) => {
       for (let filename of ['untitled.chat', `${name}.chat`]) {
         if (await page.filebrowser.contents.fileExists(filename)) {
           await page.filebrowser.contents.deleteFile(filename);
@@ -742,33 +740,41 @@ test.describe('#chatPanel', () => {
         async () => await page.filebrowser.contents.fileExists(`${name}.chat`)
       );
 
-      const chatTitle = panel.locator('.jp-SidePanel-content .jp-AccordionPanel-title');
-      await expect(chatTitle).toHaveCount(1);
-      await expect(chatTitle.locator('.lm-AccordionPanel-titleLabel')).toHaveText(
-        name
+      const chatTitle = panel.locator(
+        '.jp-SidePanel-content .jp-AccordionPanel-title'
       );
+      await expect(chatTitle).toHaveCount(1);
+      await expect(
+        chatTitle.locator('.lm-AccordionPanel-titleLabel')
+      ).toHaveText(name);
     });
 
-    test('should create an untitled file if no name is provided', async ({ page }) => {
+    test('should create an untitled file if no name is provided', async ({
+      page
+    }) => {
       await dialog.getByRole('button').getByText('Ok').click();
       await page.waitForCondition(
         async () => await page.filebrowser.contents.fileExists('untitled.chat')
       );
 
-      const chatTitle = panel.locator('.jp-SidePanel-content .jp-AccordionPanel-title');
-      await expect(chatTitle).toHaveCount(1);
-      await expect(chatTitle.locator('.lm-AccordionPanel-titleLabel')).toHaveText(
-        'untitled'
+      const chatTitle = panel.locator(
+        '.jp-SidePanel-content .jp-AccordionPanel-title'
       );
+      await expect(chatTitle).toHaveCount(1);
+      await expect(
+        chatTitle.locator('.lm-AccordionPanel-titleLabel')
+      ).toHaveText('untitled');
     });
 
-    test('should not create a chat if dialog is cancelled', async ({ page }) => {
+    test('should not create a chat if dialog is cancelled', async ({
+      page
+    }) => {
       await dialog.getByRole('button').getByText('Cancel').click();
 
       const content = panel.locator('.jp-SidePanel-content');
       await expect(content).toBeEmpty();
     });
-  })
+  });
 
   test.describe('#openingClosing', () => {
     const name = 'my-chat';
@@ -776,11 +782,15 @@ test.describe('#chatPanel', () => {
     let select: Locator;
 
     test.beforeEach(async ({ page }) => {
-      await page.filebrowser.contents.uploadContent('{}', 'text', `${name}.chat`);
+      await page.filebrowser.contents.uploadContent(
+        '{}',
+        'text',
+        `${name}.chat`
+      );
     });
 
     test.afterEach(async ({ page }) => {
-      await page.filebrowser.contents.deleteFile( `${name}.chat`);
+      await page.filebrowser.contents.deleteFile(`${name}.chat`);
     });
 
     test('should list existing chat', async ({ page }) => {
@@ -792,7 +802,7 @@ test.describe('#chatPanel', () => {
         '.jp-SidePanel-toolbar .jp-Toolbar-item.jp-collab-chat-open select'
       );
 
-      for (let i=0; i< await select.locator('option').count(); i++) {
+      for (let i = 0; i < (await select.locator('option').count()); i++) {
         console.log(await select.locator('option').nth(i).textContent());
       }
       await expect(select.locator('option')).toHaveCount(2);
@@ -810,11 +820,13 @@ test.describe('#chatPanel', () => {
 
       await select.selectOption(name);
 
-      const chatTitle = panel.locator('.jp-SidePanel-content .jp-AccordionPanel-title');
-      await expect(chatTitle).toHaveCount(1);
-      await expect(chatTitle.locator('.lm-AccordionPanel-titleLabel')).toHaveText(
-        name
+      const chatTitle = panel.locator(
+        '.jp-SidePanel-content .jp-AccordionPanel-title'
       );
+      await expect(chatTitle).toHaveCount(1);
+      await expect(
+        chatTitle.locator('.lm-AccordionPanel-titleLabel')
+      ).toHaveText(name);
 
       await chatTitle.getByRole('button').click();
       await expect(chatTitle).toHaveCount(0);
