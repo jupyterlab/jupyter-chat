@@ -3,16 +3,38 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { ChatWidget, IChatModel } from 'chat-jupyter';
+import { ChatWidget, IChatModel, IConfig } from 'chat-jupyter';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { ABCWidgetFactory, DocumentRegistry } from '@jupyterlab/docregistry';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { Contents } from '@jupyterlab/services';
+import { Signal } from '@lumino/signaling';
 import { Awareness } from 'y-protocols/awareness';
 
 import { CollaborativeChatModel } from './model';
 import { CollaborativeChatWidget } from './widget';
 import { YChat } from './ychat';
+import { IWidgetConfig } from './token';
+
+/**
+ * The object provided by the chatDocument extension.
+ * It is used to set the current config (from settings) to newly created chat widget,
+ * and to propagate every changes to the existing chat widgets.
+ */
+export class WidgetConfig implements IWidgetConfig {
+  /**
+   * The constructor of the ChatDocument.
+   */
+  constructor(config: Partial<IConfig>) {
+    this.config = config;
+    this.configChanged.connect((_, config) => {
+      this.config = { ...this.config, ...config };
+    });
+  }
+
+  config: Partial<IConfig>;
+  configChanged = new Signal<this, Partial<IConfig>>(this);
+}
 
 /**
  * A widget factory to create new instances of CollaborativeChatWidget.
@@ -73,6 +95,7 @@ export class CollaborativeChatModelFactory
 {
   constructor(options: CollaborativeChatModel.IOptions) {
     this._awareness = options.awareness;
+    this._widgetConfig = options.widgetConfig;
   }
 
   collaborative = true;
@@ -143,10 +166,12 @@ export class CollaborativeChatModelFactory
   ): CollaborativeChatModel {
     return new CollaborativeChatModel({
       ...options,
-      awareness: this._awareness
+      awareness: this._awareness,
+      widgetConfig: this._widgetConfig
     });
   }
 
   private _disposed = false;
   private _awareness: Awareness;
+  private _widgetConfig: IWidgetConfig;
 }

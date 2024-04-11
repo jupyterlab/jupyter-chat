@@ -1,6 +1,6 @@
 {
-  "title": "Jupyter chat configuration",
-  "description": "Configuration for the chat panel",
+  "title": "Chat configuration",
+  "description": "Configuration for the chat widgets",
   "type": "object",
   "properties": {
     "sendWithShiftEnter": {
