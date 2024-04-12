@@ -3,7 +3,12 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { IJupyterLabPageFixture, expect, galata, test } from '@jupyterlab/galata';
+import {
+  IJupyterLabPageFixture,
+  expect,
+  galata,
+  test
+} from '@jupyterlab/galata';
 import { Locator } from '@playwright/test';
 
 const fillModal = async (
@@ -14,24 +19,32 @@ const fillModal = async (
   const dialog = page.getByRole('dialog');
   await dialog.getByRole('textbox').pressSequentially(text);
   await dialog.getByRole('button').filter({ hasText: button }).click();
-}
+};
 
-const openChat = async (page: IJupyterLabPageFixture, filename: string): Promise<Locator> => {
+const openChat = async (
+  page: IJupyterLabPageFixture,
+  filename: string
+): Promise<Locator> => {
   await page.evaluate(async filepath => {
-    await window.jupyterapp.commands.execute('collaborative-chat:open', { filepath });
+    await window.jupyterapp.commands.execute('collaborative-chat:open', {
+      filepath
+    });
   }, filename);
   await page.waitForCondition(() => page.activity.isTabActive(filename));
-  return await page.activity.getPanelLocator(filename) as Locator;
-}
+  return (await page.activity.getPanelLocator(filename)) as Locator;
+};
 
-const openSettings = async (page: IJupyterLabPageFixture, globalSettings?: boolean): Promise<Locator> => {
+const openSettings = async (
+  page: IJupyterLabPageFixture,
+  globalSettings?: boolean
+): Promise<Locator> => {
   await page.evaluate(async globalSettings => {
     const args = globalSettings ? {} : { query: 'Chat' };
     await window.jupyterapp.commands.execute('settingeditor:open', args);
   }, globalSettings);
   await page.waitForCondition(() => page.activity.isTabActive('Settings'));
-  return await page.activity.getPanelLocator('Settings') as Locator;
-}
+  return (await page.activity.getPanelLocator('Settings')) as Locator;
+};
 
 test.describe('#commandPalette', () => {
   const name = 'my-chat';
@@ -152,7 +165,7 @@ test.describe('#messages', () => {
   const filename = 'my-chat.chat';
   const msg = 'Hello world!';
 
-  test.use({ mockSettings: { ...galata.DEFAULT_SETTINGS }});
+  test.use({ mockSettings: { ...galata.DEFAULT_SETTINGS } });
 
   test.beforeEach(async ({ page }) => {
     // Create a chat file
@@ -167,35 +180,49 @@ test.describe('#messages', () => {
 
   test('should send a message using button', async ({ page }) => {
     const chatPanel = await openChat(page, filename);
-    const input = chatPanel.locator('.jp-chat_input-container').getByRole('textbox');
-    const sendButton = chatPanel.locator('.jp-chat_input-container').getByRole('button');
+    const input = chatPanel
+      .locator('.jp-chat_input-container')
+      .getByRole('textbox');
+    const sendButton = chatPanel
+      .locator('.jp-chat_input-container')
+      .getByRole('button');
     await input.pressSequentially(msg);
     await sendButton.click();
 
     const messages = chatPanel.locator('.jp-chat_messages-container');
     await expect(messages.locator('.jp-chat_message')).toHaveCount(1);
     // It seems that the markdown renderer adds a new line.
-    expect(await messages.locator('.jp-chat_message .jp-chat-rendermime-markdown').textContent()).toBe(msg + '\n');
+    expect(
+      await messages
+        .locator('.jp-chat_message .jp-chat-rendermime-markdown')
+        .textContent()
+    ).toBe(msg + '\n');
   });
 
   test('should send a message using keyboard', async ({ page }) => {
     const chatPanel = await openChat(page, filename);
-    const input = chatPanel.locator('.jp-chat_input-container').getByRole('textbox');
+    const input = chatPanel
+      .locator('.jp-chat_input-container')
+      .getByRole('textbox');
     await input.pressSequentially(msg);
     await input.press('Enter');
 
     const messages = chatPanel.locator('.jp-chat_messages-container');
     await expect(messages.locator('.jp-chat_message')).toHaveCount(1);
     // It seems that the markdown renderer adds a new line.
-    expect(await messages.locator('.jp-chat_message .jp-chat-rendermime-markdown').textContent()).toBe(msg + '\n');
-  })
+    expect(
+      await messages
+        .locator('.jp-chat_message .jp-chat-rendermime-markdown')
+        .textContent()
+    ).toBe(msg + '\n');
+  });
 });
 
 test.describe('#settings', () => {
   const filename = 'my-chat.chat';
   const msg = 'Hello world!';
 
-  test.use({ mockSettings: { ...galata.DEFAULT_SETTINGS }});
+  test.use({ mockSettings: { ...galata.DEFAULT_SETTINGS } });
 
   test.beforeEach(async ({ page }) => {
     // Create a chat file
@@ -210,25 +237,35 @@ test.describe('#settings', () => {
 
   test('should have chat settings', async ({ page }) => {
     const settings = await openSettings(page, true);
-    await expect(settings.locator('.jp-PluginList-entry[data-id="jupyterlab-collaborative-chat:chat-document"]')).toBeVisible();
+    await expect(
+      settings.locator(
+        '.jp-PluginList-entry[data-id="jupyterlab-collaborative-chat:chat-document"]'
+      )
+    ).toBeVisible();
   });
 
   test('should have default settings values', async ({ page }) => {
     const settings = await openSettings(page);
-    const sendWithShiftEnter = settings?.getByRole('checkbox', { name: 'sendWithShiftEnter' });
+    const sendWithShiftEnter = settings?.getByRole('checkbox', {
+      name: 'sendWithShiftEnter'
+    });
     expect(sendWithShiftEnter!).not.toBeChecked();
   });
 
   test('should use settings value sendWithShiftEnter', async ({ page }) => {
     // Modify the settings
     const settings = await openSettings(page);
-    const sendWithShiftEnter = settings?.getByRole('checkbox', { name: 'sendWithShiftEnter' });
+    const sendWithShiftEnter = settings?.getByRole('checkbox', {
+      name: 'sendWithShiftEnter'
+    });
     await sendWithShiftEnter?.check();
 
     // Should not send message with Enter
     const chatPanel = await openChat(page, filename);
     const messages = chatPanel.locator('.jp-chat_messages-container');
-    const input = chatPanel.locator('.jp-chat_input-container').getByRole('textbox');
+    const input = chatPanel
+      .locator('.jp-chat_input-container')
+      .getByRole('textbox');
     await input!.pressSequentially(msg);
     await input!.press('Enter');
 
@@ -240,27 +277,43 @@ test.describe('#settings', () => {
 
     // It seems that the markdown renderer adds a new line, but the '\n' inserter when
     // pressing Enter above is trimmed.
-    expect(await messages.locator('.jp-chat_message .jp-chat-rendermime-markdown').textContent()).toBe(msg + '\n');
+    expect(
+      await messages
+        .locator('.jp-chat_message .jp-chat-rendermime-markdown')
+        .textContent()
+    ).toBe(msg + '\n');
   });
 
-  test('should update settings value sendWithShiftEnter on existing chat', async ({ page }) => {
+  test('should update settings value sendWithShiftEnter on existing chat', async ({
+    page
+  }) => {
     const chatPanel = await openChat(page, filename);
 
     // Modify the settings
     const settings = await openSettings(page);
-    const sendWithShiftEnter = settings?.getByRole('checkbox', { name: 'sendWithShiftEnter' });
+    const sendWithShiftEnter = settings?.getByRole('checkbox', {
+      name: 'sendWithShiftEnter'
+    });
     await sendWithShiftEnter?.check();
 
     // wait for the settings to be saved
-    await expect(page.activity.getTabLocator('Settings')).toHaveAttribute('class', /jp-mod-dirty/);
-    await expect(page.activity.getTabLocator('Settings')).not.toHaveAttribute('class', /jp-mod-dirty/);
+    await expect(page.activity.getTabLocator('Settings')).toHaveAttribute(
+      'class',
+      /jp-mod-dirty/
+    );
+    await expect(page.activity.getTabLocator('Settings')).not.toHaveAttribute(
+      'class',
+      /jp-mod-dirty/
+    );
 
     // Activate the chat panel
     await page.activity.activateTab(filename);
 
     // Should not send message with Enter
     const messages = chatPanel.locator('.jp-chat_messages-container');
-    const input = chatPanel.locator('.jp-chat_input-container').getByRole('textbox');
+    const input = chatPanel
+      .locator('.jp-chat_input-container')
+      .getByRole('textbox');
     await input!.pressSequentially(msg);
     await input!.press('Enter');
 
@@ -272,6 +325,10 @@ test.describe('#settings', () => {
 
     // It seems that the markdown renderer adds a new line, but the '\n' inserted when
     // pressing Enter above is trimmed.
-    expect(await messages.locator('.jp-chat_message .jp-chat-rendermime-markdown').textContent()).toBe(msg + '\n');
+    expect(
+      await messages
+        .locator('.jp-chat_message .jp-chat-rendermime-markdown')
+        .textContent()
+    ).toBe(msg + '\n');
   });
 });
