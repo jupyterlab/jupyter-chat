@@ -38,10 +38,10 @@ const openSettings = async (
   page: IJupyterLabPageFixture,
   globalSettings?: boolean
 ): Promise<Locator> => {
-  await page.evaluate(async globalSettings => {
-    const args = globalSettings ? {} : { query: 'Chat' };
+  const args = globalSettings ? {} : { query: 'Chat' };
+  await page.evaluate(async args => {
     await window.jupyterapp.commands.execute('settingeditor:open', args);
-  }, globalSettings);
+  }, args);
   await page.waitForCondition(() => page.activity.isTabActive('Settings'));
   return (await page.activity.getPanelLocator('Settings')) as Locator;
 };
@@ -192,11 +192,9 @@ test.describe('#messages', () => {
     const messages = chatPanel.locator('.jp-chat_messages-container');
     await expect(messages.locator('.jp-chat_message')).toHaveCount(1);
     // It seems that the markdown renderer adds a new line.
-    expect(
-      await messages
-        .locator('.jp-chat_message .jp-chat-rendermime-markdown')
-        .textContent()
-    ).toBe(msg + '\n');
+    await expect(
+      messages.locator('.jp-chat_message .jp-chat-rendermime-markdown')
+    ).toHaveText(msg + '\n');
   });
 
   test('should send a message using keyboard', async ({ page }) => {
@@ -210,11 +208,9 @@ test.describe('#messages', () => {
     const messages = chatPanel.locator('.jp-chat_messages-container');
     await expect(messages.locator('.jp-chat_message')).toHaveCount(1);
     // It seems that the markdown renderer adds a new line.
-    expect(
-      await messages
-        .locator('.jp-chat_message .jp-chat-rendermime-markdown')
-        .textContent()
-    ).toBe(msg + '\n');
+    await expect(
+      messages.locator('.jp-chat_message .jp-chat-rendermime-markdown')
+    ).toHaveText(msg + '\n');
   });
 });
 
@@ -260,6 +256,16 @@ test.describe('#settings', () => {
     });
     await sendWithShiftEnter?.check();
 
+    // wait for the settings to be saved
+    await expect(page.activity.getTabLocator('Settings')).toHaveAttribute(
+      'class',
+      /jp-mod-dirty/
+    );
+    await expect(page.activity.getTabLocator('Settings')).not.toHaveAttribute(
+      'class',
+      /jp-mod-dirty/
+    );
+
     // Should not send message with Enter
     const chatPanel = await openChat(page, filename);
     const messages = chatPanel.locator('.jp-chat_messages-container');
@@ -277,11 +283,9 @@ test.describe('#settings', () => {
 
     // It seems that the markdown renderer adds a new line, but the '\n' inserter when
     // pressing Enter above is trimmed.
-    expect(
-      await messages
-        .locator('.jp-chat_message .jp-chat-rendermime-markdown')
-        .textContent()
-    ).toBe(msg + '\n');
+    await expect(
+      messages.locator('.jp-chat_message .jp-chat-rendermime-markdown')
+    ).toHaveText(msg + '\n');
   });
 
   test('should update settings value sendWithShiftEnter on existing chat', async ({
