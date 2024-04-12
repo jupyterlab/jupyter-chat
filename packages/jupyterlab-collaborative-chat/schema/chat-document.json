@@ -1,5 +1,5 @@
 {
-  "title": "Chat configuration",
+  "title": "Chat",
   "description": "Configuration for the chat widgets",
   "type": "object",
   "properties": {
