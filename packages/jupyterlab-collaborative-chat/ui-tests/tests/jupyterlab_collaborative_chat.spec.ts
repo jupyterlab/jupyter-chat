@@ -30,7 +30,9 @@ const openChat = async (
       filepath
     });
   }, filename);
-  await page.waitForCondition(async () => await page.activity.isTabActive(filename));
+  await page.waitForCondition(
+    async () => await page.activity.isTabActive(filename)
+  );
   return (await page.activity.getPanelLocator(filename)) as Locator;
 };
 
@@ -42,7 +44,9 @@ const openSettings = async (
   await page.evaluate(async args => {
     await window.jupyterapp.commands.execute('settingeditor:open', args);
   }, args);
-  await page.waitForCondition(async () => await page.activity.isTabActive('Settings'));
+  await page.waitForCondition(
+    async () => await page.activity.isTabActive('Settings')
+  );
   return (await page.activity.getPanelLocator('Settings')) as Locator;
 };
 
