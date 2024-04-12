@@ -44,9 +44,7 @@ const openSettings = async (
   await page.evaluate(async args => {
     await window.jupyterapp.commands.execute('settingeditor:open', args);
   }, args);
-  await page.waitForCondition(
-    async () => await page.activity.isTabActive('Settings')
-  );
+  await page.activity.activateTab('Settings');
   return (await page.activity.getPanelLocator('Settings')) as Locator;
 };
 
