@@ -14,6 +14,10 @@ import {
   InputAdornment
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
+import clsx from 'clsx';
+
+const INPUT_BOX_CLASS = 'jp-chat_input-container';
+const SEND_BUTTON_CLASS = 'jp-chat_send-button';
 
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
   function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
@@ -40,7 +44,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   );
 
   return (
-    <Box sx={props.sx}>
+    <Box sx={props.sx} className={clsx(INPUT_BOX_CLASS)}>
       <Box sx={{ display: 'flex' }}>
         <TextField
           value={props.value}
@@ -58,7 +62,8 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
                   color="primary"
                   onClick={props.onSend}
                   disabled={!props.value.trim().length}
-                  title="Send message (SHIFT+ENTER)"
+                  title={`Send message ${props.sendWithShiftEnter ? '(SHIFT+ENTER)' : '(ENTER)'}`}
+                  className={clsx(SEND_BUTTON_CLASS)}
                 >
                   <SendIcon />
                 </IconButton>

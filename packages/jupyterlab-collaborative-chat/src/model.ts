@@ -9,6 +9,8 @@ import { IChangedArgs } from '@jupyterlab/coreutils';
 import { PartialJSONObject, UUID } from '@lumino/coreutils';
 import { ISignal, Signal } from '@lumino/signaling';
 import { Awareness } from 'y-protocols/awareness';
+
+import { IWidgetConfig } from './token';
 import { ChatChange, YChat } from './ychat';
 
 /**
@@ -17,6 +19,7 @@ import { ChatChange, YChat } from './ychat';
 export namespace CollaborativeChatModel {
   export interface IOptions extends ChatModel.IOptions {
     awareness: Awareness;
+    widgetConfig: IWidgetConfig;
     sharedModel?: YChat;
     languagePreference?: string;
   }
@@ -33,7 +36,7 @@ export class CollaborativeChatModel
     super(options);
 
     this._awareness = options.awareness;
-    const { sharedModel } = options;
+    const { widgetConfig, sharedModel } = options;
 
     if (sharedModel) {
       this._sharedModel = sharedModel;
@@ -43,7 +46,13 @@ export class CollaborativeChatModel
 
     this.sharedModel.changed.connect(this._onchange, this);
 
+    this.config = widgetConfig.config;
+
     this._user = this._awareness.states.get(this._awareness.clientID)?.user;
+
+    widgetConfig.configChanged.connect((_, config) => {
+      this.config = config;
+    });
   }
 
   readonly collaborative = true;

@@ -4,19 +4,46 @@
  */
 
 import { Token } from '@lumino/coreutils';
+import { ISignal } from '@lumino/signaling';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
+import { IConfig } from 'chat-jupyter';
+
+export const chatFileType: DocumentRegistry.IFileType = {
+  name: 'chat',
+  displayName: 'Chat',
+  mimeTypes: ['text/json', 'application/json'],
+  extensions: ['.chat'],
+  fileFormat: 'text',
+  contentType: 'chat'
+};
 
 /**
- * The token for the chat file type.
+ * The token for the chat widget config
  */
-export const IChatFileType = new Token<IChatFileType>(
-  '@jupyter/collaboration:IChatFileType'
+export const IWidgetConfig = new Token<IWidgetConfig>(
+  '@jupyter/collaboration:IChatDocument'
 );
 
 /**
- * Chat file type.
+ * Chat widget config
  */
-export type IChatFileType = DocumentRegistry.IFileType;
+export interface IWidgetConfig {
+  /**
+   * The widget config
+   */
+  config: Partial<IConfig>;
+
+  /**
+   * A signal emitting when the configuration for the chats has changed.
+   */
+  configChanged: IConfigChanged;
+}
+
+/**
+ * A signal emitting when the configuration for the chats has changed.
+ */
+export interface IConfigChanged
+  extends ISignal<IWidgetConfig, Partial<IConfig>> {}
 
 /**
  * Command ids.

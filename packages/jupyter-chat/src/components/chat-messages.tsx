@@ -6,10 +6,14 @@
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { Avatar, Box, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
+import clsx from 'clsx';
 import React, { useState, useEffect } from 'react';
 
 import { RendermimeMarkdown } from './rendermime-markdown';
 import { IChatMessage, IUser } from '../types';
+
+const MESSAGES_BOX_CLASS = 'jp-chat_messages-container';
+const MESSAGE_CLASS = 'jp-chat_message';
 
 type ChatMessagesProps = {
   rmRegistry: IRenderMimeRegistry;
@@ -129,10 +133,11 @@ export function ChatMessages(props: ChatMessagesProps): JSX.Element {
           borderBottom: '1px solid var(--jp-border-color2)'
         }
       }}
+      className={clsx(MESSAGES_BOX_CLASS)}
     >
       {props.messages.map((message, i) => (
         // extra div needed to ensure each bubble is on a new line
-        <Box key={i} sx={{ padding: 4 }}>
+        <Box key={i} sx={{ padding: 4 }} className={clsx(MESSAGE_CLASS)}>
           <ChatMessageHeader
             {...message.sender}
             timestamp={timestamps[message.id]}

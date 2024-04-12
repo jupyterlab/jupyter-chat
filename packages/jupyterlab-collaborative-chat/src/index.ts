@@ -19,52 +19,89 @@ import {
 } from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
+import { Contents } from '@jupyterlab/services';
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { chatIcon } from 'chat-jupyter';
 import { Awareness } from 'y-protocols/awareness';
 
-import { ChatWidgetFactory, CollaborativeChatModelFactory } from './factory';
-import { CommandIDs, IChatFileType } from './token';
+import {
+  WidgetConfig,
+  ChatWidgetFactory,
+  CollaborativeChatModelFactory
+} from './factory';
+import { chatFileType, CommandIDs, IWidgetConfig } from './token';
 import { CollaborativeChatWidget } from './widget';
 import { YChat } from './ychat';
-import { Contents } from '@jupyterlab/services';
-import { chatIcon } from 'chat-jupyter';
 
 const pluginIds = {
-  chatCreation: 'jupyterlab-collaborative-chat:commands',
+  chatCommands: 'jupyterlab-collaborative-chat:commands',
   chatDocument: 'jupyterlab-collaborative-chat:chat-document'
 };
 
 /**
  * Extension registering the chat file type.
  */
-export const chatDocument: JupyterFrontEndPlugin<IChatFileType> = {
+export const chatDocument: JupyterFrontEndPlugin<IWidgetConfig> = {
   id: pluginIds.chatDocument,
   description: 'A document registration for collaborative chat',
   autoStart: true,
   requires: [IGlobalAwareness, IRenderMimeRegistry],
-  optional: [ICollaborativeDrive, ILayoutRestorer, IThemeManager],
-  provides: IChatFileType,
+  optional: [
+    ICollaborativeDrive,
+    ILayoutRestorer,
+    ISettingRegistry,
+    IThemeManager
+  ],
+  provides: IWidgetConfig,
   activate: (
     app: JupyterFrontEnd,
     awareness: Awareness,
     rmRegistry: IRenderMimeRegistry,
     drive: ICollaborativeDrive | null,
     restorer: ILayoutRestorer | null,
+    settingRegistry: ISettingRegistry | null,
     themeManager: IThemeManager | null
-  ): IChatFileType => {
+  ): IWidgetConfig => {
+    /**
+     * Load the settings for the chat widgets.
+     */
+    let sendWithShiftEnter = false;
+
+    /**
+     * The ChatDocument object.
+     */
+    const widgetConfig = new WidgetConfig({ sendWithShiftEnter });
+
+    function loadSetting(setting: ISettingRegistry.ISettings): void {
+      // Read the settings and convert to the correct type
+      sendWithShiftEnter = setting.get('sendWithShiftEnter')
+        .composite as boolean;
+      widgetConfig.configChanged.emit({ sendWithShiftEnter });
+    }
+
+    if (settingRegistry) {
+      // Wait for the application to be restored and
+      // for the settings to be loaded
+      Promise.all([app.restored, settingRegistry.load(pluginIds.chatDocument)])
+        .then(([, setting]) => {
+          // Read the settings
+          loadSetting(setting);
+
+          // Listen for the plugin setting changes
+          setting.changed.connect(loadSetting);
+        })
+        .catch(reason => {
+          console.error(
+            `Something went wrong when reading the settings.\n${reason}`
+          );
+        });
+    }
+
     // Namespace for the tracker
     const namespace = 'chat';
 
     // Creating the tracker for the document
     const tracker = new WidgetTracker<CollaborativeChatWidget>({ namespace });
-
-    const chatFileType: IChatFileType = {
-      name: 'chat',
-      displayName: 'Chat',
-      mimeTypes: ['text/json', 'application/json'],
-      extensions: ['.chat'],
-      fileFormat: 'text',
-      contentType: 'chat'
-    };
 
     app.docRegistry.addFileType(chatFileType);
 
@@ -76,7 +113,10 @@ export const chatDocument: JupyterFrontEndPlugin<IChatFileType> = {
     }
 
     // Creating and registering the model factory for our custom DocumentModel
-    const modelFactory = new CollaborativeChatModelFactory({ awareness });
+    const modelFactory = new CollaborativeChatModelFactory({
+      awareness,
+      widgetConfig
+    });
     app.docRegistry.addModelFactory(modelFactory);
 
     // Creating the widget factory to register it so the document manager knows about
@@ -112,22 +152,21 @@ export const chatDocument: JupyterFrontEndPlugin<IChatFileType> = {
       });
     }
 
-    return chatFileType;
+    return widgetConfig;
   }
 };
 
 /**
  * Extension registering the chat file type.
  */
-export const chatCreation: JupyterFrontEndPlugin<void> = {
-  id: pluginIds.chatCreation,
+export const chatCommands: JupyterFrontEndPlugin<void> = {
+  id: pluginIds.chatCommands,
   description: 'The commands to create or open a chat',
   autoStart: true,
-  requires: [IChatFileType, ICollaborativeDrive],
+  requires: [ICollaborativeDrive],
   optional: [ICommandPalette, ILauncher],
   activate: (
     app: JupyterFrontEnd,
-    chatFileType: IChatFileType,
     drive: ICollaborativeDrive,
     commandPalette: ICommandPalette | null,
     launcher: ILauncher | null
@@ -272,4 +311,4 @@ export const chatCreation: JupyterFrontEndPlugin<void> = {
   }
 };
 
-export default [chatDocument, chatCreation];
+export default [chatDocument, chatCommands];
