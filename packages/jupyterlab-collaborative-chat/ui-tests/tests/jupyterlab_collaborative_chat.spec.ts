@@ -3,16 +3,25 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { IJupyterLabPageFixture, expect, test } from '@jupyterlab/galata';
+import { IJupyterLabPageFixture, expect, galata, test } from '@jupyterlab/galata';
+import { Locator } from '@playwright/test';
 
-async function fillModal(
+const fillModal = async (
   page: IJupyterLabPageFixture,
   text = '',
   button: 'Ok' | 'Cancel' = 'Ok'
-) {
+) => {
   const dialog = page.getByRole('dialog');
   await dialog.getByRole('textbox').pressSequentially(text);
   await dialog.getByRole('button').filter({ hasText: button }).click();
+}
+
+const openChat = async (page: IJupyterLabPageFixture, filename: string): Promise<Locator> => {
+  await page.evaluate(async filepath => {
+    await window.jupyterapp.commands.execute('collaborative-chat:open', { filepath });
+  }, filename);
+  await page.waitForCondition(() => page.activity.isTabActive(filename));
+  return await page.activity.getPanelLocator(filename) as Locator;
 }
 
 test.describe('#commandPalette', () => {
@@ -128,4 +137,47 @@ test.describe('#launcher', () => {
       'Create a new chat'
     );
   });
+});
+
+test.describe('#messages', () => {
+  const filename = 'my-chat.chat';
+  const msg = 'Hello world!';
+
+  test.use({ mockSettings: { ...galata.DEFAULT_SETTINGS }});
+
+  test.beforeEach(async ({ page }) => {
+    // Create a chat file
+    await page.filebrowser.contents.uploadContent('{}', 'text', filename);
+  });
+
+  test.afterEach(async ({ page }) => {
+    if (await page.filebrowser.contents.fileExists(filename)) {
+      await page.filebrowser.contents.deleteFile(filename);
+    }
+  });
+
+  test('should send a message using button', async ({ page }) => {
+    const chatPanel = await openChat(page, filename);
+    const input = chatPanel.locator('.jp-chat_input-container').getByRole('textbox');
+    const sendButton = chatPanel.locator('.jp-chat_input-container').getByRole('button');
+    await input.pressSequentially(msg);
+    await sendButton.click();
+
+    const messages = chatPanel.locator('.jp-chat_messages-container');
+    await expect(messages.locator('.jp-chat_message')).toHaveCount(1);
+    // It seems that the markdown renderer adds a new line.
+    expect(await messages.locator('.jp-chat_message .jp-chat-rendermime-markdown').textContent()).toBe(msg + '\n');
+  });
+
+  test('should send a message using keyboard', async ({ page }) => {
+    const chatPanel = await openChat(page, filename);
+    const input = chatPanel.locator('.jp-chat_input-container').getByRole('textbox');
+    await input.pressSequentially(msg);
+    await input.press('Enter');
+
+    const messages = chatPanel.locator('.jp-chat_messages-container');
+    await expect(messages.locator('.jp-chat_message')).toHaveCount(1);
+    // It seems that the markdown renderer adds a new line.
+    expect(await messages.locator('.jp-chat_message .jp-chat-rendermime-markdown').textContent()).toBe(msg + '\n');
+  })
 });
