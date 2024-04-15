@@ -429,7 +429,18 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
       restorer.add(chatPanel, 'jupyter-chat');
     }
 
-    console.log('Collaborative chat initialized');
+    // Use events system to watch changes on files.
+    const schemaID =
+      'https://events.jupyter.org/jupyter_server/contents_service/v1';
+    const actions = ['create', 'delete', 'rename'];
+    app.serviceManager.events.stream.connect((_, emission) => {
+      if (emission.schema_id === schemaID) {
+        const action = emission.action as string;
+        if (actions.includes(action)) {
+          chatPanel.updateChatNames();
+        }
+      }
+    });
 
     return chatPanel;
   }

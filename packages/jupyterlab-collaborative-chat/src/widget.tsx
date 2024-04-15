@@ -21,10 +21,11 @@ import {
 } from '@jupyterlab/ui-components';
 import { CommandRegistry } from '@lumino/commands';
 import { AccordionPanel, Panel } from '@lumino/widgets';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import { CollaborativeChatModel } from './model';
 import { CommandIDs } from './token';
+import { ISignal, Signal } from '@lumino/signaling';
 
 const MAIN_PANEL_CLASS = 'jp-collab-chat_main-panel';
 const SIDEPANEL_CLASS = 'jp-collab-chat-sidepanel';
@@ -74,6 +75,7 @@ export class ChatPanel extends SidePanel {
     super(options);
     this.addClass(SIDEPANEL_CLASS);
     this._commands = options.commands;
+    this._drive = options.drive;
     this._rmRegistry = options.rmRegistry;
     this._themeManager = options.themeManager;
 
@@ -86,13 +88,14 @@ export class ChatPanel extends SidePanel {
     addChat.addClass(ADD_BUTTON_CLASS);
     this.toolbar.addItem('createChat', addChat);
 
-    const { drive } = options;
     const openChat = ReactWidget.create(
       <ChatSelect
-        drive={drive}
+        chatNamesChanged={this._chatNamesChanged}
         handleChange={this._chatSelected.bind(this)}
       ></ChatSelect>
     );
+    this.updateChatNames();
+
     openChat.addClass(OPEN_SELECT_CLASS);
     this.toolbar.addItem('openChat', openChat);
 
@@ -135,6 +138,18 @@ export class ChatPanel extends SidePanel {
     this.addWidget(new ChatSection({ widget, name }));
   }
 
+  updateChatNames = async () => {
+    this._drive
+      .get('.')
+      .then(model => {
+        const chatsName = (model.content as any[])
+          .filter(f => f.type === 'file' && f.name.endsWith('.chat'))
+          .map(f => PathExt.basename(f.name, '.chat'));
+        this._chatNamesChanged.emit(chatsName);
+      })
+      .catch(e => console.error('Error getting the chat files from drive', e));
+  };
+
   /**
    * Handle `change` events for the HTMLSelect component.
    */
@@ -175,8 +190,10 @@ export class ChatPanel extends SidePanel {
     }
   }
 
+  private _chatNamesChanged = new Signal<this, string[]>(this);
   private _commands: CommandRegistry;
   private _config: IConfig = {};
+  private _drive: ICollaborativeDrive;
   private _rmRegistry: IRenderMimeRegistry;
   private _themeManager: IThemeManager | null;
 }
@@ -256,42 +273,22 @@ export namespace ChatSection {
 }
 
 type ChatSelectProps = {
-  drive: ICollaborativeDrive;
+  chatNamesChanged: ISignal<ChatPanel, string[]>;
   handleChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
 };
 
 /**
  * A component to select a chat from the drive.
  */
-function ChatSelect({ drive, handleChange }: ChatSelectProps): JSX.Element {
+function ChatSelect({
+  chatNamesChanged,
+  handleChange
+}: ChatSelectProps): JSX.Element {
   const [chatNames, setChatNames] = useState<string[]>([]);
 
-  /**
-   * Get chats list on initial render.
-   */
-  useEffect(() => {
-    // Find chat files in drive (root level only)
-    // TODO: search in sub-directories ?
-    async function getChats() {
-      drive
-        .get('.')
-        .then(model => {
-          const chatsName = (model.content as any[])
-            .filter(f => f.type === 'file' && f.name.endsWith('.chat'))
-            .map(f => PathExt.basename(f.name, '.chat'));
-          setChatNames(chatsName);
-        })
-        .catch(e => console.error('Error getting the chat file in drive'));
-    }
-
-    // Listen for changes in drive.
-    drive.fileChanged.connect((_, change) => {
-      getChats();
-    });
-
-    // Initialize the chats list.
-    getChats();
-  }, [drive]);
+  chatNamesChanged.connect((_, chatNames) => {
+    setChatNames(chatNames);
+  });
 
   return (
     <HTMLSelect onChange={handleChange}>
