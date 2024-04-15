@@ -14,19 +14,20 @@ import {
   closeIcon,
   CommandToolbarButton,
   HTMLSelect,
+  launchIcon,
   PanelWithToolbar,
   ReactWidget,
   SidePanel,
   ToolbarButton
 } from '@jupyterlab/ui-components';
 import { CommandRegistry } from '@lumino/commands';
+import { Message } from '@lumino/messaging';
+import { ISignal, Signal } from '@lumino/signaling';
 import { AccordionPanel, Panel } from '@lumino/widgets';
 import React, { useState } from 'react';
 
 import { CollaborativeChatModel } from './model';
-import { CommandIDs } from './token';
-import { ISignal, Signal } from '@lumino/signaling';
-import { Message } from '@lumino/messaging';
+import { CommandIDs, chatFileType } from './token';
 
 const MAIN_PANEL_CLASS = 'jp-collab-chat_main-panel';
 const SIDEPANEL_CLASS = 'jp-collab-chat-sidepanel';
@@ -53,6 +54,7 @@ export class CollaborativeChatWidget extends DocumentWidget<
    * Dispose of the resources held by the widget.
    */
   dispose(): void {
+    this.context.dispose();
     this.content.dispose();
     super.dispose();
   }
@@ -135,16 +137,17 @@ export class ChatPanel extends SidePanel {
       rmRegistry: this._rmRegistry,
       themeManager: this._themeManager
     });
-    this.addWidget(new ChatSection({ widget, name }));
+    this.addWidget(new ChatSection({ name, widget, commands: this._commands }));
   }
 
   updateChatNames = async (): Promise<void> => {
+    const extension = chatFileType.extensions[0];
     this._drive
       .get('.')
       .then(model => {
         const chatsName = (model.content as any[])
-          .filter(f => f.type === 'file' && f.name.endsWith('.chat'))
-          .map(f => PathExt.basename(f.name, '.chat'));
+          .filter(f => f.type === 'file' && f.name.endsWith(extension))
+          .map(f => PathExt.basename(f.name, extension));
         this._chatNamesChanged.emit(chatsName);
       })
       .catch(e => console.error('Error getting the chat files from drive', e));
@@ -174,7 +177,7 @@ export class ChatPanel extends SidePanel {
     );
     if (index === -1) {
       this._commands.execute(CommandIDs.openChat, {
-        filepath: `${value}.chat`,
+        filepath: `${value}${chatFileType.extensions[0]}`,
         inSidePanel: true
       });
     } else if (!this.widgets[index].isVisible) {
@@ -237,14 +240,29 @@ class ChatSection extends PanelWithToolbar {
     this.title.caption = this._name;
     this.toolbar.addClass(TOOLBAR_CLASS);
 
+    const moveToMain = new ToolbarButton({
+      icon: launchIcon,
+      iconLabel: 'Move the chat to the main area',
+      className: 'jp-mod-styled',
+      onClick: () => {
+        this.model.dispose();
+        options.commands.execute(CommandIDs.openChat, {
+          filepath: `${this._name}${chatFileType.extensions[0]}`
+        });
+        this.dispose();
+      }
+    });
+
     const closeButton = new ToolbarButton({
       icon: closeIcon,
+      iconLabel: 'Close the chat',
       className: 'jp-mod-styled',
       onClick: () => {
         this.model.dispose();
         this.dispose();
       }
     });
+    this.toolbar.addItem('collaborativeChat-main', moveToMain);
     this.toolbar.addItem('collaborativeChat-close', closeButton);
 
     this.addWidget(options.widget);
@@ -276,8 +294,9 @@ export namespace ChatSection {
    * Options to build a chat section.
    */
   export interface IOptions extends Panel.IOptions {
-    widget: ChatWidget;
+    commands: CommandRegistry;
     name: string;
+    widget: ChatWidget;
   }
 }
 

@@ -58,6 +58,22 @@ const openChat = async (
   return (await page.activity.getPanelLocator(filename)) as Locator;
 };
 
+const openChatToSide = async (
+  page: IJupyterLabPageFixture,
+  filename: string
+): Promise<Locator> => {
+  const panel = page.locator('.jp-SidePanel.jp-collab-chat-sidepanel');
+  await page.evaluate(async filepath => {
+    const inSidePanel = true;
+    await window.jupyterapp.commands.execute('collaborative-chat:open', {
+      filepath,
+      inSidePanel
+    });
+  }, filename);
+  await expect(panel).toBeVisible();
+  return panel;
+};
+
 const openSettings = async (
   page: IJupyterLabPageFixture,
   globalSettings?: boolean
@@ -70,7 +86,9 @@ const openSettings = async (
   return (await page.activity.getPanelLocator('Settings')) as Locator;
 };
 
-const openPanel = async (page: IJupyterLabPageFixture): Promise<Locator> => {
+const openSidePanel = async (
+  page: IJupyterLabPageFixture
+): Promise<Locator> => {
   const panel = page.locator('.jp-SidePanel.jp-collab-chat-sidepanel');
 
   if (!(await panel?.isVisible())) {
@@ -692,7 +710,7 @@ test.describe('#chatPanel', () => {
     });
 
     test('chat panel should contain a toolbar', async ({ page }) => {
-      const panel = await openPanel(page);
+      const panel = await openSidePanel(page);
       const toolbar = panel.locator('.jp-SidePanel-toolbar');
       await expect(toolbar).toHaveCount(1);
 
@@ -703,7 +721,7 @@ test.describe('#chatPanel', () => {
     });
 
     test('chat panel should not contain a chat at init', async ({ page }) => {
-      const panel = await openPanel(page);
+      const panel = await openSidePanel(page);
       const content = panel.locator('.jp-SidePanel-content');
       await expect(content).toBeEmpty();
     });
@@ -715,7 +733,7 @@ test.describe('#chatPanel', () => {
     let dialog: Locator;
 
     test.beforeEach(async ({ page }) => {
-      panel = await openPanel(page);
+      panel = await openSidePanel(page);
       const addButton = panel.locator(
         '.jp-SidePanel-toolbar .jp-Toolbar-item.jp-collab-chat-add'
       );
@@ -797,7 +815,7 @@ test.describe('#chatPanel', () => {
       // reload to update the chat list
       // FIX: add listener on file creation
       await page.reload();
-      panel = await openPanel(page);
+      panel = await openSidePanel(page);
       select = panel.locator(
         '.jp-SidePanel-toolbar .jp-Toolbar-item.jp-collab-chat-open select'
       );
@@ -813,7 +831,7 @@ test.describe('#chatPanel', () => {
       // reload to update the chat list
       // FIX: add listener on file creation
       await page.reload();
-      panel = await openPanel(page);
+      panel = await openSidePanel(page);
       select = panel.locator(
         '.jp-SidePanel-toolbar .jp-Toolbar-item.jp-collab-chat-open select'
       );
@@ -828,8 +846,73 @@ test.describe('#chatPanel', () => {
         chatTitle.locator('.lm-AccordionPanel-titleLabel')
       ).toHaveText(name);
 
-      await chatTitle.getByRole('button').click();
+      await chatTitle.getByTitle('Close the chat').click();
       await expect(chatTitle).toHaveCount(0);
+    });
+  });
+
+  test.describe('#movingChat', () => {
+    const filename = 'my-chat.chat';
+
+    test.use({ mockSettings: { ...galata.DEFAULT_SETTINGS } });
+
+    test.beforeEach(async ({ page }) => {
+      // Create a chat file
+      await page.filebrowser.contents.uploadContent('{}', 'text', filename);
+    });
+
+    test.afterEach(async ({ page }) => {
+      if (await page.filebrowser.contents.fileExists(filename)) {
+        await page.filebrowser.contents.deleteFile(filename);
+      }
+    });
+
+    test('main widget toolbar should have a button', async ({ page }) => {
+      const chatPanel = await openChat(page, filename);
+      const button = chatPanel.getByTitle('Move the chat to the side panel');
+      expect(button).toBeVisible();
+      expect(await button.screenshot()).toMatchSnapshot('moveToSide.png');
+    });
+
+    test('chat should move to the side panel', async ({ page }) => {
+      const chatPanel = await openChat(page, filename);
+      const button = chatPanel.getByTitle('Move the chat to the side panel');
+      await button.click();
+      await expect(chatPanel).not.toBeAttached();
+
+      const sidePanel = page.locator('.jp-SidePanel.jp-collab-chat-sidepanel');
+      await expect(sidePanel).toBeVisible();
+      const chatTitle = sidePanel.locator(
+        '.jp-SidePanel-content .jp-AccordionPanel-title'
+      );
+      await expect(chatTitle).toHaveCount(1);
+      await expect(
+        chatTitle.locator('.lm-AccordionPanel-titleLabel')
+      ).toHaveText(filename.split('.')[0]);
+    });
+
+    test('side panel should contain a button to move the chat', async ({
+      page
+    }) => {
+      const sidePanel = await openChatToSide(page, filename);
+      const chatTitle = sidePanel
+        .locator('.jp-SidePanel-content .jp-AccordionPanel-title')
+        .first();
+      const button = chatTitle.getByTitle('Move the chat to the main area');
+      expect(button).toBeVisible();
+      expect(await button.screenshot()).toMatchSnapshot('moveToMain.png');
+    });
+
+    test('chat should move to the main area', async ({ page }) => {
+      const sidePanel = await openChatToSide(page, filename);
+      const chatTitle = sidePanel
+        .locator('.jp-SidePanel-content .jp-AccordionPanel-title')
+        .first();
+      const button = chatTitle.getByTitle('Move the chat to the main area');
+      await button.click();
+      expect(chatTitle).not.toBeAttached();
+
+      await expect(page.activity.getTabLocator(filename)).toBeVisible();
     });
   });
 });

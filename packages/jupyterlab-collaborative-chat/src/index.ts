@@ -28,6 +28,7 @@ import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { Contents } from '@jupyterlab/services';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { ITranslator, nullTranslator } from '@jupyterlab/translation';
+import { launchIcon } from '@jupyterlab/ui-components';
 import { Awareness } from 'y-protocols/awareness';
 
 import {
@@ -109,7 +110,6 @@ export const docFactories: JupyterFrontEndPlugin<IWidgetConfig> = {
           pluginIds.docFactories,
           translator
         );
-        console.log('Create toolbarFactory', toolbarFactory);
       }
 
       // Wait for the application to be restored and
@@ -326,6 +326,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         }
 
         if (inSidePanel && chatPanel) {
+          app.shell.activateById(chatPanel.id);
           // The chat is opened in the chat panel.
           const model = await drive.get(filepath);
 
@@ -439,6 +440,37 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
         if (actions.includes(action)) {
           chatPanel.updateChatNames();
         }
+      }
+    });
+
+    /*
+     * Command to move a chat from the main area to the side panel.
+     *
+     */
+    commands.addCommand(CommandIDs.moveToSide, {
+      label: 'Move the chat to the side panel',
+      caption: 'Move the chat to the side panel',
+      icon: launchIcon,
+      execute: async () => {
+        const widget = app.shell.currentWidget;
+        // Ensure widget is a CollaborativeChatWidget and is in main area
+        if (
+          !widget ||
+          !(widget instanceof CollaborativeChatWidget) ||
+          !Array.from(app.shell.widgets('main')).includes(widget)
+        ) {
+          console.error(
+            `The command '${CommandIDs.moveToSide}' should be executed from the toolbar button only`
+          );
+          return;
+        }
+        // Remove potential drive prefix
+        const filepath = widget.context.path.split(':').pop();
+        commands.execute(CommandIDs.openChat, {
+          filepath,
+          inSidePanel: true
+        });
+        widget.dispose();
       }
     });
 

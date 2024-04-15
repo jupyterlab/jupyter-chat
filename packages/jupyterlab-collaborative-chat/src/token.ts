@@ -59,7 +59,11 @@ export const CommandIDs = {
   /**
    * Open a chat file.
    */
-  openChat: 'collaborative-chat:open'
+  openChat: 'collaborative-chat:open',
+  /**
+   * Move a main widget to the side panel
+   */
+  moveToSide: 'collaborative-chat:moveToSide'
 };
 
 /**
