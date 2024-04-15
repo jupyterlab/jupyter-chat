@@ -42,15 +42,15 @@ const FACTORY = 'Chat';
 
 const pluginIds = {
   chatCommands: 'jupyterlab-collaborative-chat:commands',
-  chatDocument: 'jupyterlab-collaborative-chat:chat-document'
+  docFactories: 'jupyterlab-collaborative-chat:factories'
 };
 
 /**
  * Extension registering the chat file type.
  */
-export const chatDocument: JupyterFrontEndPlugin<IWidgetConfig> = {
-  id: pluginIds.chatDocument,
-  description: 'A document registration for collaborative chat',
+export const docFactories: JupyterFrontEndPlugin<IWidgetConfig> = {
+  id: pluginIds.docFactories,
+  description: 'A document factories for collaborative chat',
   autoStart: true,
   requires: [IGlobalAwareness, IRenderMimeRegistry],
   optional: [
@@ -83,15 +83,11 @@ export const chatDocument: JupyterFrontEndPlugin<IWidgetConfig> = {
           | DocumentRegistry.IToolbarItem[]
           | IObservableList<DocumentRegistry.IToolbarItem>)
       | undefined;
+
     /**
      * Load the settings for the chat widgets.
      */
     let sendWithShiftEnter = false;
-
-    /**
-     * The ChatDocument object.
-     */
-    const widgetConfig = new WidgetConfig({ sendWithShiftEnter });
 
     function loadSetting(setting: ISettingRegistry.ISettings): void {
       // Read the settings and convert to the correct type
@@ -101,19 +97,21 @@ export const chatDocument: JupyterFrontEndPlugin<IWidgetConfig> = {
     }
 
     if (settingRegistry) {
+      // Create the main area widget toolbar factory.
       if (toolbarRegistry) {
         toolbarFactory = createToolbarFactory(
           toolbarRegistry,
           settingRegistry,
           FACTORY,
-          pluginIds.chatDocument,
+          pluginIds.docFactories,
           translator
         );
         console.log('Create toolbarFactory', toolbarFactory);
       }
+
       // Wait for the application to be restored and
       // for the settings to be loaded
-      Promise.all([app.restored, settingRegistry.load(pluginIds.chatDocument)])
+      Promise.all([app.restored, settingRegistry.load(pluginIds.docFactories)])
         .then(([, setting]) => {
           // Read the settings
           loadSetting(setting);
@@ -127,6 +125,11 @@ export const chatDocument: JupyterFrontEndPlugin<IWidgetConfig> = {
           );
         });
     }
+
+    /**
+     * The chat config object.
+     */
+    const widgetConfig = new WidgetConfig({ sendWithShiftEnter });
 
     // Namespace for the tracker
     const namespace = 'chat';
@@ -345,4 +348,4 @@ export const chatCommands: JupyterFrontEndPlugin<void> = {
   }
 };
 
-export default [chatDocument, chatCommands];
+export default [chatCommands, docFactories];
