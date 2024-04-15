@@ -359,7 +359,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           // The chat is opened in the main area
           commands.execute('docmanager:open', {
             path: `RTC:${filepath}`,
-            factory: 'chat-factory'
+            factory: FACTORY
           });
         }
       }
