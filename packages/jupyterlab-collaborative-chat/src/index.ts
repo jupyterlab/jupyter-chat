@@ -13,14 +13,19 @@ import {
 import {
   ICommandPalette,
   IThemeManager,
+  IToolbarWidgetRegistry,
   InputDialog,
   WidgetTracker,
+  createToolbarFactory,
   showErrorMessage
 } from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
+import { DocumentRegistry } from '@jupyterlab/docregistry';
+import { IObservableList } from '@jupyterlab/observables';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { Contents } from '@jupyterlab/services';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
+import { ITranslator, nullTranslator } from '@jupyterlab/translation';
 import { chatIcon } from 'chat-jupyter';
 import { Awareness } from 'y-protocols/awareness';
 
@@ -32,6 +37,8 @@ import {
 import { chatFileType, CommandIDs, IWidgetConfig } from './token';
 import { CollaborativeChatWidget } from './widget';
 import { YChat } from './ychat';
+
+const FACTORY = 'Chat';
 
 const pluginIds = {
   chatCommands: 'jupyterlab-collaborative-chat:commands',
@@ -50,7 +57,9 @@ export const chatDocument: JupyterFrontEndPlugin<IWidgetConfig> = {
     ICollaborativeDrive,
     ILayoutRestorer,
     ISettingRegistry,
-    IThemeManager
+    IThemeManager,
+    IToolbarWidgetRegistry,
+    ITranslator
   ],
   provides: IWidgetConfig,
   activate: (
@@ -60,8 +69,20 @@ export const chatDocument: JupyterFrontEndPlugin<IWidgetConfig> = {
     drive: ICollaborativeDrive | null,
     restorer: ILayoutRestorer | null,
     settingRegistry: ISettingRegistry | null,
-    themeManager: IThemeManager | null
+    themeManager: IThemeManager | null,
+    toolbarRegistry: IToolbarWidgetRegistry | null,
+    translator_: ITranslator | null
   ): IWidgetConfig => {
+    const translator = translator_ ?? nullTranslator;
+
+    // Declare the toolbar factory.
+    let toolbarFactory:
+      | ((
+          widget: CollaborativeChatWidget
+        ) =>
+          | DocumentRegistry.IToolbarItem[]
+          | IObservableList<DocumentRegistry.IToolbarItem>)
+      | undefined;
     /**
      * Load the settings for the chat widgets.
      */
@@ -80,6 +101,16 @@ export const chatDocument: JupyterFrontEndPlugin<IWidgetConfig> = {
     }
 
     if (settingRegistry) {
+      if (toolbarRegistry) {
+        toolbarFactory = createToolbarFactory(
+          toolbarRegistry,
+          settingRegistry,
+          FACTORY,
+          pluginIds.chatDocument,
+          translator
+        );
+        console.log('Create toolbarFactory', toolbarFactory);
+      }
       // Wait for the application to be restored and
       // for the settings to be loaded
       Promise.all([app.restored, settingRegistry.load(pluginIds.chatDocument)])
@@ -122,12 +153,15 @@ export const chatDocument: JupyterFrontEndPlugin<IWidgetConfig> = {
     // Creating the widget factory to register it so the document manager knows about
     // our new DocumentWidget
     const widgetFactory = new ChatWidgetFactory({
-      name: 'chat-factory',
+      name: FACTORY,
+      label: 'Chat',
       modelName: 'chat',
       fileTypes: ['chat'],
       defaultFor: ['chat'],
       themeManager,
-      rmRegistry
+      rmRegistry,
+      toolbarFactory,
+      translator
     });
 
     // Add the widget to the tracker when it's created
@@ -146,7 +180,7 @@ export const chatDocument: JupyterFrontEndPlugin<IWidgetConfig> = {
     if (restorer) {
       void restorer.restore(tracker, {
         command: 'docmanager:open',
-        args: panel => ({ path: panel.context.path, factory: 'chat-factory' }),
+        args: panel => ({ path: panel.context.path, factory: FACTORY }),
         name: panel => panel.context.path,
         when: app.serviceManager.ready
       });

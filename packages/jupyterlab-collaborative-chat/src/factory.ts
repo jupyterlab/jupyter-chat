@@ -48,7 +48,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
    *
    * @param options Constructor options
    */
-  constructor(options: ChatWidgetFactory.IOptions) {
+  constructor(options: ChatWidgetFactory.IOptions<CollaborativeChatWidget>) {
     super(options);
     this._themeManager = options.themeManager;
     this._rmRegistry = options.rmRegistry;
@@ -84,7 +84,8 @@ export namespace ChatWidgetFactory {
     rmRegistry: IRenderMimeRegistry;
   }
 
-  export interface IOptions extends DocumentRegistry.IWidgetFactoryOptions {
+  export interface IOptions<T extends CollaborativeChatWidget>
+    extends DocumentRegistry.IWidgetFactoryOptions<T> {
     themeManager: IThemeManager | null;
     rmRegistry: IRenderMimeRegistry;
   }

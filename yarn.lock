@@ -2952,7 +2952,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyterlab/translation@npm:^4.1.6":
+"@jupyterlab/translation@npm:^4.0.0, @jupyterlab/translation@npm:^4.1.6":
   version: 4.1.6
   resolution: "@jupyterlab/translation@npm:4.1.6"
   dependencies:
@@ -9842,6 +9842,7 @@ __metadata:
     "@jupyterlab/services": ^7.0.0
     "@jupyterlab/settingregistry": ^4.0.0
     "@jupyterlab/testutils": ^4.0.0
+    "@jupyterlab/translation": ^4.0.0
     "@lumino/coreutils": ^2.0.0
     "@lumino/signaling": ^2.0.0
     "@types/jest": ^29.2.0
