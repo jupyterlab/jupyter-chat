@@ -319,7 +319,7 @@ export const chatCommands: JupyterFrontEndPlugin<void> = {
 
         commands.execute('docmanager:open', {
           path: `RTC:${filepath}`,
-          factory: 'chat-factory'
+          factory: FACTORY
         });
       }
     });
