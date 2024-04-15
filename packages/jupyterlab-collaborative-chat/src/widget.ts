@@ -8,6 +8,8 @@ import { DocumentWidget } from '@jupyterlab/docregistry';
 
 import { CollaborativeChatModel } from './model';
 
+const MAIN_PANEL_CLASS = 'jp-collab-chat_main-panel';
+
 /**
  * DocumentWidget: widget that represents the view or editor for a file type.
  */
@@ -19,6 +21,7 @@ export class CollaborativeChatWidget extends DocumentWidget<
     options: DocumentWidget.IOptions<ChatWidget, CollaborativeChatModel>
   ) {
     super(options);
+    this.addClass(MAIN_PANEL_CLASS);
   }
 
   /**
