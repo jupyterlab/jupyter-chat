@@ -26,6 +26,7 @@ import React, { useState } from 'react';
 import { CollaborativeChatModel } from './model';
 import { CommandIDs } from './token';
 import { ISignal, Signal } from '@lumino/signaling';
+import { Message } from '@lumino/messaging';
 
 const MAIN_PANEL_CLASS = 'jp-collab-chat_main-panel';
 const SIDEPANEL_CLASS = 'jp-collab-chat-sidepanel';
@@ -88,16 +89,15 @@ export class ChatPanel extends SidePanel {
     addChat.addClass(ADD_BUTTON_CLASS);
     this.toolbar.addItem('createChat', addChat);
 
-    const openChat = ReactWidget.create(
+    this._openChat = ReactWidget.create(
       <ChatSelect
         chatNamesChanged={this._chatNamesChanged}
         handleChange={this._chatSelected.bind(this)}
       ></ChatSelect>
     );
-    this.updateChatNames();
 
-    openChat.addClass(OPEN_SELECT_CLASS);
-    this.toolbar.addItem('openChat', openChat);
+    this._openChat.addClass(OPEN_SELECT_CLASS);
+    this.toolbar.addItem('openChat', this._openChat);
 
     const content = this.content as AccordionPanel;
     content.expansionToggled.connect(this._onExpansionToggled, this);
@@ -138,7 +138,7 @@ export class ChatPanel extends SidePanel {
     this.addWidget(new ChatSection({ widget, name }));
   }
 
-  updateChatNames = async () => {
+  updateChatNames = async (): Promise<void> => {
     this._drive
       .get('.')
       .then(model => {
@@ -149,6 +149,14 @@ export class ChatPanel extends SidePanel {
       })
       .catch(e => console.error('Error getting the chat files from drive', e));
   };
+
+  /**
+   * A message handler invoked on an `'after-show'` message.
+   */
+  protected onAfterShow(msg: Message): void {
+    // Wait for the component to be rendered.
+    this._openChat.renderPromise?.then(() => this.updateChatNames());
+  }
 
   /**
    * Handle `change` events for the HTMLSelect component.
@@ -194,6 +202,7 @@ export class ChatPanel extends SidePanel {
   private _commands: CommandRegistry;
   private _config: IConfig = {};
   private _drive: ICollaborativeDrive;
+  private _openChat: ReactWidget;
   private _rmRegistry: IRenderMimeRegistry;
   private _themeManager: IThemeManager | null;
 }
@@ -286,6 +295,7 @@ function ChatSelect({
 }: ChatSelectProps): JSX.Element {
   const [chatNames, setChatNames] = useState<string[]>([]);
 
+  // Update the chat list.
   chatNamesChanged.connect((_, chatNames) => {
     setChatNames(chatNames);
   });
