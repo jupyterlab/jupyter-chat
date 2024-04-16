@@ -13,7 +13,7 @@ A lot of the components of this chat project come from
 ### Typescript package
 
 The typescript package is located in *packages/jupyter-chat* and builds an NPM
-package named `chat-jupyter`.
+package named `@jupyter/chat`.
 
 This package provides a frontend library (using react), and is intended to be
 used by a jupyterlab extension to create a chat.
@@ -22,7 +22,7 @@ used by a jupyterlab extension to create a chat.
 
 #### Chat extension based on shared document: *packages/jupyterlab-collaborative-chat*
 
-This extension is an implementation of the `chat-jupyter` package, relying on
+This extension is an implementation of the `@jupyter/chat` package, relying on
 shared document (see [jupyter_ydoc](https://github.com/jupyter-server/jupyter_ydoc)).
 
 It is composed of:
@@ -33,7 +33,7 @@ It is composed of:
 
 #### Chat extension based on websocket: *packages/jupyterlab-ws-chat*
 
-This extension is an implementation of the `chat-jupyter` package, relying on
+This extension is an implementation of the `@jupyter/chat` package, relying on
 websocket for the communication between server and front end.
 
 It is composed of a Python package named `jupyterlab_ws_chat`

@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { ChatWidget } from 'chat-jupyter';
+import { ChatWidget } from '@jupyter/chat';
 import { DocumentWidget } from '@jupyterlab/docregistry';
 
 import { CollaborativeChatModel } from './model';

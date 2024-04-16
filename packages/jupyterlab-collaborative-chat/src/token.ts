@@ -3,10 +3,10 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { IConfig, chatIcon } from '@jupyter/chat';
 import { Token } from '@lumino/coreutils';
 import { ISignal } from '@lumino/signaling';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
-import { IConfig, chatIcon } from 'chat-jupyter';
 
 export const chatFileType: DocumentRegistry.IFileType = {
   name: 'chat',

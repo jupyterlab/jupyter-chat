@@ -3,6 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { chatIcon } from '@jupyter/chat';
 import { IGlobalAwareness } from '@jupyter/collaboration';
 import { ICollaborativeDrive } from '@jupyter/docprovider';
 import {
@@ -26,7 +27,6 @@ import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { Contents } from '@jupyterlab/services';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { ITranslator, nullTranslator } from '@jupyterlab/translation';
-import { chatIcon } from 'chat-jupyter';
 import { Awareness } from 'y-protocols/awareness';
 
 import {

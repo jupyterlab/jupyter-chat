@@ -3,6 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { buildChatSidebar, buildErrorWidget } from '@jupyter/chat';
 import {
   ILayoutRestorer,
   JupyterFrontEnd,
@@ -11,7 +12,6 @@ import {
 import { ReactWidget, IThemeManager } from '@jupyterlab/apputils';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-import { buildChatSidebar, buildErrorWidget } from 'chat-jupyter';
 
 import { WebSocketHandler } from './handlers/websocket-handler';
 

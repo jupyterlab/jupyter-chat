@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { ChatModel, IChatMessage, INewMessage, IUser } from 'chat-jupyter';
+import { ChatModel, IChatMessage, INewMessage, IUser } from '@jupyter/chat';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { IChangedArgs } from '@jupyterlab/coreutils';
 import { PartialJSONObject, UUID } from '@lumino/coreutils';
