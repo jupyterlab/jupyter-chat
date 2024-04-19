@@ -6,7 +6,7 @@
 import { Token } from '@lumino/coreutils';
 import { ISignal } from '@lumino/signaling';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
-import { IConfig } from 'chat-jupyter';
+import { IConfig, chatIcon } from 'chat-jupyter';
 
 export const chatFileType: DocumentRegistry.IFileType = {
   name: 'chat',
@@ -14,7 +14,8 @@ export const chatFileType: DocumentRegistry.IFileType = {
   mimeTypes: ['text/json', 'application/json'],
   extensions: ['.chat'],
   fileFormat: 'text',
-  contentType: 'chat'
+  contentType: 'chat',
+  icon: chatIcon
 };
 
 /**
