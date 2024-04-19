@@ -1,5 +1,5 @@
 {
-    "name": "chat-jupyter-root",
+    "name": "jupyter-chat-root",
     "version": "0.1.0",
     "description": "A chat package for Jupyterlab extension",
     "private": true,
@@ -26,7 +26,7 @@
     ],
     "scripts": {
         "build": "lerna run build --stream",
-        "build:core": "lerna run build --stream --scope \"chat-jupyter\"",
+        "build:core": "lerna run build --stream --scope \"@jupyter/chat\"",
         "build:collaborative": "lerna run build --scope=jupyterlab-collaborative-chat --include-filtered-dependencies",
         "build:ws": "lerna run build --scope=jupyterlab-ws-chat --include-filtered-dependencies",
         "build:prod": "lerna run build:prod --stream",
