@@ -135,20 +135,28 @@ export function ChatMessages(props: ChatMessagesProps): JSX.Element {
       }}
       className={clsx(MESSAGES_BOX_CLASS)}
     >
-      {props.messages.map((message, i) => (
-        // extra div needed to ensure each bubble is on a new line
-        <Box key={i} sx={{ padding: 4 }} className={clsx(MESSAGE_CLASS)}>
-          <ChatMessageHeader
-            {...message.sender}
-            timestamp={timestamps[message.id]}
-            sx={{ marginBottom: 3 }}
-          />
-          <RendermimeMarkdown
-            rmRegistry={props.rmRegistry}
-            markdownStr={message.body}
-          />
-        </Box>
-      ))}
+      {props.messages.map((message, i) => {
+        let sender: IUser;
+        if (typeof message.sender === 'string') {
+          sender = { id: message.sender };
+        } else {
+          sender = message.sender;
+        }
+        return (
+          // extra div needed to ensure each bubble is on a new line
+          <Box key={i} sx={{ padding: 4 }} className={clsx(MESSAGE_CLASS)}>
+            <ChatMessageHeader
+              {...sender}
+              timestamp={timestamps[message.id]}
+              sx={{ marginBottom: 3 }}
+            />
+            <RendermimeMarkdown
+              rmRegistry={props.rmRegistry}
+              markdownStr={message.body}
+            />
+          </Box>
+        );
+      })}
     </Box>
   );
 }

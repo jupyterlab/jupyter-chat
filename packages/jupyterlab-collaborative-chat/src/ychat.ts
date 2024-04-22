@@ -3,9 +3,8 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-// TODO: remove this module in favor of the one in jupyter_ydoc when released.
-
-import { Delta, DocumentChange, MapChange, YDocument } from '@jupyter/ydoc';
+import { IChatMessage, IUser } from '@jupyter/chat';
+import { DocumentChange, StateChange, YDocument } from '@jupyter/ydoc';
 import { JSONExt, JSONObject } from '@lumino/coreutils';
 import * as Y from 'yjs';
 
@@ -14,17 +13,33 @@ import * as Y from 'yjs';
  */
 export type ChatChange = DocumentChange & {
   /**
-   * Messages list change
+   * Changes in messages.
    */
-  messagesChange?: Delta<any>;
+  messageChanges?: MessageChange[];
   /**
-   * Content change
+   * Changes in users.
    */
-  contentChange?: MapChange;
+  userChanges?: UserChange[];
 };
 
-interface IDict<T = any> {
-  [key: string]: T;
+/**
+ * The message change type.
+ */
+export type MessageChange = StateChange<IYmessage>;
+
+/**
+ * The user change type.
+ */
+export type UserChange = StateChange<IUser>;
+
+/**
+ * The interface for a YMessage.
+ */
+export interface IYmessage extends IChatMessage {
+  /**
+   * The username of the message sender.
+   */
+  sender: string;
 }
 
 /**
@@ -36,10 +51,10 @@ export class YChat extends YDocument<ChatChange> {
    */
   constructor(options?: YDocument.IOptions) {
     super(options);
-    this._content = this.ydoc.getMap<IDict>('content');
-    this._content.observe(this._contentObserver);
+    this._users = this.ydoc.getMap<IUser>('users');
+    this._users.observe(this._usersObserver);
 
-    this._messages = this.ydoc.getArray<IDict>('messages');
+    this._messages = this.ydoc.getMap<IYmessage>('messages');
     this._messages.observe(this._messagesObserver);
   }
 
@@ -57,28 +72,62 @@ export class YChat extends YDocument<ChatChange> {
     return new YChat(options);
   }
 
-  get content(): JSONObject {
-    return JSONExt.deepCopy(this._content.toJSON());
+  get users(): JSONObject {
+    return JSONExt.deepCopy(this._users.toJSON());
   }
 
-  get messages(): string[] {
+  get messages(): JSONObject {
     return JSONExt.deepCopy(this._messages.toJSON());
   }
 
-  setMessage(value: IDict): void {
-    this._messages.push([value]);
+  getUser(username: string | undefined): IUser | undefined {
+    if (!username) {
+      return undefined;
+    }
+
+    return this._users.get(username);
   }
 
-  private _contentObserver = (event: Y.YMapEvent<IDict>): void => {
-    this._changed.emit(this.content);
+  setUser(value: IUser): void {
+    this._users.set(value.username || value.id, value);
+  }
+
+  setMessage(value: IYmessage): void {
+    this._messages.set(value.id, value);
+  }
+
+  private _usersObserver = (event: Y.YMapEvent<IUser>): void => {
+    const userChange = new Array<UserChange>();
+    event.keysChanged.forEach(key => {
+      const change = event.changes.keys.get(key);
+      if (change) {
+        userChange.push({
+          name: key,
+          oldValue: change.oldValue,
+          newValue: this._users.get(key)
+        });
+      }
+    });
+
+    this._changed.emit({ userChange: userChange } as any);
   };
 
-  private _messagesObserver = (event: Y.YArrayEvent<IDict>): void => {
-    const changes: ChatChange = {};
-    changes.messagesChange = event.delta;
-    this._changed.emit(changes);
+  private _messagesObserver = (event: Y.YMapEvent<IYmessage>): void => {
+    const messageChanges = new Array<MessageChange>();
+    event.keysChanged.forEach(key => {
+      const change = event.changes.keys.get(key);
+      if (change) {
+        messageChanges.push({
+          name: key,
+          oldValue: change.oldValue,
+          newValue: this._messages.get(key)
+        });
+      }
+    });
+
+    this._changed.emit({ messageChanges: messageChanges } as any);
   };
 
-  private _content: Y.Map<IDict>;
-  private _messages: Y.Array<IDict>;
+  private _users: Y.Map<IUser>;
+  private _messages: Y.Map<IYmessage>;
 }

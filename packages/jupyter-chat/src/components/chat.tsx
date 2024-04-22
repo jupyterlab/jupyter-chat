@@ -56,10 +56,17 @@ function ChatBody({
         setMessages([]);
         return;
       } else if (message.type === 'msg') {
-        setMessages((messageGroups: IChatMessage[]) => [
-          ...messageGroups,
-          message
-        ]);
+        setMessages((messageGroups: IChatMessage[]) => {
+          const msg = [...messageGroups];
+          let nextMsgIndex = messageGroups.findIndex(
+            msg => msg.time > message.time
+          );
+          if (nextMsgIndex === -1) {
+            nextMsgIndex = messageGroups.length;
+          }
+          msg.splice(nextMsgIndex, 0, message);
+          return msg;
+        });
       }
     }
 

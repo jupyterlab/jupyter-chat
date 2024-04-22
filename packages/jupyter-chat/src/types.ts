@@ -32,7 +32,7 @@ export interface IChatMessage {
   body: string;
   id: string;
   time: number;
-  sender: IUser;
+  sender: IUser | string;
 }
 
 export type IClearMessage = {
