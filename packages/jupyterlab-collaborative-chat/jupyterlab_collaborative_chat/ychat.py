@@ -83,7 +83,7 @@ class YChat(YBaseDoc):
         if "messages" in contents.keys():
             with self._ydoc.transaction():
                 for k, v in contents["messages"].items():
-                    self._ymessages.update({k, v})
+                    self._ymessages.update({k: v})
 
     def observe(self, callback: Callable[[str, Any], None]) -> None:
         self.unobserve()

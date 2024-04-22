@@ -162,8 +162,8 @@ export class CollaborativeChatModel
       const msgChange = change.messageChanges;
       const messages: IYmessage[] = [];
       msgChange.forEach(data => {
-        // New message
-        if (data.newValue && !data.oldValue) {
+        // New message or updated message.
+        if (data.newValue) {
           messages.push(data.newValue);
         }
       });
