@@ -56,10 +56,34 @@ function ChatBody({
         setMessages([]);
         return;
       } else if (message.type === 'msg') {
-        setMessages((messageGroups: IChatMessage[]) => [
-          ...messageGroups,
-          message
-        ]);
+        setMessages((messageGroups: IChatMessage[]) => {
+          const existingMessages = [...messageGroups];
+
+          const messageIndex = existingMessages.findIndex(
+            msg => msg.id === message.id
+          );
+          if (messageIndex > -1) {
+            // The message is an update of an existing one.
+            // Let's remove it (to avoid position conflict if timestamp has changed)
+            // and add the new one.
+            existingMessages.splice(messageIndex, 1);
+          }
+
+          // Find the first message that should be after this one.
+          let nextMsgIndex = existingMessages.findIndex(
+            msg => msg.time > message.time
+          );
+          if (nextMsgIndex === -1) {
+            // There is no message after this one, so let's insert the message at
+            // the end.
+            nextMsgIndex = existingMessages.length;
+          }
+
+          // Insert the message.
+          existingMessages.splice(nextMsgIndex, 0, message);
+
+          return existingMessages;
+        });
       }
     }
 

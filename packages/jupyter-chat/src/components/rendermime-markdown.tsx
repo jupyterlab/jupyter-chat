@@ -15,6 +15,7 @@ const RENDERMIME_MD_CLASS = 'jp-chat-rendermime-markdown';
 type RendermimeMarkdownProps = {
   markdownStr: string;
   rmRegistry: IRenderMimeRegistry;
+  appendContent?: boolean;
 };
 
 /**
@@ -29,6 +30,7 @@ function escapeLatexDelimiters(text: string) {
 }
 
 function RendermimeMarkdownBase(props: RendermimeMarkdownProps): JSX.Element {
+  const appendContent = props.appendContent || false;
   const [renderedContent, setRenderedContent] = useState<HTMLElement | null>(
     null
   );
@@ -69,9 +71,12 @@ function RendermimeMarkdownBase(props: RendermimeMarkdownProps): JSX.Element {
 
   return (
     <div ref={containerRef} className={RENDERMIME_MD_CLASS}>
-      {renderedContent && (
-        <div ref={node => node && node.appendChild(renderedContent)} />
-      )}
+      {renderedContent &&
+        (appendContent ? (
+          <div ref={node => node && node.appendChild(renderedContent)} />
+        ) : (
+          <div ref={node => node && node.replaceChildren(renderedContent)} />
+        ))}
     </div>
   );
 }

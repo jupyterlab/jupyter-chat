@@ -3,7 +3,13 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { ChatModel, IChatMessage, INewMessage, IUser } from '@jupyter/chat';
+import {
+  ChatModel,
+  IChatMessage,
+  IDeleteMessage,
+  INewMessage,
+  IUser
+} from '@jupyter/chat';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { IChangedArgs } from '@jupyterlab/coreutils';
 import { PartialJSONObject, UUID } from '@lumino/coreutils';
@@ -11,7 +17,7 @@ import { ISignal, Signal } from '@lumino/signaling';
 import { Awareness } from 'y-protocols/awareness';
 
 import { IWidgetConfig } from './token';
-import { ChatChange, YChat } from './ychat';
+import { ChatChange, IYmessage, YChat } from './ychat';
 
 /**
  * Collaborative chat namespace.
@@ -125,44 +131,65 @@ export class CollaborativeChatModel
    */
   protected formatChatMessage(message: IChatMessage): IChatMessage {
     if (this._awareness) {
-      const sender = Array.from(this._awareness.states.values()).find(
-        awareness => awareness.user.username === message.sender.username
-      )?.user;
-      if (sender) {
-        message.sender.color = sender.color;
+      if (typeof message.sender !== 'string') {
+        // const sender = message.sender as IUser;
+        const sender = Array.from(this._awareness.states.values()).find(
+          awareness =>
+            awareness.user.username === (message.sender as IUser).username
+        )?.user;
+        if (sender) {
+          message.sender.color = sender.color;
+        }
       }
     }
     return message;
   }
 
   addMessage(message: INewMessage): Promise<boolean | void> | boolean | void {
-    const msg: IChatMessage = {
+    const msg: IYmessage = {
       type: 'msg',
       id: UUID.uuid4(),
       body: message.body,
       time: Date.now() / 1000,
-      sender: this._user
+      sender: this._user.username || this._user.id
     };
 
+    // Add the user if it does not exist or has changed
+    if (!(this.sharedModel.getUser(this._user.username) === this._user)) {
+      this.sharedModel.transact(
+        () => void this.sharedModel.setUser(this._user)
+      );
+    }
     this.sharedModel.transact(() => void this.sharedModel.setMessage(msg));
   }
 
   private _onchange = (_: YChat, change: ChatChange) => {
-    if (change.messagesChange) {
-      const msgDelta = change.messagesChange;
-      // let retain: number;
-      const messages: IChatMessage[] = [];
-      msgDelta.forEach(data => {
-        if (data.retain) {
-          // retain = data.retain;
-        } else if (data.insert) {
-          messages.push(...data.insert);
+    if (change.messageChanges) {
+      const msgChange = change.messageChanges;
+      const messages: IYmessage[] = [];
+      const deletedMessages: IYmessage[] = [];
+      msgChange.forEach(data => {
+        if (['add', 'change'].includes(data.type) && data.newValue) {
+          messages.push(data.newValue);
+        } else if (data.type === 'remove' && data.oldValue) {
+          deletedMessages.push(data.oldValue);
         }
       });
-
       if (messages) {
         messages.forEach(message => {
-          this.onMessage(message);
+          const msg: IChatMessage = { ...message };
+          msg.sender =
+            this.sharedModel.getUser(message.sender) || message.sender;
+          this.onMessage(msg);
+        });
+      }
+      if (deletedMessages) {
+        deletedMessages.forEach(message => {
+          const msg: IDeleteMessage = {
+            type: 'remove',
+            id: message.id
+          };
+          this.onMessage(msg);
         });
       }
     }

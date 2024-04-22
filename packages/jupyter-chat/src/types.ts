@@ -32,14 +32,19 @@ export interface IChatMessage {
   body: string;
   id: string;
   time: number;
-  sender: IUser;
+  sender: IUser | string;
 }
 
 export type IClearMessage = {
   type: 'clear';
 };
 
-export type IMessage = IChatMessage | IClearMessage;
+export type IDeleteMessage = {
+  type: 'remove';
+  id: string;
+};
+
+export type IMessage = IChatMessage | IClearMessage | IDeleteMessage;
 
 /**
  * The chat history interface.

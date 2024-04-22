@@ -96,10 +96,14 @@ export class WebSocketHandler extends ChatModel {
 
   onMessage(message: IMessage): void {
     // resolve promise from `sendMessage()`
-    if (message.type === 'msg' && message.sender.id === this.id) {
-      this._sendResolverQueue.get(message.id)?.(true);
-    }
+    if (message.type === 'msg') {
+      const sender =
+        typeof message.sender !== 'string' ? message.sender.id : message.sender;
 
+      if (sender === this.id) {
+        this._sendResolverQueue.get(message.id)?.(true);
+      }
+    }
     super.onMessage(message);
   }
 
