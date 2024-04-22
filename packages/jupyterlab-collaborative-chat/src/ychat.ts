@@ -4,7 +4,7 @@
  */
 
 import { IChatMessage, IUser } from '@jupyter/chat';
-import { DocumentChange, StateChange, YDocument } from '@jupyter/ydoc';
+import { DocumentChange, IMapChange, YDocument } from '@jupyter/ydoc';
 import { JSONExt, JSONObject } from '@lumino/coreutils';
 import * as Y from 'yjs';
 
@@ -25,12 +25,12 @@ export type ChatChange = DocumentChange & {
 /**
  * The message change type.
  */
-export type MessageChange = StateChange<IYmessage>;
+export type MessageChange = IMapChange<IYmessage>;
 
 /**
  * The user change type.
  */
-export type UserChange = StateChange<IUser>;
+export type UserChange = IMapChange<IUser>;
 
 /**
  * The interface for a YMessage.
@@ -101,11 +101,30 @@ export class YChat extends YDocument<ChatChange> {
     event.keysChanged.forEach(key => {
       const change = event.changes.keys.get(key);
       if (change) {
-        userChange.push({
-          name: key,
-          oldValue: change.oldValue,
-          newValue: this._users.get(key)
-        });
+        switch (change.action) {
+          case 'add':
+            userChange.push({
+              key,
+              newValue: this._users.get(key),
+              type: 'add'
+            });
+            break;
+          case 'delete':
+            userChange.push({
+              key,
+              oldValue: change.oldValue,
+              type: 'remove'
+            });
+            break;
+          case 'update':
+            userChange.push({
+              key: key,
+              oldValue: change.oldValue,
+              newValue: this._users.get(key),
+              type: 'change'
+            });
+            break;
+        }
       }
     });
 
@@ -117,11 +136,30 @@ export class YChat extends YDocument<ChatChange> {
     event.keysChanged.forEach(key => {
       const change = event.changes.keys.get(key);
       if (change) {
-        messageChanges.push({
-          name: key,
-          oldValue: change.oldValue,
-          newValue: this._messages.get(key)
-        });
+        switch (change.action) {
+          case 'add':
+            messageChanges.push({
+              key,
+              newValue: this._messages.get(key),
+              type: 'add'
+            });
+            break;
+          case 'delete':
+            messageChanges.push({
+              key,
+              oldValue: change.oldValue,
+              type: 'remove'
+            });
+            break;
+          case 'update':
+            messageChanges.push({
+              key: key,
+              oldValue: change.oldValue,
+              newValue: this._messages.get(key),
+              type: 'change'
+            });
+            break;
+        }
       }
     });
 

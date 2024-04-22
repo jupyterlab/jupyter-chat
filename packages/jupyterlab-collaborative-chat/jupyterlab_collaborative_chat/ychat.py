@@ -10,6 +10,7 @@ from typing import Any, Callable, Dict
 from jupyter_ydoc.ybasedoc import YBaseDoc
 from pycrdt import Map
 
+
 class YChat(YBaseDoc):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

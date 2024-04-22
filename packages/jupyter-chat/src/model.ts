@@ -34,16 +34,6 @@ export interface IChatModel extends IDisposable {
   get incomingMessage(): ISignal<IChatModel, IMessage>;
 
   /**
-   * The signal emitted when a message is updated.
-   */
-  get messageUpdated(): ISignal<IChatModel, IMessage>;
-
-  /**
-   * The signal emitted when a message is updated.
-   */
-  get messageDeleted(): ISignal<IChatModel, IMessage>;
-
-  /**
    * Send a message, to be defined depending on the chosen technology.
    * Default to no-op.
    *
@@ -135,20 +125,6 @@ export class ChatModel implements IChatModel {
   }
 
   /**
-   * The signal emitted when a message is updated.
-   */
-  get messageUpdated(): ISignal<IChatModel, IMessage> {
-    return this._messageUpdated;
-  }
-
-  /**
-   * The signal emitted when a message is updated.
-   */
-  get messageDeleted(): ISignal<IChatModel, IMessage> {
-    return this._messageDeleted;
-  }
-
-  /**
    * Send a message, to be defined depending on the chosen technology.
    * Default to no-op.
    *
@@ -199,8 +175,6 @@ export class ChatModel implements IChatModel {
   private _config: IConfig;
   private _isDisposed = false;
   private _incomingMessage = new Signal<IChatModel, IMessage>(this);
-  private _messageUpdated = new Signal<IChatModel, IChatMessage>(this);
-  private _messageDeleted = new Signal<IChatModel, IChatMessage>(this);
 }
 
 /**

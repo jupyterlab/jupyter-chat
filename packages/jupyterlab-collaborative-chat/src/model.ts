@@ -3,7 +3,13 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { ChatModel, IChatMessage, INewMessage, IUser } from '@jupyter/chat';
+import {
+  ChatModel,
+  IChatMessage,
+  IDeleteMessage,
+  INewMessage,
+  IUser
+} from '@jupyter/chat';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { IChangedArgs } from '@jupyterlab/coreutils';
 import { PartialJSONObject, UUID } from '@lumino/coreutils';
@@ -161,10 +167,12 @@ export class CollaborativeChatModel
     if (change.messageChanges) {
       const msgChange = change.messageChanges;
       const messages: IYmessage[] = [];
+      const deletedMessages: IYmessage[] = [];
       msgChange.forEach(data => {
-        // New message or updated message.
-        if (data.newValue) {
+        if (['add', 'change'].includes(data.type) && data.newValue) {
           messages.push(data.newValue);
+        } else if (data.type === 'remove' && data.oldValue) {
+          deletedMessages.push(data.oldValue);
         }
       });
       if (messages) {
@@ -172,6 +180,15 @@ export class CollaborativeChatModel
           const msg: IChatMessage = { ...message };
           msg.sender =
             this.sharedModel.getUser(message.sender) || message.sender;
+          this.onMessage(msg);
+        });
+      }
+      if (deletedMessages) {
+        deletedMessages.forEach(message => {
+          const msg: IDeleteMessage = {
+            type: 'remove',
+            id: message.id
+          };
           this.onMessage(msg);
         });
       }
