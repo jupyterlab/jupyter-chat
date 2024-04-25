@@ -3,11 +3,12 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 
 import { CopyButton } from './copy-button';
-import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
+import { MessageToolbar } from './toolbar';
 
 const MD_MIME_TYPE = 'text/markdown';
 const RENDERMIME_MD_CLASS = 'jp-chat-rendermime-markdown';
@@ -16,6 +17,8 @@ type RendermimeMarkdownProps = {
   markdownStr: string;
   rmRegistry: IRenderMimeRegistry;
   appendContent?: boolean;
+  edit?: () => void;
+  delete?: () => void;
 };
 
 /**
@@ -77,6 +80,7 @@ function RendermimeMarkdownBase(props: RendermimeMarkdownProps): JSX.Element {
         ) : (
           <div ref={node => node && node.replaceChildren(renderedContent)} />
         ))}
+      <MessageToolbar edit={props.edit} delete={props.delete} />
     </div>
   );
 }

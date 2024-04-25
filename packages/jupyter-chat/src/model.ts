@@ -11,7 +11,8 @@ import {
   INewMessage,
   IChatMessage,
   IConfig,
-  IMessage
+  IMessage,
+  IUser
 } from './types';
 
 /**
@@ -27,6 +28,11 @@ export interface IChatModel extends IDisposable {
    * The configuration for the chat panel.
    */
   config: IConfig;
+
+  /**
+   * The user connected to the chat panel.
+   */
+  readonly user?: IUser;
 
   /**
    * The signal emitted when a new message is received.
@@ -46,12 +52,19 @@ export interface IChatModel extends IDisposable {
    * Optional, to update a message from the chat.
    *
    * @param id - the unique ID of the message.
-   * @param message - the message to update.
+   * @param message - the updated message.
    */
   updateMessage?(
     id: string,
-    message: INewMessage
+    message: IChatMessage
   ): Promise<boolean | void> | boolean | void;
+
+  /**
+   * Optional, to delete a message from the chat.
+   *
+   * @param id - the unique ID of the message.
+   */
+  deleteMessage?(id: string): Promise<boolean | void> | boolean | void;
 
   /**
    * Optional, to get messages history.
@@ -74,13 +87,6 @@ export interface IChatModel extends IDisposable {
    * @param message - the new message, containing user information and body.
    */
   onMessage(message: IMessage): void;
-
-  /**
-   * Function to call when a message is updated.
-   *
-   * @param message - the message updated, containing user information and body.
-   */
-  onMessageUpdated?(message: IMessage): void;
 }
 
 /**
@@ -132,6 +138,17 @@ export class ChatModel implements IChatModel {
    * @returns whether the message has been sent or not.
    */
   addMessage(message: INewMessage): Promise<boolean | void> | boolean | void {}
+
+  /**
+   * Optional, to update a message from the chat.
+   *
+   * @param id - the unique ID of the message.
+   * @param message - the message to update.
+   */
+  updateMessage?(
+    id: string,
+    message: INewMessage
+  ): Promise<boolean | void> | boolean | void;
 
   /**
    * Dispose the chat model.

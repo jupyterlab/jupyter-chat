@@ -7,8 +7,7 @@
  * The user description.
  */
 export interface IUser {
-  id: string;
-  username?: string;
+  username: string;
   name?: string;
   display_name?: string;
   initials?: string;

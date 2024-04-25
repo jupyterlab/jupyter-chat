@@ -63,6 +63,10 @@ export class CollaborativeChatModel
 
   readonly collaborative = true;
 
+  get user(): IUser {
+    return this._user;
+  }
+
   get sharedModel(): YChat {
     return this._sharedModel;
   }
@@ -151,7 +155,7 @@ export class CollaborativeChatModel
       id: UUID.uuid4(),
       body: message.body,
       time: Date.now() / 1000,
-      sender: this._user.username || this._user.id,
+      sender: this._user.username,
       raw_time: true
     };
 

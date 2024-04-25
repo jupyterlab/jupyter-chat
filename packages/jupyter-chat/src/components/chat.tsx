@@ -3,6 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { IThemeManager } from '@jupyterlab/apputils';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -16,7 +17,6 @@ import { ChatInput } from './chat-input';
 import { ScrollContainer } from './scroll-container';
 import { IChatModel } from '../model';
 import { IChatMessage, IMessage } from '../types';
-import { IThemeManager } from '@jupyterlab/apputils';
 
 type ChatBodyProps = {
   model: IChatModel;
@@ -105,7 +105,11 @@ function ChatBody({
   return (
     <>
       <ScrollContainer sx={{ flexGrow: 1 }}>
-        <ChatMessages messages={messages} rmRegistry={renderMimeRegistry} />
+        <ChatMessages
+          messages={messages}
+          rmRegistry={renderMimeRegistry}
+          model={model}
+        />
       </ScrollContainer>
       <ChatInput
         value={input}

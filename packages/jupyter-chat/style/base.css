@@ -9,5 +9,5 @@
     https://jupyterlab.readthedocs.io/en/stable/developer/css.html
 */
 
+@import url('./chat.css');
 @import url('./chat-settings.css');
-@import url('./rendermime-markdown.css');

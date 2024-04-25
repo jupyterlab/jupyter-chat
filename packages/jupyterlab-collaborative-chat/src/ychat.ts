@@ -89,7 +89,7 @@ export class YChat extends YDocument<ChatChange> {
   }
 
   setUser(value: IUser): void {
-    this._users.set(value.username || value.id, value);
+    this._users.set(value.username, value);
   }
 
   setMessage(value: IYmessage): void {

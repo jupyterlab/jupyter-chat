@@ -9,7 +9,9 @@ import type { SxProps, Theme } from '@mui/material';
 import clsx from 'clsx';
 import React, { useState, useEffect } from 'react';
 
+import { ChatInput } from './chat-input';
 import { RendermimeMarkdown } from './rendermime-markdown';
+import { IChatModel } from '../model';
 import { IChatMessage, IUser } from '../types';
 
 const MESSAGES_BOX_CLASS = 'jp-chat-messages-container';
@@ -17,8 +19,16 @@ const MESSAGE_CLASS = 'jp-chat-message';
 const MESSAGE_HEADER_CLASS = 'jp-chat-message-header';
 const MESSAGE_TIME_CLASS = 'jp-chat-message-time';
 
-type ChatMessagesProps = {
+type BaseMessageProps = {
   rmRegistry: IRenderMimeRegistry;
+  model: IChatModel;
+};
+
+type ChatMessageProps = BaseMessageProps & {
+  message: IChatMessage;
+};
+
+type ChatMessagesProps = BaseMessageProps & {
   messages: IChatMessage[];
 };
 
@@ -105,6 +115,9 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
   );
 }
 
+/**
+ * The messages list UI.
+ */
 export function ChatMessages(props: ChatMessagesProps): JSX.Element {
   const [timestamps, setTimestamps] = useState<Record<string, string>>({});
 
@@ -163,7 +176,7 @@ export function ChatMessages(props: ChatMessagesProps): JSX.Element {
       {props.messages.map((message, i) => {
         let sender: IUser;
         if (typeof message.sender === 'string') {
-          sender = { id: message.sender };
+          sender = { username: message.sender };
         } else {
           sender = message.sender;
         }
@@ -176,13 +189,73 @@ export function ChatMessages(props: ChatMessagesProps): JSX.Element {
               rawTime={message.raw_time || false}
               sx={{ marginBottom: 3 }}
             />
-            <RendermimeMarkdown
-              rmRegistry={props.rmRegistry}
-              markdownStr={message.body}
-            />
+            <ChatMessage {...props} message={message} />
           </Box>
         );
       })}
     </Box>
+  );
+}
+
+/**
+ * the message UI.
+ */
+export function ChatMessage(props: ChatMessageProps): JSX.Element {
+  const { model } = props;
+  let canEdit = false;
+  let canDelete = false;
+  if (model.user !== undefined) {
+    const username =
+      typeof props.message.sender === 'string'
+        ? props.message.sender
+        : props.message.sender.username;
+
+    if (model.user.username === username && model.updateMessage !== undefined) {
+      canEdit = true;
+    }
+    if (model.user.username === username && model.deleteMessage !== undefined) {
+      canDelete = true;
+    }
+  }
+  const [edit, setEdit] = useState<boolean>(false);
+  const [input, setInput] = useState(props.message.body);
+
+  const updateMessage = (id: string): void => {
+    if (!canEdit) {
+      return;
+    }
+    // Update the message
+    const message = { ...props.message };
+    message.body = input;
+    props.model.updateMessage!(id, message);
+    setEdit(false);
+  };
+
+  const deleteMessage = (id: string): void => {
+    if (!canDelete) {
+      return;
+    }
+    // Delete the message
+    props.model.deleteMessage!(id);
+  };
+
+  return (
+    <div>
+      {edit && canEdit ? (
+        <ChatInput
+          value={input}
+          onChange={setInput}
+          onSend={() => updateMessage(props.message.id)}
+          sendWithShiftEnter={model.config.sendWithShiftEnter ?? false}
+        />
+      ) : (
+        <RendermimeMarkdown
+          rmRegistry={props.rmRegistry}
+          markdownStr={props.message.body}
+          edit={canEdit ? () => setEdit(true) : undefined}
+          delete={canDelete ? () => deleteMessage(props.message.id) : undefined}
+        />
+      )}
+    </div>
   );
 }
