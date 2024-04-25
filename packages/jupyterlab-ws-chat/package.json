@@ -7,9 +7,9 @@
         "jupyterlab",
         "jupyterlab-extension"
     ],
-    "homepage": "https://github.com/jupyterlab-contrib/jupyter-chat",
+    "homepage": "https://github.com/jupyterlab/jupyter-chat",
     "bugs": {
-        "url": "https://github.com/jupyterlab-contrib/jupyter-chat/issues"
+        "url": "https://github.com/jupyterlab/jupyter-chat/issues"
     },
     "license": "BSD-3-Clause",
     "author": {
@@ -27,7 +27,7 @@
     "style": "style/index.css",
     "repository": {
         "type": "git",
-        "url": "https://github.com/jupyterlab-contrib/jupyter-chat.git"
+        "url": "https://github.com/jupyterlab/jupyter-chat.git"
     },
     "scripts": {
         "build": "jlpm build:lib && jlpm build:labextension:dev",
