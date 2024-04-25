@@ -13,7 +13,7 @@ mimetype: ''
 mimetype_name: ''
 project_short_description: A chat extension based on shared documents
 python_name: jupyterlab_collaborative_chat
-repository: https://github.com/jupyterlab-contrib/jupyter-chat
+repository: https://github.com/jupyterlab/jupyter-chat
 test: true
 viewer_name: ''
 
