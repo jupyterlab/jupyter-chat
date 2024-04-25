@@ -96,6 +96,10 @@ export class YChat extends YDocument<ChatChange> {
     this._messages.set(value.id, value);
   }
 
+  deleteMessage(id: string): void {
+    this._messages.delete(id);
+  }
+
   private _usersObserver = (event: Y.YMapEvent<IUser>): void => {
     const userChange = new Array<UserChange>();
     event.keysChanged.forEach(key => {

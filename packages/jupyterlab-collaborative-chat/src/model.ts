@@ -168,6 +168,30 @@ export class CollaborativeChatModel
     this.sharedModel.transact(() => void this.sharedModel.setMessage(msg));
   }
 
+  updateMessage(
+    id: string,
+    message: IChatMessage
+  ): Promise<boolean | void> | boolean | void {
+    let sender: string;
+    if (typeof message.sender === 'string') {
+      sender = message.sender;
+    } else {
+      sender = message.sender.username;
+    }
+    const msg: IYmessage = {
+      type: 'msg',
+      id: id || UUID.uuid4(),
+      body: message.body,
+      time: message.time || Date.now() / 1000,
+      sender: sender
+    };
+    this.sharedModel.transact(() => void this.sharedModel.setMessage(msg));
+  }
+
+  deleteMessage(id: string): Promise<boolean | void> | boolean | void {
+    this.sharedModel.transact(() => void this.sharedModel.deleteMessage(id));
+  }
+
   private _onchange = (_: YChat, change: ChatChange) => {
     if (change.messageChanges) {
       const msgChange = change.messageChanges;
