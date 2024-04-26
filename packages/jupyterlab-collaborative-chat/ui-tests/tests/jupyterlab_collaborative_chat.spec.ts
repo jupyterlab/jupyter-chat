@@ -318,6 +318,143 @@ test.describe('#raw_time', () => {
   });
 });
 
+test.describe('#messageToolbar', () => {
+  const filename = 'my-chat.chat';
+  const originalContent = 'Hello World!';
+  const additionnalContent = ' Messages can be edited';
+  const username = UUID.uuid4();
+  const user: User.IUser = {
+    identity: {
+      username: username,
+      name: 'jovyan',
+      display_name: 'jovyan',
+      initials: 'JP',
+      color: 'var(--jp-collaborator-color1)'
+    },
+    permissions: {}
+  };
+
+  const msgID = UUID.uuid4();
+  const msg: IChatMessage = {
+    type: 'msg',
+    id: msgID,
+    sender: username,
+    body: originalContent,
+    time: 1714116341
+  };
+  const chatContent = {
+    messages: {},
+    users: {}
+  };
+  chatContent.users[username] = user.identity;
+  chatContent.messages[msgID] = msg;
+
+  test.use({
+    mockUser: user
+  });
+
+  test.beforeEach(async ({ page }) => {
+    // Create a chat file with content
+    await page.filebrowser.contents.uploadContent(
+      JSON.stringify(chatContent),
+      'text',
+      filename
+    );
+  });
+
+  test.afterEach(async ({ page }) => {
+    if (await page.filebrowser.contents.fileExists(filename)) {
+      await page.filebrowser.contents.deleteFile(filename);
+    }
+  });
+
+  test('message should have a toolbar', async ({ page }) => {
+    const chatPanel = await openChat(page, filename);
+    const message = chatPanel
+      .locator('.jp-chat-messages-container .jp-chat-rendermime-markdown')
+      .first();
+
+    await expect(message.locator('.jp-chat-toolbar')).not.toBeVisible();
+
+    //Should display the message toolbar
+    await message.hover({ position: { x: 5, y: 5 } });
+    await expect(message.locator('.jp-chat-toolbar')).toBeVisible();
+  });
+
+  test('should update the message', async ({ page }) => {
+    const chatPanel = await openChat(page, filename);
+    const message = chatPanel
+      .locator('.jp-chat-messages-container .jp-chat-rendermime-markdown')
+      .first();
+
+    // Should display the message toolbar
+    await message.hover({ position: { x: 5, y: 5 } });
+    await message.locator('.jp-chat-toolbar jp-button').first().click();
+
+    await expect(message).not.toBeVisible();
+
+    const editInput = chatPanel
+      .locator('.jp-chat-messages-container .jp-chat-input-container')
+      .getByRole('textbox');
+
+    await expect(editInput).toBeVisible();
+    await editInput.focus();
+    await editInput.press('End');
+    await editInput.pressSequentially(additionnalContent);
+    await editInput.press('Enter');
+
+    // It seems that the markdown renderer adds a new line.
+    await expect(message).toHaveText(
+      originalContent + additionnalContent + '\n'
+    );
+  });
+
+  test('should cancel message edition', async ({ page }) => {
+    const chatPanel = await openChat(page, filename);
+    const message = chatPanel
+      .locator('.jp-chat-messages-container .jp-chat-rendermime-markdown')
+      .first();
+
+    // Should display the message toolbar
+    await message.hover({ position: { x: 5, y: 5 } });
+    await message.locator('.jp-chat-toolbar jp-button').first().click();
+
+    await expect(message).not.toBeVisible();
+
+    const editInput = chatPanel
+      .locator('.jp-chat-messages-container .jp-chat-input-container')
+      .getByRole('textbox');
+
+    await expect(editInput).toBeVisible();
+    await editInput.focus();
+    await editInput.press('End');
+    await editInput.pressSequentially(additionnalContent);
+
+    const cancelButton = chatPanel
+      .locator('.jp-chat-messages-container .jp-chat-input-container')
+      .getByTitle('Cancel edition');
+    await expect(cancelButton).toBeVisible();
+    await cancelButton.click();
+    await expect(editInput).not.toBeVisible();
+
+    // It seems that the markdown renderer adds a new line.
+    await expect(message).toHaveText(originalContent + '\n');
+  });
+
+  test('should delete the message', async ({ page }) => {
+    const chatPanel = await openChat(page, filename);
+    const message = chatPanel
+      .locator('.jp-chat-messages-container .jp-chat-rendermime-markdown')
+      .first();
+
+    // Should display the message toolbar
+    await message.hover({ position: { x: 5, y: 5 } });
+    await message.locator('.jp-chat-toolbar jp-button').last().click();
+
+    await expect(message).not.toBeVisible();
+  });
+});
+
 test.describe('#settings', () => {
   const filename = 'my-chat.chat';
   const msg = 'Hello world!';
@@ -433,10 +570,8 @@ test.describe('#settings', () => {
 
     // It seems that the markdown renderer adds a new line, but the '\n' inserted when
     // pressing Enter above is trimmed.
-    expect(
-      await messages
-        .locator('.jp-chat-message .jp-chat-rendermime-markdown')
-        .textContent()
-    ).toBe(msg + '\n');
+    await expect(
+      messages.locator('.jp-chat-message .jp-chat-rendermime-markdown')
+    ).toHaveText(msg + '\n');
   });
 });

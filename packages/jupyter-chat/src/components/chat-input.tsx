@@ -64,7 +64,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
                     color="primary"
                     onClick={props.onCancel}
                     disabled={!props.value.trim().length}
-                    title={'Cancel the message'}
+                    title={'Cancel edition'}
                     className={clsx(CANCEL_BUTTON_CLASS)}
                   >
                     <Cancel />
