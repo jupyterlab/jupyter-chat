@@ -220,6 +220,11 @@ export function ChatMessage(props: ChatMessageProps): JSX.Element {
   const [edit, setEdit] = useState<boolean>(false);
   const [input, setInput] = useState(props.message.body);
 
+  const cancelEdition = (): void => {
+    setInput(props.message.body);
+    setEdit(false);
+  };
+
   const updateMessage = (id: string): void => {
     if (!canEdit) {
       return;
@@ -246,6 +251,7 @@ export function ChatMessage(props: ChatMessageProps): JSX.Element {
           value={input}
           onChange={setInput}
           onSend={() => updateMessage(props.message.id)}
+          onCancel={() => cancelEdition()}
           sendWithShiftEnter={model.config.sendWithShiftEnter ?? false}
         />
       ) : (

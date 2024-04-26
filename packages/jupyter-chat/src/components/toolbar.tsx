@@ -21,14 +21,16 @@ export function MessageToolbar(props: MessageToolbar.IProps): JSX.Element {
   if (props.edit !== undefined) {
     const editButton = ToolbarButtonComponent({
       icon: editIcon,
-      onClick: props.edit
+      onClick: props.edit,
+      tooltip: 'Edit'
     });
     buttons.push(editButton);
   }
   if (props.delete !== undefined) {
     const deleteButton = ToolbarButtonComponent({
       icon: deleteIcon,
-      onClick: props.delete
+      onClick: props.delete,
+      tooltip: 'Delete'
     });
     buttons.push(deleteButton);
   }

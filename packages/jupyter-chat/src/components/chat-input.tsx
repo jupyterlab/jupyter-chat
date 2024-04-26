@@ -13,11 +13,12 @@ import {
   IconButton,
   InputAdornment
 } from '@mui/material';
-import SendIcon from '@mui/icons-material/Send';
+import { Send, Cancel } from '@mui/icons-material';
 import clsx from 'clsx';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
 const SEND_BUTTON_CLASS = 'jp-chat-send-button';
+const CANCEL_BUTTON_CLASS = 'jp-chat-cancel-button';
 
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
   function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
@@ -57,6 +58,18 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
           InputProps={{
             endAdornment: (
               <InputAdornment position="end">
+                {props.onCancel && (
+                  <IconButton
+                    size="small"
+                    color="primary"
+                    onClick={props.onCancel}
+                    disabled={!props.value.trim().length}
+                    title={'Cancel the message'}
+                    className={clsx(CANCEL_BUTTON_CLASS)}
+                  >
+                    <Cancel />
+                  </IconButton>
+                )}
                 <IconButton
                   size="small"
                   color="primary"
@@ -65,7 +78,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
                   title={`Send message ${props.sendWithShiftEnter ? '(SHIFT+ENTER)' : '(ENTER)'}`}
                   className={clsx(SEND_BUTTON_CLASS)}
                 >
-                  <SendIcon />
+                  <Send />
                 </IconButton>
               </InputAdornment>
             )
@@ -92,6 +105,7 @@ export namespace ChatInput {
     onChange: (newValue: string) => unknown;
     onSend: () => unknown;
     sendWithShiftEnter: boolean;
+    onCancel?: () => unknown;
     sx?: SxProps<Theme>;
   }
 }
