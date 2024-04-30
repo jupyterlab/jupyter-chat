@@ -114,7 +114,7 @@ class YChat(YBaseDoc):
             if value["action"] != "add":
                 continue
             message = self._ymessages.get(key, None)
-            if message and not message.get("validated_time", False):
+            if message and message.get("raw_time", True):
                 new_msg_ids.append(key)
 
         if len(new_msg_ids):
@@ -129,7 +129,7 @@ class YChat(YBaseDoc):
             message = self._ymessages.get(msg_id, None)
             if message:
                 message["time"] = timestamp
-                message["validated_time"] = True
+                message["raw_time"] = False
                 messages[msg_id] = message
 
         with self._ydoc.transaction():

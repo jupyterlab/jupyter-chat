@@ -22,6 +22,7 @@ type ChatMessagesProps = {
 
 export type ChatMessageHeaderProps = IUser & {
   timestamp: string;
+  rawTime?: boolean;
   sx?: SxProps<Theme>;
 };
 
@@ -91,8 +92,9 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
             color: 'var(--jp-ui-font-color2)',
             fontWeight: 300
           }}
+          title={props.rawTime ? 'Unverified date' : ''}
         >
-          {props.timestamp}
+          {`${props.timestamp}${props.rawTime ? '*' : ''}`}
         </Typography>
       </Box>
     </Box>
@@ -167,6 +169,7 @@ export function ChatMessages(props: ChatMessagesProps): JSX.Element {
             <ChatMessageHeader
               {...sender}
               timestamp={timestamps[message.id]}
+              rawTime={message.raw_time || false}
               sx={{ marginBottom: 3 }}
             />
             <RendermimeMarkdown

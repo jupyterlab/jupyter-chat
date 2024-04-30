@@ -33,6 +33,7 @@ export interface IChatMessage {
   id: string;
   time: number;
   sender: IUser | string;
+  raw_time?: boolean;
 }
 
 export type IClearMessage = {
