@@ -109,14 +109,33 @@ export function ChatMessages(props: ChatMessagesProps): JSX.Element {
     const newTimestamps: Record<string, string> = { ...timestamps };
     let timestampAdded = false;
 
+    const currentDate = new Date();
+    const sameDay = (date: Date) =>
+      date.getFullYear() === currentDate.getFullYear() &&
+      date.getMonth() === currentDate.getMonth() &&
+      date.getDate() === currentDate.getDate();
+
     for (const message of props.messages) {
       if (!(message.id in newTimestamps)) {
-        // Use the browser's default locale
-        newTimestamps[message.id] = new Date(message.time * 1000) // Convert message time to milliseconds
-          .toLocaleTimeString([], {
-            hour: 'numeric', // Avoid leading zero for hours; we don't want "03:15 PM"
+        const date = new Date(message.time * 1000); // Convert message time to milliseconds
+
+        // Display only the time if the day of the message is the current one.
+        if (sameDay(date)) {
+          // Use the browser's default locale
+          newTimestamps[message.id] = date.toLocaleTimeString([], {
+            hour: 'numeric',
             minute: '2-digit'
           });
+        } else {
+          // Use the browser's default locale
+          newTimestamps[message.id] = date.toLocaleString([], {
+            day: 'numeric',
+            month: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit'
+          });
+        }
 
         timestampAdded = true;
       }
