@@ -17,6 +17,7 @@ class YChat(YBaseDoc):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._background_tasks: Set[asyncio.Task] = set()
+        self.dirty = True
         self._ydoc["users"] = self._yusers = Map()
         self._ydoc["messages"] = self._ymessages = Map()
         self._ymessages.observe(self._timestamp_new_messages)
@@ -108,6 +109,11 @@ class YChat(YBaseDoc):
         Called when a the ymessages changes to update the timestamp with the server one,
         to synchronize all messages with a unique time server.
         """
+
+        # Avoid updating the time while reading the document the first time, the dirty
+        # flag is set to False after first reading.
+        if self.dirty:
+            return
         timestamp: float = time.time()
         new_msg_ids: List[str] = []
         for key, value in event.keys.items():
