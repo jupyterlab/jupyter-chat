@@ -14,6 +14,8 @@ import { IChatMessage, IUser } from '../types';
 
 const MESSAGES_BOX_CLASS = 'jp-chat-messages-container';
 const MESSAGE_CLASS = 'jp-chat-message';
+const MESSAGE_HEADER_CLASS = 'jp-chat-message-header';
+const MESSAGE_TIME_CLASS = 'jp-chat-message-time';
 
 type ChatMessagesProps = {
   rmRegistry: IRenderMimeRegistry;
@@ -64,6 +66,7 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
 
   return (
     <Box
+      className={MESSAGE_HEADER_CLASS}
       sx={{
         display: 'flex',
         alignItems: 'center',
@@ -87,12 +90,13 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
           {name}
         </Typography>
         <Typography
+          className={MESSAGE_TIME_CLASS}
           sx={{
             fontSize: '0.8em',
             color: 'var(--jp-ui-font-color2)',
             fontWeight: 300
           }}
-          title={props.rawTime ? 'Unverified date' : ''}
+          title={props.rawTime ? 'Unverified time' : ''}
         >
           {`${props.timestamp}${props.rawTime ? '*' : ''}`}
         </Typography>
