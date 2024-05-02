@@ -12,8 +12,8 @@ import React, { useState, useEffect } from 'react';
 import { RendermimeMarkdown } from './rendermime-markdown';
 import { IChatMessage, IUser } from '../types';
 
-const MESSAGES_BOX_CLASS = 'jp-chat_messages-container';
-const MESSAGE_CLASS = 'jp-chat_message';
+const MESSAGES_BOX_CLASS = 'jp-chat-messages-container';
+const MESSAGE_CLASS = 'jp-chat-message';
 
 type ChatMessagesProps = {
   rmRegistry: IRenderMimeRegistry;

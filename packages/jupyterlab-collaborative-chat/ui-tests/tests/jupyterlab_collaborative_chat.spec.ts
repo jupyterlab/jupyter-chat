@@ -183,35 +183,35 @@ test.describe('#messages', () => {
   test('should send a message using button', async ({ page }) => {
     const chatPanel = await openChat(page, filename);
     const input = chatPanel
-      .locator('.jp-chat_input-container')
+      .locator('.jp-chat-input-container')
       .getByRole('textbox');
     const sendButton = chatPanel
-      .locator('.jp-chat_input-container')
+      .locator('.jp-chat-input-container')
       .getByRole('button');
     await input.pressSequentially(msg);
     await sendButton.click();
 
-    const messages = chatPanel.locator('.jp-chat_messages-container');
-    await expect(messages.locator('.jp-chat_message')).toHaveCount(1);
+    const messages = chatPanel.locator('.jp-chat-messages-container');
+    await expect(messages.locator('.jp-chat-message')).toHaveCount(1);
     // It seems that the markdown renderer adds a new line.
     await expect(
-      messages.locator('.jp-chat_message .jp-chat-rendermime-markdown')
+      messages.locator('.jp-chat-message .jp-chat-rendermime-markdown')
     ).toHaveText(msg + '\n');
   });
 
   test('should send a message using keyboard', async ({ page }) => {
     const chatPanel = await openChat(page, filename);
     const input = chatPanel
-      .locator('.jp-chat_input-container')
+      .locator('.jp-chat-input-container')
       .getByRole('textbox');
     await input.pressSequentially(msg);
     await input.press('Enter');
 
-    const messages = chatPanel.locator('.jp-chat_messages-container');
-    await expect(messages.locator('.jp-chat_message')).toHaveCount(1);
+    const messages = chatPanel.locator('.jp-chat-messages-container');
+    await expect(messages.locator('.jp-chat-message')).toHaveCount(1);
     // It seems that the markdown renderer adds a new line.
     await expect(
-      messages.locator('.jp-chat_message .jp-chat-rendermime-markdown')
+      messages.locator('.jp-chat-message .jp-chat-rendermime-markdown')
     ).toHaveText(msg + '\n');
   });
 });
@@ -270,23 +270,23 @@ test.describe('#settings', () => {
 
     // Should not send message with Enter
     const chatPanel = await openChat(page, filename);
-    const messages = chatPanel.locator('.jp-chat_messages-container');
+    const messages = chatPanel.locator('.jp-chat-messages-container');
     const input = chatPanel
-      .locator('.jp-chat_input-container')
+      .locator('.jp-chat-input-container')
       .getByRole('textbox');
     await input!.pressSequentially(msg);
     await input!.press('Enter');
 
-    await expect(messages!.locator('.jp-chat_message')).toHaveCount(0);
+    await expect(messages!.locator('.jp-chat-message')).toHaveCount(0);
 
     // Should not send message with Shift+Enter
     await input!.press('Shift+Enter');
-    await expect(messages!.locator('.jp-chat_message')).toHaveCount(1);
+    await expect(messages!.locator('.jp-chat-message')).toHaveCount(1);
 
     // It seems that the markdown renderer adds a new line, but the '\n' inserter when
     // pressing Enter above is trimmed.
     await expect(
-      messages.locator('.jp-chat_message .jp-chat-rendermime-markdown')
+      messages.locator('.jp-chat-message .jp-chat-rendermime-markdown')
     ).toHaveText(msg + '\n');
   });
 
@@ -316,24 +316,24 @@ test.describe('#settings', () => {
     await page.activity.activateTab(filename);
 
     // Should not send message with Enter
-    const messages = chatPanel.locator('.jp-chat_messages-container');
+    const messages = chatPanel.locator('.jp-chat-messages-container');
     const input = chatPanel
-      .locator('.jp-chat_input-container')
+      .locator('.jp-chat-input-container')
       .getByRole('textbox');
     await input!.pressSequentially(msg);
     await input!.press('Enter');
 
-    await expect(messages!.locator('.jp-chat_message')).toHaveCount(0);
+    await expect(messages!.locator('.jp-chat-message')).toHaveCount(0);
 
     // Should not send message with Shift+Enter
     await input!.press('Shift+Enter');
-    await expect(messages!.locator('.jp-chat_message')).toHaveCount(1);
+    await expect(messages!.locator('.jp-chat-message')).toHaveCount(1);
 
     // It seems that the markdown renderer adds a new line, but the '\n' inserted when
     // pressing Enter above is trimmed.
     expect(
       await messages
-        .locator('.jp-chat_message .jp-chat-rendermime-markdown')
+        .locator('.jp-chat-message .jp-chat-rendermime-markdown')
         .textContent()
     ).toBe(msg + '\n');
   });
