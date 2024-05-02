@@ -35,6 +35,8 @@ type ChatMessagesProps = BaseMessageProps & {
 export type ChatMessageHeaderProps = IUser & {
   timestamp: string;
   rawTime?: boolean;
+  deleted?: boolean;
+  edited?: boolean;
   sx?: SxProps<Theme>;
 };
 
@@ -96,9 +98,24 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
           alignItems: 'center'
         }}
       >
-        <Typography sx={{ fontWeight: 700, color: 'var(--jp-ui-font-color1)' }}>
-          {name}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Typography
+            sx={{ fontWeight: 700, color: 'var(--jp-ui-font-color1)' }}
+          >
+            {name}
+          </Typography>
+          {(props.deleted || props.edited) && (
+            <Typography
+              sx={{
+                fontStyle: 'italic',
+                fontSize: 'var(--jp-content-font-size0)',
+                paddingLeft: '0.5em'
+              }}
+            >
+              {props.deleted ? '(message deleted)' : '(edited)'}
+            </Typography>
+          )}
+        </Box>
         <Typography
           className={MESSAGE_TIME_CLASS}
           sx={{
@@ -182,11 +199,17 @@ export function ChatMessages(props: ChatMessagesProps): JSX.Element {
         }
         return (
           // extra div needed to ensure each bubble is on a new line
-          <Box key={i} sx={{ padding: 4 }} className={clsx(MESSAGE_CLASS)}>
+          <Box
+            key={i}
+            sx={{ padding: '1em 1em 0 1em' }}
+            className={clsx(MESSAGE_CLASS)}
+          >
             <ChatMessageHeader
               {...sender}
               timestamp={timestamps[message.id]}
-              rawTime={message.raw_time || false}
+              rawTime={message.raw_time}
+              deleted={message.deleted}
+              edited={message.edited}
               sx={{ marginBottom: 3 }}
             />
             <ChatMessage {...props} message={message} />
@@ -201,14 +224,14 @@ export function ChatMessages(props: ChatMessagesProps): JSX.Element {
  * the message UI.
  */
 export function ChatMessage(props: ChatMessageProps): JSX.Element {
-  const { model } = props;
+  const { message, model, rmRegistry } = props;
   let canEdit = false;
   let canDelete = false;
-  if (model.user !== undefined) {
+  if (model.user !== undefined && !message.deleted) {
     const username =
-      typeof props.message.sender === 'string'
-        ? props.message.sender
-        : props.message.sender.username;
+      typeof message.sender === 'string'
+        ? message.sender
+        : message.sender.username;
 
     if (model.user.username === username && model.updateMessage !== undefined) {
       canEdit = true;
@@ -218,10 +241,10 @@ export function ChatMessage(props: ChatMessageProps): JSX.Element {
     }
   }
   const [edit, setEdit] = useState<boolean>(false);
-  const [input, setInput] = useState(props.message.body);
+  const [input, setInput] = useState(message.body);
 
   const cancelEdition = (): void => {
-    setInput(props.message.body);
+    setInput(message.body);
     setEdit(false);
   };
 
@@ -230,9 +253,9 @@ export function ChatMessage(props: ChatMessageProps): JSX.Element {
       return;
     }
     // Update the message
-    const message = { ...props.message };
-    message.body = input;
-    props.model.updateMessage!(id, message);
+    const updatedMessage = { ...message };
+    updatedMessage.body = input;
+    model.updateMessage!(id, updatedMessage);
     setEdit(false);
   };
 
@@ -241,25 +264,28 @@ export function ChatMessage(props: ChatMessageProps): JSX.Element {
       return;
     }
     // Delete the message
-    props.model.deleteMessage!(id);
+    model.deleteMessage!(id);
   };
 
-  return (
+  // Empty if the message has been deleted
+  return message.deleted ? (
+    <></>
+  ) : (
     <div>
       {edit && canEdit ? (
         <ChatInput
           value={input}
           onChange={setInput}
-          onSend={() => updateMessage(props.message.id)}
+          onSend={() => updateMessage(message.id)}
           onCancel={() => cancelEdition()}
           sendWithShiftEnter={model.config.sendWithShiftEnter ?? false}
         />
       ) : (
         <RendermimeMarkdown
-          rmRegistry={props.rmRegistry}
-          markdownStr={props.message.body}
+          rmRegistry={rmRegistry}
+          markdownStr={message.body}
           edit={canEdit ? () => setEdit(true) : undefined}
-          delete={canDelete ? () => deleteMessage(props.message.id) : undefined}
+          delete={canDelete ? () => deleteMessage(message.id) : undefined}
         />
       )}
     </div>
