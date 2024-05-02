@@ -151,7 +151,8 @@ export class CollaborativeChatModel
       id: UUID.uuid4(),
       body: message.body,
       time: Date.now() / 1000,
-      sender: this._user.username || this._user.id
+      sender: this._user.username || this._user.id,
+      raw_time: true
     };
 
     // Add the user if it does not exist or has changed

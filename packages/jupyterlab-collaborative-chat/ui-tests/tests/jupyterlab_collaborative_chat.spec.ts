@@ -3,12 +3,15 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { IChatMessage } from '@jupyter/chat';
 import {
   IJupyterLabPageFixture,
   expect,
   galata,
   test
 } from '@jupyterlab/galata';
+import { User } from '@jupyterlab/services';
+import { UUID } from '@lumino/coreutils';
 import { Locator } from '@playwright/test';
 
 const fillModal = async (
@@ -183,36 +186,135 @@ test.describe('#messages', () => {
   test('should send a message using button', async ({ page }) => {
     const chatPanel = await openChat(page, filename);
     const input = chatPanel
-      .locator('.jp-chat_input-container')
+      .locator('.jp-chat-input-container')
       .getByRole('textbox');
     const sendButton = chatPanel
-      .locator('.jp-chat_input-container')
+      .locator('.jp-chat-input-container')
       .getByRole('button');
     await input.pressSequentially(msg);
     await sendButton.click();
 
-    const messages = chatPanel.locator('.jp-chat_messages-container');
-    await expect(messages.locator('.jp-chat_message')).toHaveCount(1);
+    const messages = chatPanel.locator('.jp-chat-messages-container');
+    await expect(messages.locator('.jp-chat-message')).toHaveCount(1);
     // It seems that the markdown renderer adds a new line.
     await expect(
-      messages.locator('.jp-chat_message .jp-chat-rendermime-markdown')
+      messages.locator('.jp-chat-message .jp-chat-rendermime-markdown')
     ).toHaveText(msg + '\n');
   });
 
   test('should send a message using keyboard', async ({ page }) => {
     const chatPanel = await openChat(page, filename);
     const input = chatPanel
-      .locator('.jp-chat_input-container')
+      .locator('.jp-chat-input-container')
       .getByRole('textbox');
     await input.pressSequentially(msg);
     await input.press('Enter');
 
-    const messages = chatPanel.locator('.jp-chat_messages-container');
-    await expect(messages.locator('.jp-chat_message')).toHaveCount(1);
+    const messages = chatPanel.locator('.jp-chat-messages-container');
+    await expect(messages.locator('.jp-chat-message')).toHaveCount(1);
     // It seems that the markdown renderer adds a new line.
     await expect(
-      messages.locator('.jp-chat_message .jp-chat-rendermime-markdown')
+      messages.locator('.jp-chat-message .jp-chat-rendermime-markdown')
     ).toHaveText(msg + '\n');
+  });
+});
+
+test.describe('#raw_time', () => {
+  const filename = 'my-chat.chat';
+  const originalContent = 'Hello World!';
+  const username = UUID.uuid4();
+  const user: User.IUser = {
+    identity: {
+      username: username,
+      name: 'jovyan',
+      display_name: 'jovyan',
+      initials: 'JP',
+      color: 'var(--jp-collaborator-color1)'
+    },
+    permissions: {}
+  };
+  const msgID_raw = UUID.uuid4();
+  const msg_raw_time: IChatMessage = {
+    type: 'msg',
+    id: msgID_raw,
+    sender: username,
+    body: originalContent,
+    time: 1714116341,
+    raw_time: true
+  };
+  const msgID_verif = UUID.uuid4();
+  const msg_verif: IChatMessage = {
+    type: 'msg',
+    id: msgID_verif,
+    sender: username,
+    body: originalContent,
+    time: 1714116341,
+    raw_time: false
+  };
+  const chatContent = {
+    messages: {},
+    users: {}
+  };
+  chatContent.users[username] = user.identity;
+  chatContent.messages[msgID_raw] = msg_raw_time;
+  chatContent.messages[msgID_verif] = msg_verif;
+
+  test.use({
+    mockUser: user
+  });
+
+  test.beforeEach(async ({ page }) => {
+    // Create a chat file with content
+    await page.filebrowser.contents.uploadContent(
+      JSON.stringify(chatContent),
+      'text',
+      filename
+    );
+  });
+
+  test.afterEach(async ({ page }) => {
+    if (await page.filebrowser.contents.fileExists(filename)) {
+      await page.filebrowser.contents.deleteFile(filename);
+    }
+  });
+
+  test('message timestamp should be raw according to file content', async ({
+    page
+  }) => {
+    const chatPanel = await openChat(page, filename);
+    const messages = chatPanel.locator(
+      '.jp-chat-messages-container .jp-chat-message'
+    );
+
+    const raw_time = messages.locator('.jp-chat-message-time').first();
+    expect(await raw_time.getAttribute('title')).toBe('Unverified time');
+    expect(await raw_time.textContent()).toMatch(/\*$/);
+
+    const verified_time = messages.locator('.jp-chat-message-time').last();
+    expect(await verified_time.getAttribute('title')).toBe('');
+    expect(await verified_time.textContent()).toMatch(/[^\*]$/);
+  });
+
+  test('time for new message should not be raw', async ({ page }) => {
+    const chatPanel = await openChat(page, filename);
+    const messages = chatPanel.locator(
+      '.jp-chat-messages-container .jp-chat-message'
+    );
+
+    // Send a new message
+    const input = chatPanel
+      .locator('.jp-chat-input-container')
+      .getByRole('textbox');
+    const sendButton = chatPanel
+      .locator('.jp-chat-input-container')
+      .getByRole('button');
+    await input.pressSequentially('New message');
+    await sendButton.click();
+
+    expect(messages).toHaveCount(3);
+    await expect(
+      messages.locator('.jp-chat-message-time').last()
+    ).toHaveAttribute('title', '');
   });
 });
 
@@ -270,23 +372,23 @@ test.describe('#settings', () => {
 
     // Should not send message with Enter
     const chatPanel = await openChat(page, filename);
-    const messages = chatPanel.locator('.jp-chat_messages-container');
+    const messages = chatPanel.locator('.jp-chat-messages-container');
     const input = chatPanel
-      .locator('.jp-chat_input-container')
+      .locator('.jp-chat-input-container')
       .getByRole('textbox');
     await input!.pressSequentially(msg);
     await input!.press('Enter');
 
-    await expect(messages!.locator('.jp-chat_message')).toHaveCount(0);
+    await expect(messages!.locator('.jp-chat-message')).toHaveCount(0);
 
     // Should not send message with Shift+Enter
     await input!.press('Shift+Enter');
-    await expect(messages!.locator('.jp-chat_message')).toHaveCount(1);
+    await expect(messages!.locator('.jp-chat-message')).toHaveCount(1);
 
     // It seems that the markdown renderer adds a new line, but the '\n' inserter when
     // pressing Enter above is trimmed.
     await expect(
-      messages.locator('.jp-chat_message .jp-chat-rendermime-markdown')
+      messages.locator('.jp-chat-message .jp-chat-rendermime-markdown')
     ).toHaveText(msg + '\n');
   });
 
@@ -316,24 +418,24 @@ test.describe('#settings', () => {
     await page.activity.activateTab(filename);
 
     // Should not send message with Enter
-    const messages = chatPanel.locator('.jp-chat_messages-container');
+    const messages = chatPanel.locator('.jp-chat-messages-container');
     const input = chatPanel
-      .locator('.jp-chat_input-container')
+      .locator('.jp-chat-input-container')
       .getByRole('textbox');
     await input!.pressSequentially(msg);
     await input!.press('Enter');
 
-    await expect(messages!.locator('.jp-chat_message')).toHaveCount(0);
+    await expect(messages!.locator('.jp-chat-message')).toHaveCount(0);
 
     // Should not send message with Shift+Enter
     await input!.press('Shift+Enter');
-    await expect(messages!.locator('.jp-chat_message')).toHaveCount(1);
+    await expect(messages!.locator('.jp-chat-message')).toHaveCount(1);
 
     // It seems that the markdown renderer adds a new line, but the '\n' inserted when
     // pressing Enter above is trimmed.
     expect(
       await messages
-        .locator('.jp-chat_message .jp-chat-rendermime-markdown')
+        .locator('.jp-chat-message .jp-chat-rendermime-markdown')
         .textContent()
     ).toBe(msg + '\n');
   });

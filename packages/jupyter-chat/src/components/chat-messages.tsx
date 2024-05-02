@@ -12,8 +12,10 @@ import React, { useState, useEffect } from 'react';
 import { RendermimeMarkdown } from './rendermime-markdown';
 import { IChatMessage, IUser } from '../types';
 
-const MESSAGES_BOX_CLASS = 'jp-chat_messages-container';
-const MESSAGE_CLASS = 'jp-chat_message';
+const MESSAGES_BOX_CLASS = 'jp-chat-messages-container';
+const MESSAGE_CLASS = 'jp-chat-message';
+const MESSAGE_HEADER_CLASS = 'jp-chat-message-header';
+const MESSAGE_TIME_CLASS = 'jp-chat-message-time';
 
 type ChatMessagesProps = {
   rmRegistry: IRenderMimeRegistry;
@@ -22,6 +24,7 @@ type ChatMessagesProps = {
 
 export type ChatMessageHeaderProps = IUser & {
   timestamp: string;
+  rawTime?: boolean;
   sx?: SxProps<Theme>;
 };
 
@@ -63,6 +66,7 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
 
   return (
     <Box
+      className={MESSAGE_HEADER_CLASS}
       sx={{
         display: 'flex',
         alignItems: 'center',
@@ -86,13 +90,15 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
           {name}
         </Typography>
         <Typography
+          className={MESSAGE_TIME_CLASS}
           sx={{
             fontSize: '0.8em',
             color: 'var(--jp-ui-font-color2)',
             fontWeight: 300
           }}
+          title={props.rawTime ? 'Unverified time' : ''}
         >
-          {props.timestamp}
+          {`${props.timestamp}${props.rawTime ? '*' : ''}`}
         </Typography>
       </Box>
     </Box>
@@ -109,14 +115,33 @@ export function ChatMessages(props: ChatMessagesProps): JSX.Element {
     const newTimestamps: Record<string, string> = { ...timestamps };
     let timestampAdded = false;
 
+    const currentDate = new Date();
+    const sameDay = (date: Date) =>
+      date.getFullYear() === currentDate.getFullYear() &&
+      date.getMonth() === currentDate.getMonth() &&
+      date.getDate() === currentDate.getDate();
+
     for (const message of props.messages) {
       if (!(message.id in newTimestamps)) {
-        // Use the browser's default locale
-        newTimestamps[message.id] = new Date(message.time * 1000) // Convert message time to milliseconds
-          .toLocaleTimeString([], {
-            hour: 'numeric', // Avoid leading zero for hours; we don't want "03:15 PM"
+        const date = new Date(message.time * 1000); // Convert message time to milliseconds
+
+        // Display only the time if the day of the message is the current one.
+        if (sameDay(date)) {
+          // Use the browser's default locale
+          newTimestamps[message.id] = date.toLocaleTimeString([], {
+            hour: 'numeric',
             minute: '2-digit'
           });
+        } else {
+          // Use the browser's default locale
+          newTimestamps[message.id] = date.toLocaleString([], {
+            day: 'numeric',
+            month: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit'
+          });
+        }
 
         timestampAdded = true;
       }
@@ -148,6 +173,7 @@ export function ChatMessages(props: ChatMessagesProps): JSX.Element {
             <ChatMessageHeader
               {...sender}
               timestamp={timestamps[message.id]}
+              rawTime={message.raw_time || false}
               sx={{ marginBottom: 3 }}
             />
             <RendermimeMarkdown

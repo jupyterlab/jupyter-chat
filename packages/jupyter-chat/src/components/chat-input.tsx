@@ -16,8 +16,8 @@ import {
 import SendIcon from '@mui/icons-material/Send';
 import clsx from 'clsx';
 
-const INPUT_BOX_CLASS = 'jp-chat_input-container';
-const SEND_BUTTON_CLASS = 'jp-chat_send-button';
+const INPUT_BOX_CLASS = 'jp-chat-input-container';
+const SEND_BUTTON_CLASS = 'jp-chat-send-button';
 
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
   function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {

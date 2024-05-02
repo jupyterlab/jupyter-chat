@@ -4,18 +4,23 @@
 # TODO: remove this module in favor of the one in jupyter_ydoc when released.
 
 import json
+import time
+import asyncio
 from functools import partial
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, List, Set
 
 from jupyter_ydoc.ybasedoc import YBaseDoc
-from pycrdt import Map
+from pycrdt import Map, MapEvent
 
 
 class YChat(YBaseDoc):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._background_tasks: Set[asyncio.Task] = set()
+        self.dirty = True
         self._ydoc["users"] = self._yusers = Map()
         self._ydoc["messages"] = self._ymessages = Map()
+        self._ymessages.observe(self._timestamp_new_messages)
 
     @property
     def version(self) -> str:
@@ -25,6 +30,11 @@ class YChat(YBaseDoc):
         :rtype: str
         """
         return "1.0.0"
+
+    def create_task(self, coro):
+        task = asyncio.create_task(coro)
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.discard)
 
     @property
     def users(self) -> Map:
@@ -93,3 +103,40 @@ class YChat(YBaseDoc):
             partial(callback, "messages")
         )
         self._subscriptions[self._yusers] = self._yusers.observe(partial(callback, "users"))
+
+    def _timestamp_new_messages(self, event: MapEvent) -> None:
+        """
+        Called when a the ymessages changes to update the timestamp with the server one,
+        to synchronize all messages with a unique time server.
+        """
+
+        # Avoid updating the time while reading the document the first time, the dirty
+        # flag is set to False after first reading.
+        if self.dirty:
+            return
+        timestamp: float = time.time()
+        new_msg_ids: List[str] = []
+        for key, value in event.keys.items():
+            if value["action"] != "add":
+                continue
+            message = self._ymessages.get(key, None)
+            if message and message.get("raw_time", True):
+                new_msg_ids.append(key)
+
+        if len(new_msg_ids):
+            self.create_task(self._set_timestamp(new_msg_ids, timestamp))
+
+    async def _set_timestamp(self, new_msg_ids: List[str], timestamp: float):
+        """
+        Update the timestamp of a list of message.
+        """
+        messages = {}
+        for msg_id in new_msg_ids:
+            message = self._ymessages.get(msg_id, None)
+            if message:
+                message["time"] = timestamp
+                message["raw_time"] = False
+                messages[msg_id] = message
+
+        with self._ydoc.transaction():
+            self._ymessages.update(messages)
