@@ -278,9 +278,13 @@ test.describe('#raw_time', () => {
     }
   });
 
-  test('message timestamp should be raw according to file content', async ({ page }) => {
+  test('message timestamp should be raw according to file content', async ({
+    page
+  }) => {
     const chatPanel = await openChat(page, filename);
-    const messages = chatPanel.locator('.jp-chat-messages-container .jp-chat-message');
+    const messages = chatPanel.locator(
+      '.jp-chat-messages-container .jp-chat-message'
+    );
 
     const raw_time = messages.locator('.jp-chat-message-time').first();
     expect(await raw_time.getAttribute('title')).toBe('Unverified time');
@@ -293,7 +297,9 @@ test.describe('#raw_time', () => {
 
   test('time for new message should not be raw', async ({ page }) => {
     const chatPanel = await openChat(page, filename);
-    const messages = chatPanel.locator('.jp-chat-messages-container .jp-chat-message');
+    const messages = chatPanel.locator(
+      '.jp-chat-messages-container .jp-chat-message'
+    );
 
     // Send a new message
     const input = chatPanel
@@ -305,8 +311,7 @@ test.describe('#raw_time', () => {
     await input.pressSequentially('New message');
     await sendButton.click();
 
-    expect(messages).toHaveCount(3),
-
+    expect(messages).toHaveCount(3);
     await expect(
       messages.locator('.jp-chat-message-time').last()
     ).toHaveAttribute('title', '');
