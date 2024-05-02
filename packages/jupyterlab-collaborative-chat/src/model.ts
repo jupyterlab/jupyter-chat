@@ -170,26 +170,42 @@ export class CollaborativeChatModel
 
   updateMessage(
     id: string,
-    message: IChatMessage
+    updatedMessage: IChatMessage
   ): Promise<boolean | void> | boolean | void {
-    let sender: string;
-    if (typeof message.sender === 'string') {
-      sender = message.sender;
+    let message = this.sharedModel.getMessage(id);
+    if (message) {
+      message.body = updatedMessage.body;
+      message.edited = true;
     } else {
-      sender = message.sender.username;
+      let sender: string;
+      if (typeof updatedMessage.sender === 'string') {
+        sender = updatedMessage.sender;
+      } else {
+        sender = updatedMessage.sender.username;
+      }
+      message = {
+        type: 'msg',
+        id: id || UUID.uuid4(),
+        body: updatedMessage.body,
+        time: updatedMessage.time || Date.now() / 1000,
+        sender: sender,
+        edited: true
+      };
     }
-    const msg: IYmessage = {
-      type: 'msg',
-      id: id || UUID.uuid4(),
-      body: message.body,
-      time: message.time || Date.now() / 1000,
-      sender: sender
-    };
-    this.sharedModel.transact(() => void this.sharedModel.setMessage(msg));
+    this.sharedModel.transact(
+      () => void this.sharedModel.setMessage(message as IYmessage)
+    );
   }
 
   deleteMessage(id: string): Promise<boolean | void> | boolean | void {
-    this.sharedModel.transact(() => void this.sharedModel.deleteMessage(id));
+    const message = this.sharedModel.getMessage(id);
+    if (!message) {
+      console.error('The message to delete does not exist');
+      return;
+    }
+    message.body = '';
+    message.deleted = true;
+    this.sharedModel.transact(() => void this.sharedModel.setMessage(message));
   }
 
   private _onchange = (_: YChat, change: ChatChange) => {

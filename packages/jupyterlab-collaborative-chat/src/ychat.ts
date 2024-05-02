@@ -92,6 +92,10 @@ export class YChat extends YDocument<ChatChange> {
     this._users.set(value.username, value);
   }
 
+  getMessage(id: string): IYmessage | undefined {
+    return this._messages.get(id);
+  }
+
   setMessage(value: IYmessage): void {
     this._messages.set(value.id, value);
   }

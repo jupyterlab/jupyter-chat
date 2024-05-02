@@ -384,14 +384,15 @@ test.describe('#messageToolbar', () => {
   test('should update the message', async ({ page }) => {
     const chatPanel = await openChat(page, filename);
     const message = chatPanel
-      .locator('.jp-chat-messages-container .jp-chat-rendermime-markdown')
+      .locator('.jp-chat-messages-container .jp-chat-message')
       .first();
+    const messageContent = message.locator('.jp-chat-rendermime-markdown');
 
     // Should display the message toolbar
-    await message.hover({ position: { x: 5, y: 5 } });
-    await message.locator('.jp-chat-toolbar jp-button').first().click();
+    await messageContent.hover({ position: { x: 5, y: 5 } });
+    await messageContent.locator('.jp-chat-toolbar jp-button').first().click();
 
-    await expect(message).not.toBeVisible();
+    await expect(messageContent).not.toBeVisible();
 
     const editInput = chatPanel
       .locator('.jp-chat-messages-container .jp-chat-input-container')
@@ -404,22 +405,26 @@ test.describe('#messageToolbar', () => {
     await editInput.press('Enter');
 
     // It seems that the markdown renderer adds a new line.
-    await expect(message).toHaveText(
+    await expect(messageContent).toHaveText(
       originalContent + additionnalContent + '\n'
     );
+    expect(
+      await message.locator('.jp-chat-message-header').textContent()
+    ).toContain('(edited)');
   });
 
   test('should cancel message edition', async ({ page }) => {
     const chatPanel = await openChat(page, filename);
     const message = chatPanel
-      .locator('.jp-chat-messages-container .jp-chat-rendermime-markdown')
+      .locator('.jp-chat-messages-container .jp-chat-message')
       .first();
+    const messageContent = message.locator('.jp-chat-rendermime-markdown');
 
     // Should display the message toolbar
-    await message.hover({ position: { x: 5, y: 5 } });
-    await message.locator('.jp-chat-toolbar jp-button').first().click();
+    await messageContent.hover({ position: { x: 5, y: 5 } });
+    await messageContent.locator('.jp-chat-toolbar jp-button').first().click();
 
-    await expect(message).not.toBeVisible();
+    await expect(messageContent).not.toBeVisible();
 
     const editInput = chatPanel
       .locator('.jp-chat-messages-container .jp-chat-input-container')
@@ -438,20 +443,27 @@ test.describe('#messageToolbar', () => {
     await expect(editInput).not.toBeVisible();
 
     // It seems that the markdown renderer adds a new line.
-    await expect(message).toHaveText(originalContent + '\n');
+    await expect(messageContent).toHaveText(originalContent + '\n');
+    expect(
+      await message.locator('.jp-chat-message-header').textContent()
+    ).not.toContain('(edited)');
   });
 
   test('should delete the message', async ({ page }) => {
     const chatPanel = await openChat(page, filename);
     const message = chatPanel
-      .locator('.jp-chat-messages-container .jp-chat-rendermime-markdown')
+      .locator('.jp-chat-messages-container .jp-chat-message')
       .first();
+    const messageContent = message.locator('.jp-chat-rendermime-markdown');
 
     // Should display the message toolbar
-    await message.hover({ position: { x: 5, y: 5 } });
-    await message.locator('.jp-chat-toolbar jp-button').last().click();
+    await messageContent.hover({ position: { x: 5, y: 5 } });
+    await messageContent.locator('.jp-chat-toolbar jp-button').last().click();
 
-    await expect(message).not.toBeVisible();
+    await expect(messageContent).not.toBeVisible();
+    expect(
+      await message.locator('.jp-chat-message-header').textContent()
+    ).toContain('(message deleted)');
   });
 });
 
