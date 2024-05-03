@@ -447,6 +447,115 @@ test.describe('#messageToolbar', () => {
   });
 });
 
+test.describe('#outofband', () => {
+  const msgID = UUID.uuid4();
+  const msg: IChatMessage = {
+    type: 'msg',
+    id: msgID,
+    sender: USERNAME,
+    body: MSG_CONTENT,
+    time: 1714116341
+  };
+  const chatContent = {
+    messages: {},
+    users: {}
+  };
+  chatContent.users[USERNAME] = USER.identity;
+  chatContent.messages[msgID] = msg;
+
+  test.beforeEach(async ({ page }) => {
+    // Create a chat file with content
+    await page.filebrowser.contents.uploadContent(
+      JSON.stringify(chatContent),
+      'text',
+      FILENAME
+    );
+  });
+
+  test.afterEach(async ({ page }) => {
+    if (await page.filebrowser.contents.fileExists(FILENAME)) {
+      await page.filebrowser.contents.deleteFile(FILENAME);
+    }
+  });
+
+  test('should update message from file', async ({ page }) => {
+    const updatedContent = 'Content updated';
+    const chatPanel = await openChat(page, FILENAME);
+    const messageContent = chatPanel
+      .locator('.jp-chat-messages-container .jp-chat-rendermime-markdown')
+      .first();
+    const newMsg = { ...msg, body: updatedContent };
+    const newContent = {
+      messages: {},
+      users: {}
+    };
+    newContent.users[USERNAME] = USER.identity;
+    newContent.messages[msgID] = newMsg;
+
+    await page.filebrowser.contents.uploadContent(
+      JSON.stringify(newContent),
+      'text',
+      FILENAME
+    );
+
+    await expect(messageContent).toHaveText(updatedContent);
+  });
+
+  test('should add a message from file', async ({ page }) => {
+    const newMsgContent = 'New message';
+    const newMsgID = UUID.uuid4();
+    const chatPanel = await openChat(page, FILENAME);
+    const messages = chatPanel.locator(
+      '.jp-chat-messages-container .jp-chat-message'
+    );
+    const newMsg: IChatMessage = {
+      type: 'msg',
+      id: newMsgID,
+      sender: USERNAME,
+      body: newMsgContent,
+      time: msg.time + 5
+    };
+    const newContent = {
+      messages: {},
+      users: {}
+    };
+    newContent.users[USERNAME] = USER.identity;
+    newContent.messages[msgID] = msg;
+    newContent.messages[newMsgID] = newMsg;
+
+    await page.filebrowser.contents.uploadContent(
+      JSON.stringify(newContent),
+      'text',
+      FILENAME
+    );
+
+    await expect(messages).toHaveCount(2);
+    await expect(
+      messages.last().locator('.jp-chat-rendermime-markdown')
+    ).toHaveText(newMsgContent);
+  });
+
+  test('should delete a message from file', async ({ page }) => {
+    const chatPanel = await openChat(page, FILENAME);
+    const messageContent = chatPanel
+      .locator('.jp-chat-messages-container .jp-chat-rendermime-markdown')
+      .first();
+    const newContent = {
+      messages: {},
+      users: {}
+    };
+    newContent.users[USERNAME] = USER.identity;
+
+    await page.filebrowser.contents.uploadContent(
+      JSON.stringify(newContent),
+      'text',
+      FILENAME
+    );
+
+    await expect(messageContent).not.toBeAttached();
+  });
+});
+
 test.describe('#settings', () => {
   test.beforeEach(async ({ page }) => {
     // Create a chat file
