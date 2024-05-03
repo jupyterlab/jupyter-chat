@@ -6,9 +6,12 @@
 import {
   ChatModel,
   IChatHistory,
+  IChatMessage,
   IChatModel,
-  IMessage,
-  INewMessage
+  IClearMessage,
+  IDeleteMessage,
+  INewMessage,
+  IUser
 } from '@jupyter/chat';
 import { URLExt } from '@jupyterlab/coreutils';
 import { ServerConnection } from '@jupyterlab/services';
@@ -17,6 +20,30 @@ import { UUID } from '@lumino/coreutils';
 import { requestAPI } from './handler';
 
 const CHAT_SERVICE_URL = 'api/chat';
+
+/**
+ * The interface for a user with ID.
+ */
+export interface IWsUser extends IUser {
+  /**
+   * The id of the user. A unique client ID assigned to identify different JupyterLab
+   * clients on the same device (i.e. running on multiple tabs/windows), which may
+   * have the same username assigned to them by the IdentityProvider.
+   */
+  id?: string;
+}
+
+/**
+ * The interface for a chat message, which includes an ID to the sender.
+ */
+export interface IWsMessage extends IChatMessage {
+  /**
+   * The id of the message sender.
+   */
+  sender: IWsUser | string;
+}
+
+export type IMessage = IWsMessage | IClearMessage | IDeleteMessage;
 
 export type ConnectionMessage = {
   type: 'connection';

@@ -14,6 +14,25 @@ import { User } from '@jupyterlab/services';
 import { UUID } from '@lumino/coreutils';
 import { Locator } from '@playwright/test';
 
+const FILENAME = 'my-chat.chat';
+const MSG_CONTENT = 'Hello World!';
+const USERNAME = UUID.uuid4();
+const USER: User.IUser = {
+  identity: {
+    username: USERNAME,
+    name: 'jovyan',
+    display_name: 'jovyan',
+    initials: 'JP',
+    color: 'var(--jp-collaborator-color1)'
+  },
+  permissions: {}
+};
+
+test.use({
+  mockUser: USER,
+  mockSettings: { ...galata.DEFAULT_SETTINGS }
+});
+
 const fillModal = async (
   page: IJupyterLabPageFixture,
   text = '',
@@ -52,14 +71,14 @@ const openSettings = async (
 };
 
 test.describe('#commandPalette', () => {
-  const name = 'my-chat';
+  const name = FILENAME.replace('.chat', '');
 
   test.beforeEach(async ({ page }) => {
     await page.keyboard.press('Control+Shift+c');
   });
 
   test.afterEach(async ({ page }) => {
-    for (let filename of ['untitled.chat', `${name}.chat`]) {
+    for (let filename of ['untitled.chat', FILENAME]) {
       if (await page.filebrowser.contents.fileExists(filename)) {
         await page.filebrowser.contents.deleteFile(filename);
       }
@@ -84,9 +103,9 @@ test.describe('#commandPalette', () => {
       .click();
     await fillModal(page, name);
     await page.waitForCondition(
-      async () => await page.filebrowser.contents.fileExists(`${name}.chat`)
+      async () => await page.filebrowser.contents.fileExists(FILENAME)
     );
-    await expect(page.activity.getTabLocator(`${name}.chat`)).toBeVisible();
+    await expect(page.activity.getTabLocator(FILENAME)).toBeVisible();
   });
 
   test('should create an untitled chat from command palette', async ({
@@ -117,7 +136,7 @@ test.describe('#commandPalette', () => {
 
   test('should open an existing chat', async ({ page }) => {
     // Create a chat file
-    await page.filebrowser.contents.uploadContent('{}', 'text', `${name}.chat`);
+    await page.filebrowser.contents.uploadContent('{}', 'text', FILENAME);
 
     // open it from command palette
     await page
@@ -125,8 +144,8 @@ test.describe('#commandPalette', () => {
         '#modal-command-palette li[data-command="collaborative-chat:open"]'
       )
       .click();
-    await fillModal(page, `${name}.chat`);
-    await expect(page.activity.getTabLocator(`${name}.chat`)).toBeVisible();
+    await fillModal(page, FILENAME);
+    await expect(page.activity.getTabLocator(FILENAME)).toBeVisible();
   });
 });
 
@@ -167,31 +186,26 @@ test.describe('#launcher', () => {
 });
 
 test.describe('#messages', () => {
-  const filename = 'my-chat.chat';
-  const msg = 'Hello world!';
-
-  test.use({ mockSettings: { ...galata.DEFAULT_SETTINGS } });
-
   test.beforeEach(async ({ page }) => {
     // Create a chat file
-    await page.filebrowser.contents.uploadContent('{}', 'text', filename);
+    await page.filebrowser.contents.uploadContent('{}', 'text', FILENAME);
   });
 
   test.afterEach(async ({ page }) => {
-    if (await page.filebrowser.contents.fileExists(filename)) {
-      await page.filebrowser.contents.deleteFile(filename);
+    if (await page.filebrowser.contents.fileExists(FILENAME)) {
+      await page.filebrowser.contents.deleteFile(FILENAME);
     }
   });
 
   test('should send a message using button', async ({ page }) => {
-    const chatPanel = await openChat(page, filename);
+    const chatPanel = await openChat(page, FILENAME);
     const input = chatPanel
       .locator('.jp-chat-input-container')
       .getByRole('textbox');
     const sendButton = chatPanel
       .locator('.jp-chat-input-container')
       .getByRole('button');
-    await input.pressSequentially(msg);
+    await input.pressSequentially(MSG_CONTENT);
     await sendButton.click();
 
     const messages = chatPanel.locator('.jp-chat-messages-container');
@@ -199,15 +213,15 @@ test.describe('#messages', () => {
     // It seems that the markdown renderer adds a new line.
     await expect(
       messages.locator('.jp-chat-message .jp-chat-rendermime-markdown')
-    ).toHaveText(msg + '\n');
+    ).toHaveText(MSG_CONTENT + '\n');
   });
 
   test('should send a message using keyboard', async ({ page }) => {
-    const chatPanel = await openChat(page, filename);
+    const chatPanel = await openChat(page, FILENAME);
     const input = chatPanel
       .locator('.jp-chat-input-container')
       .getByRole('textbox');
-    await input.pressSequentially(msg);
+    await input.pressSequentially(MSG_CONTENT);
     await input.press('Enter');
 
     const messages = chatPanel.locator('.jp-chat-messages-container');
@@ -215,30 +229,17 @@ test.describe('#messages', () => {
     // It seems that the markdown renderer adds a new line.
     await expect(
       messages.locator('.jp-chat-message .jp-chat-rendermime-markdown')
-    ).toHaveText(msg + '\n');
+    ).toHaveText(MSG_CONTENT + '\n');
   });
 });
 
 test.describe('#raw_time', () => {
-  const filename = 'my-chat.chat';
-  const originalContent = 'Hello World!';
-  const username = UUID.uuid4();
-  const user: User.IUser = {
-    identity: {
-      username: username,
-      name: 'jovyan',
-      display_name: 'jovyan',
-      initials: 'JP',
-      color: 'var(--jp-collaborator-color1)'
-    },
-    permissions: {}
-  };
   const msgID_raw = UUID.uuid4();
   const msg_raw_time: IChatMessage = {
     type: 'msg',
     id: msgID_raw,
-    sender: username,
-    body: originalContent,
+    sender: USERNAME,
+    body: MSG_CONTENT,
     time: 1714116341,
     raw_time: true
   };
@@ -246,8 +247,8 @@ test.describe('#raw_time', () => {
   const msg_verif: IChatMessage = {
     type: 'msg',
     id: msgID_verif,
-    sender: username,
-    body: originalContent,
+    sender: USERNAME,
+    body: MSG_CONTENT,
     time: 1714116341,
     raw_time: false
   };
@@ -255,33 +256,29 @@ test.describe('#raw_time', () => {
     messages: {},
     users: {}
   };
-  chatContent.users[username] = user.identity;
+  chatContent.users[USERNAME] = USER.identity;
   chatContent.messages[msgID_raw] = msg_raw_time;
   chatContent.messages[msgID_verif] = msg_verif;
-
-  test.use({
-    mockUser: user
-  });
 
   test.beforeEach(async ({ page }) => {
     // Create a chat file with content
     await page.filebrowser.contents.uploadContent(
       JSON.stringify(chatContent),
       'text',
-      filename
+      FILENAME
     );
   });
 
   test.afterEach(async ({ page }) => {
-    if (await page.filebrowser.contents.fileExists(filename)) {
-      await page.filebrowser.contents.deleteFile(filename);
+    if (await page.filebrowser.contents.fileExists(FILENAME)) {
+      await page.filebrowser.contents.deleteFile(FILENAME);
     }
   });
 
   test('message timestamp should be raw according to file content', async ({
     page
   }) => {
-    const chatPanel = await openChat(page, filename);
+    const chatPanel = await openChat(page, FILENAME);
     const messages = chatPanel.locator(
       '.jp-chat-messages-container .jp-chat-message'
     );
@@ -296,7 +293,7 @@ test.describe('#raw_time', () => {
   });
 
   test('time for new message should not be raw', async ({ page }) => {
-    const chatPanel = await openChat(page, filename);
+    const chatPanel = await openChat(page, FILENAME);
     const messages = chatPanel.locator(
       '.jp-chat-messages-container .jp-chat-message'
     );
@@ -318,20 +315,256 @@ test.describe('#raw_time', () => {
   });
 });
 
-test.describe('#settings', () => {
-  const filename = 'my-chat.chat';
-  const msg = 'Hello world!';
+test.describe('#messageToolbar', () => {
+  const additionnalContent = ' Messages can be edited';
 
-  test.use({ mockSettings: { ...galata.DEFAULT_SETTINGS } });
+  const msgID = UUID.uuid4();
+  const msg: IChatMessage = {
+    type: 'msg',
+    id: msgID,
+    sender: USERNAME,
+    body: MSG_CONTENT,
+    time: 1714116341
+  };
+  const chatContent = {
+    messages: {},
+    users: {}
+  };
+  chatContent.users[USERNAME] = USER.identity;
+  chatContent.messages[msgID] = msg;
 
   test.beforeEach(async ({ page }) => {
-    // Create a chat file
-    await page.filebrowser.contents.uploadContent('{}', 'text', filename);
+    // Create a chat file with content
+    await page.filebrowser.contents.uploadContent(
+      JSON.stringify(chatContent),
+      'text',
+      FILENAME
+    );
   });
 
   test.afterEach(async ({ page }) => {
-    if (await page.filebrowser.contents.fileExists(filename)) {
-      await page.filebrowser.contents.deleteFile(filename);
+    if (await page.filebrowser.contents.fileExists(FILENAME)) {
+      await page.filebrowser.contents.deleteFile(FILENAME);
+    }
+  });
+
+  test('message should have a toolbar', async ({ page }) => {
+    const chatPanel = await openChat(page, FILENAME);
+    const message = chatPanel
+      .locator('.jp-chat-messages-container .jp-chat-rendermime-markdown')
+      .first();
+
+    await expect(message.locator('.jp-chat-toolbar')).not.toBeVisible();
+
+    //Should display the message toolbar
+    await message.hover({ position: { x: 5, y: 5 } });
+    await expect(message.locator('.jp-chat-toolbar')).toBeVisible();
+  });
+
+  test('should update the message', async ({ page }) => {
+    const chatPanel = await openChat(page, FILENAME);
+    const message = chatPanel
+      .locator('.jp-chat-messages-container .jp-chat-message')
+      .first();
+    const messageContent = message.locator('.jp-chat-rendermime-markdown');
+
+    // Should display the message toolbar
+    await messageContent.hover({ position: { x: 5, y: 5 } });
+    await messageContent.locator('.jp-chat-toolbar jp-button').first().click();
+
+    await expect(messageContent).not.toBeVisible();
+
+    const editInput = chatPanel
+      .locator('.jp-chat-messages-container .jp-chat-input-container')
+      .getByRole('textbox');
+
+    await expect(editInput).toBeVisible();
+    await editInput.focus();
+    await editInput.press('End');
+    await editInput.pressSequentially(additionnalContent);
+    await editInput.press('Enter');
+
+    // It seems that the markdown renderer adds a new line.
+    await expect(messageContent).toHaveText(
+      MSG_CONTENT + additionnalContent + '\n'
+    );
+    expect(
+      await message.locator('.jp-chat-message-header').textContent()
+    ).toContain('(edited)');
+  });
+
+  test('should cancel message edition', async ({ page }) => {
+    const chatPanel = await openChat(page, FILENAME);
+    const message = chatPanel
+      .locator('.jp-chat-messages-container .jp-chat-message')
+      .first();
+    const messageContent = message.locator('.jp-chat-rendermime-markdown');
+
+    // Should display the message toolbar
+    await messageContent.hover({ position: { x: 5, y: 5 } });
+    await messageContent.locator('.jp-chat-toolbar jp-button').first().click();
+
+    await expect(messageContent).not.toBeVisible();
+
+    const editInput = chatPanel
+      .locator('.jp-chat-messages-container .jp-chat-input-container')
+      .getByRole('textbox');
+
+    await expect(editInput).toBeVisible();
+    await editInput.focus();
+    await editInput.press('End');
+    await editInput.pressSequentially(additionnalContent);
+
+    const cancelButton = chatPanel
+      .locator('.jp-chat-messages-container .jp-chat-input-container')
+      .getByTitle('Cancel edition');
+    await expect(cancelButton).toBeVisible();
+    await cancelButton.click();
+    await expect(editInput).not.toBeVisible();
+
+    // It seems that the markdown renderer adds a new line.
+    await expect(messageContent).toHaveText(MSG_CONTENT + '\n');
+    expect(
+      await message.locator('.jp-chat-message-header').textContent()
+    ).not.toContain('(edited)');
+  });
+
+  test('should set the message as deleted', async ({ page }) => {
+    const chatPanel = await openChat(page, FILENAME);
+    const message = chatPanel
+      .locator('.jp-chat-messages-container .jp-chat-message')
+      .first();
+    const messageContent = message.locator('.jp-chat-rendermime-markdown');
+
+    // Should display the message toolbar
+    await messageContent.hover({ position: { x: 5, y: 5 } });
+    await messageContent.locator('.jp-chat-toolbar jp-button').last().click();
+
+    await expect(messageContent).not.toBeVisible();
+    expect(
+      await message.locator('.jp-chat-message-header').textContent()
+    ).toContain('(message deleted)');
+  });
+});
+
+test.describe('#outofband', () => {
+  const msgID = UUID.uuid4();
+  const msg: IChatMessage = {
+    type: 'msg',
+    id: msgID,
+    sender: USERNAME,
+    body: MSG_CONTENT,
+    time: 1714116341
+  };
+  const chatContent = {
+    messages: {},
+    users: {}
+  };
+  chatContent.users[USERNAME] = USER.identity;
+  chatContent.messages[msgID] = msg;
+
+  test.beforeEach(async ({ page }) => {
+    // Create a chat file with content
+    await page.filebrowser.contents.uploadContent(
+      JSON.stringify(chatContent),
+      'text',
+      FILENAME
+    );
+  });
+
+  test.afterEach(async ({ page }) => {
+    if (await page.filebrowser.contents.fileExists(FILENAME)) {
+      await page.filebrowser.contents.deleteFile(FILENAME);
+    }
+  });
+
+  test('should update message from file', async ({ page }) => {
+    const updatedContent = 'Content updated';
+    const chatPanel = await openChat(page, FILENAME);
+    const messageContent = chatPanel
+      .locator('.jp-chat-messages-container .jp-chat-rendermime-markdown')
+      .first();
+    const newMsg = { ...msg, body: updatedContent };
+    const newContent = {
+      messages: {},
+      users: {}
+    };
+    newContent.users[USERNAME] = USER.identity;
+    newContent.messages[msgID] = newMsg;
+
+    await page.filebrowser.contents.uploadContent(
+      JSON.stringify(newContent),
+      'text',
+      FILENAME
+    );
+
+    await expect(messageContent).toHaveText(updatedContent);
+  });
+
+  test('should add a message from file', async ({ page }) => {
+    const newMsgContent = 'New message';
+    const newMsgID = UUID.uuid4();
+    const chatPanel = await openChat(page, FILENAME);
+    const messages = chatPanel.locator(
+      '.jp-chat-messages-container .jp-chat-message'
+    );
+    const newMsg: IChatMessage = {
+      type: 'msg',
+      id: newMsgID,
+      sender: USERNAME,
+      body: newMsgContent,
+      time: msg.time + 5
+    };
+    const newContent = {
+      messages: {},
+      users: {}
+    };
+    newContent.users[USERNAME] = USER.identity;
+    newContent.messages[msgID] = msg;
+    newContent.messages[newMsgID] = newMsg;
+
+    await page.filebrowser.contents.uploadContent(
+      JSON.stringify(newContent),
+      'text',
+      FILENAME
+    );
+
+    await expect(messages).toHaveCount(2);
+    await expect(
+      messages.last().locator('.jp-chat-rendermime-markdown')
+    ).toHaveText(newMsgContent);
+  });
+
+  test('should delete a message from file', async ({ page }) => {
+    const chatPanel = await openChat(page, FILENAME);
+    const messageContent = chatPanel
+      .locator('.jp-chat-messages-container .jp-chat-rendermime-markdown')
+      .first();
+    const newContent = {
+      messages: {},
+      users: {}
+    };
+    newContent.users[USERNAME] = USER.identity;
+
+    await page.filebrowser.contents.uploadContent(
+      JSON.stringify(newContent),
+      'text',
+      FILENAME
+    );
+
+    await expect(messageContent).not.toBeAttached();
+  });
+});
+
+test.describe('#settings', () => {
+  test.beforeEach(async ({ page }) => {
+    // Create a chat file
+    await page.filebrowser.contents.uploadContent('{}', 'text', FILENAME);
+  });
+
+  test.afterEach(async ({ page }) => {
+    if (await page.filebrowser.contents.fileExists(FILENAME)) {
+      await page.filebrowser.contents.deleteFile(FILENAME);
     }
   });
 
@@ -371,12 +604,12 @@ test.describe('#settings', () => {
     );
 
     // Should not send message with Enter
-    const chatPanel = await openChat(page, filename);
+    const chatPanel = await openChat(page, FILENAME);
     const messages = chatPanel.locator('.jp-chat-messages-container');
     const input = chatPanel
       .locator('.jp-chat-input-container')
       .getByRole('textbox');
-    await input!.pressSequentially(msg);
+    await input!.pressSequentially(MSG_CONTENT);
     await input!.press('Enter');
 
     await expect(messages!.locator('.jp-chat-message')).toHaveCount(0);
@@ -389,13 +622,13 @@ test.describe('#settings', () => {
     // pressing Enter above is trimmed.
     await expect(
       messages.locator('.jp-chat-message .jp-chat-rendermime-markdown')
-    ).toHaveText(msg + '\n');
+    ).toHaveText(MSG_CONTENT + '\n');
   });
 
   test('should update settings value sendWithShiftEnter on existing chat', async ({
     page
   }) => {
-    const chatPanel = await openChat(page, filename);
+    const chatPanel = await openChat(page, FILENAME);
 
     // Modify the settings
     const settings = await openSettings(page);
@@ -415,14 +648,14 @@ test.describe('#settings', () => {
     );
 
     // Activate the chat panel
-    await page.activity.activateTab(filename);
+    await page.activity.activateTab(FILENAME);
 
     // Should not send message with Enter
     const messages = chatPanel.locator('.jp-chat-messages-container');
     const input = chatPanel
       .locator('.jp-chat-input-container')
       .getByRole('textbox');
-    await input!.pressSequentially(msg);
+    await input!.pressSequentially(MSG_CONTENT);
     await input!.press('Enter');
 
     await expect(messages!.locator('.jp-chat-message')).toHaveCount(0);
@@ -433,10 +666,8 @@ test.describe('#settings', () => {
 
     // It seems that the markdown renderer adds a new line, but the '\n' inserted when
     // pressing Enter above is trimmed.
-    expect(
-      await messages
-        .locator('.jp-chat-message .jp-chat-rendermime-markdown')
-        .textContent()
-    ).toBe(msg + '\n');
+    await expect(
+      messages.locator('.jp-chat-message .jp-chat-rendermime-markdown')
+    ).toHaveText(MSG_CONTENT + '\n');
   });
 });

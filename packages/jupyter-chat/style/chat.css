@@ -3,6 +3,10 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+.jp-chat-rendermime-markdown {
+  position: relative;
+}
+
 .jp-chat-rendermime-markdown .jp-RenderedHTMLCommon {
   padding-right: 0;
 }
@@ -24,4 +28,26 @@
 
 .jp-chat-rendermime-markdown mjx-container {
   font-size: 119%;
+}
+
+.jp-chat-toolbar {
+  display: none;
+  position: absolute;
+  right: 2px;
+  top: 2px;
+  font-size: var(--jp-ui-font-size0);
+  color: var(--jp-ui-font-color3);
+}
+
+.jp-chat-rendermime-markdown:hover .jp-chat-toolbar {
+  display: inherit;
+}
+
+.jp-chat-toolbar:hover {
+  cursor: pointer;
+  color: var(--jp-ui-font-color2);
+}
+
+.jp-chat-toolbar > .jp-ToolbarButtonComponent {
+  margin-top: 0px;
 }

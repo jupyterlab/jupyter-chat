@@ -7,8 +7,7 @@
  * The user description.
  */
 export interface IUser {
-  id: string;
-  username?: string;
+  username: string;
   name?: string;
   display_name?: string;
   initials?: string;
@@ -34,6 +33,8 @@ export interface IChatMessage {
   time: number;
   sender: IUser | string;
   raw_time?: boolean;
+  deleted?: boolean;
+  edited?: boolean;
 }
 
 export type IClearMessage = {

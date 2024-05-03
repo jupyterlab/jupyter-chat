@@ -89,11 +89,19 @@ export class YChat extends YDocument<ChatChange> {
   }
 
   setUser(value: IUser): void {
-    this._users.set(value.username || value.id, value);
+    this._users.set(value.username, value);
+  }
+
+  getMessage(id: string): IYmessage | undefined {
+    return this._messages.get(id);
   }
 
   setMessage(value: IYmessage): void {
     this._messages.set(value.id, value);
+  }
+
+  deleteMessage(id: string): void {
+    this._messages.delete(id);
   }
 
   private _usersObserver = (event: Y.YMapEvent<IUser>): void => {

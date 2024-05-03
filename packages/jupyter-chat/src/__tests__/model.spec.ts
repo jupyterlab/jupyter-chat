@@ -39,7 +39,7 @@ describe('test chat model', () => {
       id: 'message1',
       time: Date.now() / 1000,
       body: 'message test',
-      sender: { id: 'user' }
+      sender: { username: 'user' }
     } as IChatMessage;
 
     beforeEach(() => {

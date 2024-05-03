@@ -3,6 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { IThemeManager } from '@jupyterlab/apputils';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -16,7 +17,6 @@ import { ChatInput } from './chat-input';
 import { ScrollContainer } from './scroll-container';
 import { IChatModel } from '../model';
 import { IChatMessage, IMessage } from '../types';
-import { IThemeManager } from '@jupyterlab/apputils';
 
 type ChatBodyProps = {
   model: IChatModel;
@@ -55,7 +55,7 @@ function ChatBody({
       if (message.type === 'clear') {
         setMessages([]);
         return;
-      } else if (message.type === 'msg') {
+      } else {
         setMessages((messageGroups: IChatMessage[]) => {
           const existingMessages = [...messageGroups];
 
@@ -63,10 +63,14 @@ function ChatBody({
             msg => msg.id === message.id
           );
           if (messageIndex > -1) {
-            // The message is an update of an existing one.
-            // Let's remove it (to avoid position conflict if timestamp has changed)
-            // and add the new one.
+            // The message is an update of an existing one (or a removal).
+            // Let's remove it anyway (to avoid position conflict if timestamp has
+            // changed) and add the new one if it is an update.
             existingMessages.splice(messageIndex, 1);
+          }
+
+          if (message.type === 'remove') {
+            return existingMessages;
           }
 
           // Find the first message that should be after this one.
@@ -105,7 +109,11 @@ function ChatBody({
   return (
     <>
       <ScrollContainer sx={{ flexGrow: 1 }}>
-        <ChatMessages messages={messages} rmRegistry={renderMimeRegistry} />
+        <ChatMessages
+          messages={messages}
+          rmRegistry={renderMimeRegistry}
+          model={model}
+        />
       </ScrollContainer>
       <ChatInput
         value={input}

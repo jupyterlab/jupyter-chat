@@ -70,7 +70,6 @@ class YChat(YBaseDoc):
         :return: Document's contents.
         :rtype: string
         """
-
         return json.dumps({
             "messages": self.get_messages()["messages"],
             "users": self.get_users()["users"]
@@ -86,13 +85,18 @@ class YChat(YBaseDoc):
             contents = json.loads(value)
         except json.JSONDecodeError:
             contents = dict()
-        if "users" in contents.keys():
-            with self._ydoc.transaction():
+
+        with self._ydoc.transaction():
+            self._yusers.clear()
+            self._ymessages.clear()
+            for key in [k for k in self._ystate.keys() if k not in ("dirty", "path")]:
+                del self._ystate[key]
+
+            if "users" in contents.keys():
                 for k, v in contents["users"].items():
                     self._yusers.update({k: v})
 
-        if "messages" in contents.keys():
-            with self._ydoc.transaction():
+            if "messages" in contents.keys():
                 for k, v in contents["messages"].items():
                     self._ymessages.update({k: v})
 
