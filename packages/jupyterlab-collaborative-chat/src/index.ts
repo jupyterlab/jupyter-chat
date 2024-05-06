@@ -21,8 +21,8 @@ import {
   showErrorMessage
 } from '@jupyterlab/apputils';
 import { PathExt } from '@jupyterlab/coreutils';
-import { ILauncher } from '@jupyterlab/launcher';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
+import { ILauncher } from '@jupyterlab/launcher';
 import { IObservableList } from '@jupyterlab/observables';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { Contents } from '@jupyterlab/services';
@@ -326,8 +326,8 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         }
 
         if (inSidePanel && chatPanel) {
-          app.shell.activateById(chatPanel.id);
           // The chat is opened in the chat panel.
+          app.shell.activateById(chatPanel.id);
           const model = await drive.get(filepath);
 
           /**
