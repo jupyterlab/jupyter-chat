@@ -183,7 +183,9 @@ test.describe('#menuNew', () => {
     const menu = await page.menu.openLocator('File>New');
     // Snapshot on list the list to avoid the menu border with transparency,
     // which can lead to error due to background.
-    expect(await menu!.locator('> ul').screenshot()).toMatchSnapshot('menu-new.png');
+    expect(await menu!.locator('> ul').screenshot()).toMatchSnapshot(
+      'menu-new.png'
+    );
   });
 
   test('should open modal create from the menu', async ({ page }) => {
