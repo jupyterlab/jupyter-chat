@@ -10,11 +10,11 @@ import {
   INewMessage,
   IUser
 } from '@jupyter/chat';
-import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { IChangedArgs } from '@jupyterlab/coreutils';
+import { DocumentRegistry } from '@jupyterlab/docregistry';
+import { User } from '@jupyterlab/services';
 import { PartialJSONObject, UUID } from '@lumino/coreutils';
 import { ISignal, Signal } from '@lumino/signaling';
-import { Awareness } from 'y-protocols/awareness';
 
 import { IWidgetConfig } from './token';
 import { ChatChange, IYmessage, YChat } from './ychat';
@@ -24,8 +24,8 @@ import { ChatChange, IYmessage, YChat } from './ychat';
  */
 export namespace CollaborativeChatModel {
   export interface IOptions extends ChatModel.IOptions {
-    awareness: Awareness;
     widgetConfig: IWidgetConfig;
+    user: User.IIdentity | null;
     sharedModel?: YChat;
     languagePreference?: string;
   }
@@ -41,7 +41,8 @@ export class CollaborativeChatModel
   constructor(options: CollaborativeChatModel.IOptions) {
     super(options);
 
-    this._awareness = options.awareness;
+    this._user = options.user || { username: 'user undefined' };
+
     const { widgetConfig, sharedModel } = options;
 
     if (sharedModel) {
@@ -53,8 +54,6 @@ export class CollaborativeChatModel
     this.sharedModel.changed.connect(this._onchange, this);
 
     this.config = widgetConfig.config;
-
-    this._user = this._awareness.states.get(this._awareness.clientID)?.user;
 
     widgetConfig.configChanged.connect((_, config) => {
       this.config = config;
@@ -121,32 +120,6 @@ export class CollaborativeChatModel
 
   fromJSON(data: PartialJSONObject): void {
     // nothing to do
-  }
-
-  initialize(): void {
-    //
-  }
-
-  /**
-   * A function called before transferring the message to the panel(s).
-   * Can be useful if some actions are required on the message.
-   *
-   * It is used in this case to retrieve the user avatar color, unknown on server side.
-   */
-  protected formatChatMessage(message: IChatMessage): IChatMessage {
-    if (this._awareness) {
-      if (typeof message.sender !== 'string') {
-        // const sender = message.sender as IUser;
-        const sender = Array.from(this._awareness.states.values()).find(
-          awareness =>
-            awareness.user.username === (message.sender as IUser).username
-        )?.user;
-        if (sender) {
-          message.sender.color = sender.color;
-        }
-      }
-    }
-    return message;
   }
 
   addMessage(message: INewMessage): Promise<boolean | void> | boolean | void {
@@ -251,6 +224,5 @@ export class CollaborativeChatModel
   private _contentChanged = new Signal<this, void>(this);
   private _stateChanged = new Signal<this, IChangedArgs<any>>(this);
 
-  private _awareness: Awareness;
   private _user: IUser;
 }

@@ -4,7 +4,6 @@
  */
 
 import { chatIcon } from '@jupyter/chat';
-import { IGlobalAwareness } from '@jupyter/collaboration';
 import { ICollaborativeDrive } from '@jupyter/docprovider';
 import {
   ILayoutRestorer,
@@ -29,7 +28,6 @@ import { Contents } from '@jupyterlab/services';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { ITranslator, nullTranslator } from '@jupyterlab/translation';
 import { launchIcon } from '@jupyterlab/ui-components';
-import { Awareness } from 'y-protocols/awareness';
 
 import {
   WidgetConfig,
@@ -56,7 +54,7 @@ export const docFactories: JupyterFrontEndPlugin<IWidgetConfig> = {
   id: pluginIds.docFactories,
   description: 'A document factories for collaborative chat',
   autoStart: true,
-  requires: [IGlobalAwareness, IRenderMimeRegistry],
+  requires: [IRenderMimeRegistry],
   optional: [
     ICollaborativeDrive,
     ILayoutRestorer,
@@ -68,7 +66,6 @@ export const docFactories: JupyterFrontEndPlugin<IWidgetConfig> = {
   provides: IWidgetConfig,
   activate: (
     app: JupyterFrontEnd,
-    awareness: Awareness,
     rmRegistry: IRenderMimeRegistry,
     drive: ICollaborativeDrive | null,
     restorer: ILayoutRestorer | null,
@@ -149,12 +146,22 @@ export const docFactories: JupyterFrontEndPlugin<IWidgetConfig> = {
       drive.sharedModelFactory.registerDocumentFactory('chat', chatFactory);
     }
 
-    // Creating and registering the model factory for our custom DocumentModel
-    const modelFactory = new CollaborativeChatModelFactory({
-      awareness,
-      widgetConfig
-    });
-    app.docRegistry.addModelFactory(modelFactory);
+    app.serviceManager.ready
+      .then(() => {
+        const user = app.serviceManager.user.identity;
+        // Creating and registering the model factory for our custom DocumentModel
+        const modelFactory = new CollaborativeChatModelFactory({
+          user,
+          widgetConfig
+        });
+        app.docRegistry.addModelFactory(modelFactory);
+      })
+      .catch(e =>
+        console.error(
+          'The collaborative chat model factory is not initialized',
+          e
+        )
+      );
 
     // Creating the widget factory to register it so the document manager knows about
     // our new DocumentWidget
@@ -203,12 +210,11 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
   id: pluginIds.chatCommands,
   description: 'The commands to create or open a chat',
   autoStart: true,
-  requires: [ICollaborativeDrive, IGlobalAwareness, IWidgetConfig],
+  requires: [ICollaborativeDrive, IWidgetConfig],
   optional: [IChatPanel, ICommandPalette, ILauncher],
   activate: (
     app: JupyterFrontEnd,
     drive: ICollaborativeDrive,
-    awareness: Awareness,
     widgetConfig: IWidgetConfig,
     chatPanel: ChatPanel | null,
     commandPalette: ICommandPalette | null,
@@ -220,7 +226,12 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
      * Command to create a new chat.
      *
      * args:
-     *  name: the name of the chat to create.
+     *  name -        optional, the name of the chat to create.
+     *                Open a dialog if not provided.
+     *  inSidePanel - optional (default to false).
+     *                Whether to open the chat in side panel or in main area.
+     *  isPalette -   optional (default to false).
+     *                Whether the command is in commands palette or not.
      */
     commands.addCommand(CommandIDs.createChat, {
       label: args => (args.isPalette ? 'Create a new chat' : 'Chat'),
@@ -283,99 +294,19 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           filepath = model.path;
         }
 
-        return commands.execute(CommandIDs.openChat, { filepath, inSidePanel });
-      }
-    });
-
-    /*
-     * Command to open a chat.
-     *
-     * args:
-     *  filepath - the chat file to open.
-     */
-    commands.addCommand(CommandIDs.openChat, {
-      label: 'Open a chat',
-      execute: async args => {
-        const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
-        let filepath: string | null = (args.filepath as string) ?? null;
-        if (filepath === null) {
-          filepath = (
-            await InputDialog.getText({
-              label: 'File path',
-              placeholder: '/path/to/the/chat/file',
-              title: 'Path of the chat'
-            })
-          ).value;
-        }
-
-        if (!filepath) {
-          return;
-        }
-
-        let fileExist = true;
-        await drive.get(filepath, { content: false }).catch(() => {
-          fileExist = false;
+        return commands.execute(CommandIDs.openChat, {
+          filepath,
+          inSidePanel
         });
-
-        if (!fileExist) {
-          showErrorMessage(
-            'Error opening chat',
-            `'${filepath}' is not a valid path`
-          );
-          return;
-        }
-
-        if (inSidePanel && chatPanel) {
-          // The chat is opened in the chat panel.
-          app.shell.activateById(chatPanel.id);
-          const model = await drive.get(filepath);
-
-          /**
-           * Create a share model from the chat file
-           */
-          const sharedModel = drive.sharedModelFactory.createNew({
-            path: model.path,
-            format: model.format,
-            contentType: chatFileType.contentType,
-            collaborative: true
-          }) as YChat;
-
-          /**
-           * Initialize the chat model with the share model
-           */
-          const chat = new CollaborativeChatModel({
-            awareness,
-            sharedModel,
-            widgetConfig
-          });
-
-          /**
-           * Add a chat widget to the side panel.
-           */
-          chatPanel.addChat(
-            chat,
-            PathExt.basename(model.name, chatFileType.extensions[0])
-          );
-        } else {
-          // The chat is opened in the main area
-          commands.execute('docmanager:open', {
-            path: `RTC:${filepath}`,
-            factory: FACTORY
-          });
-        }
       }
     });
 
-    // Add the commands to the palette
+    // Add the command to the palette
     if (commandPalette) {
       commandPalette.addItem({
         category: 'Chat',
         command: CommandIDs.createChat,
         args: { isPalette: true }
-      });
-      commandPalette.addItem({
-        category: 'Chat',
-        command: CommandIDs.openChat
       });
     }
 
@@ -387,6 +318,100 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         rank: 1
       });
     }
+
+    app.serviceManager.ready
+      .then(() => {
+        const user = app.serviceManager.user.identity;
+        /*
+         * Command to open a chat.
+         *
+         * args:
+         *  filepath - the chat file to open.
+         */
+        commands.addCommand(CommandIDs.openChat, {
+          label: 'Open a chat',
+          execute: async args => {
+            const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
+            let filepath: string | null = (args.filepath as string) ?? null;
+            if (filepath === null) {
+              filepath = (
+                await InputDialog.getText({
+                  label: 'File path',
+                  placeholder: '/path/to/the/chat/file',
+                  title: 'Path of the chat'
+                })
+              ).value;
+            }
+
+            if (!filepath) {
+              return;
+            }
+
+            let fileExist = true;
+            await drive.get(filepath, { content: false }).catch(() => {
+              fileExist = false;
+            });
+
+            if (!fileExist) {
+              showErrorMessage(
+                'Error opening chat',
+                `'${filepath}' is not a valid path`
+              );
+              return;
+            }
+
+            if (inSidePanel && chatPanel) {
+              // The chat is opened in the chat panel.
+              app.shell.activateById(chatPanel.id);
+              const model = await drive.get(filepath);
+
+              /**
+               * Create a share model from the chat file
+               */
+              const sharedModel = drive.sharedModelFactory.createNew({
+                path: model.path,
+                format: model.format,
+                contentType: chatFileType.contentType,
+                collaborative: true
+              }) as YChat;
+
+              /**
+               * Initialize the chat model with the share model
+               */
+              const chat = new CollaborativeChatModel({
+                user,
+                sharedModel,
+                widgetConfig
+              });
+
+              /**
+               * Add a chat widget to the side panel.
+               */
+              chatPanel.addChat(
+                chat,
+                PathExt.basename(model.name, chatFileType.extensions[0])
+              );
+            } else {
+              // The chat is opened in the main area
+              commands.execute('docmanager:open', {
+                path: `RTC:${filepath}`,
+                factory: FACTORY
+              });
+            }
+          }
+        });
+
+        // Add the command to the palette
+        if (commandPalette) {
+          commandPalette.addItem({
+            category: 'Chat',
+            command: CommandIDs.openChat
+          });
+        }
+      })
+      .catch(e =>
+        console.error('The command to open a chat is not initialized', e)
+      );
   }
 };
 
