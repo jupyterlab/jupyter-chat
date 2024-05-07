@@ -18,6 +18,8 @@ export const chatFileType: DocumentRegistry.IFileType = {
   icon: chatIcon
 };
 
+import { ChatPanel } from './widget';
+
 /**
  * The token for the chat widget config
  */
@@ -57,5 +59,16 @@ export const CommandIDs = {
   /**
    * Open a chat file.
    */
-  openChat: 'collaborative-chat:open'
+  openChat: 'collaborative-chat:open',
+  /**
+   * Move a main widget to the side panel
+   */
+  moveToSide: 'collaborative-chat:moveToSide'
 };
+
+/**
+ * The chat panel token.
+ */
+export const IChatPanel = new Token<ChatPanel>(
+  '@jupyter/collaboration:IChatPanel'
+);

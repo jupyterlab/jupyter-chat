@@ -23,7 +23,7 @@ import { IWidgetConfig } from './token';
  */
 export class WidgetConfig implements IWidgetConfig {
   /**
-   * The constructor of the ChatDocument.
+   * The constructor of the WidgetConfig.
    */
   constructor(config: Partial<IConfig>) {
     this.config = config;

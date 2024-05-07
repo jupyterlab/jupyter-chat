@@ -4,9 +4,15 @@
  */
 
 /*
-    See the JupyterLab Developer Guide for useful CSS Patterns:
+  See the JupyterLab Developer Guide for useful CSS Patterns:
 
-    https://jupyterlab.readthedocs.io/en/stable/developer/css.html
+  https://jupyterlab.readthedocs.io/en/stable/developer/css.html
 */
 
 @import url('~@jupyter/chat/style/index.css');
+
+.jp-collab-chat_main-panel
+  .jp-ToolbarButtonComponent[data-command='collaborative-chat:moveToSide']
+  svg {
+  transform: rotate(180deg);
+}
