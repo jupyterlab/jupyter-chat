@@ -180,8 +180,10 @@ test.describe('#commandPalette', () => {
 
 test.describe('#menuNew', () => {
   test('should have an entry in main menu -> new', async ({ page }) => {
-    const menu = await page.menu.open('File>New');
-    expect(await menu?.screenshot()).toMatchSnapshot('menu-new.png');
+    const menu = await page.menu.openLocator('File>New');
+    // Snapshot on list the list to avoid the menu border with transparency,
+    // which can lead to error due to background.
+    expect(await menu!.locator('> ul').screenshot()).toMatchSnapshot('menu-new.png');
   });
 
   test('should open modal create from the menu', async ({ page }) => {
