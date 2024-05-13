@@ -294,10 +294,17 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           filepath = model.path;
         }
 
-        return commands.execute(CommandIDs.openChat, {
-          filepath,
-          inSidePanel
-        });
+        if (commands.hasCommand(CommandIDs.openChat)) {
+          return commands.execute(CommandIDs.openChat, {
+            filepath,
+            inSidePanel
+          });
+        } else {
+          commands.execute('docmanager:open', {
+            path: `RTC:${filepath}`,
+            factory: FACTORY
+          });
+        }
       }
     });
 
@@ -410,7 +417,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         }
       })
       .catch(e =>
-        console.error('The command to open a chat is not initialized', e)
+        console.error('The command to open a chat is not initialized\n', e)
       );
   }
 };
@@ -476,6 +483,7 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
       label: 'Move the chat to the side panel',
       caption: 'Move the chat to the side panel',
       icon: launchIcon,
+      isEnabled: () => commands.hasCommand(CommandIDs.openChat),
       execute: async () => {
         const widget = app.shell.currentWidget;
         // Ensure widget is a CollaborativeChatWidget and is in main area
