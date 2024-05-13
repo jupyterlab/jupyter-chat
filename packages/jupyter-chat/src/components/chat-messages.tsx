@@ -33,7 +33,7 @@ type ChatMessagesProps = BaseMessageProps & {
 };
 
 export type ChatMessageHeaderProps = IUser & {
-  timestamp: string;
+  timestamp: number;
   rawTime?: boolean;
   deleted?: boolean;
   edited?: boolean;
@@ -41,10 +41,48 @@ export type ChatMessageHeaderProps = IUser & {
 };
 
 export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
+  const [datetime, setDatetime] = useState<Record<number, string>>({});
   const sharedStyles: SxProps<Theme> = {
     height: '24px',
     width: '24px'
   };
+
+  /**
+   * Effect: update cached datetime strings upon receiving a new message.
+   */
+  useEffect(() => {
+    if (!datetime[props.timestamp]) {
+      const newDatetime: Record<number, string> = {};
+      let datetime: string;
+      const currentDate = new Date();
+      const sameDay = (date: Date) =>
+        date.getFullYear() === currentDate.getFullYear() &&
+        date.getMonth() === currentDate.getMonth() &&
+        date.getDate() === currentDate.getDate();
+
+      const msgDate = new Date(props.timestamp * 1000); // Convert message time to milliseconds
+
+      // Display only the time if the day of the message is the current one.
+      if (sameDay(msgDate)) {
+        // Use the browser's default locale
+        datetime = msgDate.toLocaleTimeString([], {
+          hour: 'numeric',
+          minute: '2-digit'
+        });
+      } else {
+        // Use the browser's default locale
+        datetime = msgDate.toLocaleString([], {
+          day: 'numeric',
+          month: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit'
+        });
+      }
+      newDatetime[props.timestamp] = datetime;
+      setDatetime(newDatetime);
+    }
+  });
 
   const bgcolor = props.color;
   const avatar = props.avatar_url ? (
@@ -125,7 +163,7 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
           }}
           title={props.rawTime ? 'Unverified time' : ''}
         >
-          {`${props.timestamp}${props.rawTime ? '*' : ''}`}
+          {`${datetime[props.timestamp]}${props.rawTime ? '*' : ''}`}
         </Typography>
       </Box>
     </Box>
@@ -136,51 +174,6 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
  * The messages list UI.
  */
 export function ChatMessages(props: ChatMessagesProps): JSX.Element {
-  const [timestamps, setTimestamps] = useState<Record<string, string>>({});
-
-  /**
-   * Effect: update cached timestamp strings upon receiving a new message.
-   */
-  useEffect(() => {
-    const newTimestamps: Record<string, string> = { ...timestamps };
-    let timestampAdded = false;
-
-    const currentDate = new Date();
-    const sameDay = (date: Date) =>
-      date.getFullYear() === currentDate.getFullYear() &&
-      date.getMonth() === currentDate.getMonth() &&
-      date.getDate() === currentDate.getDate();
-
-    for (const message of props.messages) {
-      if (!(message.id in newTimestamps)) {
-        const date = new Date(message.time * 1000); // Convert message time to milliseconds
-
-        // Display only the time if the day of the message is the current one.
-        if (sameDay(date)) {
-          // Use the browser's default locale
-          newTimestamps[message.id] = date.toLocaleTimeString([], {
-            hour: 'numeric',
-            minute: '2-digit'
-          });
-        } else {
-          // Use the browser's default locale
-          newTimestamps[message.id] = date.toLocaleString([], {
-            day: 'numeric',
-            month: 'numeric',
-            year: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit'
-          });
-        }
-
-        timestampAdded = true;
-      }
-    }
-    if (timestampAdded) {
-      setTimestamps(newTimestamps);
-    }
-  }, [props.messages]);
-
   return (
     <Box
       sx={{
@@ -206,7 +199,7 @@ export function ChatMessages(props: ChatMessagesProps): JSX.Element {
           >
             <ChatMessageHeader
               {...sender}
-              timestamp={timestamps[message.id]}
+              timestamp={message.time}
               rawTime={message.raw_time}
               deleted={message.deleted}
               edited={message.edited}
