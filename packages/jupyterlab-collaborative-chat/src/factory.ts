@@ -7,9 +7,8 @@ import { ChatWidget, IChatModel, IConfig } from '@jupyter/chat';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { ABCWidgetFactory, DocumentRegistry } from '@jupyterlab/docregistry';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
-import { Contents } from '@jupyterlab/services';
+import { Contents, User } from '@jupyterlab/services';
 import { Signal } from '@lumino/signaling';
-import { Awareness } from 'y-protocols/awareness';
 
 import { CollaborativeChatModel } from './model';
 import { CollaborativeChatWidget } from './widget';
@@ -95,7 +94,7 @@ export class CollaborativeChatModelFactory
   implements DocumentRegistry.IModelFactory<CollaborativeChatModel>
 {
   constructor(options: CollaborativeChatModel.IOptions) {
-    this._awareness = options.awareness;
+    this._user = options.user;
     this._widgetConfig = options.widgetConfig;
   }
 
@@ -167,12 +166,12 @@ export class CollaborativeChatModelFactory
   ): CollaborativeChatModel {
     return new CollaborativeChatModel({
       ...options,
-      awareness: this._awareness,
+      user: this._user,
       widgetConfig: this._widgetConfig
     });
   }
 
   private _disposed = false;
-  private _awareness: Awareness;
+  private _user: User.IIdentity | null;
   private _widgetConfig: IWidgetConfig;
 }

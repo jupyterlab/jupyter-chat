@@ -7,7 +7,11 @@ import { IConfig, chatIcon } from '@jupyter/chat';
 import { Token } from '@lumino/coreutils';
 import { ISignal } from '@lumino/signaling';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
+import { ChatPanel } from './widget';
 
+/**
+ * The file type for a chat document.
+ */
 export const chatFileType: DocumentRegistry.IFileType = {
   name: 'chat',
   displayName: 'Chat',
@@ -18,13 +22,11 @@ export const chatFileType: DocumentRegistry.IFileType = {
   icon: chatIcon
 };
 
-import { ChatPanel } from './widget';
-
 /**
  * The token for the chat widget config
  */
 export const IWidgetConfig = new Token<IWidgetConfig>(
-  '@jupyter/collaboration:IChatDocument'
+  'jupyter-collaborative-chat:IWidgetConfig'
 );
 
 /**
@@ -70,5 +72,5 @@ export const CommandIDs = {
  * The chat panel token.
  */
 export const IChatPanel = new Token<ChatPanel>(
-  '@jupyter/collaboration:IChatPanel'
+  'jupyter-collaborative-chat:IChatPanel'
 );

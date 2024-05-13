@@ -82,7 +82,15 @@ const openSettings = async (
   await page.evaluate(async args => {
     await window.jupyterapp.commands.execute('settingeditor:open', args);
   }, args);
-  await page.activity.activateTab('Settings');
+
+  // Activate the settings tab, sometimes it does not automatically.
+  const settingsTab = page
+    .getByRole('main')
+    .getByRole('tab', { name: 'Settings', exact: true });
+  await settingsTab.click();
+  await page.waitForCondition(
+    async () => (await settingsTab.getAttribute('aria-selected')) === 'true'
+  );
   return (await page.activity.getPanelLocator('Settings')) as Locator;
 };
 
@@ -180,8 +188,12 @@ test.describe('#commandPalette', () => {
 
 test.describe('#menuNew', () => {
   test('should have an entry in main menu -> new', async ({ page }) => {
-    const menu = await page.menu.open('File>New');
-    expect(await menu?.screenshot()).toMatchSnapshot('menu-new.png');
+    const menu = await page.menu.openLocator('File>New');
+    // Snapshot on list the list to avoid the menu border with transparency,
+    // which can lead to error due to background.
+    expect(await menu!.locator('> ul').screenshot()).toMatchSnapshot(
+      'menu-new.png'
+    );
   });
 
   test('should open modal create from the menu', async ({ page }) => {
