@@ -28,7 +28,6 @@ function ChatBody({
   rmRegistry: renderMimeRegistry
 }: ChatBodyProps): JSX.Element {
   const [messages, setMessages] = useState<IChatMessage[]>([]);
-  const [input, setInput] = useState('');
 
   /**
    * Effect: fetch history and config on initial render
@@ -99,9 +98,7 @@ function ChatBody({
 
   // no need to append to messageGroups imperatively here. all of that is
   // handled by the listeners registered in the effect hooks above.
-  const onSend = async () => {
-    setInput('');
-
+  const onSend = async (input: string) => {
     // send message to backend
     model.addMessage({ body: input });
   };
@@ -116,8 +113,6 @@ function ChatBody({
         />
       </ScrollContainer>
       <ChatInput
-        value={input}
-        onChange={setInput}
         onSend={onSend}
         sx={{
           paddingLeft: 4,
