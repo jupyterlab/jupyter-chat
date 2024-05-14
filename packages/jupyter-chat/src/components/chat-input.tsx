@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 
 import {
   Box,
@@ -21,16 +21,34 @@ const SEND_BUTTON_CLASS = 'jp-chat-send-button';
 const CANCEL_BUTTON_CLASS = 'jp-chat-cancel-button';
 
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
+  const [input, setInput] = useState(props.value || '');
+
   function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
     if (
       event.key === 'Enter' &&
       ((props.sendWithShiftEnter && event.shiftKey) ||
         (!props.sendWithShiftEnter && !event.shiftKey))
     ) {
-      props.onSend();
+      onSend();
       event.stopPropagation();
       event.preventDefault();
     }
+  }
+
+  /**
+   * Triggered when sending the message.
+   */
+  function onSend() {
+    setInput('');
+    props.onSend(input);
+  }
+
+  /**
+   * Triggered when cancelling edition.
+   */
+  function onCancel() {
+    setInput(props.value || '');
+    props.onCancel!();
   }
 
   // Set the helper text based on whether Shift+Enter is used for sending.
@@ -48,8 +66,8 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     <Box sx={props.sx} className={clsx(INPUT_BOX_CLASS)}>
       <Box sx={{ display: 'flex' }}>
         <TextField
-          value={props.value}
-          onChange={e => props.onChange(e.target.value)}
+          value={input}
+          onChange={e => setInput(e.target.value)}
           fullWidth
           variant="outlined"
           multiline
@@ -62,8 +80,8 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
                   <IconButton
                     size="small"
                     color="primary"
-                    onClick={props.onCancel}
-                    disabled={!props.value.trim().length}
+                    onClick={onCancel}
+                    disabled={!input.trim().length}
                     title={'Cancel edition'}
                     className={clsx(CANCEL_BUTTON_CLASS)}
                   >
@@ -73,8 +91,8 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
                 <IconButton
                   size="small"
                   color="primary"
-                  onClick={props.onSend}
-                  disabled={!props.value.trim().length}
+                  onClick={onSend}
+                  disabled={!input.trim().length}
                   title={`Send message ${props.sendWithShiftEnter ? '(SHIFT+ENTER)' : '(ENTER)'}`}
                   className={clsx(SEND_BUTTON_CLASS)}
                 >
@@ -86,7 +104,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
           FormHelperTextProps={{
             sx: { marginLeft: 'auto', marginRight: 0 }
           }}
-          helperText={props.value.length > 2 ? helperText : ' '}
+          helperText={input.length > 2 ? helperText : ' '}
         />
       </Box>
     </Box>
@@ -101,11 +119,25 @@ export namespace ChatInput {
    * The properties of the react element.
    */
   export interface IProps {
-    value: string;
-    onChange: (newValue: string) => unknown;
-    onSend: () => unknown;
-    sendWithShiftEnter: boolean;
+    /**
+     * The initial value of the input (default to '')
+     */
+    value?: string;
+    /**
+     * The function to be called to send the message.
+     */
+    onSend: (input: string) => unknown;
+    /**
+     * The function to be called to cancel editing.
+     */
     onCancel?: () => unknown;
+    /**
+     * Whether using shift+enter to send the message.
+     */
+    sendWithShiftEnter: boolean;
+    /**
+     * Custom mui/material styles.
+     */
     sx?: SxProps<Theme>;
   }
 }
