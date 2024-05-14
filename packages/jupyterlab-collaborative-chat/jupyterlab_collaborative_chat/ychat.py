@@ -10,7 +10,7 @@ from functools import partial
 from typing import Any, Callable, Dict, List, Set
 
 from jupyter_ydoc.ybasedoc import YBaseDoc
-from pycrdt import Map, MapEvent
+from pycrdt import Array, ArrayEvent, Map
 
 
 class YChat(YBaseDoc):
@@ -19,7 +19,7 @@ class YChat(YBaseDoc):
         self._background_tasks: Set[asyncio.Task] = set()
         self.dirty = True
         self._ydoc["users"] = self._yusers = Map()
-        self._ydoc["messages"] = self._ymessages = Map()
+        self._ydoc["messages"] = self._ymessages = Array()
         self._ymessages.observe(self._timestamp_new_messages)
 
     @property
@@ -51,7 +51,7 @@ class YChat(YBaseDoc):
         return dict(users=users)
 
     @property
-    def messages(self) -> Map:
+    def messages(self) -> List:
         return self._ymessages.to_py()
 
     def get_messages(self) -> Dict:
@@ -71,8 +71,8 @@ class YChat(YBaseDoc):
         :rtype: string
         """
         return json.dumps({
-            "messages": self.get_messages()["messages"],
-            "users": self.get_users()["users"]
+            "messages": self.messages,
+            "users": self.users
         })
 
     def set(self, value: str) -> None:
@@ -86,6 +86,7 @@ class YChat(YBaseDoc):
         except json.JSONDecodeError:
             contents = dict()
 
+        # Make sure the users are updated before the messages, for consistency.
         with self._ydoc.transaction():
             self._yusers.clear()
             self._ymessages.clear()
@@ -97,8 +98,8 @@ class YChat(YBaseDoc):
                     self._yusers.update({k: v})
 
             if "messages" in contents.keys():
-                for k, v in contents["messages"].items():
-                    self._ymessages.update({k: v})
+                for message in contents["messages"]:
+                    self._ymessages.append(message)
 
     def observe(self, callback: Callable[[str, Any], None]) -> None:
         self.unobserve()
@@ -108,7 +109,7 @@ class YChat(YBaseDoc):
         )
         self._subscriptions[self._yusers] = self._yusers.observe(partial(callback, "users"))
 
-    def _timestamp_new_messages(self, event: MapEvent) -> None:
+    def _timestamp_new_messages(self, event: ArrayEvent) -> None:
         """
         Called when a the ymessages changes to update the timestamp with the server one,
         to synchronize all messages with a unique time server.
@@ -118,29 +119,43 @@ class YChat(YBaseDoc):
         # flag is set to False after first reading.
         if self.dirty:
             return
-        timestamp: float = time.time()
-        new_msg_ids: List[str] = []
-        for key, value in event.keys.items():
-            if value["action"] != "add":
-                continue
-            message = self._ymessages.get(key, None)
+        # timestamp: float = time.time()
+        timestamp: float = 1715619678
+        index = 0
+        inserted_count = -1
+        deleted_count = -1
+        for value in event.delta:
+            if "retain" in value.keys():
+                index = value["retain"]
+            elif "insert" in value.keys():
+                inserted_count = len(value["insert"])
+            elif "delete" in value.keys():
+                deleted_count = value["delete"]
+
+        # There is no message inserted, nothing to do.
+        if inserted_count == -1 or deleted_count == inserted_count:
+            return
+
+        for idx in range(index, index + inserted_count):
+            message = self._ymessages[idx]
             if message and message.get("raw_time", True):
-                new_msg_ids.append(key)
+                self.create_task(self._set_timestamp(idx, timestamp))
 
-        if len(new_msg_ids):
-            self.create_task(self._set_timestamp(new_msg_ids, timestamp))
-
-    async def _set_timestamp(self, new_msg_ids: List[str], timestamp: float):
+    async def _set_timestamp(self, msg_idx: int, timestamp: float):
         """
-        Update the timestamp of a list of message.
+        Update the timestamp of a message and reinsert it at the correct position.
         """
-        messages = {}
-        for msg_id in new_msg_ids:
-            message = self._ymessages.get(msg_id, None)
-            if message:
-                message["time"] = timestamp
-                message["raw_time"] = False
-                messages[msg_id] = message
-
         with self._ydoc.transaction():
-            self._ymessages.update(messages)
+            # Remove the message from the list and modify the timestamp
+            message = self._ymessages.pop(msg_idx)
+
+        if message:
+            message["time"] = timestamp
+            message["raw_time"] = False
+            with self._ydoc.transaction():
+                # Move the message at the correct position in the list, looking first at the end, since the message
+                # should be the last one.
+                # The next() function below return the index of the first message with a timestamp inferior of the
+                # current one, starting from the end of the list.
+                new_idx = len(self._ymessages) - next((i for i, v in enumerate(self._ymessages.to_py()[::-1]) if v["time"] < timestamp), len(self._ymessages))
+                self._ymessages.insert(new_idx, message)

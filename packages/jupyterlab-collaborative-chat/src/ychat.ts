@@ -4,7 +4,7 @@
  */
 
 import { IChatMessage, IUser } from '@jupyter/chat';
-import { DocumentChange, IMapChange, YDocument } from '@jupyter/ydoc';
+import { Delta, DocumentChange, IMapChange, YDocument } from '@jupyter/ydoc';
 import { JSONExt, JSONObject } from '@lumino/coreutils';
 import * as Y from 'yjs';
 
@@ -15,7 +15,7 @@ export type ChatChange = DocumentChange & {
   /**
    * Changes in messages.
    */
-  messageChanges?: MessageChange[];
+  messageChanges?: MessageChange;
   /**
    * Changes in users.
    */
@@ -25,7 +25,7 @@ export type ChatChange = DocumentChange & {
 /**
  * The message change type.
  */
-export type MessageChange = IMapChange<IYmessage>;
+export type MessageChange = Delta<IYmessage[]>;
 
 /**
  * The user change type.
@@ -54,7 +54,7 @@ export class YChat extends YDocument<ChatChange> {
     this._users = this.ydoc.getMap<IUser>('users');
     this._users.observe(this._usersObserver);
 
-    this._messages = this.ydoc.getMap<IYmessage>('messages');
+    this._messages = this.ydoc.getArray<IYmessage>('messages');
     this._messages.observe(this._messagesObserver);
   }
 
@@ -76,7 +76,7 @@ export class YChat extends YDocument<ChatChange> {
     return JSONExt.deepCopy(this._users.toJSON());
   }
 
-  get messages(): JSONObject {
+  get messages(): string[] {
     return JSONExt.deepCopy(this._messages.toJSON());
   }
 
@@ -89,19 +89,36 @@ export class YChat extends YDocument<ChatChange> {
   }
 
   setUser(value: IUser): void {
-    this._users.set(value.username, value);
+    this.transact(() => {
+      this._users.set(value.username, value);
+    });
   }
 
-  getMessage(id: string): IYmessage | undefined {
-    return this._messages.get(id);
+  getMessage(index: number): IYmessage | undefined {
+    return this._messages.get(index);
   }
 
-  setMessage(value: IYmessage): void {
-    this._messages.set(value.id, value);
+  addMessage(value: IYmessage): void {
+    this.transact(() => {
+      this._messages.push([value]);
+    });
   }
 
-  deleteMessage(id: string): void {
-    this._messages.delete(id);
+  updateMessage(index: number, value: IYmessage): void {
+    this.transact(() => {
+      this._messages.delete(index);
+      this._messages.insert(index, [value]);
+    });
+  }
+
+  getMessageIndex(id: string): number {
+    return this._messages.toArray().findIndex(msg => msg.id === id);
+  }
+
+  deleteMessage(index: number): void {
+    this.transact(() => {
+      this._messages.delete(index);
+    });
   }
 
   private _usersObserver = (event: Y.YMapEvent<IUser>): void => {
@@ -139,41 +156,11 @@ export class YChat extends YDocument<ChatChange> {
     this._changed.emit({ userChange: userChange } as any);
   };
 
-  private _messagesObserver = (event: Y.YMapEvent<IYmessage>): void => {
-    const messageChanges = new Array<MessageChange>();
-    event.keysChanged.forEach(key => {
-      const change = event.changes.keys.get(key);
-      if (change) {
-        switch (change.action) {
-          case 'add':
-            messageChanges.push({
-              key,
-              newValue: this._messages.get(key),
-              type: 'add'
-            });
-            break;
-          case 'delete':
-            messageChanges.push({
-              key,
-              oldValue: change.oldValue,
-              type: 'remove'
-            });
-            break;
-          case 'update':
-            messageChanges.push({
-              key: key,
-              oldValue: change.oldValue,
-              newValue: this._messages.get(key),
-              type: 'change'
-            });
-            break;
-        }
-      }
-    });
-
+  private _messagesObserver = (event: Y.YArrayEvent<IYmessage>): void => {
+    const messageChanges = event.delta;
     this._changed.emit({ messageChanges: messageChanges } as any);
   };
 
   private _users: Y.Map<IUser>;
-  private _messages: Y.Map<IYmessage>;
+  private _messages: Y.Array<IYmessage>;
 }
