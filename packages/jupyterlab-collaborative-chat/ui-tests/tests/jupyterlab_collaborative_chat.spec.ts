@@ -292,7 +292,7 @@ test.describe('#raw_time', () => {
     raw_time: false
   };
   const chatContent = {
-    messages: <IChatMessage[]> [],
+    messages: <IChatMessage[]>[],
     users: {}
   };
   chatContent.users[USERNAME] = USER.identity;
@@ -365,7 +365,7 @@ test.describe('#messageToolbar', () => {
     time: 1714116341
   };
   const chatContent = {
-    messages: <IChatMessage[]> [],
+    messages: <IChatMessage[]>[],
     users: {}
   };
   chatContent.users[USERNAME] = USER.identity;
@@ -494,7 +494,7 @@ test.describe('#outofband', () => {
     time: 1714116341
   };
   const chatContent = {
-    messages: <IChatMessage[]> [],
+    messages: <IChatMessage[]>[],
     users: {}
   };
   chatContent.users[USERNAME] = USER.identity;
@@ -523,7 +523,7 @@ test.describe('#outofband', () => {
       .first();
     const newMsg = { ...msg, body: updatedContent };
     const newContent = {
-      messages: <IChatMessage[]> [],
+      messages: <IChatMessage[]>[],
       users: {}
     };
     newContent.users[USERNAME] = USER.identity;
@@ -552,7 +552,7 @@ test.describe('#outofband', () => {
       time: msg.time + 5
     };
     const newContent = {
-      messages: <IChatMessage[]> [],
+      messages: <IChatMessage[]>[],
       users: {}
     };
     newContent.users[USERNAME] = USER.identity;
@@ -577,7 +577,7 @@ test.describe('#outofband', () => {
       .locator('.jp-chat-messages-container .jp-chat-rendermime-markdown')
       .first();
     const newContent = {
-      messages: <IChatMessage[]> [],
+      messages: <IChatMessage[]>[],
       users: {}
     };
     newContent.users[USERNAME] = USER.identity;
