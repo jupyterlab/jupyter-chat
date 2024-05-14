@@ -11,7 +11,6 @@ import {
   INewMessage,
   IChatMessage,
   IConfig,
-  IMessage,
   IUser
 } from './types';
 
@@ -35,9 +34,14 @@ export interface IChatModel extends IDisposable {
   readonly user?: IUser;
 
   /**
-   * The signal emitted when a new message is received.
+   * The chat messages list.
    */
-  get incomingMessage(): ISignal<IChatModel, IMessage>;
+  readonly messages: IChatMessage[];
+
+  /**
+   * The signal emitted when the messages list is updated.
+   */
+  readonly messagesUpdated: ISignal<IChatModel, void>;
 
   /**
    * Send a message, to be defined depending on the chosen technology.
@@ -49,7 +53,7 @@ export interface IChatModel extends IDisposable {
   addMessage(message: INewMessage): Promise<boolean | void> | boolean | void;
 
   /**
-   * Optional, to update a message from the chat.
+   * Optional, to update a message from the chat panel.
    *
    * @param id - the unique ID of the message.
    * @param message - the updated message.
@@ -84,9 +88,22 @@ export interface IChatModel extends IDisposable {
   /**
    * Function to call when a message is received.
    *
-   * @param message - the new message, containing user information and body.
+   * @param message - the message with user information and body.
    */
-  onMessage(message: IMessage): void;
+  onMessage(message: IChatMessage): void;
+
+  /**
+   * Function updating the chat messages list.
+   *
+   * @param index - the index of the messages to add or delete.
+   * @param deleted - the number of messages to delete.
+   * @param messages - the list of messages to add.
+   */
+  updateMessagesList(
+    index: number,
+    deleted: number,
+    messages: IChatMessage[]
+  ): void;
 }
 
 /**
@@ -100,6 +117,13 @@ export class ChatModel implements IChatModel {
    */
   constructor(options: ChatModel.IOptions = {}) {
     this._config = options.config ?? {};
+  }
+
+  /**
+   * The chat messages list.
+   */
+  get messages(): IChatMessage[] {
+    return this._messages;
   }
 
   /**
@@ -123,11 +147,10 @@ export class ChatModel implements IChatModel {
   }
 
   /**
-   *
-   * The signal emitted when a new message is received.
+   * The signal emitted when the messages list is updated.
    */
-  get incomingMessage(): ISignal<IChatModel, IMessage> {
-    return this._incomingMessage;
+  get messagesUpdated(): ISignal<IChatModel, void> {
+    return this._messagesUpdated;
   }
 
   /**
@@ -140,7 +163,7 @@ export class ChatModel implements IChatModel {
   addMessage(message: INewMessage): Promise<boolean | void> | boolean | void {}
 
   /**
-   * Optional, to update a message from the chat.
+   * Optional, to update a message from the chat panel.
    *
    * @param id - the unique ID of the message.
    * @param message - the message to update.
@@ -180,18 +203,49 @@ export class ChatModel implements IChatModel {
    *
    * @param message - the message with user information and body.
    */
-  onMessage(message: IMessage): void {
-    if (message.type === 'msg') {
-      message = this.formatChatMessage(message as IChatMessage);
+  onMessage(message: IChatMessage): void {
+    const messageIndex = this._messages.findIndex(msg => msg.id === message.id);
+    if (messageIndex > -1) {
+      // The message is an update of an existing one.
+      // Let's remove it to avoid position conflict if timestamp has changed.
+      this._messages.splice(messageIndex, 1);
     }
-
-    this._incomingMessage.emit(message);
+    // Find the first message that should be after this one.
+    let nextMsgIndex = this._messages.findIndex(msg => msg.time > message.time);
+    if (nextMsgIndex === -1) {
+      // There is no message after this one, so let's insert the message at the end.
+      nextMsgIndex = this._messages.length;
+    }
+    // Insert the message.
+    this.updateMessagesList(nextMsgIndex, 0, [message]);
   }
 
+  /**
+   * Function updating the chat messages list.
+   *
+   * @param index - the index of the messages to add or delete.
+   * @param deleted - the number of messages to delete.
+   * @param messages - the list of messages to add.
+   */
+  updateMessagesList(
+    index: number,
+    deleted: number = 0,
+    messages: IChatMessage[] = []
+  ): void {
+    const formattedMessages: IChatMessage[] = [];
+    messages.forEach(message => {
+      formattedMessages.push(this.formatChatMessage(message));
+    });
+
+    this._messages.splice(index, deleted, ...formattedMessages);
+    this._messagesUpdated.emit();
+  }
+
+  private _messages: IChatMessage[] = [];
   private _id: string = '';
   private _config: IConfig;
   private _isDisposed = false;
-  private _incomingMessage = new Signal<IChatModel, IMessage>(this);
+  private _messagesUpdated = new Signal<IChatModel, void>(this);
 }
 
 /**

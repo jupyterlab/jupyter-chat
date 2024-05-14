@@ -3,13 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import {
-  ChatModel,
-  IChatMessage,
-  IDeleteMessage,
-  INewMessage,
-  IUser
-} from '@jupyter/chat';
+import { ChatModel, IChatMessage, INewMessage, IUser } from '@jupyter/chat';
 import { IChangedArgs } from '@jupyterlab/coreutils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { User } from '@jupyterlab/services';
@@ -203,11 +197,8 @@ export class CollaborativeChatModel
       }
       if (deletedMessages) {
         deletedMessages.forEach(message => {
-          const msg: IDeleteMessage = {
-            type: 'remove',
-            id: message.id
-          };
-          this.onMessage(msg);
+          const index = this.messages.findIndex(msg => msg.id === message.id);
+          this.updateMessagesList(index, 1);
         });
       }
     }

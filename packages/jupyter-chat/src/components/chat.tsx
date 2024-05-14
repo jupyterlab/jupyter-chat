@@ -16,7 +16,7 @@ import { ChatMessages } from './chat-messages';
 import { ChatInput } from './chat-input';
 import { ScrollContainer } from './scroll-container';
 import { IChatModel } from '../model';
-import { IChatMessage, IMessage } from '../types';
+import { IChatMessage } from '../types';
 
 type ChatBodyProps = {
   model: IChatModel;
@@ -50,49 +50,13 @@ function ChatBody({
    * Effect: listen to chat messages
    */
   useEffect(() => {
-    function handleChatEvents(_: IChatModel, message: IMessage) {
-      if (message.type === 'clear') {
-        setMessages([]);
-        return;
-      } else {
-        setMessages((messageGroups: IChatMessage[]) => {
-          const existingMessages = [...messageGroups];
-
-          const messageIndex = existingMessages.findIndex(
-            msg => msg.id === message.id
-          );
-          if (messageIndex > -1) {
-            // The message is an update of an existing one (or a removal).
-            // Let's remove it anyway (to avoid position conflict if timestamp has
-            // changed) and add the new one if it is an update.
-            existingMessages.splice(messageIndex, 1);
-          }
-
-          if (message.type === 'remove') {
-            return existingMessages;
-          }
-
-          // Find the first message that should be after this one.
-          let nextMsgIndex = existingMessages.findIndex(
-            msg => msg.time > message.time
-          );
-          if (nextMsgIndex === -1) {
-            // There is no message after this one, so let's insert the message at
-            // the end.
-            nextMsgIndex = existingMessages.length;
-          }
-
-          // Insert the message.
-          existingMessages.splice(nextMsgIndex, 0, message);
-
-          return existingMessages;
-        });
-      }
+    function handleChatEvents(_: IChatModel) {
+      setMessages([...model.messages]);
     }
 
-    model.incomingMessage.connect(handleChatEvents);
+    model.messagesUpdated.connect(handleChatEvents);
     return function cleanup() {
-      model.incomingMessage.disconnect(handleChatEvents);
+      model.messagesUpdated.disconnect(handleChatEvents);
     };
   }, [model]);
 

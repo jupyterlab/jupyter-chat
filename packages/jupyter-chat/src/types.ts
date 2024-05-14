@@ -37,17 +37,6 @@ export interface IChatMessage {
   edited?: boolean;
 }
 
-export type IClearMessage = {
-  type: 'clear';
-};
-
-export type IDeleteMessage = {
-  type: 'remove';
-  id: string;
-};
-
-export type IMessage = IChatMessage | IClearMessage | IDeleteMessage;
-
 /**
  * The chat history interface.
  */
