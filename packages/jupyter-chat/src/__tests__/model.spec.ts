@@ -8,7 +8,7 @@
  */
 
 import { ChatModel, IChatModel } from '../model';
-import { IChatMessage, IMessage } from '../types';
+import { IChatMessage } from '../types';
 
 describe('test chat model', () => {
   describe('model instantiation', () => {
@@ -33,7 +33,7 @@ describe('test chat model', () => {
     }
 
     let model: IChatModel;
-    let messages: IMessage[];
+    let messages: IChatMessage[];
     const msg = {
       type: 'msg',
       id: 'message1',
@@ -48,22 +48,22 @@ describe('test chat model', () => {
 
     it('should signal incoming message', () => {
       model = new ChatModel();
-      model.incomingMessage.connect((sender: IChatModel, message: IMessage) => {
+      model.messagesUpdated.connect((sender: IChatModel) => {
         expect(sender).toBe(model);
-        messages.push(message);
+        messages = model.messages;
       });
-      model.onMessage(msg);
+      model.messageAdded(msg);
       expect(messages).toHaveLength(1);
       expect(messages[0]).toBe(msg);
     });
 
     it('should format message', () => {
       model = new TestChat();
-      model.incomingMessage.connect((sender: IChatModel, message: IMessage) => {
+      model.messagesUpdated.connect((sender: IChatModel) => {
         expect(sender).toBe(model);
-        messages.push(message);
+        messages = model.messages;
       });
-      model.onMessage({ ...msg } as IChatMessage);
+      model.messageAdded({ ...msg });
       expect(messages).toHaveLength(1);
       expect(messages[0]).not.toBe(msg);
       expect((messages[0] as IChatMessage).body).toBe('formatted msg');

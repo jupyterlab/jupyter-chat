@@ -7,15 +7,12 @@ import {
   ChatModel,
   IChatHistory,
   IChatMessage,
-  IChatModel,
-  IClearMessage,
-  IDeleteMessage,
   INewMessage,
   IUser
 } from '@jupyter/chat';
 import { URLExt } from '@jupyterlab/coreutils';
 import { ServerConnection } from '@jupyterlab/services';
-import { UUID } from '@lumino/coreutils';
+import { PromiseDelegate, UUID } from '@lumino/coreutils';
 
 import { requestAPI } from './handler';
 
@@ -43,14 +40,12 @@ export interface IWsMessage extends IChatMessage {
   sender: IWsUser | string;
 }
 
-export type IMessage = IWsMessage | IClearMessage | IDeleteMessage;
-
 export type ConnectionMessage = {
   type: 'connection';
   client_id: string;
 };
 
-type GenericMessage = IMessage | ConnectionMessage;
+type GenericMessage = IWsMessage | ConnectionMessage;
 
 /**
  * An implementation of the chat model based on websocket handler.
@@ -76,7 +71,8 @@ export class WebSocketHandler extends ChatModel {
    * must be awaited before calling any other method.
    */
   async initialize(): Promise<void> {
-    await this._initialize();
+    this._initialize();
+    await this._connectionInitialized.promise;
   }
 
   /**
@@ -121,7 +117,7 @@ export class WebSocketHandler extends ChatModel {
     }
   }
 
-  onMessage(message: IMessage): void {
+  messageAdded(message: GenericMessage): void {
     // resolve promise from `sendMessage()`
     if (message.type === 'msg') {
       const sender =
@@ -130,57 +126,56 @@ export class WebSocketHandler extends ChatModel {
       if (sender === this.id) {
         this._sendResolverQueue.get(message.id)?.(true);
       }
+      super.messageAdded(message);
+    } else if (message.type === 'connection') {
+      this.id = message.client_id;
+      this._connectionInitialized.resolve(true);
     }
-    super.onMessage(message);
   }
 
-  private _onClose(e: CloseEvent, reject: any) {
-    reject(new Error('Chat UI websocket disconnected'));
+  private _onClose(e: CloseEvent) {
+    this._connectionInitialized.reject(
+      new Error('Chat UI websocket disconnected')
+    );
     console.error('Chat UI websocket disconnected');
     // only attempt re-connect if there was an abnormal closure
     // WebSocket status codes defined in RFC 6455: https://www.rfc-editor.org/rfc/rfc6455.html#section-7.4.1
     if (e.code === 1006) {
       const delaySeconds = 1;
       console.info(`Will try to reconnect in ${delaySeconds} s.`);
-      setTimeout(async () => await this._initialize(), delaySeconds * 1000);
+      setTimeout(async () => await this.initialize(), delaySeconds * 1000);
     }
   }
 
-  private _initialize(): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      if (this.isDisposed) {
-        return;
-      }
-      console.log('Creating a new websocket connection for chat...');
-      const { token, WebSocket, wsUrl } = this.serverSettings;
-      const url =
-        URLExt.join(wsUrl, CHAT_SERVICE_URL) +
-        (token ? `?token=${encodeURIComponent(token)}` : '');
+  private _initialize(): void {
+    if (this.isDisposed) {
+      return;
+    }
+    console.log('Creating a new websocket connection for chat...');
+    const { token, WebSocket, wsUrl } = this.serverSettings;
+    const url =
+      URLExt.join(wsUrl, CHAT_SERVICE_URL) +
+      (token ? `?token=${encodeURIComponent(token)}` : '');
 
-      const socket = (this._socket = new WebSocket(url));
-      socket.onclose = e => this._onClose(e, reject);
-      socket.onerror = e => reject(e);
-      socket.onmessage = msg =>
-        msg.data && this.onMessage(JSON.parse(msg.data));
-
-      const listenForConnection = (_: IChatModel, message: GenericMessage) => {
-        if (message.type !== 'connection') {
-          return;
-        }
-        this.id = message.client_id;
-        resolve();
-        this.incomingMessage.disconnect(listenForConnection);
-      };
-
-      this.incomingMessage.connect(listenForConnection);
-    });
+    const socket = (this._socket = new WebSocket(url));
+    socket.onclose = e => this._onClose(e);
+    socket.onerror = e => console.error(e);
+    socket.onmessage = msg =>
+      msg.data && this.messageAdded(JSON.parse(msg.data));
   }
 
+  /**
+   * The websocket.
+   */
   private _socket: WebSocket | null = null;
   /**
-   * Queue of Promise resolvers pushed onto by `send()`
+   * Queue of Promise resolvers pushed onto by `send()`.
    */
   private _sendResolverQueue = new Map<string, (value: boolean) => void>();
+  /**
+   * A promise that resolves when the connection is initialized.
+   */
+  private _connectionInitialized = new PromiseDelegate<boolean>();
 }
 
 /**

@@ -3,13 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import {
-  ChatModel,
-  IChatMessage,
-  IDeleteMessage,
-  INewMessage,
-  IUser
-} from '@jupyter/chat';
+import { ChatModel, IChatMessage, INewMessage, IUser } from '@jupyter/chat';
 import { IChangedArgs } from '@jupyterlab/coreutils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { User } from '@jupyterlab/services';
@@ -134,18 +128,17 @@ export class CollaborativeChatModel
 
     // Add the user if it does not exist or has changed
     if (!(this.sharedModel.getUser(this._user.username) === this._user)) {
-      this.sharedModel.transact(
-        () => void this.sharedModel.setUser(this._user)
-      );
+      this.sharedModel.setUser(this._user);
     }
-    this.sharedModel.transact(() => void this.sharedModel.setMessage(msg));
+    this.sharedModel.addMessage(msg);
   }
 
   updateMessage(
     id: string,
     updatedMessage: IChatMessage
   ): Promise<boolean | void> | boolean | void {
-    let message = this.sharedModel.getMessage(id);
+    const index = this.sharedModel.getMessageIndex(id);
+    let message = this.sharedModel.getMessage(index);
     if (message) {
       message.body = updatedMessage.body;
       message.edited = true;
@@ -165,51 +158,41 @@ export class CollaborativeChatModel
         edited: true
       };
     }
-    this.sharedModel.transact(
-      () => void this.sharedModel.setMessage(message as IYmessage)
-    );
+    this.sharedModel.updateMessage(index, message as IYmessage);
   }
 
   deleteMessage(id: string): Promise<boolean | void> | boolean | void {
-    const message = this.sharedModel.getMessage(id);
+    const index = this.sharedModel.getMessageIndex(id);
+    const message = this.sharedModel.getMessage(index);
     if (!message) {
       console.error('The message to delete does not exist');
       return;
     }
     message.body = '';
     message.deleted = true;
-    this.sharedModel.transact(() => void this.sharedModel.setMessage(message));
+    this.sharedModel.updateMessage(index, message);
   }
 
   private _onchange = (_: YChat, change: ChatChange) => {
     if (change.messageChanges) {
-      const msgChange = change.messageChanges;
-      const messages: IYmessage[] = [];
-      const deletedMessages: IYmessage[] = [];
-      msgChange.forEach(data => {
-        if (['add', 'change'].includes(data.type) && data.newValue) {
-          messages.push(data.newValue);
-        } else if (data.type === 'remove' && data.oldValue) {
-          deletedMessages.push(data.oldValue);
+      const msgDelta = change.messageChanges;
+      let index = 0;
+      msgDelta.forEach(delta => {
+        if (delta.retain) {
+          index += delta.retain;
+        } else if (delta.insert) {
+          const messages = delta.insert.map(ymessage => {
+            const msg: IChatMessage = { ...ymessage };
+            msg.sender =
+              this.sharedModel.getUser(ymessage.sender) || ymessage.sender;
+            return msg;
+          });
+          this.messagesInserted(index, messages);
+          index += messages.length;
+        } else if (delta.delete) {
+          this.messagesDeleted(index, delta.delete);
         }
       });
-      if (messages) {
-        messages.forEach(message => {
-          const msg: IChatMessage = { ...message };
-          msg.sender =
-            this.sharedModel.getUser(message.sender) || message.sender;
-          this.onMessage(msg);
-        });
-      }
-      if (deletedMessages) {
-        deletedMessages.forEach(message => {
-          const msg: IDeleteMessage = {
-            type: 'remove',
-            id: message.id
-          };
-          this.onMessage(msg);
-        });
-      }
     }
   };
 

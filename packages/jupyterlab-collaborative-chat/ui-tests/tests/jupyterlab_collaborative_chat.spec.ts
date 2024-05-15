@@ -275,31 +275,29 @@ test.describe('#messages', () => {
 });
 
 test.describe('#raw_time', () => {
-  const msgID_raw = UUID.uuid4();
   const msg_raw_time: IChatMessage = {
     type: 'msg',
-    id: msgID_raw,
+    id: UUID.uuid4(),
     sender: USERNAME,
     body: MSG_CONTENT,
     time: 1714116341,
     raw_time: true
   };
-  const msgID_verif = UUID.uuid4();
   const msg_verif: IChatMessage = {
     type: 'msg',
-    id: msgID_verif,
+    id: UUID.uuid4(),
     sender: USERNAME,
     body: MSG_CONTENT,
     time: 1714116341,
     raw_time: false
   };
   const chatContent = {
-    messages: {},
+    messages: <IChatMessage[]>[],
     users: {}
   };
   chatContent.users[USERNAME] = USER.identity;
-  chatContent.messages[msgID_raw] = msg_raw_time;
-  chatContent.messages[msgID_verif] = msg_verif;
+  chatContent.messages.push(msg_raw_time);
+  chatContent.messages.push(msg_verif);
 
   test.beforeEach(async ({ page }) => {
     // Create a chat file with content
@@ -359,20 +357,19 @@ test.describe('#raw_time', () => {
 test.describe('#messageToolbar', () => {
   const additionnalContent = ' Messages can be edited';
 
-  const msgID = UUID.uuid4();
   const msg: IChatMessage = {
     type: 'msg',
-    id: msgID,
+    id: UUID.uuid4(),
     sender: USERNAME,
     body: MSG_CONTENT,
     time: 1714116341
   };
   const chatContent = {
-    messages: {},
+    messages: <IChatMessage[]>[],
     users: {}
   };
   chatContent.users[USERNAME] = USER.identity;
-  chatContent.messages[msgID] = msg;
+  chatContent.messages.push(msg);
 
   test.beforeEach(async ({ page }) => {
     // Create a chat file with content
@@ -489,20 +486,19 @@ test.describe('#messageToolbar', () => {
 });
 
 test.describe('#outofband', () => {
-  const msgID = UUID.uuid4();
   const msg: IChatMessage = {
     type: 'msg',
-    id: msgID,
+    id: UUID.uuid4(),
     sender: USERNAME,
     body: MSG_CONTENT,
     time: 1714116341
   };
   const chatContent = {
-    messages: {},
+    messages: <IChatMessage[]>[],
     users: {}
   };
   chatContent.users[USERNAME] = USER.identity;
-  chatContent.messages[msgID] = msg;
+  chatContent.messages.push(msg);
 
   test.beforeEach(async ({ page }) => {
     // Create a chat file with content
@@ -527,11 +523,11 @@ test.describe('#outofband', () => {
       .first();
     const newMsg = { ...msg, body: updatedContent };
     const newContent = {
-      messages: {},
+      messages: <IChatMessage[]>[],
       users: {}
     };
     newContent.users[USERNAME] = USER.identity;
-    newContent.messages[msgID] = newMsg;
+    newContent.messages.push(newMsg);
 
     await page.filebrowser.contents.uploadContent(
       JSON.stringify(newContent),
@@ -544,25 +540,24 @@ test.describe('#outofband', () => {
 
   test('should add a message from file', async ({ page }) => {
     const newMsgContent = 'New message';
-    const newMsgID = UUID.uuid4();
     const chatPanel = await openChat(page, FILENAME);
     const messages = chatPanel.locator(
       '.jp-chat-messages-container .jp-chat-message'
     );
     const newMsg: IChatMessage = {
       type: 'msg',
-      id: newMsgID,
+      id: UUID.uuid4(),
       sender: USERNAME,
       body: newMsgContent,
       time: msg.time + 5
     };
     const newContent = {
-      messages: {},
+      messages: <IChatMessage[]>[],
       users: {}
     };
     newContent.users[USERNAME] = USER.identity;
-    newContent.messages[msgID] = msg;
-    newContent.messages[newMsgID] = newMsg;
+    newContent.messages.push(msg);
+    newContent.messages.push(newMsg);
 
     await page.filebrowser.contents.uploadContent(
       JSON.stringify(newContent),
@@ -582,7 +577,7 @@ test.describe('#outofband', () => {
       .locator('.jp-chat-messages-container .jp-chat-rendermime-markdown')
       .first();
     const newContent = {
-      messages: {},
+      messages: <IChatMessage[]>[],
       users: {}
     };
     newContent.users[USERNAME] = USER.identity;
