@@ -177,25 +177,22 @@ export class CollaborativeChatModel
     if (change.messageChanges) {
       const msgDelta = change.messageChanges;
       let index = 0;
-      const messages: IYmessage[] = [];
-      let deletedCount = 0;
       msgDelta.forEach(delta => {
         if (delta.retain) {
-          index = delta.retain;
+          index += delta.retain;
         } else if (delta.insert) {
-          messages.push(...delta.insert);
+          const messages = delta.insert.map(ymessage => {
+            const msg: IChatMessage = { ...ymessage };
+            msg.sender =
+              this.sharedModel.getUser(ymessage.sender) || ymessage.sender;
+            return msg;
+          });
+          this.messagesInserted(index, messages);
+          index += messages.length;
         } else if (delta.delete) {
-          deletedCount = delta.delete;
+          this.messagesDeleted(index, delta.delete);
         }
       });
-
-      const chatMessages = messages.map(message => {
-        const msg: IChatMessage = { ...message };
-        msg.sender = this.sharedModel.getUser(message.sender) || message.sender;
-        return msg;
-      });
-
-      this.updateMessagesList(index, deletedCount, chatMessages);
     }
   };
 

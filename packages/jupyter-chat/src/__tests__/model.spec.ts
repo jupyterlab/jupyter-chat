@@ -52,7 +52,7 @@ describe('test chat model', () => {
         expect(sender).toBe(model);
         messages = model.messages;
       });
-      model.onMessage(msg);
+      model.messageAdded(msg);
       expect(messages).toHaveLength(1);
       expect(messages[0]).toBe(msg);
     });
@@ -63,7 +63,7 @@ describe('test chat model', () => {
         expect(sender).toBe(model);
         messages = model.messages;
       });
-      model.onMessage({ ...msg });
+      model.messageAdded({ ...msg });
       expect(messages).toHaveLength(1);
       expect(messages[0]).not.toBe(msg);
       expect((messages[0] as IChatMessage).body).toBe('formatted msg');

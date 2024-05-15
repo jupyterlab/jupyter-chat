@@ -147,15 +147,20 @@ class YChat(YBaseDoc):
         """
         with self._ydoc.transaction():
             # Remove the message from the list and modify the timestamp
-            message = self._ymessages.pop(msg_idx)
+            try:
+                message = self._ymessages[msg_idx]
+            except IndexError:
+                return
 
-        if message:
             message["time"] = timestamp
             message["raw_time"] = False
-            with self._ydoc.transaction():
-                # Move the message at the correct position in the list, looking first at the end, since the message
-                # should be the last one.
-                # The next() function below return the index of the first message with a timestamp inferior of the
-                # current one, starting from the end of the list.
-                new_idx = len(self._ymessages) - next((i for i, v in enumerate(self._ymessages.to_py()[::-1]) if v["time"] < timestamp), len(self._ymessages))
+            self._ymessages[msg_idx] = message
+
+            # Move the message at the correct position in the list, looking first at the end, since the message
+            # should be the last one.
+            # The next() function below return the index of the first message with a timestamp inferior of the
+            # current one, starting from the end of the list.
+            new_idx = len(self._ymessages) - next((i for i, v in enumerate(self._ymessages.to_py()[::-1]) if v["time"] < timestamp), len(self._ymessages))
+            if msg_idx != new_idx:
+                message = self._ymessages.pop(msg_idx)
                 self._ymessages.insert(new_idx, message)

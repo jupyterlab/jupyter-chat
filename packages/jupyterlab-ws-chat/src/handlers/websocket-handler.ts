@@ -117,7 +117,7 @@ export class WebSocketHandler extends ChatModel {
     }
   }
 
-  onMessage(message: GenericMessage): void {
+  messageAdded(message: GenericMessage): void {
     // resolve promise from `sendMessage()`
     if (message.type === 'msg') {
       const sender =
@@ -126,7 +126,7 @@ export class WebSocketHandler extends ChatModel {
       if (sender === this.id) {
         this._sendResolverQueue.get(message.id)?.(true);
       }
-      super.onMessage(message);
+      super.messageAdded(message);
     } else if (message.type === 'connection') {
       this.id = message.client_id;
       this._connectionInitialized.resolve(true);
@@ -160,7 +160,8 @@ export class WebSocketHandler extends ChatModel {
     const socket = (this._socket = new WebSocket(url));
     socket.onclose = e => this._onClose(e);
     socket.onerror = e => console.error(e);
-    socket.onmessage = msg => msg.data && this.onMessage(JSON.parse(msg.data));
+    socket.onmessage = msg =>
+      msg.data && this.messageAdded(JSON.parse(msg.data));
   }
 
   /**

@@ -90,20 +90,23 @@ export interface IChatModel extends IDisposable {
    *
    * @param message - the message with user information and body.
    */
-  onMessage(message: IChatMessage): void;
+  messageAdded(message: IChatMessage): void;
 
   /**
-   * Function updating the chat messages list.
+   * Function called when messages are inserted.
    *
-   * @param index - the index of the messages to add or delete.
-   * @param deleted - the number of messages to delete.
-   * @param messages - the list of messages to add.
+   * @param index - the index of the first message of the list.
+   * @param messages - the messages list.
    */
-  updateMessagesList(
-    index: number,
-    deleted: number,
-    messages: IChatMessage[]
-  ): void;
+  messagesInserted(index: number, messages: IChatMessage[]): void;
+
+  /**
+   * Function called when messages are deleted.
+   *
+   * @param index - the index of the first message to delete.
+   * @param count - the number of messages to delete.
+   */
+  messagesDeleted(index: number, count: number): void;
 }
 
 /**
@@ -203,7 +206,7 @@ export class ChatModel implements IChatModel {
    *
    * @param message - the message with user information and body.
    */
-  onMessage(message: IChatMessage): void {
+  messageAdded(message: IChatMessage): void {
     const messageIndex = this._messages.findIndex(msg => msg.id === message.id);
     if (messageIndex > -1) {
       // The message is an update of an existing one.
@@ -217,27 +220,32 @@ export class ChatModel implements IChatModel {
       nextMsgIndex = this._messages.length;
     }
     // Insert the message.
-    this.updateMessagesList(nextMsgIndex, 0, [message]);
+    this.messagesInserted(nextMsgIndex, [message]);
   }
 
   /**
-   * Function updating the chat messages list.
+   * Function called when messages are inserted.
    *
-   * @param index - the index of the messages to add or delete.
-   * @param deleted - the number of messages to delete.
-   * @param messages - the list of messages to add.
+   * @param index - the index of the first message of the list.
+   * @param messages - the messages list.
    */
-  updateMessagesList(
-    index: number,
-    deleted: number = 0,
-    messages: IChatMessage[] = []
-  ): void {
+  messagesInserted(index: number, messages: IChatMessage[]): void {
     const formattedMessages: IChatMessage[] = [];
     messages.forEach(message => {
       formattedMessages.push(this.formatChatMessage(message));
     });
+    this._messages.splice(index, 0, ...formattedMessages);
+    this._messagesUpdated.emit();
+  }
 
-    this._messages.splice(index, deleted, ...formattedMessages);
+  /**
+   * Function called when messages are deleted.
+   *
+   * @param index - the index of the first message to delete.
+   * @param count - the number of messages to delete.
+   */
+  messagesDeleted(index: number, count: number): void {
+    this._messages.splice(index, count);
     this._messagesUpdated.emit();
   }
 
