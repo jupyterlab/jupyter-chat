@@ -119,8 +119,7 @@ class YChat(YBaseDoc):
         # flag is set to False after first reading.
         if self.dirty:
             return
-        # timestamp: float = time.time()
-        timestamp: float = 1715619678
+        timestamp: float = time.time()
         index = 0
         inserted_count = -1
         deleted_count = -1
