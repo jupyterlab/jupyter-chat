@@ -12,7 +12,7 @@ import React, { useState, useEffect } from 'react';
 import { ChatInput } from './chat-input';
 import { RendermimeMarkdown } from './rendermime-markdown';
 import { IChatModel } from '../model';
-import { IChatMessage, IUser } from '../types';
+import { IChatMessage } from '../types';
 
 const MESSAGES_BOX_CLASS = 'jp-chat-messages-container';
 const MESSAGE_CLASS = 'jp-chat-message';
@@ -55,14 +55,7 @@ export function ChatMessages(props: ChatMessagesProps): JSX.Element {
             sx={{ padding: '1em 1em 0 1em' }}
             className={clsx(MESSAGE_CLASS)}
           >
-            <ChatMessageHeader
-              {...message.sender}
-              timestamp={message.time}
-              rawTime={message.raw_time}
-              deleted={message.deleted}
-              edited={message.edited}
-              sx={{ marginBottom: 3 }}
-            />
+            <ChatMessageHeader message={message} sx={{ marginBottom: 3 }} />
             <ChatMessage {...props} message={message} />
           </Box>
         );
@@ -74,11 +67,8 @@ export function ChatMessages(props: ChatMessagesProps): JSX.Element {
 /**
  * The message header props.
  */
-type ChatMessageHeaderProps = IUser & {
-  timestamp: number;
-  rawTime?: boolean;
-  deleted?: boolean;
-  edited?: boolean;
+type ChatMessageHeaderProps = {
+  message: IChatMessage;
   sx?: SxProps<Theme>;
 };
 
@@ -91,12 +81,13 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
     height: '24px',
     width: '24px'
   };
-
+  const message = props.message;
+  const sender = message.sender;
   /**
    * Effect: update cached datetime strings upon receiving a new message.
    */
   useEffect(() => {
-    if (!datetime[props.timestamp]) {
+    if (!datetime[message.time]) {
       const newDatetime: Record<number, string> = {};
       let datetime: string;
       const currentDate = new Date();
@@ -105,7 +96,7 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
         date.getMonth() === currentDate.getMonth() &&
         date.getDate() === currentDate.getDate();
 
-      const msgDate = new Date(props.timestamp * 1000); // Convert message time to milliseconds
+      const msgDate = new Date(message.time * 1000); // Convert message time to milliseconds
 
       // Display only the time if the day of the message is the current one.
       if (sameDay(msgDate)) {
@@ -124,21 +115,21 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
           minute: '2-digit'
         });
       }
-      newDatetime[props.timestamp] = datetime;
+      newDatetime[message.time] = datetime;
       setDatetime(newDatetime);
     }
   });
 
-  const bgcolor = props.color;
-  const avatar = props.avatar_url ? (
+  const bgcolor = sender.color;
+  const avatar = sender.avatar_url ? (
     <Avatar
       sx={{
         ...sharedStyles,
         ...(bgcolor && { bgcolor })
       }}
-      src={props.avatar_url}
+      src={sender.avatar_url}
     ></Avatar>
-  ) : props.initials ? (
+  ) : sender.initials ? (
     <Avatar
       sx={{
         ...sharedStyles,
@@ -151,13 +142,13 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
           color: 'var(--jp-ui-inverse-font-color1)'
         }}
       >
-        {props.initials}
+        {sender.initials}
       </Typography>
     </Avatar>
   ) : null;
 
   const name =
-    props.display_name ?? props.name ?? (props.username || 'User undefined');
+    sender.display_name ?? sender.name ?? (sender.username || 'User undefined');
 
   return (
     <Box
@@ -187,7 +178,7 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
           >
             {name}
           </Typography>
-          {(props.deleted || props.edited) && (
+          {(message.deleted || message.edited) && (
             <Typography
               sx={{
                 fontStyle: 'italic',
@@ -195,7 +186,7 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
                 paddingLeft: '0.5em'
               }}
             >
-              {props.deleted ? '(message deleted)' : '(edited)'}
+              {message.deleted ? '(message deleted)' : '(edited)'}
             </Typography>
           )}
         </Box>
@@ -206,9 +197,9 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
             color: 'var(--jp-ui-font-color2)',
             fontWeight: 300
           }}
-          title={props.rawTime ? 'Unverified time' : ''}
+          title={message.raw_time ? 'Unverified time' : ''}
         >
-          {`${datetime[props.timestamp]}${props.rawTime ? '*' : ''}`}
+          {`${datetime[message.time]}${message.raw_time ? '*' : ''}`}
         </Typography>
       </Box>
     </Box>
