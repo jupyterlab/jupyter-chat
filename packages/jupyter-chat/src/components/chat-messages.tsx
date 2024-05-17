@@ -184,12 +184,6 @@ export function ChatMessages(props: ChatMessagesProps): JSX.Element {
       className={clsx(MESSAGES_BOX_CLASS)}
     >
       {props.messages.map((message, i) => {
-        let sender: IUser;
-        if (typeof message.sender === 'string') {
-          sender = { username: message.sender };
-        } else {
-          sender = message.sender;
-        }
         return (
           // extra div needed to ensure each bubble is on a new line
           <Box
@@ -198,7 +192,7 @@ export function ChatMessages(props: ChatMessagesProps): JSX.Element {
             className={clsx(MESSAGE_CLASS)}
           >
             <ChatMessageHeader
-              {...sender}
+              {...message.sender}
               timestamp={message.time}
               rawTime={message.raw_time}
               deleted={message.deleted}

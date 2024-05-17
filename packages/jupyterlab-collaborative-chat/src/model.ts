@@ -143,12 +143,8 @@ export class CollaborativeChatModel
       message.body = updatedMessage.body;
       message.edited = true;
     } else {
-      let sender: string;
-      if (typeof updatedMessage.sender === 'string') {
-        sender = updatedMessage.sender;
-      } else {
-        sender = updatedMessage.sender.username;
-      }
+      const sender = updatedMessage.sender.username;
+
       message = {
         type: 'msg',
         id: id || UUID.uuid4(),
@@ -182,9 +178,13 @@ export class CollaborativeChatModel
           index += delta.retain;
         } else if (delta.insert) {
           const messages = delta.insert.map(ymessage => {
-            const msg: IChatMessage = { ...ymessage };
-            msg.sender =
-              this.sharedModel.getUser(ymessage.sender) || ymessage.sender;
+            const msg: IChatMessage = {
+              ...ymessage,
+              sender: this.sharedModel.getUser(ymessage.sender) || {
+                username: 'User undefined'
+              }
+            };
+
             return msg;
           });
           this.messagesInserted(index, messages);
