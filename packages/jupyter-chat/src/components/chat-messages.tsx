@@ -19,20 +19,62 @@ const MESSAGE_CLASS = 'jp-chat-message';
 const MESSAGE_HEADER_CLASS = 'jp-chat-message-header';
 const MESSAGE_TIME_CLASS = 'jp-chat-message-time';
 
+/**
+ * The base components props.
+ */
 type BaseMessageProps = {
   rmRegistry: IRenderMimeRegistry;
   model: IChatModel;
 };
 
-type ChatMessageProps = BaseMessageProps & {
-  message: IChatMessage;
-};
-
+/**
+ * The message list props.
+ */
 type ChatMessagesProps = BaseMessageProps & {
   messages: IChatMessage[];
 };
 
-export type ChatMessageHeaderProps = IUser & {
+/**
+ * The messages list component.
+ */
+export function ChatMessages(props: ChatMessagesProps): JSX.Element {
+  return (
+    <Box
+      sx={{
+        '& > :not(:last-child)': {
+          borderBottom: '1px solid var(--jp-border-color2)'
+        }
+      }}
+      className={clsx(MESSAGES_BOX_CLASS)}
+    >
+      {props.messages.map((message, i) => {
+        return (
+          // extra div needed to ensure each bubble is on a new line
+          <Box
+            key={i}
+            sx={{ padding: '1em 1em 0 1em' }}
+            className={clsx(MESSAGE_CLASS)}
+          >
+            <ChatMessageHeader
+              {...message.sender}
+              timestamp={message.time}
+              rawTime={message.raw_time}
+              deleted={message.deleted}
+              edited={message.edited}
+              sx={{ marginBottom: 3 }}
+            />
+            <ChatMessage {...props} message={message} />
+          </Box>
+        );
+      })}
+    </Box>
+  );
+}
+
+/**
+ * The message header props.
+ */
+type ChatMessageHeaderProps = IUser & {
   timestamp: number;
   rawTime?: boolean;
   deleted?: boolean;
@@ -40,6 +82,9 @@ export type ChatMessageHeaderProps = IUser & {
   sx?: SxProps<Theme>;
 };
 
+/**
+ * The message header component.
+ */
 export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
   const [datetime, setDatetime] = useState<Record<number, string>>({});
   const sharedStyles: SxProps<Theme> = {
@@ -171,44 +216,14 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
 }
 
 /**
- * The messages list UI.
+ * The message component props.
  */
-export function ChatMessages(props: ChatMessagesProps): JSX.Element {
-  return (
-    <Box
-      sx={{
-        '& > :not(:last-child)': {
-          borderBottom: '1px solid var(--jp-border-color2)'
-        }
-      }}
-      className={clsx(MESSAGES_BOX_CLASS)}
-    >
-      {props.messages.map((message, i) => {
-        return (
-          // extra div needed to ensure each bubble is on a new line
-          <Box
-            key={i}
-            sx={{ padding: '1em 1em 0 1em' }}
-            className={clsx(MESSAGE_CLASS)}
-          >
-            <ChatMessageHeader
-              {...message.sender}
-              timestamp={message.time}
-              rawTime={message.raw_time}
-              deleted={message.deleted}
-              edited={message.edited}
-              sx={{ marginBottom: 3 }}
-            />
-            <ChatMessage {...props} message={message} />
-          </Box>
-        );
-      })}
-    </Box>
-  );
-}
+type ChatMessageProps = BaseMessageProps & {
+  message: IChatMessage;
+};
 
 /**
- * the message UI.
+ * The message component body.
  */
 export function ChatMessage(props: ChatMessageProps): JSX.Element {
   const { message, model, rmRegistry } = props;

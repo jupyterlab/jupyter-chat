@@ -166,17 +166,6 @@ export class ChatModel implements IChatModel {
   addMessage(message: INewMessage): Promise<boolean | void> | boolean | void {}
 
   /**
-   * Optional, to update a message from the chat panel.
-   *
-   * @param id - the unique ID of the message.
-   * @param message - the message to update.
-   */
-  updateMessage?(
-    id: string,
-    message: INewMessage
-  ): Promise<boolean | void> | boolean | void;
-
-  /**
    * Dispose the chat model.
    */
   dispose(): void {
