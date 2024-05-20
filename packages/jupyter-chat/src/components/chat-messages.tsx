@@ -40,20 +40,12 @@ type ChatMessagesProps = BaseMessageProps & {
  */
 export function ChatMessages(props: ChatMessagesProps): JSX.Element {
   return (
-    <Box
-      sx={{
-        '& > :not(:last-child)': {
-          borderBottom: '1px solid var(--jp-border-color2)'
-        }
-      }}
-      className={clsx(MESSAGES_BOX_CLASS)}
-    >
+    <Box className={clsx(MESSAGES_BOX_CLASS)}>
       {props.messages.map((message, i) => {
         return (
           // extra div needed to ensure each bubble is on a new line
           <Box
             key={i}
-            sx={{ padding: message.stacked ? '0 1em' : '1em 1em 0 1em' }}
             className={clsx(
               MESSAGE_CLASS,
               message.stacked ? MESSAGE_STACKED_CLASS : ''
@@ -180,7 +172,11 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           {!message.stacked && (
             <Typography
-              sx={{ fontWeight: 700, color: 'var(--jp-ui-font-color1)' }}
+              sx={{
+                fontWeight: 700,
+                color: 'var(--jp-ui-font-color1)',
+                paddingRight: '0.5em'
+              }}
             >
               {name}
             </Typography>
@@ -189,8 +185,7 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
             <Typography
               sx={{
                 fontStyle: 'italic',
-                fontSize: 'var(--jp-content-font-size0)',
-                paddingLeft: '0.5em'
+                fontSize: 'var(--jp-content-font-size0)'
               }}
             >
               {message.deleted ? '(message deleted)' : '(edited)'}
