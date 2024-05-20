@@ -166,6 +166,7 @@ export class ChatModel implements IChatModel {
           delete message.stacked;
         });
       }
+      this._messagesUpdated.emit();
     }
   }
 
