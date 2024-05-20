@@ -35,7 +35,7 @@ path = "package.json"
 fields = ["description", "authors", "urls"]
 
 [tool.jupyter-releaser.options]
-version_cmd = "../../scripts/bump-version.sh"
+version-cmd = "cd ../.. && python scripts/bump_version.py --force --skip-if-dirty"
 python_packages = [
     "packages/jupyterlab-collaborative-chat",
     "packages/jupyterlab-ws-chat"
@@ -48,6 +48,10 @@ before-build-npm = [
     "jlpm build:prod"
 ]
 before-build-python = ["jlpm clean"]
+before-bump-version = [
+    "python -m pip install -U jupyterlab",
+    "jlpm"
+]
 
 [tool.check-wheel-contents]
 ignore = ["W002"]
