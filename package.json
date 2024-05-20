@@ -22,6 +22,7 @@
         "url": "https://github.com/jupyterlab/jupyter-chat.git"
     },
     "workspaces": [
+        ".",
         "packages/*"
     ],
     "scripts": {
@@ -137,5 +138,8 @@
             "selector-no-vendor-prefix": null,
             "value-no-vendor-prefix": null
         }
+    },
+    "nx": {
+        "includedScripts": []
     }
 }
