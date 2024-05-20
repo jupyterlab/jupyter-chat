@@ -220,10 +220,26 @@ export class ChatModel implements IChatModel {
    */
   messagesInserted(index: number, messages: IChatMessage[]): void {
     const formattedMessages: IChatMessage[] = [];
-    messages.forEach(message => {
+
+    // Format the messages.
+    messages.forEach((message, idx) => {
       formattedMessages.push(this.formatChatMessage(message));
     });
+
+    // Insert the messages.
     this._messages.splice(index, 0, ...formattedMessages);
+
+    // Check if some messages should be stacked by comparing each message' sender
+    // with the previous one.
+    const lastIdx = index + formattedMessages.length - 1;
+    const start = index === 0 ? 1 : index;
+    const end = this._messages.length > lastIdx + 1 ? lastIdx + 1 : lastIdx;
+    for (let idx = start; idx <= end; idx++) {
+      const message = this._messages[idx];
+      const previousUser = this._messages[idx - 1].sender.username;
+      message.stacked = previousUser === message.sender.username;
+    }
+
     this._messagesUpdated.emit();
   }
 
