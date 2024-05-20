@@ -934,7 +934,7 @@ test.describe('#stackedMessages', () => {
   };
   const chatContent = {
     messages: [msg1, msg2],
-    users: { }
+    users: {}
   };
   chatContent.users[USERNAME] = USER.identity;
 
@@ -986,6 +986,8 @@ test.describe('#stackedMessages', () => {
 
     // Should not send message with Enter
     const messages = chatPanel.locator('.jp-chat-messages-container');
-    expect(await messages.screenshot()).toMatchSnapshot('not-stacked-messages.png');
+    expect(await messages.screenshot()).toMatchSnapshot(
+      'not-stacked-messages.png'
+    );
   });
 });
