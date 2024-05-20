@@ -24,17 +24,18 @@ export interface IConfig {
 }
 
 /**
- * The chat message decription.
+ * The chat message description.
  */
-export interface IChatMessage {
+export interface IChatMessage<T = IUser> {
   type: 'msg';
   body: string;
   id: string;
   time: number;
-  sender: IUser | string;
+  sender: T;
   raw_time?: boolean;
   deleted?: boolean;
   edited?: boolean;
+  stacked?: boolean;
 }
 
 /**

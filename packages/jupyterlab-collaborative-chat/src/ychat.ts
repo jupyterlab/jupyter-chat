@@ -33,14 +33,9 @@ export type MessageChange = Delta<IYmessage[]>;
 export type UserChange = IMapChange<IUser>;
 
 /**
- * The interface for a YMessage.
+ * The type for a YMessage.
  */
-export interface IYmessage extends IChatMessage {
-  /**
-   * The username of the message sender.
-   */
-  sender: string;
-}
+export type IYmessage = IChatMessage<string>;
 
 /**
  * The collaborative chat shared document.

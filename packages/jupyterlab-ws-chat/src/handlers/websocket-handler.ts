@@ -31,14 +31,9 @@ export interface IWsUser extends IUser {
 }
 
 /**
- * The interface for a chat message, which includes an ID to the sender.
+ * The type for a chat message, which includes an ID to the sender.
  */
-export interface IWsMessage extends IChatMessage {
-  /**
-   * The id of the message sender.
-   */
-  sender: IWsUser | string;
-}
+export type IWsMessage = IChatMessage<IWsUser>;
 
 export type ConnectionMessage = {
   type: 'connection';
@@ -120,10 +115,7 @@ export class WebSocketHandler extends ChatModel {
   messageAdded(message: GenericMessage): void {
     // resolve promise from `sendMessage()`
     if (message.type === 'msg') {
-      const sender =
-        typeof message.sender !== 'string' ? message.sender.id : message.sender;
-
-      if (sender === this.id) {
+      if (message.sender.id === this.id) {
         this._sendResolverQueue.get(message.id)?.(true);
       }
       super.messageAdded(message);
