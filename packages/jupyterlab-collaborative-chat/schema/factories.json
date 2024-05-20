@@ -21,6 +21,12 @@
       "type": "boolean",
       "default": false,
       "readOnly": false
+    },
+    "stackMessages": {
+      "description": "Whether to stack consecutive messages from same user.",
+      "type": "boolean",
+      "default": true,
+      "readOnly": false
     }
   },
   "additionalProperties": false,

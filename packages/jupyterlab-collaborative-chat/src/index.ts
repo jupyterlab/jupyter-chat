@@ -89,12 +89,13 @@ export const docFactories: JupyterFrontEndPlugin<IWidgetConfig> = {
      * Load the settings for the chat widgets.
      */
     let sendWithShiftEnter = false;
-
+    let stackMessages = true;
     function loadSetting(setting: ISettingRegistry.ISettings): void {
       // Read the settings and convert to the correct type
       sendWithShiftEnter = setting.get('sendWithShiftEnter')
         .composite as boolean;
-      widgetConfig.configChanged.emit({ sendWithShiftEnter });
+      stackMessages = setting.get('stackMessages').composite as boolean;
+      widgetConfig.configChanged.emit({ sendWithShiftEnter, stackMessages });
     }
 
     if (settingRegistry) {

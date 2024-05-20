@@ -21,6 +21,7 @@ export interface IUser {
 export interface IConfig {
   sendWithShiftEnter?: boolean;
   lastRead?: number;
+  stackMessages?: boolean;
 }
 
 /**
@@ -54,6 +55,6 @@ export interface INewMessage {
 }
 
 /**
- * An empty interface to describe optional settings taht could be fetched from server.
+ * An empty interface to describe optional settings that could be fetched from server.
  */
 export interface ISettings {}
