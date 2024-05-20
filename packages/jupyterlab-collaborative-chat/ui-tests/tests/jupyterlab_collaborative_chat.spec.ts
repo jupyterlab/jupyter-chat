@@ -916,3 +916,76 @@ test.describe('#chatPanel', () => {
     });
   });
 });
+
+test.describe('#stackedMessages', () => {
+  const msg1 = {
+    type: 'msg',
+    id: UUID.uuid4(),
+    sender: USERNAME,
+    body: MSG_CONTENT,
+    time: 1714116341
+  };
+  const msg2 = {
+    type: 'msg',
+    id: UUID.uuid4(),
+    sender: USERNAME,
+    body: 'Me again',
+    time: 1714116341
+  };
+  const chatContent = {
+    messages: [msg1, msg2],
+    users: { }
+  };
+  chatContent.users[USERNAME] = USER.identity;
+
+  test.beforeEach(async ({ page }) => {
+    // Create a chat file with content
+    await page.filebrowser.contents.uploadContent(
+      JSON.stringify(chatContent),
+      'text',
+      FILENAME
+    );
+  });
+
+  test.afterEach(async ({ page }) => {
+    if (await page.filebrowser.contents.fileExists(FILENAME)) {
+      await page.filebrowser.contents.deleteFile(FILENAME);
+    }
+  });
+
+  test('messages should be stacked by default', async ({ page }) => {
+    const chatPanel = await openChat(page, FILENAME);
+    const messages = chatPanel.locator('.jp-chat-messages-container');
+    expect(await messages.screenshot()).toMatchSnapshot('stacked-messages.png');
+  });
+
+  test('should update settings value stackMessages on existing chat', async ({
+    page
+  }) => {
+    const chatPanel = await openChat(page, FILENAME);
+
+    // Modify the settings
+    const settings = await openSettings(page);
+    const stackMessages = settings?.getByRole('checkbox', {
+      name: 'stackMessages'
+    });
+    await stackMessages?.uncheck();
+
+    // wait for the settings to be saved
+    await expect(page.activity.getTabLocator('Settings')).toHaveAttribute(
+      'class',
+      /jp-mod-dirty/
+    );
+    await expect(page.activity.getTabLocator('Settings')).not.toHaveAttribute(
+      'class',
+      /jp-mod-dirty/
+    );
+
+    // Activate the chat panel
+    await page.activity.activateTab(FILENAME);
+
+    // Should not send message with Enter
+    const messages = chatPanel.locator('.jp-chat-messages-container');
+    expect(await messages.screenshot()).toMatchSnapshot('not-stacked-messages.png');
+  });
+});
