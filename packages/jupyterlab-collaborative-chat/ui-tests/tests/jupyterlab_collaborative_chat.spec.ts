@@ -955,8 +955,20 @@ test.describe('#stackedMessages', () => {
 
   test('messages should be stacked by default', async ({ page }) => {
     const chatPanel = await openChat(page, FILENAME);
-    const messages = chatPanel.locator('.jp-chat-messages-container');
-    expect(await messages.screenshot()).toMatchSnapshot('stacked-messages.png');
+    const messagesContainer = chatPanel.locator('.jp-chat-messages-container');
+    const messages = messagesContainer.locator('.jp-chat-message');
+    await expect(messages).toHaveCount(2);
+
+    // Hide the time to avoid time zone diff
+    await messages
+      .locator('.jp-chat-message-time')
+      .evaluateAll(elements =>
+        elements.map(element => (element.style.display = 'none'))
+      );
+
+    expect(await messagesContainer.screenshot()).toMatchSnapshot(
+      'stacked-messages.png'
+    );
   });
 
   test('should update settings value stackMessages on existing chat', async ({
@@ -985,8 +997,18 @@ test.describe('#stackedMessages', () => {
     await page.activity.activateTab(FILENAME);
 
     // Should not send message with Enter
-    const messages = chatPanel.locator('.jp-chat-messages-container');
-    expect(await messages.screenshot()).toMatchSnapshot(
+    const messagesContainer = chatPanel.locator('.jp-chat-messages-container');
+    const messages = messagesContainer.locator('.jp-chat-message');
+    await expect(messages).toHaveCount(2);
+
+    // Hide the time to avoid time zone diff
+    await messages
+      .locator('.jp-chat-message-time')
+      .evaluateAll(elements =>
+        elements.map(element => (element.style.display = 'none'))
+      );
+
+    expect(await messagesContainer.screenshot()).toMatchSnapshot(
       'not-stacked-messages.png'
     );
   });
