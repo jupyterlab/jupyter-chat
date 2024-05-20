@@ -3,7 +3,6 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { IChatMessage } from '@jupyter/chat';
 import {
   IJupyterLabPageFixture,
   expect,
@@ -212,9 +211,7 @@ test.describe('#launcher', () => {
     ).toHaveCount(1);
 
     // Chat tile
-    const tile = page
-      .locator('.jp-LauncherCard[data-category="Chat"]')
-      .getByTitle('Create a chat');
+    const tile = page.locator('.jp-LauncherCard[data-category="Chat"]');
     expect(await tile.screenshot()).toMatchSnapshot('launcher-tile.png');
   });
 
@@ -226,7 +223,42 @@ test.describe('#launcher', () => {
   });
 });
 
-test.describe('#messages', () => {
+test.describe('#settings', () => {
+  test.beforeEach(async ({ page }) => {
+    // Create a chat file
+    await page.filebrowser.contents.uploadContent('{}', 'text', FILENAME);
+  });
+
+  test.afterEach(async ({ page }) => {
+    if (await page.filebrowser.contents.fileExists(FILENAME)) {
+      await page.filebrowser.contents.deleteFile(FILENAME);
+    }
+  });
+
+  test('should have chat settings', async ({ page }) => {
+    const settings = await openSettings(page, true);
+    await expect(
+      settings.locator(
+        '.jp-PluginList-entry[data-id="jupyterlab-collaborative-chat:factories"]'
+      )
+    ).toBeVisible();
+  });
+
+  test('should have default settings values', async ({ page }) => {
+    const settings = await openSettings(page);
+    const sendWithShiftEnter = settings?.getByRole('checkbox', {
+      name: 'sendWithShiftEnter'
+    });
+    expect(sendWithShiftEnter!).not.toBeChecked();
+
+    const stackMessages = settings?.getByRole('checkbox', {
+      name: 'stackMessages'
+    });
+    expect(stackMessages!).toBeChecked();
+  });
+});
+
+test.describe('#sendMessages', () => {
   test.beforeEach(async ({ page }) => {
     // Create a chat file
     await page.filebrowser.contents.uploadContent('{}', 'text', FILENAME);
@@ -272,10 +304,96 @@ test.describe('#messages', () => {
       messages.locator('.jp-chat-message .jp-chat-rendermime-markdown')
     ).toHaveText(MSG_CONTENT + '\n');
   });
+
+  test('should use settings value sendWithShiftEnter', async ({ page }) => {
+    // Modify the settings
+    const settings = await openSettings(page);
+    const sendWithShiftEnter = settings?.getByRole('checkbox', {
+      name: 'sendWithShiftEnter'
+    });
+    await sendWithShiftEnter?.check();
+
+    // wait for the settings to be saved
+    await expect(page.activity.getTabLocator('Settings')).toHaveAttribute(
+      'class',
+      /jp-mod-dirty/
+    );
+    await expect(page.activity.getTabLocator('Settings')).not.toHaveAttribute(
+      'class',
+      /jp-mod-dirty/
+    );
+
+    // Should not send message with Enter
+    const chatPanel = await openChat(page, FILENAME);
+    const messages = chatPanel.locator('.jp-chat-messages-container');
+    const input = chatPanel
+      .locator('.jp-chat-input-container')
+      .getByRole('textbox');
+    await input!.pressSequentially(MSG_CONTENT);
+    await input!.press('Enter');
+
+    await expect(messages!.locator('.jp-chat-message')).toHaveCount(0);
+
+    // Should not send message with Shift+Enter
+    await input!.press('Shift+Enter');
+    await expect(messages!.locator('.jp-chat-message')).toHaveCount(1);
+
+    // It seems that the markdown renderer adds a new line, but the '\n' inserter when
+    // pressing Enter above is trimmed.
+    await expect(
+      messages.locator('.jp-chat-message .jp-chat-rendermime-markdown')
+    ).toHaveText(MSG_CONTENT + '\n');
+  });
+
+  test('should update settings value sendWithShiftEnter on existing chat', async ({
+    page
+  }) => {
+    const chatPanel = await openChat(page, FILENAME);
+
+    // Modify the settings
+    const settings = await openSettings(page);
+    const sendWithShiftEnter = settings?.getByRole('checkbox', {
+      name: 'sendWithShiftEnter'
+    });
+    await sendWithShiftEnter?.check();
+
+    // wait for the settings to be saved
+    await expect(page.activity.getTabLocator('Settings')).toHaveAttribute(
+      'class',
+      /jp-mod-dirty/
+    );
+    await expect(page.activity.getTabLocator('Settings')).not.toHaveAttribute(
+      'class',
+      /jp-mod-dirty/
+    );
+
+    // Activate the chat panel
+    await page.activity.activateTab(FILENAME);
+
+    // Should not send message with Enter
+    const messages = chatPanel.locator('.jp-chat-messages-container');
+    const input = chatPanel
+      .locator('.jp-chat-input-container')
+      .getByRole('textbox');
+    await input!.pressSequentially(MSG_CONTENT);
+    await input!.press('Enter');
+
+    await expect(messages!.locator('.jp-chat-message')).toHaveCount(0);
+
+    // Should not send message with Shift+Enter
+    await input!.press('Shift+Enter');
+    await expect(messages!.locator('.jp-chat-message')).toHaveCount(1);
+
+    // It seems that the markdown renderer adds a new line, but the '\n' inserted when
+    // pressing Enter above is trimmed.
+    await expect(
+      messages.locator('.jp-chat-message .jp-chat-rendermime-markdown')
+    ).toHaveText(MSG_CONTENT + '\n');
+  });
 });
 
 test.describe('#raw_time', () => {
-  const msg_raw_time: IChatMessage = {
+  const msg_raw_time = {
     type: 'msg',
     id: UUID.uuid4(),
     sender: USERNAME,
@@ -283,7 +401,7 @@ test.describe('#raw_time', () => {
     time: 1714116341,
     raw_time: true
   };
-  const msg_verif: IChatMessage = {
+  const msg_verif = {
     type: 'msg',
     id: UUID.uuid4(),
     sender: USERNAME,
@@ -292,12 +410,10 @@ test.describe('#raw_time', () => {
     raw_time: false
   };
   const chatContent = {
-    messages: <IChatMessage[]>[],
+    messages: [msg_raw_time, msg_verif],
     users: {}
   };
   chatContent.users[USERNAME] = USER.identity;
-  chatContent.messages.push(msg_raw_time);
-  chatContent.messages.push(msg_verif);
 
   test.beforeEach(async ({ page }) => {
     // Create a chat file with content
@@ -357,7 +473,7 @@ test.describe('#raw_time', () => {
 test.describe('#messageToolbar', () => {
   const additionnalContent = ' Messages can be edited';
 
-  const msg: IChatMessage = {
+  const msg = {
     type: 'msg',
     id: UUID.uuid4(),
     sender: USERNAME,
@@ -365,11 +481,10 @@ test.describe('#messageToolbar', () => {
     time: 1714116341
   };
   const chatContent = {
-    messages: <IChatMessage[]>[],
+    messages: [msg],
     users: {}
   };
   chatContent.users[USERNAME] = USER.identity;
-  chatContent.messages.push(msg);
 
   test.beforeEach(async ({ page }) => {
     // Create a chat file with content
@@ -486,7 +601,7 @@ test.describe('#messageToolbar', () => {
 });
 
 test.describe('#outofband', () => {
-  const msg: IChatMessage = {
+  const msg = {
     type: 'msg',
     id: UUID.uuid4(),
     sender: USERNAME,
@@ -494,11 +609,10 @@ test.describe('#outofband', () => {
     time: 1714116341
   };
   const chatContent = {
-    messages: <IChatMessage[]>[],
+    messages: [msg],
     users: {}
   };
   chatContent.users[USERNAME] = USER.identity;
-  chatContent.messages.push(msg);
 
   test.beforeEach(async ({ page }) => {
     // Create a chat file with content
@@ -523,11 +637,10 @@ test.describe('#outofband', () => {
       .first();
     const newMsg = { ...msg, body: updatedContent };
     const newContent = {
-      messages: <IChatMessage[]>[],
+      messages: [newMsg],
       users: {}
     };
     newContent.users[USERNAME] = USER.identity;
-    newContent.messages.push(newMsg);
 
     await page.filebrowser.contents.uploadContent(
       JSON.stringify(newContent),
@@ -544,7 +657,7 @@ test.describe('#outofband', () => {
     const messages = chatPanel.locator(
       '.jp-chat-messages-container .jp-chat-message'
     );
-    const newMsg: IChatMessage = {
+    const newMsg = {
       type: 'msg',
       id: UUID.uuid4(),
       sender: USERNAME,
@@ -552,12 +665,10 @@ test.describe('#outofband', () => {
       time: msg.time + 5
     };
     const newContent = {
-      messages: <IChatMessage[]>[],
+      messages: [msg, newMsg],
       users: {}
     };
     newContent.users[USERNAME] = USER.identity;
-    newContent.messages.push(msg);
-    newContent.messages.push(newMsg);
 
     await page.filebrowser.contents.uploadContent(
       JSON.stringify(newContent),
@@ -577,7 +688,7 @@ test.describe('#outofband', () => {
       .locator('.jp-chat-messages-container .jp-chat-rendermime-markdown')
       .first();
     const newContent = {
-      messages: <IChatMessage[]>[],
+      messages: [],
       users: {}
     };
     newContent.users[USERNAME] = USER.identity;
@@ -589,122 +700,6 @@ test.describe('#outofband', () => {
     );
 
     await expect(messageContent).not.toBeAttached();
-  });
-});
-
-test.describe('#settings', () => {
-  test.beforeEach(async ({ page }) => {
-    // Create a chat file
-    await page.filebrowser.contents.uploadContent('{}', 'text', FILENAME);
-  });
-
-  test.afterEach(async ({ page }) => {
-    if (await page.filebrowser.contents.fileExists(FILENAME)) {
-      await page.filebrowser.contents.deleteFile(FILENAME);
-    }
-  });
-
-  test('should have chat settings', async ({ page }) => {
-    const settings = await openSettings(page, true);
-    await expect(
-      settings.locator(
-        '.jp-PluginList-entry[data-id="jupyterlab-collaborative-chat:factories"]'
-      )
-    ).toBeVisible();
-  });
-
-  test('should have default settings values', async ({ page }) => {
-    const settings = await openSettings(page);
-    const sendWithShiftEnter = settings?.getByRole('checkbox', {
-      name: 'sendWithShiftEnter'
-    });
-    expect(sendWithShiftEnter!).not.toBeChecked();
-  });
-
-  test('should use settings value sendWithShiftEnter', async ({ page }) => {
-    // Modify the settings
-    const settings = await openSettings(page);
-    const sendWithShiftEnter = settings?.getByRole('checkbox', {
-      name: 'sendWithShiftEnter'
-    });
-    await sendWithShiftEnter?.check();
-
-    // wait for the settings to be saved
-    await expect(page.activity.getTabLocator('Settings')).toHaveAttribute(
-      'class',
-      /jp-mod-dirty/
-    );
-    await expect(page.activity.getTabLocator('Settings')).not.toHaveAttribute(
-      'class',
-      /jp-mod-dirty/
-    );
-
-    // Should not send message with Enter
-    const chatPanel = await openChat(page, FILENAME);
-    const messages = chatPanel.locator('.jp-chat-messages-container');
-    const input = chatPanel
-      .locator('.jp-chat-input-container')
-      .getByRole('textbox');
-    await input!.pressSequentially(MSG_CONTENT);
-    await input!.press('Enter');
-
-    await expect(messages!.locator('.jp-chat-message')).toHaveCount(0);
-
-    // Should not send message with Shift+Enter
-    await input!.press('Shift+Enter');
-    await expect(messages!.locator('.jp-chat-message')).toHaveCount(1);
-
-    // It seems that the markdown renderer adds a new line, but the '\n' inserter when
-    // pressing Enter above is trimmed.
-    await expect(
-      messages.locator('.jp-chat-message .jp-chat-rendermime-markdown')
-    ).toHaveText(MSG_CONTENT + '\n');
-  });
-
-  test('should update settings value sendWithShiftEnter on existing chat', async ({
-    page
-  }) => {
-    const chatPanel = await openChat(page, FILENAME);
-
-    // Modify the settings
-    const settings = await openSettings(page);
-    const sendWithShiftEnter = settings?.getByRole('checkbox', {
-      name: 'sendWithShiftEnter'
-    });
-    await sendWithShiftEnter?.check();
-
-    // wait for the settings to be saved
-    await expect(page.activity.getTabLocator('Settings')).toHaveAttribute(
-      'class',
-      /jp-mod-dirty/
-    );
-    await expect(page.activity.getTabLocator('Settings')).not.toHaveAttribute(
-      'class',
-      /jp-mod-dirty/
-    );
-
-    // Activate the chat panel
-    await page.activity.activateTab(FILENAME);
-
-    // Should not send message with Enter
-    const messages = chatPanel.locator('.jp-chat-messages-container');
-    const input = chatPanel
-      .locator('.jp-chat-input-container')
-      .getByRole('textbox');
-    await input!.pressSequentially(MSG_CONTENT);
-    await input!.press('Enter');
-
-    await expect(messages!.locator('.jp-chat-message')).toHaveCount(0);
-
-    // Should not send message with Shift+Enter
-    await input!.press('Shift+Enter');
-    await expect(messages!.locator('.jp-chat-message')).toHaveCount(1);
-
-    // It seems that the markdown renderer adds a new line, but the '\n' inserted when
-    // pressing Enter above is trimmed.
-    await expect(
-      messages.locator('.jp-chat-message .jp-chat-rendermime-markdown')
-    ).toHaveText(MSG_CONTENT + '\n');
   });
 });
 
@@ -791,9 +786,7 @@ test.describe('#chatPanel', () => {
       ).toHaveText('untitled');
     });
 
-    test('should not create a chat if dialog is cancelled', async ({
-      page
-    }) => {
+    test('should not create a chat if dialog is cancelled', async () => {
       await dialog.getByRole('button').getByText('Cancel').click();
 
       const content = panel.locator('.jp-SidePanel-content');
