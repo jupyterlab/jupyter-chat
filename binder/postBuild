@@ -3,13 +3,7 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-set -euxo pipefail
-
-yarn || yarn
-
-python -m pip install -vv -e . --no-build-isolation
-jupyter server extension enable jupyter_collaboration
-
+# Install collaborative chat
 ./scripts/install.sh collaborative
 
 jupyter troubleshoot
