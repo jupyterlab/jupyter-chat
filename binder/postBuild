@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# Copyright (c) Jupyter Development Team.
+# Distributed under the terms of the Modified BSD License.
+
+# Install collaborative chat
+./scripts/install.sh collaborative
+
+jupyter troubleshoot
+jupyter notebook --show-config
+jupyter lab --show-config
+jupyter labextension list
+jupyter server extension list
