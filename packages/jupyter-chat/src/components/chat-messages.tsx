@@ -16,6 +16,7 @@ import { IChatMessage } from '../types';
 
 const MESSAGES_BOX_CLASS = 'jp-chat-messages-container';
 const MESSAGE_CLASS = 'jp-chat-message';
+const MESSAGE_STACKED_CLASS = 'jp-chat-message-stacked';
 const MESSAGE_HEADER_CLASS = 'jp-chat-message-header';
 const MESSAGE_TIME_CLASS = 'jp-chat-message-time';
 
@@ -39,23 +40,18 @@ type ChatMessagesProps = BaseMessageProps & {
  */
 export function ChatMessages(props: ChatMessagesProps): JSX.Element {
   return (
-    <Box
-      sx={{
-        '& > :not(:last-child)': {
-          borderBottom: '1px solid var(--jp-border-color2)'
-        }
-      }}
-      className={clsx(MESSAGES_BOX_CLASS)}
-    >
+    <Box className={clsx(MESSAGES_BOX_CLASS)}>
       {props.messages.map((message, i) => {
         return (
           // extra div needed to ensure each bubble is on a new line
           <Box
             key={i}
-            sx={{ padding: '1em 1em 0 1em' }}
-            className={clsx(MESSAGE_CLASS)}
+            className={clsx(
+              MESSAGE_CLASS,
+              message.stacked ? MESSAGE_STACKED_CLASS : ''
+            )}
           >
-            <ChatMessageHeader message={message} sx={{ marginBottom: 3 }} />
+            <ChatMessageHeader message={message} />
             <ChatMessage {...props} message={message} />
           </Box>
         );
@@ -121,7 +117,7 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
   });
 
   const bgcolor = sender.color;
-  const avatar = sender.avatar_url ? (
+  const avatar = message.stacked ? null : sender.avatar_url ? (
     <Avatar
       sx={{
         ...sharedStyles,
@@ -159,6 +155,7 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
         '& > :not(:last-child)': {
           marginRight: 3
         },
+        marginBottom: message.stacked ? '0px' : '12px',
         ...props.sx
       }}
     >
@@ -173,17 +170,22 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Typography
-            sx={{ fontWeight: 700, color: 'var(--jp-ui-font-color1)' }}
-          >
-            {name}
-          </Typography>
+          {!message.stacked && (
+            <Typography
+              sx={{
+                fontWeight: 700,
+                color: 'var(--jp-ui-font-color1)',
+                paddingRight: '0.5em'
+              }}
+            >
+              {name}
+            </Typography>
+          )}
           {(message.deleted || message.edited) && (
             <Typography
               sx={{
                 fontStyle: 'italic',
-                fontSize: 'var(--jp-content-font-size0)',
-                paddingLeft: '0.5em'
+                fontSize: 'var(--jp-content-font-size0)'
               }}
             >
               {message.deleted ? '(message deleted)' : '(edited)'}

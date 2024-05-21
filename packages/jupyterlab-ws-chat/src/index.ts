@@ -41,12 +41,14 @@ const chat: JupyterFrontEndPlugin<void> = {
      * Load the settings.
      */
     let sendWithShiftEnter = false;
+    let stackMessages = true;
 
     function loadSetting(setting: ISettingRegistry.ISettings): void {
       // Read the settings and convert to the correct type
       sendWithShiftEnter = setting.get('sendWithShiftEnter')
         .composite as boolean;
-      chatHandler.config = { sendWithShiftEnter };
+      stackMessages = setting.get('stackMessages').composite as boolean;
+      chatHandler.config = { sendWithShiftEnter, stackMessages };
     }
 
     // Wait for the application to be restored and
