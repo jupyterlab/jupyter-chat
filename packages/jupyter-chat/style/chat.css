@@ -62,3 +62,10 @@
 .jp-chat-toolbar > .jp-ToolbarButtonComponent {
   margin-top: 0px;
 }
+
+.jp-chat-goto-unread {
+  position: absolute;
+  bottom: 100px;
+  right: 100px;
+  z-index: 1;
+}

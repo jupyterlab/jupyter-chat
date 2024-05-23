@@ -3,11 +3,12 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { Button } from '@jupyter/react-components';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { Avatar, Box, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
 import clsx from 'clsx';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 import { ChatInput } from './chat-input';
 import { RendermimeMarkdown } from './rendermime-markdown';
@@ -20,6 +21,7 @@ const MESSAGE_CLASS = 'jp-chat-message';
 const MESSAGE_STACKED_CLASS = 'jp-chat-message-stacked';
 const MESSAGE_HEADER_CLASS = 'jp-chat-message-header';
 const MESSAGE_TIME_CLASS = 'jp-chat-message-time';
+const UNREAD_BUTTON_CLASS = 'jp-chat-goto-unread';
 
 /**
  * The base components props.
@@ -35,6 +37,23 @@ type BaseMessageProps = {
 export function ChatMessages(props: BaseMessageProps): JSX.Element {
   const { model } = props;
   const [messages, setMessages] = useState<IChatMessage[]>([]);
+  const refMsgBox = useRef<HTMLDivElement>(null);
+  const unread: number[] = [];
+  const [minUnread, setMinUnread] = useState<number>(-1);
+
+  const readStatus = (msgIdx: number, readStatus: boolean) => {
+    const unreadIdx = unread.indexOf(msgIdx);
+    if (readStatus && unreadIdx !== -1) {
+      unread.splice(unreadIdx, 1);
+    } else if (!readStatus && unreadIdx === -1) {
+      unread.push(msgIdx);
+    }
+    setMinUnread(unread.length ? Math.min(...unread) : -1);
+  };
+
+  const onclick = () => {
+    refMsgBox.current?.children.item(minUnread)?.scrollIntoView();
+  };
 
   /**
    * Effect: fetch history and config on initial render
@@ -68,25 +87,36 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
   }, [model]);
 
   return (
-    <ScrollContainer sx={{ flexGrow: 1 }}>
-      <Box className={clsx(MESSAGES_BOX_CLASS)}>
-        {messages.map((message, i) => {
-          return (
-            // extra div needed to ensure each bubble is on a new line
-            <Box
-              key={i}
-              className={clsx(
-                MESSAGE_CLASS,
-                message.stacked ? MESSAGE_STACKED_CLASS : ''
-              )}
-            >
-              <ChatMessageHeader message={message} />
-              <ChatMessage {...props} message={message} />
-            </Box>
-          );
-        })}
-      </Box>
-    </ScrollContainer>
+    <>
+      {minUnread > -1 && (
+        <Button className={UNREAD_BUTTON_CLASS} onClick={onclick}>
+          unread
+        </Button>
+      )}
+      <ScrollContainer sx={{ flexGrow: 1 }}>
+        <Box ref={refMsgBox} className={clsx(MESSAGES_BOX_CLASS)}>
+          {messages.map((message, i) => {
+            return (
+              // extra div needed to ensure each bubble is on a new line
+              <Box
+                key={i}
+                className={clsx(
+                  MESSAGE_CLASS,
+                  message.stacked ? MESSAGE_STACKED_CLASS : ''
+                )}
+              >
+                <ChatMessageHeader message={message} />
+                <ChatMessage
+                  {...props}
+                  message={message}
+                  readStatus={(status: boolean) => readStatus(i, status)}
+                />
+              </Box>
+            );
+          })}
+        </Box>
+      </ScrollContainer>
+    </>
   );
 }
 
@@ -246,6 +276,7 @@ type ChatMessageProps = BaseMessageProps & {
    * The message to display.
    */
   message: IChatMessage;
+  readStatus: (status: boolean) => void;
 };
 
 /**
@@ -253,10 +284,39 @@ type ChatMessageProps = BaseMessageProps & {
  */
 export function ChatMessage(props: ChatMessageProps): JSX.Element {
   const { message, model, rmRegistry } = props;
+  const elementRef = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<IntersectionObserver | null>();
   const [edit, setEdit] = useState<boolean>(false);
   const [deleted, setDeleted] = useState<boolean>(false);
   const [canEdit, setCanEdit] = useState<boolean>(false);
   const [canDelete, setCanDelete] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (elementRef.current === null) {
+      return;
+    }
+
+    // On the first call the observer is undefined. We create an IntersectionObserver
+    // which will be set to null as soon as the message has been seen.
+    if (observerRef.current === undefined) {
+      observerRef.current = new IntersectionObserver(([entry]) => {
+        if (entry.isIntersecting) {
+          props.readStatus(true);
+          observerRef.current?.disconnect();
+          observerRef.current = null;
+        } else {
+          props.readStatus(false);
+        }
+      });
+    }
+
+    // If the observer is defined, let's observe the message.
+    observerRef.current?.observe(elementRef.current);
+
+    return () => {
+      observerRef.current?.disconnect();
+    };
+  });
 
   // Look if the message can be deleted or edited.
   useEffect(() => {
@@ -297,11 +357,11 @@ export function ChatMessage(props: ChatMessageProps): JSX.Element {
     model.deleteMessage!(id);
   };
 
-  // Empty if the message has been deleted
+  // Empty if the message has been deleted.
   return deleted ? (
-    <></>
+    <div ref={elementRef}></div>
   ) : (
-    <div>
+    <div ref={elementRef}>
       {edit && canEdit ? (
         <ChatInput
           value={message.body}
