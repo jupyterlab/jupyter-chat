@@ -11,8 +11,12 @@
 
 @import url('~@jupyter/chat/style/index.css');
 
-.jp-collab-chat_main-panel
+.jp-collab-chat-main-panel
   .jp-ToolbarButtonComponent[data-command='collaborative-chat:moveToSide']
   svg {
   transform: rotate(180deg);
+}
+
+.jp-collab-chat-title-unread .lm-TabBar-tabLabel::before {
+  content: '* ';
 }
