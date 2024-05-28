@@ -29,6 +29,16 @@ export interface IChatModel extends IDisposable {
   config: IConfig;
 
   /**
+   * The indexes list of the unread messages.
+   */
+  unreadMessages: number[];
+
+  /**
+   * The indexes list of the messages currently in the viewport.
+   */
+  messagesInViewport?: number[];
+
+  /**
    * The user connected to the chat panel.
    */
   readonly user?: IUser;
@@ -39,9 +49,14 @@ export interface IChatModel extends IDisposable {
   readonly messages: IChatMessage[];
 
   /**
-   * The signal emitted when the messages list is updated.
+   * A signal emitting when the messages list is updated.
    */
   readonly messagesUpdated: ISignal<IChatModel, void>;
+
+  /**
+   * A signal emitting when unread messages change.
+   */
+  readonly unreadChanged?: ISignal<IChatModel, number[]>;
 
   /**
    * Send a message, to be defined depending on the chosen technology.
@@ -171,10 +186,51 @@ export class ChatModel implements IChatModel {
   }
 
   /**
-   * The signal emitted when the messages list is updated.
+   * The indexes list of the unread messages.
+   */
+  get unreadMessages(): number[] {
+    return this._unreadMessages;
+  }
+  set unreadMessages(unread: number[]) {
+    this._unreadMessages = unread;
+    this._unreadChanged.emit(this._unreadMessages);
+  }
+
+  /**
+   * Add unread messages to the list.
+   * @param indexes - list of new indexes.
+   */
+  private _addUnreadMessages(indexes: number[]) {
+    indexes.forEach(index => {
+      if (!this._unreadMessages.includes(index)) {
+        this._unreadMessages.push(index);
+      }
+    });
+    this._unreadChanged.emit(this._unreadMessages);
+  }
+
+  /**
+   * The indexes list of the messages currently in the viewport.
+   */
+  get messagesInViewport(): number[] {
+    return this._messagesInViewport;
+  }
+  set messagesInViewport(values: number[]) {
+    this._messagesInViewport = values;
+  }
+
+  /**
+   * A signal emitting when the messages list is updated.
    */
   get messagesUpdated(): ISignal<IChatModel, void> {
     return this._messagesUpdated;
+  }
+
+  /**
+   * A signal emitting when unread messages change.
+   */
+  get unreadChanged(): ISignal<IChatModel, number[]> {
+    return this._unreadChanged;
   }
 
   /**
@@ -241,10 +297,12 @@ export class ChatModel implements IChatModel {
    */
   messagesInserted(index: number, messages: IChatMessage[]): void {
     const formattedMessages: IChatMessage[] = [];
+    const insertedIndexes: number[] = [];
 
     // Format the messages.
     messages.forEach((message, idx) => {
       formattedMessages.push(this.formatChatMessage(message));
+      insertedIndexes.push(index + idx);
     });
 
     // Insert the messages.
@@ -263,6 +321,7 @@ export class ChatModel implements IChatModel {
       }
     }
 
+    this._addUnreadMessages(insertedIndexes);
     this._messagesUpdated.emit();
   }
 
@@ -278,10 +337,13 @@ export class ChatModel implements IChatModel {
   }
 
   private _messages: IChatMessage[] = [];
+  private _unreadMessages: number[] = [];
+  private _messagesInViewport: number[] = [];
   private _id: string = '';
   private _config: IConfig;
   private _isDisposed = false;
   private _messagesUpdated = new Signal<IChatModel, void>(this);
+  private _unreadChanged = new Signal<IChatModel, number[]>(this);
 }
 
 /**

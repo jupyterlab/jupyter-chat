@@ -5,6 +5,11 @@
 
 import { Button } from '@jupyter/react-components';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
+import {
+  LabIcon,
+  caretDownEmptyIcon,
+  classes
+} from '@jupyterlab/ui-components';
 import { Avatar, Box, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
 import clsx from 'clsx';
@@ -21,7 +26,10 @@ const MESSAGE_CLASS = 'jp-chat-message';
 const MESSAGE_STACKED_CLASS = 'jp-chat-message-stacked';
 const MESSAGE_HEADER_CLASS = 'jp-chat-message-header';
 const MESSAGE_TIME_CLASS = 'jp-chat-message-time';
-const UNREAD_BUTTON_CLASS = 'jp-chat-goto-unread';
+const NAVIGATION_BUTTON_CLASS = 'jp-chat-navigation';
+const NAVIGATION_UNREAD_CLASS = 'jp-chat-navigation-unread';
+const NAVIGATION_TOP_CLASS = 'jp-chat-navigation-top';
+const NAVIGATION_BOTTOM_CLASS = 'jp-chat-navigation-bottom';
 
 /**
  * The base components props.
@@ -38,22 +46,12 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
   const { model } = props;
   const [messages, setMessages] = useState<IChatMessage[]>([]);
   const refMsgBox = useRef<HTMLDivElement>(null);
-  const unread: number[] = [];
-  const [minUnread, setMinUnread] = useState<number>(-1);
+  const inViewport = useRef<number[]>([]);
 
-  const readStatus = (msgIdx: number, readStatus: boolean) => {
-    const unreadIdx = unread.indexOf(msgIdx);
-    if (readStatus && unreadIdx !== -1) {
-      unread.splice(unreadIdx, 1);
-    } else if (!readStatus && unreadIdx === -1) {
-      unread.push(msgIdx);
-    }
-    setMinUnread(unread.length ? Math.min(...unread) : -1);
-  };
-
-  const onclick = () => {
-    refMsgBox.current?.children.item(minUnread)?.scrollIntoView();
-  };
+  // The intersection observer that listen to all the message visibility.
+  const observerRef = useRef<IntersectionObserver>(
+    new IntersectionObserver(viewportChange)
+  );
 
   /**
    * Effect: fetch history and config on initial render
@@ -86,13 +84,37 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
     };
   }, [model]);
 
+  /**
+   * Function called when a message enter or leave the viewport.
+   */
+  function viewportChange(entries: IntersectionObserverEntry[]) {
+    const unread = model.unreadMessages;
+    entries.forEach(entry => {
+      const index = parseInt(entry.target.getAttribute('data-index') ?? '');
+      if (!isNaN(index)) {
+        const unreadIdx = unread.indexOf(index);
+        if (entry.isIntersecting && unreadIdx !== -1) {
+          unread.splice(unreadIdx, 1);
+        }
+        const viewportIdx = inViewport.current.indexOf(index);
+        if (!entry.isIntersecting && viewportIdx !== -1) {
+          inViewport.current.splice(viewportIdx, 1);
+        } else if (entry.isIntersecting && viewportIdx === -1) {
+          inViewport.current.push(index);
+        }
+      }
+    });
+
+    props.model.messagesInViewport = inViewport.current;
+    props.model.unreadMessages = unread;
+
+    return () => {
+      observerRef.current?.disconnect();
+    };
+  }
+
   return (
     <>
-      {minUnread > -1 && (
-        <Button className={UNREAD_BUTTON_CLASS} onClick={onclick}>
-          unread
-        </Button>
-      )}
       <ScrollContainer sx={{ flexGrow: 1 }}>
         <Box ref={refMsgBox} className={clsx(MESSAGES_BOX_CLASS)}>
           {messages.map((message, i) => {
@@ -109,13 +131,15 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
                 <ChatMessage
                   {...props}
                   message={message}
-                  readStatus={(status: boolean) => readStatus(i, status)}
+                  observer={observerRef.current}
+                  index={i}
                 />
               </Box>
             );
           })}
         </Box>
       </ScrollContainer>
+      <Navigation {...props} refMsgBox={refMsgBox} />
     </>
   );
 }
@@ -276,7 +300,14 @@ type ChatMessageProps = BaseMessageProps & {
    * The message to display.
    */
   message: IChatMessage;
-  readStatus: (status: boolean) => void;
+  /**
+   * The index of the message in the list.
+   */
+  index: number;
+  /**
+   * The intersection observer for all the messages.
+   */
+  observer: IntersectionObserver | null;
 };
 
 /**
@@ -285,38 +316,26 @@ type ChatMessageProps = BaseMessageProps & {
 export function ChatMessage(props: ChatMessageProps): JSX.Element {
   const { message, model, rmRegistry } = props;
   const elementRef = useRef<HTMLDivElement>(null);
-  const observerRef = useRef<IntersectionObserver | null>();
   const [edit, setEdit] = useState<boolean>(false);
   const [deleted, setDeleted] = useState<boolean>(false);
   const [canEdit, setCanEdit] = useState<boolean>(false);
   const [canDelete, setCanDelete] = useState<boolean>(false);
 
+  // Add the current message to the observer, to actualize viewport and unread messages.
   useEffect(() => {
     if (elementRef.current === null) {
       return;
     }
 
-    // On the first call the observer is undefined. We create an IntersectionObserver
-    // which will be set to null as soon as the message has been seen.
-    if (observerRef.current === undefined) {
-      observerRef.current = new IntersectionObserver(([entry]) => {
-        if (entry.isIntersecting) {
-          props.readStatus(true);
-          observerRef.current?.disconnect();
-          observerRef.current = null;
-        } else {
-          props.readStatus(false);
-        }
-      });
-    }
-
     // If the observer is defined, let's observe the message.
-    observerRef.current?.observe(elementRef.current);
+    props.observer?.observe(elementRef.current);
 
     return () => {
-      observerRef.current?.disconnect();
+      if (elementRef.current !== null) {
+        props.observer?.unobserve(elementRef.current);
+      }
     };
-  });
+  }, [model]);
 
   // Look if the message can be deleted or edited.
   useEffect(() => {
@@ -359,9 +378,9 @@ export function ChatMessage(props: ChatMessageProps): JSX.Element {
 
   // Empty if the message has been deleted.
   return deleted ? (
-    <div ref={elementRef}></div>
+    <div ref={elementRef} data-index={props.index}></div>
   ) : (
-    <div ref={elementRef}>
+    <div ref={elementRef} data-index={props.index}>
       {edit && canEdit ? (
         <ChatInput
           value={message.body}
@@ -378,5 +397,108 @@ export function ChatMessage(props: ChatMessageProps): JSX.Element {
         />
       )}
     </div>
+  );
+}
+
+/**
+ * The navigation component props.
+ */
+type NavigationProps = BaseMessageProps & {
+  /**
+   * The reference to the messages container.
+   */
+  refMsgBox: React.RefObject<HTMLDivElement>;
+};
+
+/**
+ * The navigation component, to navigate to unread messages.
+ */
+export function Navigation(props: NavigationProps): JSX.Element {
+  const { model } = props;
+  const [unreadBefore, setUnreadBefore] = useState<number | null>(null);
+  const [unreadAfter, setUnreadAfter] = useState<number | null>(null);
+
+  const gotoMessage = (msgIdx: number) => {
+    props.refMsgBox.current?.children.item(msgIdx)?.scrollIntoView();
+  };
+
+  // Listen for change in unread messages, and find the first unread message before or
+  // after the current viewport, to display navigation buttons.
+  useEffect(() => {
+    const unreadChanged = (model: IChatModel, unreadIndexes: number[]) => {
+      const viewport = model.messagesInViewport;
+      if (!viewport) {
+        return;
+      }
+
+      // Initialize the next values with the current values if there still relevant.
+      let before =
+        unreadBefore !== null &&
+        unreadIndexes.includes(unreadBefore) &&
+        unreadBefore < Math.min(...viewport)
+          ? unreadBefore
+          : null;
+
+      let after =
+        unreadAfter !== null &&
+        unreadIndexes.includes(unreadAfter) &&
+        unreadAfter > Math.max(...viewport)
+          ? unreadAfter
+          : null;
+
+      unreadIndexes.forEach(unread => {
+        if (viewport?.includes(unread)) {
+          return;
+        }
+        if (unread < (before ?? Math.min(...viewport))) {
+          before = unread;
+        } else if (
+          unread > Math.max(...viewport) &&
+          unread < (after ?? model.messages.length)
+        ) {
+          after = unread;
+        }
+      });
+
+      setUnreadBefore(before);
+      setUnreadAfter(after);
+    };
+
+    model?.unreadChanged?.connect(unreadChanged);
+
+    return () => {
+      model?.unreadChanged?.disconnect(unreadChanged);
+    };
+  });
+
+  return (
+    <>
+      {unreadBefore !== null && (
+        <Button
+          className={`${NAVIGATION_BUTTON_CLASS} ${NAVIGATION_UNREAD_CLASS} ${NAVIGATION_TOP_CLASS}`}
+          onClick={() => gotoMessage!(unreadBefore)}
+          title={'Go to unread messages'}
+        >
+          <LabIcon.resolveReact
+            display={'flex'}
+            icon={caretDownEmptyIcon}
+            iconClass={classes('jp-Icon')}
+          />
+        </Button>
+      )}
+      {unreadAfter !== null && (
+        <Button
+          className={`${NAVIGATION_BUTTON_CLASS} ${NAVIGATION_UNREAD_CLASS} ${NAVIGATION_BOTTOM_CLASS}`}
+          onClick={() => gotoMessage!(unreadAfter)}
+          title={'Go to unread messages'}
+        >
+          <LabIcon.resolveReact
+            display={'flex'}
+            icon={caretDownEmptyIcon}
+            iconClass={classes('jp-Icon')}
+          />
+        </Button>
+      )}
+    </>
   );
 }
