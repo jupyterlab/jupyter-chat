@@ -415,6 +415,7 @@ type NavigationProps = BaseMessageProps & {
  */
 export function Navigation(props: NavigationProps): JSX.Element {
   const { model } = props;
+  const [lastInViewport, setLastInViewport] = useState<boolean>(true);
   const [unreadBefore, setUnreadBefore] = useState<number | null>(null);
   const [unreadAfter, setUnreadAfter] = useState<number | null>(null);
 
@@ -464,12 +465,30 @@ export function Navigation(props: NavigationProps): JSX.Element {
       setUnreadAfter(after);
     };
 
-    model?.unreadChanged?.connect(unreadChanged);
+    model.unreadChanged?.connect(unreadChanged);
+
+    unreadChanged(model, model.unreadMessages);
 
     return () => {
-      model?.unreadChanged?.disconnect(unreadChanged);
+      model.unreadChanged?.disconnect(unreadChanged);
     };
-  });
+  }, [model]);
+
+  // Listen for change in the viewport, to add a navigation button if the last is not
+  // in viewport.
+  useEffect(() => {
+    const viewportChanged = (model: IChatModel, viewport: number[]) => {
+      setLastInViewport(viewport.includes(model.messages.length - 1));
+    };
+
+    model.viewportChanged?.connect(viewportChanged);
+
+    viewportChanged(model, model.messagesInViewport ?? []);
+
+    return () => {
+      model.viewportChanged?.disconnect(viewportChanged);
+    };
+  }, [model]);
 
   return (
     <>
@@ -486,11 +505,19 @@ export function Navigation(props: NavigationProps): JSX.Element {
           />
         </Button>
       )}
-      {unreadAfter !== null && (
+      {(unreadAfter !== null || !lastInViewport) && (
         <Button
-          className={`${NAVIGATION_BUTTON_CLASS} ${NAVIGATION_UNREAD_CLASS} ${NAVIGATION_BOTTOM_CLASS}`}
-          onClick={() => gotoMessage!(unreadAfter)}
-          title={'Go to unread messages'}
+          className={`${NAVIGATION_BUTTON_CLASS} ${unreadAfter !== null ? NAVIGATION_UNREAD_CLASS : ''} ${NAVIGATION_BOTTOM_CLASS}`}
+          onClick={() =>
+            gotoMessage!(
+              unreadAfter !== null ? unreadAfter : model.messages.length - 1
+            )
+          }
+          title={
+            unreadAfter !== null
+              ? 'Go to unread messages'
+              : 'Go to last message'
+          }
         >
           <LabIcon.resolveReact
             display={'flex'}

@@ -59,6 +59,11 @@ export interface IChatModel extends IDisposable {
   readonly unreadChanged?: ISignal<IChatModel, number[]>;
 
   /**
+   * A signal emitting when the viewport change.
+   */
+  readonly viewportChanged?: ISignal<IChatModel, number[]>;
+
+  /**
    * Send a message, to be defined depending on the chosen technology.
    * Default to no-op.
    *
@@ -217,6 +222,7 @@ export class ChatModel implements IChatModel {
   }
   set messagesInViewport(values: number[]) {
     this._messagesInViewport = values;
+    this._viewportChanged.emit(values);
   }
 
   /**
@@ -231,6 +237,13 @@ export class ChatModel implements IChatModel {
    */
   get unreadChanged(): ISignal<IChatModel, number[]> {
     return this._unreadChanged;
+  }
+
+  /**
+   * A signal emitting when the viewport change.
+   */
+  get viewportChanged(): ISignal<IChatModel, number[]> {
+    return this._viewportChanged;
   }
 
   /**
@@ -344,6 +357,7 @@ export class ChatModel implements IChatModel {
   private _isDisposed = false;
   private _messagesUpdated = new Signal<IChatModel, void>(this);
   private _unreadChanged = new Signal<IChatModel, number[]>(this);
+  private _viewportChanged = new Signal<IChatModel, number[]>(this);
 }
 
 /**
