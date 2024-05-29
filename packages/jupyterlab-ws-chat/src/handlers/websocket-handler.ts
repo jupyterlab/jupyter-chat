@@ -58,6 +58,17 @@ export class WebSocketHandler extends ChatModel {
     super(options);
     this.serverSettings =
       options.serverSettings ?? ServerConnection.makeSettings();
+    this.name = 'chat';
+  }
+
+  /**
+   * Getter and setter for the chat ID.
+   */
+  get id(): string {
+    return this._id;
+  }
+  set id(value: string) {
+    this._id = value;
   }
 
   /**
@@ -156,6 +167,10 @@ export class WebSocketHandler extends ChatModel {
       msg.data && this.messageAdded(JSON.parse(msg.data));
   }
 
+  /**
+   * The chat ID.
+   */
+  private _id: string = '';
   /**
    * The websocket.
    */

@@ -153,7 +153,8 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
         // Creating and registering the model factory for our custom DocumentModel
         const modelFactory = new CollaborativeChatModelFactory({
           user,
-          widgetConfig
+          widgetConfig,
+          commands: app.commands
         });
         app.docRegistry.addModelFactory(modelFactory);
       })
@@ -390,7 +391,8 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
               const chat = new CollaborativeChatModel({
                 user,
                 sharedModel,
-                widgetConfig
+                widgetConfig,
+                commands: app.commands
               });
 
               /**

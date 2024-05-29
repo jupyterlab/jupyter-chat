@@ -3,6 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { CommandRegistry } from '@lumino/commands';
 import { IDisposable } from '@lumino/disposable';
 import { ISignal, Signal } from '@lumino/signaling';
 
@@ -19,9 +20,9 @@ import {
  */
 export interface IChatModel extends IDisposable {
   /**
-   * The chat model ID.
+   * The chat model name.
    */
-  id: string;
+  name: string;
 
   /**
    * The configuration for the chat panel.
@@ -143,6 +144,8 @@ export class ChatModel implements IChatModel {
 
     // Stack consecutive messages from the same user by default.
     this._config = { stackMessages: true, ...config };
+
+    this._commands = options.commands;
   }
 
   /**
@@ -153,13 +156,13 @@ export class ChatModel implements IChatModel {
   }
 
   /**
-   * The chat model ID.
+   * The chat model name.
    */
-  get id(): string {
-    return this._id;
+  get name(): string {
+    return this._name;
   }
-  set id(value: string) {
-    this._id = value;
+  set name(value: string) {
+    this._name = value;
   }
 
   /**
@@ -197,8 +200,37 @@ export class ChatModel implements IChatModel {
     return this._unreadMessages;
   }
   set unreadMessages(unread: number[]) {
+    const diff = unread.length - this._unreadMessages.length;
     this._unreadMessages = unread;
     this._unreadChanged.emit(this._unreadMessages);
+
+    // Notify the change.
+    if (this._commands) {
+      if (unread.length) {
+        // Update the notification if exist.
+        this._commands
+          .execute('apputils:update-notification', {
+            id: this._notificationId,
+            message: `${unread.length} incoming message(s) ${this._name ? 'in ' + this._name : ''}`
+          })
+          .then(success => {
+            // Create a new notification only if messages are added.
+            if (!success && diff > 0) {
+              this._commands!.execute('apputils:notify', {
+                type: 'Chat',
+                message: `${unread.length} incoming message(s) in ${this._name}`
+              }).then(id => {
+                this._notificationId = id;
+              });
+            }
+          });
+      } else if (this._notificationId) {
+        // Delete notification if there is no more unread messages.
+        this._commands.execute('apputils:dismiss-notification', {
+          id: this._notificationId
+        });
+      }
+    }
   }
 
   /**
@@ -206,12 +238,9 @@ export class ChatModel implements IChatModel {
    * @param indexes - list of new indexes.
    */
   private _addUnreadMessages(indexes: number[]) {
-    indexes.forEach(index => {
-      if (!this._unreadMessages.includes(index)) {
-        this._unreadMessages.push(index);
-      }
-    });
-    this._unreadChanged.emit(this._unreadMessages);
+    const unread = new Set(this._unreadMessages);
+    indexes.forEach(index => unread.add(index));
+    this.unreadMessages = Array.from(unread.values());
   }
 
   /**
@@ -352,9 +381,11 @@ export class ChatModel implements IChatModel {
   private _messages: IChatMessage[] = [];
   private _unreadMessages: number[] = [];
   private _messagesInViewport: number[] = [];
-  private _id: string = '';
+  private _name: string = '';
   private _config: IConfig;
   private _isDisposed = false;
+  private _commands?: CommandRegistry;
+  private _notificationId: string | null = null;
   private _messagesUpdated = new Signal<IChatModel, void>(this);
   private _unreadChanged = new Signal<IChatModel, number[]>(this);
   private _viewportChanged = new Signal<IChatModel, number[]>(this);
@@ -372,5 +403,10 @@ export namespace ChatModel {
      * Initial config for the chat widget.
      */
     config?: IConfig;
+
+    /**
+     * Commands registry.
+     */
+    commands?: CommandRegistry;
   }
 }

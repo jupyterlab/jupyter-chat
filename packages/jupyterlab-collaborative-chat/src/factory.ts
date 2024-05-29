@@ -8,6 +8,7 @@ import { IThemeManager } from '@jupyterlab/apputils';
 import { ABCWidgetFactory, DocumentRegistry } from '@jupyterlab/docregistry';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { Contents, User } from '@jupyterlab/services';
+import { CommandRegistry } from '@lumino/commands';
 import { Signal } from '@lumino/signaling';
 
 import { CollaborativeChatModel } from './model';
@@ -96,6 +97,7 @@ export class CollaborativeChatModelFactory
   constructor(options: CollaborativeChatModel.IOptions) {
     this._user = options.user;
     this._widgetConfig = options.widgetConfig;
+    this._commands = options.commands;
   }
 
   collaborative = true;
@@ -167,11 +169,13 @@ export class CollaborativeChatModelFactory
     return new CollaborativeChatModel({
       ...options,
       user: this._user,
-      widgetConfig: this._widgetConfig
+      widgetConfig: this._widgetConfig,
+      commands: this._commands
     });
   }
 
   private _disposed = false;
   private _user: User.IIdentity | null;
   private _widgetConfig: IWidgetConfig;
+  private _commands?: CommandRegistry;
 }

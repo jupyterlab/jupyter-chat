@@ -35,7 +35,7 @@ const chat: JupyterFrontEndPlugin<void> = {
     /**
      * Initialize chat handler, open WS connection
      */
-    const chatHandler = new WebSocketHandler();
+    const chatHandler = new WebSocketHandler({ commands: app.commands });
 
     /**
      * Load the settings.

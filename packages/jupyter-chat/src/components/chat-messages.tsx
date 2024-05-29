@@ -89,12 +89,16 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
    */
   function viewportChange(entries: IntersectionObserverEntry[]) {
     const unread = model.unreadMessages;
+    let unreadModified = false;
     entries.forEach(entry => {
       const index = parseInt(entry.target.getAttribute('data-index') ?? '');
       if (!isNaN(index)) {
-        const unreadIdx = unread.indexOf(index);
-        if (entry.isIntersecting && unreadIdx !== -1) {
-          unread.splice(unreadIdx, 1);
+        if (unread.length) {
+          const unreadIdx = unread.indexOf(index);
+          if (unreadIdx !== -1 && entry.isIntersecting) {
+            unread.splice(unreadIdx, 1);
+            unreadModified = true;
+          }
         }
         const viewportIdx = inViewport.current.indexOf(index);
         if (!entry.isIntersecting && viewportIdx !== -1) {
@@ -106,7 +110,9 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
     });
 
     props.model.messagesInViewport = inViewport.current;
-    props.model.unreadMessages = unread;
+    if (unreadModified) {
+      props.model.unreadMessages = unread;
+    }
 
     return () => {
       observerRef.current?.disconnect();

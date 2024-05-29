@@ -49,14 +49,15 @@ export class CollaborativeChatPanel extends DocumentWidget<
   ) {
     super(options);
     this.addClass(MAIN_PANEL_CLASS);
-    this.model?.unreadChanged.connect(this._unreadChanged);
+    this.model.name = this.context.localPath;
+    this.model.unreadChanged.connect(this._unreadChanged);
   }
 
   /**
    * Dispose of the resources held by the widget.
    */
   dispose(): void {
-    this.model?.unreadChanged.disconnect(this._unreadChanged);
+    this.model.unreadChanged.disconnect(this._unreadChanged);
     this.context.dispose();
     this.content.dispose();
     super.dispose();
@@ -65,7 +66,7 @@ export class CollaborativeChatPanel extends DocumentWidget<
   /**
    * The model for the widget.
    */
-  get model(): CollaborativeChatModel | null {
+  get model(): CollaborativeChatModel {
     return this.content.model as CollaborativeChatModel;
   }
 
@@ -149,6 +150,9 @@ export class ChatPanel extends SidePanel {
     for (let i = 0; i < this.widgets.length; i++) {
       content.collapse(i);
     }
+
+    // Set the id of the model.
+    model.name = name;
 
     // Create a new widget.
     const widget = new ChatWidget({
