@@ -174,7 +174,11 @@ export class ChatModel implements IChatModel {
   set config(value: Partial<IConfig>) {
     const stackMessagesChanged =
       'stackMessages' in value &&
-      this._config.stackMessages !== value?.stackMessages;
+      this._config.stackMessages !== value.stackMessages;
+
+    const unreadNotificationsChanged =
+      'unreadNotifications' in value &&
+      this._config.unreadNotifications !== value.unreadNotifications;
 
     this._config = { ...this._config, ...value };
 
@@ -191,6 +195,11 @@ export class ChatModel implements IChatModel {
       }
       this._messagesUpdated.emit();
     }
+
+    // remove existing notifications if they are not required anymore.
+    if (unreadNotificationsChanged && !this._config.unreadNotifications) {
+      this._notify(0);
+    }
   }
 
   /**
@@ -200,47 +209,12 @@ export class ChatModel implements IChatModel {
     return this._unreadMessages;
   }
   set unreadMessages(unread: number[]) {
-    const diff = unread.length - this._unreadMessages.length;
+    const unreadCountDiff = unread.length - this._unreadMessages.length;
     this._unreadMessages = unread;
     this._unreadChanged.emit(this._unreadMessages);
 
     // Notify the change.
-    if (this._commands) {
-      if (unread.length) {
-        // Update the notification if exist.
-        this._commands
-          .execute('apputils:update-notification', {
-            id: this._notificationId,
-            message: `${unread.length} incoming message(s) ${this._name ? 'in ' + this._name : ''}`
-          })
-          .then(success => {
-            // Create a new notification only if messages are added.
-            if (!success && diff > 0) {
-              this._commands!.execute('apputils:notify', {
-                type: 'Chat',
-                message: `${unread.length} incoming message(s) in ${this._name}`
-              }).then(id => {
-                this._notificationId = id;
-              });
-            }
-          });
-      } else if (this._notificationId) {
-        // Delete notification if there is no more unread messages.
-        this._commands.execute('apputils:dismiss-notification', {
-          id: this._notificationId
-        });
-      }
-    }
-  }
-
-  /**
-   * Add unread messages to the list.
-   * @param indexes - list of new indexes.
-   */
-  private _addUnreadMessages(indexes: number[]) {
-    const unread = new Set(this._unreadMessages);
-    indexes.forEach(index => unread.add(index));
-    this.unreadMessages = Array.from(unread.values());
+    this._notify(unread.length, unreadCountDiff > 0);
   }
 
   /**
@@ -376,6 +350,55 @@ export class ChatModel implements IChatModel {
   messagesDeleted(index: number, count: number): void {
     this._messages.splice(index, count);
     this._messagesUpdated.emit();
+  }
+
+  /**
+   * Add unread messages to the list.
+   * @param indexes - list of new indexes.
+   */
+  private _addUnreadMessages(indexes: number[]) {
+    const unread = new Set(this._unreadMessages);
+    indexes.forEach(index => unread.add(index));
+    this.unreadMessages = Array.from(unread.values());
+  }
+
+  /**
+   * Notifications on unread messages.
+   *
+   * @param unreadCount - number of unread messages.
+   *    If the value is 0, existing notification will be deleted.
+   * @param canCreate - whether to create a notification if it does not exist.
+   *    Usually it is used when there are new unread messages, and not when the
+   *    unread messages count decrease.
+   */
+  private _notify(unreadCount: number, canCreate: boolean = false) {
+    if (this._commands) {
+      if (unreadCount && this._config.unreadNotifications) {
+        // Update the notification if exist.
+        this._commands
+          .execute('apputils:update-notification', {
+            id: this._notificationId,
+            message: `${unreadCount} incoming message(s) ${this._name ? 'in ' + this._name : ''}`
+          })
+          .then(success => {
+            // Create a new notification only if messages are added.
+            if (!success && canCreate) {
+              this._commands!.execute('apputils:notify', {
+                type: 'Chat',
+                message: `${unreadCount} incoming message(s) in ${this._name}`
+              }).then(id => {
+                this._notificationId = id;
+              });
+            }
+          });
+      } else if (this._notificationId) {
+        // Delete notification if there is no more unread messages.
+        this._commands.execute('apputils:dismiss-notification', {
+          id: this._notificationId
+        });
+        this._notificationId = null;
+      }
+    }
   }
 
   private _messages: IChatMessage[] = [];

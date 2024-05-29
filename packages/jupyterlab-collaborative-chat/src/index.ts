@@ -90,12 +90,19 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
      */
     let sendWithShiftEnter = false;
     let stackMessages = true;
+    let unreadNotifications = true;
     function loadSetting(setting: ISettingRegistry.ISettings): void {
       // Read the settings and convert to the correct type
       sendWithShiftEnter = setting.get('sendWithShiftEnter')
         .composite as boolean;
       stackMessages = setting.get('stackMessages').composite as boolean;
-      widgetConfig.configChanged.emit({ sendWithShiftEnter, stackMessages });
+      unreadNotifications = setting.get('unreadNotifications')
+        .composite as boolean;
+      widgetConfig.configChanged.emit({
+        sendWithShiftEnter,
+        stackMessages,
+        unreadNotifications
+      });
     }
 
     if (settingRegistry) {
@@ -130,7 +137,11 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     /**
      * The chat config object.
      */
-    const widgetConfig = new WidgetConfig({ sendWithShiftEnter });
+    const widgetConfig = new WidgetConfig({
+      sendWithShiftEnter,
+      stackMessages,
+      unreadNotifications
+    });
 
     // Namespace for the tracker
     const namespace = 'chat';
