@@ -9,14 +9,12 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { IconButton } from '@mui/material';
 import { Box } from '@mui/system';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 import { JlThemeProvider } from './jl-theme-provider';
 import { ChatMessages } from './chat-messages';
 import { ChatInput } from './chat-input';
-import { ScrollContainer } from './scroll-container';
 import { IChatModel } from '../model';
-import { IChatMessage } from '../types';
 
 type ChatBodyProps = {
   model: IChatModel;
@@ -27,39 +25,6 @@ function ChatBody({
   model,
   rmRegistry: renderMimeRegistry
 }: ChatBodyProps): JSX.Element {
-  const [messages, setMessages] = useState<IChatMessage[]>([]);
-
-  /**
-   * Effect: fetch history and config on initial render
-   */
-  useEffect(() => {
-    async function fetchHistory() {
-      if (!model.getHistory) {
-        return;
-      }
-      model
-        .getHistory()
-        .then(history => setMessages(history.messages))
-        .catch(e => console.error(e));
-    }
-
-    fetchHistory();
-  }, [model]);
-
-  /**
-   * Effect: listen to chat messages
-   */
-  useEffect(() => {
-    function handleChatEvents(_: IChatModel) {
-      setMessages([...model.messages]);
-    }
-
-    model.messagesUpdated.connect(handleChatEvents);
-    return function cleanup() {
-      model.messagesUpdated.disconnect(handleChatEvents);
-    };
-  }, [model]);
-
   // no need to append to messageGroups imperatively here. all of that is
   // handled by the listeners registered in the effect hooks above.
   const onSend = async (input: string) => {
@@ -69,13 +34,7 @@ function ChatBody({
 
   return (
     <>
-      <ScrollContainer sx={{ flexGrow: 1 }}>
-        <ChatMessages
-          messages={messages}
-          rmRegistry={renderMimeRegistry}
-          model={model}
-        />
-      </ScrollContainer>
+      <ChatMessages rmRegistry={renderMimeRegistry} model={model} />
       <ChatInput
         onSend={onSend}
         sx={{

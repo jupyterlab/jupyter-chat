@@ -21,13 +21,14 @@ const SEND_BUTTON_CLASS = 'jp-chat-send-button';
 const CANCEL_BUTTON_CLASS = 'jp-chat-cancel-button';
 
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
-  const [input, setInput] = useState(props.value || '');
+  const [input, setInput] = useState<string>(props.value || '');
+  const { sendWithShiftEnter } = props;
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
     if (
       event.key === 'Enter' &&
-      ((props.sendWithShiftEnter && event.shiftKey) ||
-        (!props.sendWithShiftEnter && !event.shiftKey))
+      ((sendWithShiftEnter && event.shiftKey) ||
+        (!sendWithShiftEnter && !event.shiftKey))
     ) {
       onSend();
       event.stopPropagation();
@@ -93,7 +94,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
                   color="primary"
                   onClick={onSend}
                   disabled={!input.trim().length}
-                  title={`Send message ${props.sendWithShiftEnter ? '(SHIFT+ENTER)' : '(ENTER)'}`}
+                  title={`Send message ${sendWithShiftEnter ? '(SHIFT+ENTER)' : '(ENTER)'}`}
                   className={clsx(SEND_BUTTON_CLASS)}
                 >
                   <Send />

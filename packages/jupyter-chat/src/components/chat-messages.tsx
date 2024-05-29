@@ -11,6 +11,7 @@ import React, { useState, useEffect } from 'react';
 
 import { ChatInput } from './chat-input';
 import { RendermimeMarkdown } from './rendermime-markdown';
+import { ScrollContainer } from './scroll-container';
 import { IChatModel } from '../model';
 import { IChatMessage } from '../types';
 
@@ -29,34 +30,63 @@ type BaseMessageProps = {
 };
 
 /**
- * The message list props.
- */
-type ChatMessagesProps = BaseMessageProps & {
-  messages: IChatMessage[];
-};
-
-/**
  * The messages list component.
  */
-export function ChatMessages(props: ChatMessagesProps): JSX.Element {
+export function ChatMessages(props: BaseMessageProps): JSX.Element {
+  const { model } = props;
+  const [messages, setMessages] = useState<IChatMessage[]>([]);
+
+  /**
+   * Effect: fetch history and config on initial render
+   */
+  useEffect(() => {
+    async function fetchHistory() {
+      if (!model.getHistory) {
+        return;
+      }
+      model
+        .getHistory()
+        .then(history => setMessages(history.messages))
+        .catch(e => console.error(e));
+    }
+
+    fetchHistory();
+  }, [model]);
+
+  /**
+   * Effect: listen to chat messages.
+   */
+  useEffect(() => {
+    function handleChatEvents(_: IChatModel) {
+      setMessages([...model.messages]);
+    }
+
+    model.messagesUpdated.connect(handleChatEvents);
+    return function cleanup() {
+      model.messagesUpdated.disconnect(handleChatEvents);
+    };
+  }, [model]);
+
   return (
-    <Box className={clsx(MESSAGES_BOX_CLASS)}>
-      {props.messages.map((message, i) => {
-        return (
-          // extra div needed to ensure each bubble is on a new line
-          <Box
-            key={i}
-            className={clsx(
-              MESSAGE_CLASS,
-              message.stacked ? MESSAGE_STACKED_CLASS : ''
-            )}
-          >
-            <ChatMessageHeader message={message} />
-            <ChatMessage {...props} message={message} />
-          </Box>
-        );
-      })}
-    </Box>
+    <ScrollContainer sx={{ flexGrow: 1 }}>
+      <Box className={clsx(MESSAGES_BOX_CLASS)}>
+        {messages.map((message, i) => {
+          return (
+            // extra div needed to ensure each bubble is on a new line
+            <Box
+              key={i}
+              className={clsx(
+                MESSAGE_CLASS,
+                message.stacked ? MESSAGE_STACKED_CLASS : ''
+              )}
+            >
+              <ChatMessageHeader message={message} />
+              <ChatMessage {...props} message={message} />
+            </Box>
+          );
+        })}
+      </Box>
+    </ScrollContainer>
   );
 }
 
@@ -212,6 +242,9 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
  * The message component props.
  */
 type ChatMessageProps = BaseMessageProps & {
+  /**
+   * The message to display.
+   */
   message: IChatMessage;
 };
 
@@ -220,27 +253,31 @@ type ChatMessageProps = BaseMessageProps & {
  */
 export function ChatMessage(props: ChatMessageProps): JSX.Element {
   const { message, model, rmRegistry } = props;
-  let canEdit = false;
-  let canDelete = false;
-  if (model.user !== undefined && !message.deleted) {
-    const username =
-      typeof message.sender === 'string'
-        ? message.sender
-        : message.sender.username;
-
-    if (model.user.username === username && model.updateMessage !== undefined) {
-      canEdit = true;
-    }
-    if (model.user.username === username && model.deleteMessage !== undefined) {
-      canDelete = true;
-    }
-  }
   const [edit, setEdit] = useState<boolean>(false);
+  const [deleted, setDeleted] = useState<boolean>(false);
+  const [canEdit, setCanEdit] = useState<boolean>(false);
+  const [canDelete, setCanDelete] = useState<boolean>(false);
 
+  // Look if the message can be deleted or edited.
+  useEffect(() => {
+    setDeleted(message.deleted ?? false);
+    if (model.user !== undefined && !message.deleted) {
+      if (model.user.username === message.sender.username) {
+        setCanEdit(model.updateMessage !== undefined);
+        setCanDelete(model.deleteMessage !== undefined);
+      }
+    } else {
+      setCanEdit(false);
+      setCanDelete(false);
+    }
+  }, [model, message]);
+
+  // Cancel the current edition of the message.
   const cancelEdition = (): void => {
     setEdit(false);
   };
 
+  // Update the content of the message.
   const updateMessage = (id: string, input: string): void => {
     if (!canEdit) {
       return;
@@ -252,16 +289,16 @@ export function ChatMessage(props: ChatMessageProps): JSX.Element {
     setEdit(false);
   };
 
+  // Delete the message.
   const deleteMessage = (id: string): void => {
     if (!canDelete) {
       return;
     }
-    // Delete the message
     model.deleteMessage!(id);
   };
 
   // Empty if the message has been deleted
-  return message.deleted ? (
+  return deleted ? (
     <></>
   ) : (
     <div>
