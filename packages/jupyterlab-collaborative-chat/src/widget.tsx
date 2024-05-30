@@ -314,7 +314,6 @@ class ChatSection extends PanelWithToolbar {
    */
   dispose(): void {
     this.model.unreadChanged?.disconnect(this._unreadChanged);
-    this.toolbar.dispose();
     super.dispose();
   }
 
