@@ -392,6 +392,212 @@ test.describe('#sendMessages', () => {
   });
 });
 
+test.describe('#messagesNavigation', () => {
+  const baseTime = 1714116341;
+  const messagesList: any[] = [];
+  for (let i = 0; i < 20; i++) {
+    messagesList.push({
+      type: 'msg',
+      id: UUID.uuid4(),
+      sender: USERNAME,
+      body: `Message ${i}`,
+      time: baseTime + i * 60
+    });
+  }
+
+  const chatContent = {
+    messages: messagesList,
+    users: {}
+  };
+  chatContent.users[USERNAME] = USER.identity;
+
+  test.beforeEach(async ({ page }) => {
+    // Create a chat file with content
+    await page.filebrowser.contents.uploadContent(
+      JSON.stringify(chatContent),
+      'text',
+      FILENAME
+    );
+  });
+
+  test.afterEach(async ({ page }) => {
+    if (await page.filebrowser.contents.fileExists(FILENAME)) {
+      await page.filebrowser.contents.deleteFile(FILENAME);
+    }
+  });
+
+  test.describe('navigation without unread message', () => {
+    test('should have a icon to navigate to last message', async ({ page }) => {
+      const chatPanel = await openChat(page, FILENAME);
+      const message = chatPanel.locator('.jp-chat-message').nth(0);
+      const navigationBottom = chatPanel.locator('.jp-chat-navigation-bottom');
+      await message.scrollIntoViewIfNeeded();
+
+      await expect(navigationBottom).toBeAttached();
+      expect(navigationBottom).not.toHaveClass(/jp-chat-navigation-unread/);
+      expect(await navigationBottom.screenshot()).toMatchSnapshot(
+        'navigation-bottom.png'
+      );
+    });
+
+    test('should navigate to last message', async ({ page }) => {
+      const chatPanel = await openChat(page, FILENAME);
+      const messages = chatPanel.locator('.jp-chat-message');
+      const navigationBottom = chatPanel.locator('.jp-chat-navigation-bottom');
+      await messages.first().scrollIntoViewIfNeeded();
+
+      await expect(messages.last()).not.toBeInViewport();
+      await navigationBottom.click();
+      await expect(messages.last()).toBeInViewport();
+      await expect(navigationBottom).not.toBeAttached();
+    });
+  });
+
+  test.describe('navigation with previous unread message', () => {
+    test.beforeEach(async ({ page }) => {
+      const newMessagesList = [...messagesList];
+      // Add new message to the document.
+      for (let i = 20; i < 50; i++) {
+        newMessagesList.push({
+          type: 'msg',
+          id: UUID.uuid4(),
+          sender: USERNAME,
+          body: `Message ${i}`,
+          time: baseTime + i * 60
+        });
+      }
+      const newChatContent = {
+        messages: newMessagesList,
+        users: {}
+      };
+      newChatContent.users[USERNAME] = USER.identity;
+
+      // Create a chat file with content
+      await page.filebrowser.contents.uploadContent(
+        JSON.stringify(newChatContent),
+        'text',
+        FILENAME
+      );
+    });
+
+    test('should have unread icon for previous unread messages', async ({
+      page
+    }) => {
+      const chatPanel = await openChat(page, FILENAME);
+      const navigationTop = chatPanel.locator('.jp-chat-navigation-top');
+
+      await expect(navigationTop).toBeAttached();
+      expect(navigationTop).toHaveClass(/jp-chat-navigation-unread/);
+      expect(await navigationTop.screenshot()).toMatchSnapshot(
+        'navigation-top.png'
+      );
+    });
+
+    test('should navigate to previous unread messages', async ({ page }) => {
+      const chatPanel = await openChat(page, FILENAME);
+      const messages = chatPanel.locator('.jp-chat-message');
+      const navigationTop = chatPanel.locator('.jp-chat-navigation-top');
+      const navigationBottom = chatPanel.locator('.jp-chat-navigation-bottom');
+
+      // Navigate up to the first unread message
+      expect(messages.first()).not.toBeInViewport();
+      await navigationTop.click();
+      expect(messages.first()).toBeInViewport();
+
+      // Navigate down to next unread messages.
+      await expect(navigationBottom).toBeAttached();
+      await expect(messages.nth(15)).not.toBeInViewport();
+      await navigationBottom.click();
+      await expect(messages.nth(15)).toBeInViewport();
+    });
+  });
+
+  test.describe('navigation with new unread message', () => {
+    let guestPage: IJupyterLabPageFixture;
+    test.beforeEach(
+      async ({ baseURL, browser, page, tmpPath, waitForApplication }) => {
+        // Create a new user.
+        const user2: Partial<User.IUser> = {
+          identity: {
+            username: 'jovyan_2',
+            name: 'jovyan_2',
+            display_name: 'jovyan_2',
+            initials: 'JP',
+            color: 'var(--jp-collaborator-color2)'
+          }
+        };
+
+        // Create a new page for guest.
+        const { page: newPage } = await galata.newPage({
+          baseURL: baseURL!,
+          browser,
+          mockUser: user2,
+          tmpPath,
+          waitForApplication
+        });
+        await newPage.evaluate(() => {
+          // Acknowledge any dialog
+          window.galataip.on('dialog', d => {
+            d?.resolve();
+          });
+        });
+        guestPage = newPage;
+      }
+    );
+
+    test.afterEach(async ({ page }) => {
+      await guestPage.close();
+    });
+
+    test('should have unread icon for new messages', async ({ page }) => {
+      const chatPanel = await openChat(page, FILENAME);
+      const message = chatPanel.locator('.jp-chat-message').nth(0);
+      const navigationBottom = chatPanel.locator('.jp-chat-navigation-bottom');
+      await message.scrollIntoViewIfNeeded();
+
+      await expect(navigationBottom).toBeAttached();
+      expect(navigationBottom).not.toHaveClass(/jp-chat-navigation-unread/);
+
+      const guestChatPanel = await openChat(guestPage, FILENAME);
+      const input = guestChatPanel
+        .locator('.jp-chat-input-container')
+        .getByRole('textbox');
+      const sendButton = guestChatPanel
+        .locator('.jp-chat-input-container')
+        .getByRole('button');
+      await input.pressSequentially(MSG_CONTENT);
+      await sendButton.click();
+
+      await expect(navigationBottom).toHaveClass(/jp-chat-navigation-unread/);
+      expect(await navigationBottom.screenshot()).toMatchSnapshot(
+        'navigation-bottom-unread.png'
+      );
+    });
+
+    test('should navigate to new unread message', async ({ page }) => {
+      const chatPanel = await openChat(page, FILENAME);
+      const messages = chatPanel.locator('.jp-chat-message');
+      const navigationBottom = chatPanel.locator('.jp-chat-navigation-bottom');
+      await messages.first().scrollIntoViewIfNeeded();
+
+      const guestChatPanel = await openChat(guestPage, FILENAME);
+      const input = guestChatPanel
+        .locator('.jp-chat-input-container')
+        .getByRole('textbox');
+      const sendButton = guestChatPanel
+        .locator('.jp-chat-input-container')
+        .getByRole('button');
+      await input.pressSequentially(MSG_CONTENT);
+      await sendButton.click();
+
+      await expect(navigationBottom).toHaveClass(/jp-chat-navigation-unread/);
+      await navigationBottom.click();
+      await expect(messages.last()).toBeInViewport();
+      await expect(navigationBottom).not.toBeAttached();
+    });
+  });
+});
+
 test.describe('#raw_time', () => {
   const msg_raw_time = {
     type: 'msg',
