@@ -384,7 +384,7 @@ export class ChatModel implements IChatModel {
             // Create a new notification only if messages are added.
             if (!success && canCreate) {
               this._commands!.execute('apputils:notify', {
-                type: 'Chat',
+                type: 'info',
                 message: `${unreadCount} incoming message(s) in ${this._name}`
               }).then(id => {
                 this._notificationId = id;

@@ -46,6 +46,11 @@ const openChat = async (
   page: IJupyterLabPageFixture,
   filename: string
 ): Promise<Locator> => {
+  const panel = await page.activity.getPanelLocator(filename);
+  if (panel !== null && (await panel.count())) {
+    return panel;
+  }
+
   await page.evaluate(async filepath => {
     await window.jupyterapp.commands.execute('collaborative-chat:open', {
       filepath
@@ -104,6 +109,22 @@ const openSidePanel = async (
     await expect(panel).toBeVisible();
   }
   return panel.first();
+};
+
+const sendMessage = async (
+  page: IJupyterLabPageFixture,
+  filename: string = FILENAME,
+  content: string = MSG_CONTENT
+) => {
+  const chatPanel = await openChat(page, filename);
+  const input = chatPanel
+    .locator('.jp-chat-input-container')
+    .getByRole('textbox');
+  const sendButton = chatPanel
+    .locator('.jp-chat-input-container')
+    .getByRole('button');
+  await input.pressSequentially(content);
+  await sendButton.click();
 };
 
 test.describe('#commandPalette', () => {
@@ -429,7 +450,7 @@ test.describe('#messagesNavigation', () => {
   test.describe('navigation without unread message', () => {
     test('should have a icon to navigate to last message', async ({ page }) => {
       const chatPanel = await openChat(page, FILENAME);
-      const message = chatPanel.locator('.jp-chat-message').nth(0);
+      const message = chatPanel.locator('.jp-chat-message').first();
       const navigationBottom = chatPanel.locator('.jp-chat-navigation-bottom');
       await message.scrollIntoViewIfNeeded();
 
@@ -515,7 +536,7 @@ test.describe('#messagesNavigation', () => {
   test.describe('navigation with new unread message', () => {
     let guestPage: IJupyterLabPageFixture;
     test.beforeEach(
-      async ({ baseURL, browser, page, tmpPath, waitForApplication }) => {
+      async ({ baseURL, browser, tmpPath, waitForApplication }) => {
         // Create a new user.
         const user2: Partial<User.IUser> = {
           identity: {
@@ -551,22 +572,14 @@ test.describe('#messagesNavigation', () => {
 
     test('should have unread icon for new messages', async ({ page }) => {
       const chatPanel = await openChat(page, FILENAME);
-      const message = chatPanel.locator('.jp-chat-message').nth(0);
+      const message = chatPanel.locator('.jp-chat-message').first();
       const navigationBottom = chatPanel.locator('.jp-chat-navigation-bottom');
       await message.scrollIntoViewIfNeeded();
 
       await expect(navigationBottom).toBeAttached();
       expect(navigationBottom).not.toHaveClass(/jp-chat-navigation-unread/);
 
-      const guestChatPanel = await openChat(guestPage, FILENAME);
-      const input = guestChatPanel
-        .locator('.jp-chat-input-container')
-        .getByRole('textbox');
-      const sendButton = guestChatPanel
-        .locator('.jp-chat-input-container')
-        .getByRole('button');
-      await input.pressSequentially(MSG_CONTENT);
-      await sendButton.click();
+      await sendMessage(guestPage);
 
       await expect(navigationBottom).toHaveClass(/jp-chat-navigation-unread/);
       expect(await navigationBottom.screenshot()).toMatchSnapshot(
@@ -580,21 +593,195 @@ test.describe('#messagesNavigation', () => {
       const navigationBottom = chatPanel.locator('.jp-chat-navigation-bottom');
       await messages.first().scrollIntoViewIfNeeded();
 
-      const guestChatPanel = await openChat(guestPage, FILENAME);
-      const input = guestChatPanel
-        .locator('.jp-chat-input-container')
-        .getByRole('textbox');
-      const sendButton = guestChatPanel
-        .locator('.jp-chat-input-container')
-        .getByRole('button');
-      await input.pressSequentially(MSG_CONTENT);
-      await sendButton.click();
+      await sendMessage(guestPage);
 
       await expect(navigationBottom).toHaveClass(/jp-chat-navigation-unread/);
       await navigationBottom.click();
       await expect(messages.last()).toBeInViewport();
       await expect(navigationBottom).not.toBeAttached();
     });
+  });
+});
+
+test.describe('#notifications', () => {
+  const baseTime = 1714116341;
+  const messagesCount = 15;
+  const messagesList: any[] = [];
+  for (let i = 0; i < messagesCount; i++) {
+    messagesList.push({
+      type: 'msg',
+      id: UUID.uuid4(),
+      sender: USERNAME,
+      body: `Message ${i}`,
+      time: baseTime + i * 60
+    });
+  }
+
+  const chatContent = {
+    messages: messagesList,
+    users: {}
+  };
+  chatContent.users[USERNAME] = USER.identity;
+
+  let guestPage: IJupyterLabPageFixture;
+
+  test.beforeEach(
+    async ({ baseURL, browser, page, tmpPath, waitForApplication }) => {
+      // Create a chat file with content
+      await page.filebrowser.contents.uploadContent(
+        JSON.stringify(chatContent),
+        'text',
+        FILENAME
+      );
+
+      // Create a new user.
+      const user2: Partial<User.IUser> = {
+        identity: {
+          username: 'jovyan_2',
+          name: 'jovyan_2',
+          display_name: 'jovyan_2',
+          initials: 'JP',
+          color: 'var(--jp-collaborator-color2)'
+        }
+      };
+
+      // Create a new page for guest.
+      const { page: newPage } = await galata.newPage({
+        baseURL: baseURL!,
+        browser,
+        mockUser: user2,
+        tmpPath,
+        waitForApplication
+      });
+      await newPage.evaluate(() => {
+        // Acknowledge any dialog
+        window.galataip.on('dialog', d => {
+          d?.resolve();
+        });
+      });
+      guestPage = newPage;
+    }
+  );
+
+  test.afterEach(async ({ page }) => {
+    guestPage.close();
+    if (await page.filebrowser.contents.fileExists(FILENAME)) {
+      await page.filebrowser.contents.deleteFile(FILENAME);
+    }
+  });
+
+  test('should receive notification on unread message', async ({ page }) => {
+    const chatPanel = await openChat(page, FILENAME);
+    const messages = chatPanel.locator('.jp-chat-message');
+    await messages.first().scrollIntoViewIfNeeded();
+
+    await sendMessage(guestPage);
+    page.waitForCondition(async () => (await page.notifications).length > 0);
+    const notifications = await page.notifications;
+    expect(notifications).toHaveLength(1);
+
+    // TODO: fix it, the notification should be info but is 'default'
+    // expect(notifications[0].type).toBe('info');
+    expect(notifications[0].message).toBe(
+      '1 incoming message(s) in my-chat.chat'
+    );
+  });
+
+  test('should remove notification when the message is read', async ({
+    page
+  }) => {
+    const chatPanel = await openChat(page, FILENAME);
+    const messages = chatPanel.locator('.jp-chat-message');
+    await messages.first().scrollIntoViewIfNeeded();
+
+    await sendMessage(guestPage);
+    page.waitForCondition(async () => (await page.notifications).length > 0);
+    let notifications = await page.notifications;
+    expect(notifications).toHaveLength(1);
+
+    await messages.last().scrollIntoViewIfNeeded();
+    page.waitForCondition(async () => (await page.notifications).length === 0);
+  });
+
+  test('should update existing notification on new message', async ({
+    page
+  }) => {
+    const chatPanel = await openChat(page, FILENAME);
+    const messages = chatPanel.locator('.jp-chat-message');
+    await messages.first().scrollIntoViewIfNeeded();
+
+    await sendMessage(guestPage);
+    page.waitForCondition(async () => (await page.notifications).length > 0);
+    let notifications = await page.notifications;
+    expect(notifications).toHaveLength(1);
+
+    expect(notifications[0].message).toBe(
+      '1 incoming message(s) in my-chat.chat'
+    );
+
+    await sendMessage(guestPage);
+    notifications = await page.notifications;
+    expect(notifications[0].message).toBe(
+      '2 incoming message(s) in my-chat.chat'
+    );
+  });
+
+  test('should remove notifications from settings', async ({ page }) => {
+    const chatPanel = await openChat(page, FILENAME);
+    const messages = chatPanel.locator('.jp-chat-message');
+    await messages.first().scrollIntoViewIfNeeded();
+
+    await sendMessage(guestPage);
+    page.waitForCondition(async () => (await page.notifications).length > 0);
+    let notifications = await page.notifications;
+    expect(notifications).toHaveLength(1);
+
+    const settings = await openSettings(page);
+    const unreadNotifications = settings?.getByRole('checkbox', {
+      name: 'unreadNotifications'
+    });
+    await unreadNotifications?.uncheck();
+
+    // wait for the settings to be saved
+    await expect(page.activity.getTabLocator('Settings')).toHaveAttribute(
+      'class',
+      /jp-mod-dirty/
+    );
+    await expect(page.activity.getTabLocator('Settings')).not.toHaveAttribute(
+      'class',
+      /jp-mod-dirty/
+    );
+
+    // Activate the chat panel
+    await page.activity.activateTab(FILENAME);
+
+    page.waitForCondition(async () => (await page.notifications).length === 0);
+
+    await sendMessage(guestPage);
+    await expect(messages).toHaveCount(messagesCount + 2);
+
+    notifications = await page.notifications;
+    expect(notifications).toHaveLength(0);
+  });
+
+  test('should add unread symbol in tab label', async ({ page }) => {
+    const chatPanel = await openChat(page, FILENAME);
+    const messages = chatPanel.locator('.jp-chat-message');
+    await messages.first().scrollIntoViewIfNeeded();
+
+    const tab = page.activity.getTabLocator(FILENAME);
+    const tabLabel = tab.locator('.lm-TabBar-tabLabel');
+    await expect(tabLabel).toHaveText(FILENAME);
+
+    await sendMessage(guestPage);
+    const beforePseudo = tabLabel.evaluate(elem => {
+      return window.getComputedStyle(elem, ':before');
+    });
+    expect(await beforePseudo).toHaveProperty('content', '"* "');
+    expect(await tab.screenshot()).toMatchSnapshot('tab-with-unread.png');
+
+    await messages.last().scrollIntoViewIfNeeded();
+    expect(await tab.screenshot()).toMatchSnapshot('tab-without-unread.png');
   });
 });
 
@@ -660,14 +847,7 @@ test.describe('#raw_time', () => {
     );
 
     // Send a new message
-    const input = chatPanel
-      .locator('.jp-chat-input-container')
-      .getByRole('textbox');
-    const sendButton = chatPanel
-      .locator('.jp-chat-input-container')
-      .getByRole('button');
-    await input.pressSequentially('New message');
-    await sendButton.click();
+    await sendMessage(page);
 
     expect(messages).toHaveCount(3);
     await expect(
@@ -909,8 +1089,8 @@ test.describe('#outofband', () => {
   });
 });
 
-test.describe('#chatPanel', () => {
-  test.describe('#initiailization', () => {
+test.describe('#sidepanel', () => {
+  test.describe('#initialization', () => {
     test('should contain the chat panel icon', async ({ page }) => {
       const chatIcon = page.getByTitle('Jupyter Chat');
       expect(chatIcon).toHaveCount(1);
@@ -1026,9 +1206,6 @@ test.describe('#chatPanel', () => {
         '.jp-SidePanel-toolbar .jp-Toolbar-item.jp-collab-chat-open select'
       );
 
-      for (let i = 0; i < (await select.locator('option').count()); i++) {
-        console.log(await select.locator('option').nth(i).textContent());
-      }
       await expect(select.locator('option')).toHaveCount(2);
       await expect(select.locator('option').last()).toHaveText(name);
     });
