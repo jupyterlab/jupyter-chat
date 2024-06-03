@@ -88,7 +88,7 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
    * Function called when a message enter or leave the viewport.
    */
   function viewportChange(entries: IntersectionObserverEntry[]) {
-    const unread = model.unreadMessages;
+    const unread = [...model.unreadMessages];
     let unreadModified = false;
     entries.forEach(entry => {
       const index = parseInt(entry.target.getAttribute('data-index') ?? '');

@@ -176,6 +176,26 @@ export class ChatModel implements IChatModel {
   }
 
   /**
+   * Timestamp of the last read message in local storage.
+   */
+  get lastRead(): number {
+    const storage = JSON.parse(
+      localStorage.getItem(`jp-collaborative-chat_${this.id}`) || '{}'
+    );
+    return storage.lastRead;
+  }
+  set lastRead(value: number) {
+    const storage = JSON.parse(
+      localStorage.getItem(`jp-collaborative-chat_${this.id}`) || '{}'
+    );
+    storage.lastRead = value;
+    localStorage.setItem(
+      `jp-collaborative-chat_${this.id}`,
+      JSON.stringify(storage)
+    );
+  }
+
+  /**
    * The chat settings.
    */
   get config(): IConfig {
@@ -219,12 +239,32 @@ export class ChatModel implements IChatModel {
     return this._unreadMessages;
   }
   set unreadMessages(unread: number[]) {
+    const recentlyRead = this._unreadMessages.filter(
+      elem => !unread.includes(elem)
+    );
     const unreadCountDiff = unread.length - this._unreadMessages.length;
+
     this._unreadMessages = unread;
     this._unreadChanged.emit(this._unreadMessages);
 
     // Notify the change.
     this._notify(unread.length, unreadCountDiff > 0);
+
+    // Save the last read to the local storage.
+    if (this._id !== undefined && recentlyRead.length) {
+      let lastReadChanged = false;
+      let lastRead = this.lastRead ?? this.messages[recentlyRead[0]].time;
+      recentlyRead.forEach(index => {
+        if (this.messages[index].time > lastRead) {
+          lastRead = this.messages[index].time;
+          lastReadChanged = true;
+        }
+      });
+
+      if (lastReadChanged) {
+        this.lastRead = lastRead;
+      }
+    }
   }
 
   /**
@@ -323,12 +363,16 @@ export class ChatModel implements IChatModel {
    */
   messagesInserted(index: number, messages: IChatMessage[]): void {
     const formattedMessages: IChatMessage[] = [];
-    const insertedIndexes: number[] = [];
+    const unreadIndexes: number[] = [];
+
+    const lastRead = this.lastRead ?? 0;
 
     // Format the messages.
     messages.forEach((message, idx) => {
       formattedMessages.push(this.formatChatMessage(message));
-      insertedIndexes.push(index + idx);
+      if (message.time > lastRead) {
+        unreadIndexes.push(index + idx);
+      }
     });
 
     // Insert the messages.
@@ -347,7 +391,7 @@ export class ChatModel implements IChatModel {
       }
     }
 
-    this._addUnreadMessages(insertedIndexes);
+    this._addUnreadMessages(unreadIndexes);
     this._messagesUpdated.emit();
   }
 
