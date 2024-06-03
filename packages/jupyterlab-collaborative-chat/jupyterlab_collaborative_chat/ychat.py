@@ -8,6 +8,7 @@ import time
 import asyncio
 from functools import partial
 from typing import Any, Callable, Dict, List, Set
+from uuid import uuid4
 
 from jupyter_ydoc.ybasedoc import YBaseDoc
 from pycrdt import Array, ArrayEvent, Map
@@ -20,6 +21,7 @@ class YChat(YBaseDoc):
         self.dirty = True
         self._ydoc["users"] = self._yusers = Map()
         self._ydoc["messages"] = self._ymessages = Array()
+        self._ydoc["metadata"] = self._ymetadata = Map()
         self._ymessages.observe(self._timestamp_new_messages)
 
     @property
@@ -37,8 +39,16 @@ class YChat(YBaseDoc):
         task.add_done_callback(self._background_tasks.discard)
 
     @property
+    def messages(self) -> List:
+        return self._ymessages.to_py()
+
+    @property
     def users(self) -> Map:
         return self._yusers.to_py()
+
+    @property
+    def metadata(self) -> Map:
+        return self._ymetadata.get("metadata", {})
 
     def get_users(self) -> Dict:
         """
@@ -50,10 +60,6 @@ class YChat(YBaseDoc):
         users = self._yusers.to_py()
         return dict(users=users)
 
-    @property
-    def messages(self) -> List:
-        return self._ymessages.to_py()
-
     def get_messages(self) -> Dict:
         """
         Returns the messages of the document.
@@ -64,6 +70,32 @@ class YChat(YBaseDoc):
         messages = self._ymessages.to_py()
         return dict(messages=messages)
 
+    def create_id(self) -> str:
+        """
+        Create a new ID for the document.
+        """
+        id = str(uuid4())
+        self.set_id(id)
+        return id
+
+    def get_id(self) -> str:
+        """
+        Returns the ID of the document.
+        """
+        metadata = self._ymetadata.get("metadata", {})
+        id = metadata.get("id", None)
+        if id is None:
+            id = self.create_id()
+        return id
+
+    def set_id(self, id: str) -> None:
+        """
+        Set the ID of the document
+        """
+        metadata = self._ymetadata.get("metadata", {})
+        metadata.update({"id": id})
+        self._ymetadata.update("metadata", metadata)
+
     def get(self) -> str:
         """
         Returns the contents of the document.
@@ -72,7 +104,8 @@ class YChat(YBaseDoc):
         """
         return json.dumps({
             "messages": self.messages,
-            "users": self.users
+            "users": self.users,
+            "metadata": self.metadata
         })
 
     def set(self, value: str) -> None:
@@ -85,6 +118,11 @@ class YChat(YBaseDoc):
             contents = json.loads(value)
         except json.JSONDecodeError:
             contents = dict()
+
+        ## Create an ID for the chat if it does not exist yet.
+        if ("metadata" not in contents.keys() or "id" not in contents["metadata"].keys()):
+            with self._ydoc.transaction():
+                self.create_id()
 
         # Make sure the users are updated before the messages, for consistency.
         with self._ydoc.transaction():
@@ -104,6 +142,9 @@ class YChat(YBaseDoc):
     def observe(self, callback: Callable[[str, Any], None]) -> None:
         self.unobserve()
         self._subscriptions[self._ystate] = self._ystate.observe(partial(callback, "state"))
+        self._subscriptions[self._ymetadata] = self._ymetadata.observe(
+            partial(callback, "metadata")
+        )
         self._subscriptions[self._ymessages] = self._ymessages.observe(
             partial(callback, "messages")
         )

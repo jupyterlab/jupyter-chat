@@ -5,8 +5,27 @@
 
 import { IChatMessage, IUser } from '@jupyter/chat';
 import { Delta, DocumentChange, IMapChange, YDocument } from '@jupyter/ydoc';
-import { JSONExt, JSONObject } from '@lumino/coreutils';
+import { JSONExt, JSONObject, PartialJSONValue } from '@lumino/coreutils';
 import * as Y from 'yjs';
+
+/**
+ * The type for a YMessage.
+ */
+export type IYmessage = IChatMessage<string>;
+
+/**
+ * The type for a YMessage.
+ */
+export interface IMetadata {
+  /**
+   * The id of the chat, stored in the metadata.
+   */
+  id: string;
+  /**
+   * Allow any other keys in metadata.
+   */
+  [anyKey: string]: PartialJSONValue;
+}
 
 /**
  * Definition of the shared Chat changes.
@@ -20,6 +39,10 @@ export type ChatChange = DocumentChange & {
    * Changes in users.
    */
   userChanges?: UserChange[];
+  /**
+   * Changes in metadata.
+   */
+  metadataChanges?: MetadataChange[];
 };
 
 /**
@@ -33,9 +56,9 @@ export type MessageChange = Delta<IYmessage[]>;
 export type UserChange = IMapChange<IUser>;
 
 /**
- * The type for a YMessage.
+ * The metadata change type.
  */
-export type IYmessage = IChatMessage<string>;
+export type MetadataChange = IMapChange<any>;
 
 /**
  * The collaborative chat shared document.
@@ -51,6 +74,9 @@ export class YChat extends YDocument<ChatChange> {
 
     this._messages = this.ydoc.getArray<IYmessage>('messages');
     this._messages.observe(this._messagesObserver);
+
+    this._metadata = this.ydoc.getMap<IMetadata>('metadata');
+    this._metadata.observe(this._metadataObserver);
   }
 
   /**
@@ -65,6 +91,14 @@ export class YChat extends YDocument<ChatChange> {
    */
   static create(options?: YDocument.IOptions): YChat {
     return new YChat(options);
+  }
+
+  get id(): string {
+    const metadata: IMetadata | undefined = this._metadata.get('metadata');
+    if (!metadata) {
+      return '';
+    }
+    return metadata?.id || '';
   }
 
   get users(): JSONObject {
@@ -148,14 +182,51 @@ export class YChat extends YDocument<ChatChange> {
       }
     });
 
-    this._changed.emit({ userChange: userChange } as any);
+    this._changed.emit({ userChange: userChange } as Partial<ChatChange>);
   };
 
   private _messagesObserver = (event: Y.YArrayEvent<IYmessage>): void => {
     const messageChanges = event.delta;
-    this._changed.emit({ messageChanges: messageChanges } as any);
+    this._changed.emit({
+      messageChanges: messageChanges
+    } as Partial<ChatChange>);
+  };
+
+  private _metadataObserver = (event: Y.YMapEvent<any>): void => {
+    const metadataChange = new Array<any>();
+    event.changes.keys.forEach((change, key) => {
+      switch (change.action) {
+        case 'add':
+          metadataChange.push({
+            key,
+            newValue: this._metadata.get(key),
+            type: 'add'
+          });
+          break;
+        case 'delete':
+          metadataChange.push({
+            key,
+            oldValue: change.oldValue,
+            type: 'remove'
+          });
+          break;
+        case 'update':
+          metadataChange.push({
+            key: key,
+            oldValue: change.oldValue,
+            newValue: this._metadata.get(key),
+            type: 'change'
+          });
+          break;
+      }
+    });
+
+    this._changed.emit({
+      metadataChanges: metadataChange
+    } as Partial<ChatChange>);
   };
 
   private _users: Y.Map<IUser>;
   private _messages: Y.Array<IYmessage>;
+  private _metadata: Y.Map<IMetadata>;
 }

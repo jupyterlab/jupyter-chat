@@ -156,6 +156,16 @@ export class ChatModel implements IChatModel {
   }
 
   /**
+   * The chat model id.
+   */
+  get id(): string | undefined {
+    return this._id;
+  }
+  set id(value: string | undefined) {
+    this._id = value;
+  }
+
+  /**
    * The chat model name.
    */
   get name(): string {
@@ -404,6 +414,7 @@ export class ChatModel implements IChatModel {
   private _messages: IChatMessage[] = [];
   private _unreadMessages: number[] = [];
   private _messagesInViewport: number[] = [];
+  private _id: string | undefined;
   private _name: string = '';
   private _config: IConfig;
   private _isDisposed = false;

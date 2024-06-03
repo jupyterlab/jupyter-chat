@@ -45,6 +45,8 @@ export class CollaborativeChatModel
       this._sharedModel = YChat.create();
     }
 
+    this.id = this._sharedModel.id;
+
     this.sharedModel.changed.connect(this._onchange, this);
 
     this.config = widgetConfig.config;
@@ -192,6 +194,14 @@ export class CollaborativeChatModel
         } else if (delta.delete) {
           this.messagesDeleted(index, delta.delete);
         }
+      });
+    }
+
+    if (change.metadataChanges) {
+      change.metadataChanges.forEach(change => {
+        // no need to search for update or add, if the new value contains ID, let's
+        // update the model ID.
+        this.id = change.newValue as string;
       });
     }
   };
