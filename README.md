@@ -1,12 +1,14 @@
-# jupyter_chat
+# jupyter-chat
 
-[![Github Actions Status](https://github.com/jupyterlab/jupyter-chat/workflows/Build/badge.svg)](https://github.com/jupyterlab/jupyter-chat/actions/workflows/build.yml)[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jupyterlab/jupyter-chat/main?urlpath=lab)
+[![Github Actions Status](https://github.com/jupyterlab/jupyter-chat/workflows/Build/badge.svg)](https://github.com/jupyterlab/jupyter-chat/actions/workflows/build.yml)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jupyterlab/jupyter-chat/main?urlpath=lab)
 
 This project is a monorepo containing the frontend components and extensions to build
 a chat in Jupyter.
 
-A lot of the components of this chat project come from
-[jupyter-ai](https://github.com/jupyterlab/jupyter-ai).
+Many components of this chat project come from [jupyter-ai](https://github.com/jupyterlab/jupyter-ai).
+
+![a screenshot showing the jupyter-chat extension used in two browser windows](https://github.com/jtpio/jupyter-chat/assets/591645/977b6f8b-df73-4973-a4f2-abe5abc688c4)
 
 ## Composition
 
