@@ -8,7 +8,7 @@ a chat in Jupyter.
 
 Many components of this chat project come from [jupyter-ai](https://github.com/jupyterlab/jupyter-ai).
 
-![a screenshot showing the jupyter-chat extension used in two browser windows](https://github.com/jtpio/jupyter-chat/assets/591645/977b6f8b-df73-4973-a4f2-abe5abc688c4)
+![a screenshot showing the jupyter-chat extension used in two browser windows](https://github.com/jupyterlab/jupyter-chat/assets/591645/5dac0b00-43ed-4458-ab67-18207644b92b)
 
 ## Composition
 
