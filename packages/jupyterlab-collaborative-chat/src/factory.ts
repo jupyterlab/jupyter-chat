@@ -11,7 +11,7 @@ import { Contents, User } from '@jupyterlab/services';
 import { Signal } from '@lumino/signaling';
 
 import { CollaborativeChatModel } from './model';
-import { CollaborativeChatWidget } from './widget';
+import { CollaborativeChatPanel } from './widget';
 import { YChat } from './ychat';
 import { IWidgetConfig } from './token';
 
@@ -39,7 +39,7 @@ export class WidgetConfig implements IWidgetConfig {
  * A widget factory to create new instances of CollaborativeChatWidget.
  */
 export class ChatWidgetFactory extends ABCWidgetFactory<
-  CollaborativeChatWidget,
+  CollaborativeChatPanel,
   CollaborativeChatModel
 > {
   /**
@@ -47,7 +47,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
    *
    * @param options Constructor options
    */
-  constructor(options: ChatWidgetFactory.IOptions<CollaborativeChatWidget>) {
+  constructor(options: ChatWidgetFactory.IOptions<CollaborativeChatPanel>) {
     super(options);
     this._themeManager = options.themeManager;
     this._rmRegistry = options.rmRegistry;
@@ -61,11 +61,11 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
    */
   protected createNewWidget(
     context: ChatWidgetFactory.IContext
-  ): CollaborativeChatWidget {
+  ): CollaborativeChatPanel {
     context.chatModel = context.model;
     context.rmRegistry = this._rmRegistry;
     context.themeManager = this._themeManager;
-    return new CollaborativeChatWidget({
+    return new CollaborativeChatPanel({
       context,
       content: new ChatWidget(context)
     });
@@ -83,7 +83,7 @@ export namespace ChatWidgetFactory {
     rmRegistry: IRenderMimeRegistry;
   }
 
-  export interface IOptions<T extends CollaborativeChatWidget>
+  export interface IOptions<T extends CollaborativeChatPanel>
     extends DocumentRegistry.IWidgetFactoryOptions<T> {
     themeManager: IThemeManager | null;
     rmRegistry: IRenderMimeRegistry;

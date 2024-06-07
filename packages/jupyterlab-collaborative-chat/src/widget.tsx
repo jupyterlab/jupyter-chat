@@ -39,7 +39,7 @@ const TOOLBAR_CLASS = 'jp-collab-chat-toolbar';
 /**
  * DocumentWidget: widget that represents the view or editor for a file type.
  */
-export class CollaborativeChatWidget extends DocumentWidget<
+export class CollaborativeChatPanel extends DocumentWidget<
   ChatWidget,
   CollaborativeChatModel
 > {

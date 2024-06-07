@@ -4,10 +4,11 @@
  */
 
 import { IConfig, chatIcon } from '@jupyter/chat';
+import { IWidgetTracker } from '@jupyterlab/apputils';
+import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { Token } from '@lumino/coreutils';
 import { ISignal } from '@lumino/signaling';
-import { DocumentRegistry } from '@jupyterlab/docregistry';
-import { ChatPanel } from './widget';
+import { ChatPanel, CollaborativeChatPanel } from './widget';
 
 /**
  * The file type for a chat document.
@@ -23,14 +24,28 @@ export const chatFileType: DocumentRegistry.IFileType = {
 };
 
 /**
- * The token for the chat widget config
+ * The token for the chat widget factory.
  */
-export const IWidgetConfig = new Token<IWidgetConfig>(
-  'jupyter-collaborative-chat:IWidgetConfig'
+export const IChatFactory = new Token<IChatFactory>(
+  'jupyter-collaborative-chat:IChatFactory'
 );
 
 /**
- * Chat widget config
+ * The interface for the chat factory objects.
+ */
+export interface IChatFactory {
+  /**
+   * The chat widget config.
+   */
+  widgetConfig: IWidgetConfig;
+  /**
+   * The chat panel tracker.
+   */
+  tracker: IWidgetTracker<CollaborativeChatPanel>;
+}
+
+/**
+ * The interface for the chats config.
  */
 export interface IWidgetConfig {
   /**
