@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Box, SxProps, Theme } from '@mui/material';
 
 type ScrollContainerProps = {
@@ -31,30 +31,6 @@ export function ScrollContainer(props: ScrollContainerProps): JSX.Element {
     () => 'jupyter-chat-scroll-container-' + Date.now().toString(),
     []
   );
-
-  /**
-   * Effect: Scroll the container to the bottom as soon as it is visible.
-   */
-  useEffect(() => {
-    const el = document.querySelector<HTMLElement>(`#${id}`);
-    if (!el) {
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      entries => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            el.scroll({ top: 999999999 });
-          }
-        });
-      },
-      { threshold: 1.0 }
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
 
   return (
     <Box

@@ -421,6 +421,7 @@ type NavigationProps = BaseMessageProps & {
  */
 export function Navigation(props: NavigationProps): JSX.Element {
   const { model } = props;
+  const initialized = useRef<boolean>(false);
   const [lastInViewport, setLastInViewport] = useState<boolean>(true);
   const [unreadBefore, setUnreadBefore] = useState<number | null>(null);
   const [unreadAfter, setUnreadAfter] = useState<number | null>(null);
@@ -474,6 +475,15 @@ export function Navigation(props: NavigationProps): JSX.Element {
     model.unreadChanged?.connect(unreadChanged);
 
     unreadChanged(model, model.unreadMessages);
+
+    if (!initialized.current) {
+      if (model.unreadMessages.length) {
+        gotoMessage(Math.min(...model.unreadMessages));
+      } else {
+        gotoMessage(model.messages.length - 1);
+      }
+      initialized.current = true;
+    }
 
     return () => {
       model.unreadChanged?.disconnect(unreadChanged);
