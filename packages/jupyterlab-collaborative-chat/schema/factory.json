@@ -27,6 +27,12 @@
       "type": "boolean",
       "default": true,
       "readOnly": false
+    },
+    "unreadNotifications": {
+      "description": "Whether to enable or not the notifications on unread messages.",
+      "type": "boolean",
+      "default": true,
+      "readOnly": false
     }
   },
   "additionalProperties": false,

@@ -35,22 +35,22 @@ import {
   CollaborativeChatModelFactory
 } from './factory';
 import { CollaborativeChatModel } from './model';
-import { chatFileType, CommandIDs, IChatPanel, IWidgetConfig } from './token';
-import { ChatPanel, CollaborativeChatWidget } from './widget';
+import { chatFileType, CommandIDs, IChatPanel, IChatFactory } from './token';
+import { ChatPanel, CollaborativeChatPanel } from './widget';
 import { YChat } from './ychat';
 
 const FACTORY = 'Chat';
 
 const pluginIds = {
   chatCommands: 'jupyterlab-collaborative-chat:commands',
-  docFactories: 'jupyterlab-collaborative-chat:factories',
+  docFactories: 'jupyterlab-collaborative-chat:factory',
   chatPanel: 'jupyterlab-collaborative-chat:chat-panel'
 };
 
 /**
  * Extension registering the chat file type.
  */
-export const docFactories: JupyterFrontEndPlugin<IWidgetConfig> = {
+const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
   id: pluginIds.docFactories,
   description: 'A document factories for collaborative chat',
   autoStart: true,
@@ -63,7 +63,7 @@ export const docFactories: JupyterFrontEndPlugin<IWidgetConfig> = {
     IToolbarWidgetRegistry,
     ITranslator
   ],
-  provides: IWidgetConfig,
+  provides: IChatFactory,
   activate: (
     app: JupyterFrontEnd,
     rmRegistry: IRenderMimeRegistry,
@@ -73,13 +73,13 @@ export const docFactories: JupyterFrontEndPlugin<IWidgetConfig> = {
     themeManager: IThemeManager | null,
     toolbarRegistry: IToolbarWidgetRegistry | null,
     translator_: ITranslator | null
-  ): IWidgetConfig => {
+  ): IChatFactory => {
     const translator = translator_ ?? nullTranslator;
 
     // Declare the toolbar factory.
     let toolbarFactory:
       | ((
-          widget: CollaborativeChatWidget
+          widget: CollaborativeChatPanel
         ) =>
           | DocumentRegistry.IToolbarItem[]
           | IObservableList<DocumentRegistry.IToolbarItem>)
@@ -136,7 +136,7 @@ export const docFactories: JupyterFrontEndPlugin<IWidgetConfig> = {
     const namespace = 'chat';
 
     // Creating the tracker for the document
-    const tracker = new WidgetTracker<CollaborativeChatWidget>({ namespace });
+    const tracker = new WidgetTracker<CollaborativeChatPanel>({ namespace });
 
     app.docRegistry.addFileType(chatFileType);
 
@@ -200,7 +200,7 @@ export const docFactories: JupyterFrontEndPlugin<IWidgetConfig> = {
       });
     }
 
-    return widgetConfig;
+    return { widgetConfig, tracker };
   }
 };
 
@@ -211,17 +211,18 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
   id: pluginIds.chatCommands,
   description: 'The commands to create or open a chat',
   autoStart: true,
-  requires: [ICollaborativeDrive, IWidgetConfig],
+  requires: [ICollaborativeDrive, IChatFactory],
   optional: [IChatPanel, ICommandPalette, ILauncher],
   activate: (
     app: JupyterFrontEnd,
     drive: ICollaborativeDrive,
-    widgetConfig: IWidgetConfig,
+    factory: IChatFactory,
     chatPanel: ChatPanel | null,
     commandPalette: ICommandPalette | null,
     launcher: ILauncher | null
   ) => {
     const { commands } = app;
+    const { widgetConfig } = factory;
 
     /**
      * Command to create a new chat.
@@ -487,10 +488,10 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
       isEnabled: () => commands.hasCommand(CommandIDs.openChat),
       execute: async () => {
         const widget = app.shell.currentWidget;
-        // Ensure widget is a CollaborativeChatWidget and is in main area
+        // Ensure widget is a CollaborativeChatPanel and is in main area
         if (
           !widget ||
-          !(widget instanceof CollaborativeChatWidget) ||
+          !(widget instanceof CollaborativeChatPanel) ||
           !Array.from(app.shell.widgets('main')).includes(widget)
         ) {
           console.error(

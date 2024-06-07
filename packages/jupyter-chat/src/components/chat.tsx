@@ -51,9 +51,7 @@ function ChatBody({
 }
 
 export function Chat(props: Chat.IOptions): JSX.Element {
-  const [view, setView] = useState<Chat.ChatView>(
-    props.chatView || Chat.ChatView.Chat
-  );
+  const [view, setView] = useState<Chat.View>(props.chatView || Chat.View.chat);
   return (
     <JlThemeProvider themeManager={props.themeManager ?? null}>
       <Box
@@ -70,15 +68,15 @@ export function Chat(props: Chat.IOptions): JSX.Element {
       >
         {/* top bar */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          {view !== Chat.ChatView.Chat ? (
-            <IconButton onClick={() => setView(Chat.ChatView.Chat)}>
+          {view !== Chat.View.chat ? (
+            <IconButton onClick={() => setView(Chat.View.chat)}>
               <ArrowBackIcon />
             </IconButton>
           ) : (
             <Box />
           )}
-          {view === Chat.ChatView.Chat && props.settingsPanel ? (
-            <IconButton onClick={() => setView(Chat.ChatView.Settings)}>
+          {view !== Chat.View.settings && props.settingsPanel ? (
+            <IconButton onClick={() => setView(Chat.View.settings)}>
               <SettingsIcon />
             </IconButton>
           ) : (
@@ -86,10 +84,10 @@ export function Chat(props: Chat.IOptions): JSX.Element {
           )}
         </Box>
         {/* body */}
-        {view === Chat.ChatView.Chat && (
+        {view === Chat.View.chat && (
           <ChatBody model={props.model} rmRegistry={props.rmRegistry} />
         )}
-        {view === Chat.ChatView.Settings && props.settingsPanel && (
+        {view === Chat.View.settings && props.settingsPanel && (
           <props.settingsPanel />
         )}
       </Box>
@@ -120,7 +118,7 @@ export namespace Chat {
     /**
      * The view to render.
      */
-    chatView?: ChatView;
+    chatView?: View;
     /**
      * A settings panel that can be used for dedicated settings (e.g. jupyter-ai)
      */
@@ -131,8 +129,8 @@ export namespace Chat {
    * The view to render.
    * The settings view is available only if the settings panel is provided in options.
    */
-  export enum ChatView {
-    Chat,
-    Settings
+  export enum View {
+    chat,
+    settings
   }
 }
