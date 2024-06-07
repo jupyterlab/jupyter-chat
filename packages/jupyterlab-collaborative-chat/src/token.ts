@@ -80,7 +80,11 @@ export const CommandIDs = {
   /**
    * Move a main widget to the side panel
    */
-  moveToSide: 'collaborative-chat:moveToSide'
+  moveToSide: 'collaborative-chat:moveToSide',
+  /**
+   * Mark as read.
+   */
+  markAsRead: 'collaborative-chat:markAsRead'
 };
 
 /**

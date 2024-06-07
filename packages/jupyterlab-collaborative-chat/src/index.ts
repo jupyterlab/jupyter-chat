@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { chatIcon } from '@jupyter/chat';
+import { chatIcon, readIcon } from '@jupyter/chat';
 import { ICollaborativeDrive } from '@jupyter/docprovider';
 import {
   ILayoutRestorer,
@@ -197,6 +197,11 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
         tracker.save(widget);
       });
       tracker.add(widget);
+
+      // Update the 'markAsRead' command status when the unread changed.
+      widget.model.unreadChanged.connect(() =>
+        app.commands.notifyCommandChanged(CommandIDs.markAsRead)
+      );
     });
 
     // Registering the widget factory
@@ -234,8 +239,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     launcher: ILauncher | null
   ) => {
     const { commands } = app;
-    const { widgetConfig } = factory;
-
+    const { tracker, widgetConfig } = factory;
     /**
      * Command to create a new chat.
      *
@@ -339,6 +343,36 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         rank: 1
       });
     }
+
+    // The command to mark the chat as read.
+    commands.addCommand(CommandIDs.markAsRead, {
+      caption: 'Mark chat as read',
+      icon: readIcon,
+      isEnabled: () =>
+        tracker.currentWidget !== null &&
+        tracker.currentWidget === app.shell.currentWidget &&
+        tracker.currentWidget.model.unreadMessages.length > 0,
+      execute: async args => {
+        const widget = app.shell.currentWidget;
+        // Ensure widget is a CollaborativeChatPanel and is in main area
+        if (
+          !widget ||
+          !(widget instanceof CollaborativeChatPanel) ||
+          !Array.from(app.shell.widgets('main')).includes(widget)
+        ) {
+          console.error(
+            `The command '${CommandIDs.markAsRead}' should be executed from the toolbar button only`
+          );
+          return;
+        }
+        widget.model.unreadMessages = [];
+      }
+    });
+
+    // Update the 'markAsRead' command status when the current widget changes.
+    tracker.currentChanged.connect(() => {
+      commands.notifyCommandChanged(CommandIDs.markAsRead);
+    });
 
     app.serviceManager.ready
       .then(() => {
