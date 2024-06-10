@@ -8,7 +8,7 @@ import uuid
 from typing import Dict, List
 
 from jupyter_server.base.handlers import APIHandler as BaseAPIHandler, JupyterHandler
-from langchain.pydantic_v1 import ValidationError
+from pydantic.v1 import ValidationError
 from tornado import web, websocket
 
 from .config_manager import WriteConflictError

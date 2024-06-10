@@ -3,7 +3,7 @@
 
 from typing import Any, Dict, List, Literal, Optional, Union
 
-from langchain.pydantic_v1 import BaseModel, validator
+from pydantic.v1 import BaseModel, validator
 
 DEFAULT_CHUNK_SIZE = 2000
 DEFAULT_CHUNK_OVERLAP = 100
