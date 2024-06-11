@@ -11,7 +11,7 @@ from typing import Any, Callable, Dict, List, Set
 from uuid import uuid4
 
 from jupyter_ydoc.ybasedoc import YBaseDoc
-from pycrdt import Array, ArrayEvent, Map
+from pycrdt import Array, ArrayEvent, Map, MapEvent
 
 
 class YChat(YBaseDoc):
@@ -23,6 +23,9 @@ class YChat(YBaseDoc):
         self._ydoc["messages"] = self._ymessages = Array()
         self._ydoc["metadata"] = self._ymetadata = Map()
         self._ymessages.observe(self._timestamp_new_messages)
+
+        # Observe the state to initialize the file as soon as the document is not dirty.
+        self._ystate_subscription = self._ystate.observe(self._initialize)
 
     @property
     def version(self) -> str:
@@ -48,7 +51,7 @@ class YChat(YBaseDoc):
 
     @property
     def metadata(self) -> Map:
-        return self._ymetadata.get("metadata", {})
+        return self._ymetadata.to_py()
 
     def get_users(self) -> Dict:
         """
@@ -70,7 +73,7 @@ class YChat(YBaseDoc):
         messages = self._ymessages.to_py()
         return dict(messages=messages)
 
-    def create_id(self) -> str:
+    async def create_id(self) -> str:
         """
         Create a new ID for the document.
         """
@@ -82,19 +85,14 @@ class YChat(YBaseDoc):
         """
         Returns the ID of the document.
         """
-        metadata = self._ymetadata.get("metadata", {})
-        id = metadata.get("id", None)
-        if id is None:
-            id = self.create_id()
-        return id
+        return self._ymetadata.get("id", None)
 
     def set_id(self, id: str) -> None:
         """
         Set the ID of the document
         """
-        metadata = self._ymetadata.get("metadata", {})
-        metadata.update({"id": id})
-        self._ymetadata.update("metadata", metadata)
+        with self._ydoc.transaction():
+            self._ymetadata.update({"id": id})
 
     def get(self) -> str:
         """
@@ -119,15 +117,11 @@ class YChat(YBaseDoc):
         except json.JSONDecodeError:
             contents = dict()
 
-        ## Create an ID for the chat if it does not exist yet.
-        if ("metadata" not in contents.keys() or "id" not in contents["metadata"].keys()):
-            with self._ydoc.transaction():
-                self.create_id()
-
         # Make sure the users are updated before the messages, for consistency.
         with self._ydoc.transaction():
             self._yusers.clear()
             self._ymessages.clear()
+            self._ymetadata.clear()
             for key in [k for k in self._ystate.keys() if k not in ("dirty", "path")]:
                 del self._ystate[key]
 
@@ -139,6 +133,10 @@ class YChat(YBaseDoc):
                 for message in contents["messages"]:
                     self._ymessages.append(message)
 
+            if "metadata" in contents.keys():
+                for k, v in contents["metadata"].items():
+                    self._ymetadata.update({k: v})
+
     def observe(self, callback: Callable[[str, Any], None]) -> None:
         self.unobserve()
         self._subscriptions[self._ystate] = self._ystate.observe(partial(callback, "state"))
@@ -149,6 +147,17 @@ class YChat(YBaseDoc):
             partial(callback, "messages")
         )
         self._subscriptions[self._yusers] = self._yusers.observe(partial(callback, "users"))
+
+    def _initialize(self, event: MapEvent) -> None:
+        """
+        Called when the state changes, to create an id if it does not exist.
+        This function should be called only once when the dirty state is set to false.
+        """
+        if self.dirty:
+            return
+        if (self.get_id() is None):
+            self.create_task(self.create_id())
+        self._ystate.unobserve(self._ystate_subscription)
 
     def _timestamp_new_messages(self, event: ArrayEvent) -> None:
         """

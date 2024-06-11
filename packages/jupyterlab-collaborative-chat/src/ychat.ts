@@ -16,21 +16,12 @@ export type IYmessage = IChatMessage<string>;
 /**
  * The type for a YMessage.
  */
-export interface IMetadata {
-  /**
-   * The id of the chat, stored in the metadata.
-   */
-  id: string;
-  /**
-   * Allow any other keys in metadata.
-   */
-  [anyKey: string]: PartialJSONValue;
-}
+export type IMetadata = PartialJSONValue;
 
 /**
  * Definition of the shared Chat changes.
  */
-export type ChatChange = DocumentChange & {
+export type ChatChanges = DocumentChange & {
   /**
    * Changes in messages.
    */
@@ -58,12 +49,12 @@ export type UserChange = IMapChange<IUser>;
 /**
  * The metadata change type.
  */
-export type MetadataChange = IMapChange<any>;
+export type MetadataChange = IMapChange<IMetadata>;
 
 /**
  * The collaborative chat shared document.
  */
-export class YChat extends YDocument<ChatChange> {
+export class YChat extends YDocument<ChatChanges> {
   /**
    * Create a new collaborative chat model.
    */
@@ -94,11 +85,7 @@ export class YChat extends YDocument<ChatChange> {
   }
 
   get id(): string {
-    const metadata: IMetadata | undefined = this._metadata.get('metadata');
-    if (!metadata) {
-      return '';
-    }
-    return metadata?.id || '';
+    return (this._metadata.get('id') as string) || '';
   }
 
   get users(): JSONObject {
@@ -182,18 +169,18 @@ export class YChat extends YDocument<ChatChange> {
       }
     });
 
-    this._changed.emit({ userChange: userChange } as Partial<ChatChange>);
+    this._changed.emit({ userChange: userChange } as Partial<ChatChanges>);
   };
 
   private _messagesObserver = (event: Y.YArrayEvent<IYmessage>): void => {
     const messageChanges = event.delta;
     this._changed.emit({
       messageChanges: messageChanges
-    } as Partial<ChatChange>);
+    } as Partial<ChatChanges>);
   };
 
-  private _metadataObserver = (event: Y.YMapEvent<any>): void => {
-    const metadataChange = new Array<any>();
+  private _metadataObserver = (event: Y.YMapEvent<IMetadata>): void => {
+    const metadataChange = new Array<MetadataChange>();
     event.changes.keys.forEach((change, key) => {
       switch (change.action) {
         case 'add':
@@ -223,7 +210,7 @@ export class YChat extends YDocument<ChatChange> {
 
     this._changed.emit({
       metadataChanges: metadataChange
-    } as Partial<ChatChange>);
+    } as Partial<ChatChanges>);
   };
 
   private _users: Y.Map<IUser>;
