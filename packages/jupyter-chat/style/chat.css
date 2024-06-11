@@ -62,3 +62,32 @@
 .jp-chat-toolbar > .jp-ToolbarButtonComponent {
   margin-top: 0px;
 }
+
+.jp-chat-navigation {
+  position: absolute;
+  right: 10px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  min-width: 0;
+}
+
+.jp-chat-navigation-unread {
+  border: solid 2px var(--jp-cell-inprompt-font-color);
+}
+
+.jp-chat-navigation::part(control) {
+  padding: 0;
+}
+
+.jp-chat-navigation-top {
+  top: 10px;
+}
+
+.jp-chat-navigation-top svg {
+  transform: rotate(180deg);
+}
+
+.jp-chat-navigation-bottom {
+  bottom: 100px;
+}

@@ -29,7 +29,8 @@ import React, { useState } from 'react';
 import { CollaborativeChatModel } from './model';
 import { CommandIDs, chatFileType } from './token';
 
-const MAIN_PANEL_CLASS = 'jp-collab-chat_main-panel';
+const MAIN_PANEL_CLASS = 'jp-collab-chat-main-panel';
+const TITLE_UNREAD_CLASS = 'jp-collab-chat-title-unread';
 const SIDEPANEL_CLASS = 'jp-collab-chat-sidepanel';
 const ADD_BUTTON_CLASS = 'jp-collab-chat-add';
 const OPEN_SELECT_CLASS = 'jp-collab-chat-open';
@@ -48,12 +49,15 @@ export class CollaborativeChatPanel extends DocumentWidget<
   ) {
     super(options);
     this.addClass(MAIN_PANEL_CLASS);
+    this.model.name = this.context.localPath;
+    this.model.unreadChanged.connect(this._unreadChanged);
   }
 
   /**
    * Dispose of the resources held by the widget.
    */
   dispose(): void {
+    this.model.unreadChanged.disconnect(this._unreadChanged);
     this.context.dispose();
     this.content.dispose();
     super.dispose();
@@ -62,9 +66,25 @@ export class CollaborativeChatPanel extends DocumentWidget<
   /**
    * The model for the widget.
    */
-  get model(): CollaborativeChatModel | null {
+  get model(): CollaborativeChatModel {
     return this.content.model as CollaborativeChatModel;
   }
+
+  /**
+   * Add class to tab when messages are unread.
+   */
+  private _unreadChanged = (_: IChatModel, unread: number[]) => {
+    if (unread.length) {
+      if (!this.title.className.includes(TITLE_UNREAD_CLASS)) {
+        this.title.className += ` ${TITLE_UNREAD_CLASS}`;
+      }
+    } else {
+      this.title.className = this.title.className.replace(
+        TITLE_UNREAD_CLASS,
+        ''
+      );
+    }
+  };
 }
 
 /**
@@ -130,6 +150,9 @@ export class ChatPanel extends SidePanel {
     for (let i = 0; i < this.widgets.length; i++) {
       content.collapse(i);
     }
+
+    // Set the id of the model.
+    model.name = name;
 
     // Create a new widget.
     const widget = new ChatWidget({
@@ -266,6 +289,9 @@ class ChatSection extends PanelWithToolbar {
     this.toolbar.addItem('collaborativeChat-close', closeButton);
 
     this.addWidget(options.widget);
+
+    this.model.unreadChanged?.connect(this._unreadChanged);
+
     options.widget.node.style.height = '100%';
   }
 
@@ -282,6 +308,26 @@ class ChatSection extends PanelWithToolbar {
   get model(): IChatModel {
     return (this.widgets[0] as ChatWidget).model;
   }
+
+  /**
+   * Dispose of the resources held by the widget.
+   */
+  dispose(): void {
+    this.model.unreadChanged?.disconnect(this._unreadChanged);
+    super.dispose();
+  }
+
+  /**
+   * Change the title when messages are unread.
+   *
+   * TODO: fix it upstream in @jupyterlab/ui-components.
+   * Updating the title create a new Title widget, but does not attach again the
+   * toolbar. The toolbar is attached only when the title widget is attached the first
+   * time.
+   */
+  private _unreadChanged = (_: IChatModel, unread: number[]) => {
+    // this.title.label = `${unread.length ? '* ' : ''}${this._name}`;
+  };
 
   private _name: string;
 }

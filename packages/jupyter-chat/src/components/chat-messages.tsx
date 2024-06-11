@@ -3,11 +3,17 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { Button } from '@jupyter/react-components';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
+import {
+  LabIcon,
+  caretDownEmptyIcon,
+  classes
+} from '@jupyterlab/ui-components';
 import { Avatar, Box, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
 import clsx from 'clsx';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 import { ChatInput } from './chat-input';
 import { RendermimeMarkdown } from './rendermime-markdown';
@@ -20,6 +26,10 @@ const MESSAGE_CLASS = 'jp-chat-message';
 const MESSAGE_STACKED_CLASS = 'jp-chat-message-stacked';
 const MESSAGE_HEADER_CLASS = 'jp-chat-message-header';
 const MESSAGE_TIME_CLASS = 'jp-chat-message-time';
+const NAVIGATION_BUTTON_CLASS = 'jp-chat-navigation';
+const NAVIGATION_UNREAD_CLASS = 'jp-chat-navigation-unread';
+const NAVIGATION_TOP_CLASS = 'jp-chat-navigation-top';
+const NAVIGATION_BOTTOM_CLASS = 'jp-chat-navigation-bottom';
 
 /**
  * The base components props.
@@ -35,6 +45,13 @@ type BaseMessageProps = {
 export function ChatMessages(props: BaseMessageProps): JSX.Element {
   const { model } = props;
   const [messages, setMessages] = useState<IChatMessage[]>([]);
+  const refMsgBox = useRef<HTMLDivElement>(null);
+  const inViewport = useRef<number[]>([]);
+
+  // The intersection observer that listen to all the message visibility.
+  const observerRef = useRef<IntersectionObserver>(
+    new IntersectionObserver(viewportChange)
+  );
 
   /**
    * Effect: fetch history and config on initial render
@@ -67,26 +84,69 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
     };
   }, [model]);
 
+  /**
+   * Function called when a message enter or leave the viewport.
+   */
+  function viewportChange(entries: IntersectionObserverEntry[]) {
+    const unread = model.unreadMessages;
+    let unreadModified = false;
+    entries.forEach(entry => {
+      const index = parseInt(entry.target.getAttribute('data-index') ?? '');
+      if (!isNaN(index)) {
+        if (unread.length) {
+          const unreadIdx = unread.indexOf(index);
+          if (unreadIdx !== -1 && entry.isIntersecting) {
+            unread.splice(unreadIdx, 1);
+            unreadModified = true;
+          }
+        }
+        const viewportIdx = inViewport.current.indexOf(index);
+        if (!entry.isIntersecting && viewportIdx !== -1) {
+          inViewport.current.splice(viewportIdx, 1);
+        } else if (entry.isIntersecting && viewportIdx === -1) {
+          inViewport.current.push(index);
+        }
+      }
+    });
+
+    props.model.messagesInViewport = inViewport.current;
+    if (unreadModified) {
+      props.model.unreadMessages = unread;
+    }
+
+    return () => {
+      observerRef.current?.disconnect();
+    };
+  }
+
   return (
-    <ScrollContainer sx={{ flexGrow: 1 }}>
-      <Box className={clsx(MESSAGES_BOX_CLASS)}>
-        {messages.map((message, i) => {
-          return (
-            // extra div needed to ensure each bubble is on a new line
-            <Box
-              key={i}
-              className={clsx(
-                MESSAGE_CLASS,
-                message.stacked ? MESSAGE_STACKED_CLASS : ''
-              )}
-            >
-              <ChatMessageHeader message={message} />
-              <ChatMessage {...props} message={message} />
-            </Box>
-          );
-        })}
-      </Box>
-    </ScrollContainer>
+    <>
+      <ScrollContainer sx={{ flexGrow: 1 }}>
+        <Box ref={refMsgBox} className={clsx(MESSAGES_BOX_CLASS)}>
+          {messages.map((message, i) => {
+            return (
+              // extra div needed to ensure each bubble is on a new line
+              <Box
+                key={i}
+                className={clsx(
+                  MESSAGE_CLASS,
+                  message.stacked ? MESSAGE_STACKED_CLASS : ''
+                )}
+              >
+                <ChatMessageHeader message={message} />
+                <ChatMessage
+                  {...props}
+                  message={message}
+                  observer={observerRef.current}
+                  index={i}
+                />
+              </Box>
+            );
+          })}
+        </Box>
+      </ScrollContainer>
+      <Navigation {...props} refMsgBox={refMsgBox} />
+    </>
   );
 }
 
@@ -246,6 +306,14 @@ type ChatMessageProps = BaseMessageProps & {
    * The message to display.
    */
   message: IChatMessage;
+  /**
+   * The index of the message in the list.
+   */
+  index: number;
+  /**
+   * The intersection observer for all the messages.
+   */
+  observer: IntersectionObserver | null;
 };
 
 /**
@@ -253,10 +321,27 @@ type ChatMessageProps = BaseMessageProps & {
  */
 export function ChatMessage(props: ChatMessageProps): JSX.Element {
   const { message, model, rmRegistry } = props;
+  const elementRef = useRef<HTMLDivElement>(null);
   const [edit, setEdit] = useState<boolean>(false);
   const [deleted, setDeleted] = useState<boolean>(false);
   const [canEdit, setCanEdit] = useState<boolean>(false);
   const [canDelete, setCanDelete] = useState<boolean>(false);
+
+  // Add the current message to the observer, to actualize viewport and unread messages.
+  useEffect(() => {
+    if (elementRef.current === null) {
+      return;
+    }
+
+    // If the observer is defined, let's observe the message.
+    props.observer?.observe(elementRef.current);
+
+    return () => {
+      if (elementRef.current !== null) {
+        props.observer?.unobserve(elementRef.current);
+      }
+    };
+  }, [model]);
 
   // Look if the message can be deleted or edited.
   useEffect(() => {
@@ -297,11 +382,11 @@ export function ChatMessage(props: ChatMessageProps): JSX.Element {
     model.deleteMessage!(id);
   };
 
-  // Empty if the message has been deleted
+  // Empty if the message has been deleted.
   return deleted ? (
-    <></>
+    <div ref={elementRef} data-index={props.index}></div>
   ) : (
-    <div>
+    <div ref={elementRef} data-index={props.index}>
       {edit && canEdit ? (
         <ChatInput
           value={message.body}
@@ -318,5 +403,135 @@ export function ChatMessage(props: ChatMessageProps): JSX.Element {
         />
       )}
     </div>
+  );
+}
+
+/**
+ * The navigation component props.
+ */
+type NavigationProps = BaseMessageProps & {
+  /**
+   * The reference to the messages container.
+   */
+  refMsgBox: React.RefObject<HTMLDivElement>;
+};
+
+/**
+ * The navigation component, to navigate to unread messages.
+ */
+export function Navigation(props: NavigationProps): JSX.Element {
+  const { model } = props;
+  const [lastInViewport, setLastInViewport] = useState<boolean>(true);
+  const [unreadBefore, setUnreadBefore] = useState<number | null>(null);
+  const [unreadAfter, setUnreadAfter] = useState<number | null>(null);
+
+  const gotoMessage = (msgIdx: number) => {
+    props.refMsgBox.current?.children.item(msgIdx)?.scrollIntoView();
+  };
+
+  // Listen for change in unread messages, and find the first unread message before or
+  // after the current viewport, to display navigation buttons.
+  useEffect(() => {
+    const unreadChanged = (model: IChatModel, unreadIndexes: number[]) => {
+      const viewport = model.messagesInViewport;
+      if (!viewport) {
+        return;
+      }
+
+      // Initialize the next values with the current values if there still relevant.
+      let before =
+        unreadBefore !== null &&
+        unreadIndexes.includes(unreadBefore) &&
+        unreadBefore < Math.min(...viewport)
+          ? unreadBefore
+          : null;
+
+      let after =
+        unreadAfter !== null &&
+        unreadIndexes.includes(unreadAfter) &&
+        unreadAfter > Math.max(...viewport)
+          ? unreadAfter
+          : null;
+
+      unreadIndexes.forEach(unread => {
+        if (viewport?.includes(unread)) {
+          return;
+        }
+        if (unread < (before ?? Math.min(...viewport))) {
+          before = unread;
+        } else if (
+          unread > Math.max(...viewport) &&
+          unread < (after ?? model.messages.length)
+        ) {
+          after = unread;
+        }
+      });
+
+      setUnreadBefore(before);
+      setUnreadAfter(after);
+    };
+
+    model.unreadChanged?.connect(unreadChanged);
+
+    unreadChanged(model, model.unreadMessages);
+
+    return () => {
+      model.unreadChanged?.disconnect(unreadChanged);
+    };
+  }, [model]);
+
+  // Listen for change in the viewport, to add a navigation button if the last is not
+  // in viewport.
+  useEffect(() => {
+    const viewportChanged = (model: IChatModel, viewport: number[]) => {
+      setLastInViewport(viewport.includes(model.messages.length - 1));
+    };
+
+    model.viewportChanged?.connect(viewportChanged);
+
+    viewportChanged(model, model.messagesInViewport ?? []);
+
+    return () => {
+      model.viewportChanged?.disconnect(viewportChanged);
+    };
+  }, [model]);
+
+  return (
+    <>
+      {unreadBefore !== null && (
+        <Button
+          className={`${NAVIGATION_BUTTON_CLASS} ${NAVIGATION_UNREAD_CLASS} ${NAVIGATION_TOP_CLASS}`}
+          onClick={() => gotoMessage!(unreadBefore)}
+          title={'Go to unread messages'}
+        >
+          <LabIcon.resolveReact
+            display={'flex'}
+            icon={caretDownEmptyIcon}
+            iconClass={classes('jp-Icon')}
+          />
+        </Button>
+      )}
+      {(unreadAfter !== null || !lastInViewport) && (
+        <Button
+          className={`${NAVIGATION_BUTTON_CLASS} ${unreadAfter !== null ? NAVIGATION_UNREAD_CLASS : ''} ${NAVIGATION_BOTTOM_CLASS}`}
+          onClick={() =>
+            gotoMessage!(
+              unreadAfter !== null ? unreadAfter : model.messages.length - 1
+            )
+          }
+          title={
+            unreadAfter !== null
+              ? 'Go to unread messages'
+              : 'Go to last message'
+          }
+        >
+          <LabIcon.resolveReact
+            display={'flex'}
+            icon={caretDownEmptyIcon}
+            iconClass={classes('jp-Icon')}
+          />
+        </Button>
+      )}
+    </>
   );
 }

@@ -19,9 +19,22 @@ export interface IUser {
  * The configuration interface.
  */
 export interface IConfig {
+  /**
+   * Whether to send a message via Shift-Enter instead of Enter.
+   */
   sendWithShiftEnter?: boolean;
+  /**
+   * Last read message (no use yet).
+   */
   lastRead?: number;
+  /**
+   * Whether to stack consecutive messages from same user.
+   */
   stackMessages?: boolean;
+  /**
+   * Whether to enable or not the notifications on unread messages.
+   */
+  unreadNotifications?: boolean;
 }
 
 /**

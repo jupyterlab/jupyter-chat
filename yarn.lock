@@ -2280,9 +2280,11 @@ __metadata:
   dependencies:
     "@emotion/react": ^11.10.5
     "@emotion/styled": ^11.10.5
+    "@jupyter/react-components": ^0.15.2
     "@jupyterlab/apputils": ^4.0.0
     "@jupyterlab/rendermime": ^4.0.0
     "@jupyterlab/ui-components": ^4.0.0
+    "@lumino/commands": ^2.0.0
     "@lumino/disposable": ^2.0.0
     "@lumino/signaling": ^2.0.0
     "@mui/icons-material": ^5.11.0
@@ -3324,7 +3326,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lumino/commands@npm:^2.2.0, @lumino/commands@npm:^2.3.0":
+"@lumino/commands@npm:^2.0.0, @lumino/commands@npm:^2.2.0, @lumino/commands@npm:^2.3.0":
   version: 2.3.0
   resolution: "@lumino/commands@npm:2.3.0"
   dependencies:
@@ -9845,6 +9847,7 @@ __metadata:
     "@jupyterlab/testutils": ^4.0.0
     "@jupyterlab/translation": ^4.0.0
     "@jupyterlab/ui-components": ^4.0.0
+    "@lumino/commands": ^2.0.0
     "@lumino/coreutils": ^2.0.0
     "@lumino/signaling": ^2.0.0
     "@lumino/widgets": ^2.0.0

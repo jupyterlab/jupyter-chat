@@ -25,7 +25,7 @@ export class ChatWidget extends ReactWidget {
   }
 
   /**
-   * Gte the model of the widget.
+   * Get the model of the widget.
    */
   get model(): IChatModel {
     return this._model;

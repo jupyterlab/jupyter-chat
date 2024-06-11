@@ -35,20 +35,26 @@ const chat: JupyterFrontEndPlugin<void> = {
     /**
      * Initialize chat handler, open WS connection
      */
-    const chatHandler = new WebSocketHandler();
+    const chatHandler = new WebSocketHandler({ commands: app.commands });
 
     /**
      * Load the settings.
      */
     let sendWithShiftEnter = false;
     let stackMessages = true;
-
+    let unreadNotifications = true;
     function loadSetting(setting: ISettingRegistry.ISettings): void {
       // Read the settings and convert to the correct type
       sendWithShiftEnter = setting.get('sendWithShiftEnter')
         .composite as boolean;
       stackMessages = setting.get('stackMessages').composite as boolean;
-      chatHandler.config = { sendWithShiftEnter, stackMessages };
+      unreadNotifications = setting.get('unreadNotifications')
+        .composite as boolean;
+      chatHandler.config = {
+        sendWithShiftEnter,
+        stackMessages,
+        unreadNotifications
+      };
     }
 
     // Wait for the application to be restored and
