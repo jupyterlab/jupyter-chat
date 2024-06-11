@@ -49,7 +49,7 @@ const readFileContent = async (
   return await page.evaluate(async filepath => {
     return await window.jupyterapp.serviceManager.contents.get(filepath);
   }, filename);
-}
+};
 
 const openChat = async (
   page: IJupyterLabPageFixture,
@@ -872,7 +872,7 @@ test.describe('#localStorage', () => {
         }
       }
       return false;
-    }
+    };
 
     await page.waitForCondition(hasLocalStorage);
     const storage = await page.evaluate(() => window.localStorage);
@@ -886,7 +886,7 @@ test.describe('#localStorage', () => {
     const value = JSON.parse(storage[key]);
     expect(value['lastRead']).toBeDefined();
     expect(value['lastRead']).toBe(baseTime + (messagesCount - 1) * 60);
-  })
+  });
 });
 
 test.describe('#raw_time', () => {
@@ -1114,12 +1114,18 @@ test.describe('#ychat', () => {
 
   test('should add an id to the chat metadata', async ({ page }) => {
     const chatPanel = await openChat(page, FILENAME);
-    await chatPanel.locator('.jp-chat-input-container').getByRole('textbox').waitFor();
+    await chatPanel
+      .locator('.jp-chat-input-container')
+      .getByRole('textbox')
+      .waitFor();
     const hasId = async () => {
       const model = await readFileContent(page, FILENAME);
       const content = JSON.parse(model.content) as ReadonlyJSONObject;
-      return content.metadata !== undefined && (content.metadata as ReadonlyJSONObject).id !== undefined;
-    }
+      return (
+        content.metadata !== undefined &&
+        (content.metadata as ReadonlyJSONObject).id !== undefined
+      );
+    };
     await page.waitForCondition(hasId);
   });
 });
