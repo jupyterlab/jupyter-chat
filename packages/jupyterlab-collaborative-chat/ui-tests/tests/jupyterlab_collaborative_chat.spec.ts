@@ -9,8 +9,8 @@ import {
   galata,
   test
 } from '@jupyterlab/galata';
-import { User } from '@jupyterlab/services';
-import { UUID } from '@lumino/coreutils';
+import { Contents, User } from '@jupyterlab/services';
+import { PartialJSONObject, ReadonlyJSONObject, UUID } from '@lumino/coreutils';
 import { Locator } from '@playwright/test';
 
 const FILENAME = 'my-chat.chat';
@@ -41,6 +41,15 @@ const fillModal = async (
   await dialog.getByRole('textbox').pressSequentially(text);
   await dialog.getByRole('button').filter({ hasText: button }).click();
 };
+
+const readFileContent = async (
+  page: IJupyterLabPageFixture,
+  filename: string
+): Promise<Contents.IModel> => {
+  return await page.evaluate(async filepath => {
+    return await window.jupyterapp.serviceManager.contents.get(filepath);
+  }, filename);
+}
 
 const openChat = async (
   page: IJupyterLabPageFixture,
@@ -785,6 +794,101 @@ test.describe('#notifications', () => {
   });
 });
 
+test.describe('#localStorage', () => {
+  const baseTime = 1714116341;
+  const messagesCount = 3;
+  const messagesList: any[] = [];
+  for (let i = 0; i < messagesCount; i++) {
+    messagesList.push({
+      type: 'msg',
+      id: UUID.uuid4(),
+      sender: USERNAME,
+      body: `Message ${i}`,
+      time: baseTime + i * 60
+    });
+  }
+
+  const chatContent = {
+    messages: messagesList,
+    users: {}
+  };
+  chatContent.users[USERNAME] = USER.identity;
+
+  let guestPage: IJupyterLabPageFixture;
+
+  test.beforeEach(
+    async ({ baseURL, browser, page, tmpPath, waitForApplication }) => {
+      // Create a chat file with content
+      await page.filebrowser.contents.uploadContent(
+        JSON.stringify(chatContent),
+        'text',
+        FILENAME
+      );
+
+      // Create a new user.
+      const user2: Partial<User.IUser> = {
+        identity: {
+          username: 'jovyan_2',
+          name: 'jovyan_2',
+          display_name: 'jovyan_2',
+          initials: 'JP',
+          color: 'var(--jp-collaborator-color2)'
+        }
+      };
+
+      // Create a new page for guest.
+      const { page: newPage } = await galata.newPage({
+        baseURL: baseURL!,
+        browser,
+        mockUser: user2,
+        tmpPath,
+        waitForApplication
+      });
+      await newPage.evaluate(() => {
+        // Acknowledge any dialog
+        window.galataip.on('dialog', d => {
+          d?.resolve();
+        });
+      });
+      guestPage = newPage;
+    }
+  );
+
+  test.afterEach(async ({ page }) => {
+    guestPage.close();
+    if (await page.filebrowser.contents.fileExists(FILENAME)) {
+      await page.filebrowser.contents.deleteFile(FILENAME);
+    }
+  });
+
+  test('should save last read message in localStorage', async ({ page }) => {
+    await openChat(page, FILENAME);
+
+    const hasLocalStorage = async () => {
+      const storage = await page.evaluate(() => window.localStorage);
+      for (const k in storage) {
+        if (k.startsWith('jp-collaborative-chat_')) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    await page.waitForCondition(hasLocalStorage);
+    const storage = await page.evaluate(() => window.localStorage);
+    let key = '';
+    for (const k in storage) {
+      if (k.startsWith('jp-collaborative-chat_')) {
+        key = k;
+        break;
+      }
+    }
+    const value = JSON.parse(storage[key]);
+    expect(value['lastRead']).toBeDefined();
+    expect(value['lastRead']).toBe(baseTime + (messagesCount - 1) * 60);
+  })
+});
+
 test.describe('#raw_time', () => {
   const msg_raw_time = {
     type: 'msg',
@@ -983,6 +1087,40 @@ test.describe('#messageToolbar', () => {
     expect(
       await message.locator('.jp-chat-message-header').textContent()
     ).toContain('(message deleted)');
+  });
+});
+
+test.describe('#ychat', () => {
+  const chatContent = {
+    messages: [],
+    users: {}
+  };
+  chatContent.users[USERNAME] = USER.identity;
+
+  test.beforeEach(async ({ page }) => {
+    // Create a chat file with content
+    await page.filebrowser.contents.uploadContent(
+      JSON.stringify(chatContent),
+      'text',
+      FILENAME
+    );
+  });
+
+  test.afterEach(async ({ page }) => {
+    if (await page.filebrowser.contents.fileExists(FILENAME)) {
+      await page.filebrowser.contents.deleteFile(FILENAME);
+    }
+  });
+
+  test('should add an id to the chat metadata', async ({ page }) => {
+    const chatPanel = await openChat(page, FILENAME);
+    await chatPanel.locator('.jp-chat-input-container').getByRole('textbox').waitFor();
+    const hasId = async () => {
+      const model = await readFileContent(page, FILENAME);
+      const content = JSON.parse(model.content) as ReadonlyJSONObject;
+      return content.metadata !== undefined && (content.metadata as ReadonlyJSONObject).id !== undefined;
+    }
+    await page.waitForCondition(hasId);
   });
 });
 
