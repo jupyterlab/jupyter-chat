@@ -83,7 +83,11 @@ const chat: JupyterFrontEndPlugin<void> = {
     let chatWidget: ReactWidget | null = null;
     try {
       await chatHandler.initialize();
-      chatWidget = buildChatSidebar(chatHandler, themeManager, rmRegistry);
+      chatWidget = buildChatSidebar({
+        model: chatHandler,
+        themeManager,
+        rmRegistry
+      });
     } catch (e) {
       chatWidget = buildErrorWidget(themeManager);
     }
