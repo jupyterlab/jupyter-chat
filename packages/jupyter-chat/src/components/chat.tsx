@@ -15,16 +15,16 @@ import { JlThemeProvider } from './jl-theme-provider';
 import { ChatMessages } from './chat-messages';
 import { ChatInput } from './chat-input';
 import { IChatModel } from '../model';
+import { IAutocompletionCommandsProps } from '../types';
 
 type ChatBodyProps = {
   model: IChatModel;
   rmRegistry: IRenderMimeRegistry;
+  autocompletion?: IAutocompletionCommandsProps;
 };
 
-function ChatBody({
-  model,
-  rmRegistry: renderMimeRegistry
-}: ChatBodyProps): JSX.Element {
+function ChatBody(props: ChatBodyProps): JSX.Element {
+  const { model, rmRegistry: renderMimeRegistry, autocompletion } = props;
   // no need to append to messageGroups imperatively here. all of that is
   // handled by the listeners registered in the effect hooks above.
   const onSend = async (input: string) => {
@@ -45,6 +45,7 @@ function ChatBody({
           borderTop: '1px solid var(--jp-border-color1)'
         }}
         sendWithShiftEnter={model.config.sendWithShiftEnter ?? false}
+        autocompletion={autocompletion}
       />
     </>
   );
@@ -85,7 +86,11 @@ export function Chat(props: Chat.IOptions): JSX.Element {
         </Box>
         {/* body */}
         {view === Chat.View.chat && (
-          <ChatBody model={props.model} rmRegistry={props.rmRegistry} />
+          <ChatBody
+            model={props.model}
+            rmRegistry={props.rmRegistry}
+            autocompletion={props.autocompletion}
+          />
         )}
         {view === Chat.View.settings && props.settingsPanel && (
           <props.settingsPanel />
@@ -123,6 +128,10 @@ export namespace Chat {
      * A settings panel that can be used for dedicated settings (e.g. jupyter-ai)
      */
     settingsPanel?: () => JSX.Element;
+    /**
+     * Autocompletion properties.
+     */
+    autocompletion?: IAutocompletionCommandsProps;
   }
 
   /**
