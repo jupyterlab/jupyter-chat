@@ -29,7 +29,8 @@ export class ChatWidget extends ReactWidget {
   }
 
   render() {
-    // The model need to be passed, otherwise it is undefined in the widget.
+    // The model need to be passed, otherwise it is undefined in the widget in
+    // the case of collaborative document.
     return <Chat {...this._chatOptions} model={this._chatOptions.model} />;
   }
 
