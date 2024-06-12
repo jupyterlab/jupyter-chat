@@ -3,8 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { IThemeManager, ReactWidget } from '@jupyterlab/apputils';
-import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
+import { ReactWidget } from '@jupyterlab/apputils';
 import React from 'react';
 
 import { Chat } from '../components/chat';
@@ -19,33 +18,19 @@ export class ChatWidget extends ReactWidget {
     this.title.icon = chatIcon;
     this.title.caption = 'Jupyter Chat'; // TODO: i18n
 
-    this._model = options.model;
-    this._themeManager = options?.themeManager || null;
-    this._rmRegistry = options.rmRegistry;
+    this._chatOptions = options;
   }
 
   /**
    * Get the model of the widget.
    */
   get model(): IChatModel {
-    return this._model;
+    return this._chatOptions.model;
   }
 
   render() {
-    return (
-      <Chat
-        model={this._model}
-        themeManager={this._themeManager}
-        rmRegistry={this._rmRegistry}
-      />
-    );
+    return <Chat {...this._chatOptions} />;
   }
 
-  private readonly _model: IChatModel;
-  private _themeManager: IThemeManager | null;
-  private _rmRegistry: IRenderMimeRegistry;
-}
-
-export namespace ChatWidget {
-  export interface IOptions extends Chat.IOptions {}
+  private _chatOptions: Chat.IOptions;
 }
