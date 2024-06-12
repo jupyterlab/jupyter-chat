@@ -685,7 +685,7 @@ test.describe('#notifications', () => {
     await messages.first().scrollIntoViewIfNeeded();
 
     await sendMessage(guestPage);
-    page.waitForCondition(async () => (await page.notifications).length > 0);
+    await page.waitForCondition(async () => (await page.notifications).length > 0);
     const notifications = await page.notifications;
     expect(notifications).toHaveLength(1);
 
@@ -704,12 +704,12 @@ test.describe('#notifications', () => {
     await messages.first().scrollIntoViewIfNeeded();
 
     await sendMessage(guestPage);
-    page.waitForCondition(async () => (await page.notifications).length > 0);
+    await page.waitForCondition(async () => (await page.notifications).length > 0);
     let notifications = await page.notifications;
     expect(notifications).toHaveLength(1);
 
     await messages.last().scrollIntoViewIfNeeded();
-    page.waitForCondition(async () => (await page.notifications).length === 0);
+    await page.waitForCondition(async () => (await page.notifications).length === 0);
   });
 
   test('should update existing notification on new message', async ({
@@ -720,7 +720,7 @@ test.describe('#notifications', () => {
     await messages.first().scrollIntoViewIfNeeded();
 
     await sendMessage(guestPage);
-    page.waitForCondition(async () => (await page.notifications).length > 0);
+    await page.waitForCondition(async () => (await page.notifications).length > 0);
     let notifications = await page.notifications;
     expect(notifications).toHaveLength(1);
 
@@ -741,7 +741,7 @@ test.describe('#notifications', () => {
     await messages.first().scrollIntoViewIfNeeded();
 
     await sendMessage(guestPage);
-    page.waitForCondition(async () => (await page.notifications).length > 0);
+    await page.waitForCondition(async () => (await page.notifications).length > 0);
     let notifications = await page.notifications;
     expect(notifications).toHaveLength(1);
 
@@ -764,7 +764,7 @@ test.describe('#notifications', () => {
     // Activate the chat panel
     await page.activity.activateTab(FILENAME);
 
-    page.waitForCondition(async () => (await page.notifications).length === 0);
+    await page.waitForCondition(async () => (await page.notifications).length === 0);
 
     await sendMessage(guestPage);
     await expect(messages).toHaveCount(messagesCount + 2);
