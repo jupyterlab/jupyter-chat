@@ -179,20 +179,23 @@ export class ChatModel implements IChatModel {
    * Timestamp of the last read message in local storage.
    */
   get lastRead(): number {
+    if (this._id === undefined) {
+      return 0;
+    }
     const storage = JSON.parse(
-      localStorage.getItem(`jp-collaborative-chat_${this.id}`) || '{}'
+      localStorage.getItem(`@jupyter/chat:${this._id}`) || '{}'
     );
-    return storage.lastRead;
+    return storage.lastRead ?? 0;
   }
   set lastRead(value: number) {
+    if (this._id === undefined) {
+      return;
+    }
     const storage = JSON.parse(
-      localStorage.getItem(`jp-collaborative-chat_${this.id}`) || '{}'
+      localStorage.getItem(`@jupyter/chat:${this._id}`) || '{}'
     );
     storage.lastRead = value;
-    localStorage.setItem(
-      `jp-collaborative-chat_${this.id}`,
-      JSON.stringify(storage)
-    );
+    localStorage.setItem(`@jupyter/chat:${this._id}`, JSON.stringify(storage));
   }
 
   /**

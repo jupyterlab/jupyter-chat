@@ -867,7 +867,7 @@ test.describe('#localStorage', () => {
     const hasLocalStorage = async () => {
       const storage = await page.evaluate(() => window.localStorage);
       for (const k in storage) {
-        if (k.startsWith('jp-collaborative-chat_')) {
+        if (k.startsWith('@jupyter/chat:')) {
           return true;
         }
       }
@@ -878,7 +878,7 @@ test.describe('#localStorage', () => {
     const storage = await page.evaluate(() => window.localStorage);
     let key = '';
     for (const k in storage) {
-      if (k.startsWith('jp-collaborative-chat_')) {
+      if (k.startsWith('@jupyter/chat:')) {
         key = k;
         break;
       }
