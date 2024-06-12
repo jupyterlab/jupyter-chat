@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { ChatWidget, IChatModel, IConfig } from '@jupyter/chat';
+import { ChatWidget, IConfig } from '@jupyter/chat';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { ABCWidgetFactory, DocumentRegistry } from '@jupyterlab/docregistry';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
@@ -63,7 +63,6 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
   protected createNewWidget(
     context: ChatWidgetFactory.IContext
   ): CollaborativeChatPanel {
-    context.chatModel = context.model;
     context.rmRegistry = this._rmRegistry;
     context.themeManager = this._themeManager;
     return new CollaborativeChatPanel({
@@ -79,7 +78,6 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
 export namespace ChatWidgetFactory {
   export interface IContext
     extends DocumentRegistry.IContext<CollaborativeChatModel> {
-    chatModel: IChatModel;
     themeManager: IThemeManager | null;
     rmRegistry: IRenderMimeRegistry;
   }

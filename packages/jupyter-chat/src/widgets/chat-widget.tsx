@@ -29,7 +29,8 @@ export class ChatWidget extends ReactWidget {
   }
 
   render() {
-    return <Chat {...this._chatOptions} />;
+    // The model need to be passed, otherwise it is undefined in the widget.
+    return <Chat {...this._chatOptions} model={this._chatOptions.model} />;
   }
 
   private _chatOptions: Chat.IOptions;
