@@ -64,11 +64,11 @@ export class WebSocketHandler extends ChatModel {
   /**
    * Getter and setter for the chat ID.
    */
-  get id(): string {
-    return this._id;
+  get userId(): string {
+    return this._userId;
   }
-  set id(value: string) {
-    this._id = value;
+  set userId(value: string) {
+    this._userId = value;
   }
 
   /**
@@ -126,12 +126,12 @@ export class WebSocketHandler extends ChatModel {
   messageAdded(message: GenericMessage): void {
     // resolve promise from `sendMessage()`
     if (message.type === 'msg') {
-      if (message.sender.id === this.id) {
+      if (message.sender.id === this.userId) {
         this._sendResolverQueue.get(message.id)?.(true);
       }
       super.messageAdded(message);
     } else if (message.type === 'connection') {
-      this.id = message.client_id;
+      this.userId = message.client_id;
       this._connectionInitialized.resolve(true);
     }
   }
@@ -168,9 +168,9 @@ export class WebSocketHandler extends ChatModel {
   }
 
   /**
-   * The chat ID.
+   * The user ID.
    */
-  private _id: string = '';
+  private _userId: string = '';
   /**
    * The websocket.
    */

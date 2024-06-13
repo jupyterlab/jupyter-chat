@@ -8,9 +8,10 @@ import time
 import asyncio
 from functools import partial
 from typing import Any, Callable, Dict, List, Set
+from uuid import uuid4
 
 from jupyter_ydoc.ybasedoc import YBaseDoc
-from pycrdt import Array, ArrayEvent, Map
+from pycrdt import Array, ArrayEvent, Map, MapEvent
 
 
 class YChat(YBaseDoc):
@@ -20,7 +21,11 @@ class YChat(YBaseDoc):
         self.dirty = True
         self._ydoc["users"] = self._yusers = Map()
         self._ydoc["messages"] = self._ymessages = Array()
+        self._ydoc["metadata"] = self._ymetadata = Map()
         self._ymessages.observe(self._timestamp_new_messages)
+
+        # Observe the state to initialize the file as soon as the document is not dirty.
+        self._ystate_subscription = self._ystate.observe(self._initialize)
 
     @property
     def version(self) -> str:
@@ -37,8 +42,16 @@ class YChat(YBaseDoc):
         task.add_done_callback(self._background_tasks.discard)
 
     @property
+    def messages(self) -> List:
+        return self._ymessages.to_py()
+
+    @property
     def users(self) -> Map:
         return self._yusers.to_py()
+
+    @property
+    def metadata(self) -> Map:
+        return self._ymetadata.to_py()
 
     def get_users(self) -> Dict:
         """
@@ -50,10 +63,6 @@ class YChat(YBaseDoc):
         users = self._yusers.to_py()
         return dict(users=users)
 
-    @property
-    def messages(self) -> List:
-        return self._ymessages.to_py()
-
     def get_messages(self) -> Dict:
         """
         Returns the messages of the document.
@@ -64,6 +73,27 @@ class YChat(YBaseDoc):
         messages = self._ymessages.to_py()
         return dict(messages=messages)
 
+    async def create_id(self) -> str:
+        """
+        Create a new ID for the document.
+        """
+        id = str(uuid4())
+        self.set_id(id)
+        return id
+
+    def get_id(self) -> str:
+        """
+        Returns the ID of the document.
+        """
+        return self._ymetadata.get("id", None)
+
+    def set_id(self, id: str) -> None:
+        """
+        Set the ID of the document
+        """
+        with self._ydoc.transaction():
+            self._ymetadata.update({"id": id})
+
     def get(self) -> str:
         """
         Returns the contents of the document.
@@ -72,7 +102,8 @@ class YChat(YBaseDoc):
         """
         return json.dumps({
             "messages": self.messages,
-            "users": self.users
+            "users": self.users,
+            "metadata": self.metadata
         })
 
     def set(self, value: str) -> None:
@@ -90,6 +121,7 @@ class YChat(YBaseDoc):
         with self._ydoc.transaction():
             self._yusers.clear()
             self._ymessages.clear()
+            self._ymetadata.clear()
             for key in [k for k in self._ystate.keys() if k not in ("dirty", "path")]:
                 del self._ystate[key]
 
@@ -101,13 +133,31 @@ class YChat(YBaseDoc):
                 for message in contents["messages"]:
                     self._ymessages.append(message)
 
+            if "metadata" in contents.keys():
+                for k, v in contents["metadata"].items():
+                    self._ymetadata.update({k: v})
+
     def observe(self, callback: Callable[[str, Any], None]) -> None:
         self.unobserve()
         self._subscriptions[self._ystate] = self._ystate.observe(partial(callback, "state"))
+        self._subscriptions[self._ymetadata] = self._ymetadata.observe(
+            partial(callback, "metadata")
+        )
         self._subscriptions[self._ymessages] = self._ymessages.observe(
             partial(callback, "messages")
         )
         self._subscriptions[self._yusers] = self._yusers.observe(partial(callback, "users"))
+
+    def _initialize(self, event: MapEvent) -> None:
+        """
+        Called when the state changes, to create an id if it does not exist.
+        This function should be called only once when the dirty state is set to false.
+        """
+        if self.dirty:
+            return
+        if (self.get_id() is None):
+            self.create_task(self.create_id())
+        self._ystate.unobserve(self._ystate_subscription)
 
     def _timestamp_new_messages(self, event: ArrayEvent) -> None:
         """

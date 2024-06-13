@@ -156,6 +156,16 @@ export class ChatModel implements IChatModel {
   }
 
   /**
+   * The chat model id.
+   */
+  get id(): string | undefined {
+    return this._id;
+  }
+  set id(value: string | undefined) {
+    this._id = value;
+  }
+
+  /**
    * The chat model name.
    */
   get name(): string {
@@ -163,6 +173,29 @@ export class ChatModel implements IChatModel {
   }
   set name(value: string) {
     this._name = value;
+  }
+
+  /**
+   * Timestamp of the last read message in local storage.
+   */
+  get lastRead(): number {
+    if (this._id === undefined) {
+      return 0;
+    }
+    const storage = JSON.parse(
+      localStorage.getItem(`@jupyter/chat:${this._id}`) || '{}'
+    );
+    return storage.lastRead ?? 0;
+  }
+  set lastRead(value: number) {
+    if (this._id === undefined) {
+      return;
+    }
+    const storage = JSON.parse(
+      localStorage.getItem(`@jupyter/chat:${this._id}`) || '{}'
+    );
+    storage.lastRead = value;
+    localStorage.setItem(`@jupyter/chat:${this._id}`, JSON.stringify(storage));
   }
 
   /**
@@ -209,12 +242,32 @@ export class ChatModel implements IChatModel {
     return this._unreadMessages;
   }
   set unreadMessages(unread: number[]) {
+    const recentlyRead = this._unreadMessages.filter(
+      elem => !unread.includes(elem)
+    );
     const unreadCountDiff = unread.length - this._unreadMessages.length;
+
     this._unreadMessages = unread;
     this._unreadChanged.emit(this._unreadMessages);
 
     // Notify the change.
     this._notify(unread.length, unreadCountDiff > 0);
+
+    // Save the last read to the local storage.
+    if (this._id !== undefined && recentlyRead.length) {
+      let lastReadChanged = false;
+      let lastRead = this.lastRead ?? this.messages[recentlyRead[0]].time;
+      recentlyRead.forEach(index => {
+        if (this.messages[index].time > lastRead) {
+          lastRead = this.messages[index].time;
+          lastReadChanged = true;
+        }
+      });
+
+      if (lastReadChanged) {
+        this.lastRead = lastRead;
+      }
+    }
   }
 
   /**
@@ -313,12 +366,16 @@ export class ChatModel implements IChatModel {
    */
   messagesInserted(index: number, messages: IChatMessage[]): void {
     const formattedMessages: IChatMessage[] = [];
-    const insertedIndexes: number[] = [];
+    const unreadIndexes: number[] = [];
+
+    const lastRead = this.lastRead ?? 0;
 
     // Format the messages.
     messages.forEach((message, idx) => {
       formattedMessages.push(this.formatChatMessage(message));
-      insertedIndexes.push(index + idx);
+      if (message.time > lastRead) {
+        unreadIndexes.push(index + idx);
+      }
     });
 
     // Insert the messages.
@@ -337,7 +394,7 @@ export class ChatModel implements IChatModel {
       }
     }
 
-    this._addUnreadMessages(insertedIndexes);
+    this._addUnreadMessages(unreadIndexes);
     this._messagesUpdated.emit();
   }
 
@@ -404,6 +461,7 @@ export class ChatModel implements IChatModel {
   private _messages: IChatMessage[] = [];
   private _unreadMessages: number[] = [];
   private _messagesInViewport: number[] = [];
+  private _id: string | undefined;
   private _name: string = '';
   private _config: IConfig;
   private _isDisposed = false;

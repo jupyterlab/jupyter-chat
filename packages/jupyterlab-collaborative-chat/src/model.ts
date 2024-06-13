@@ -11,7 +11,7 @@ import { PartialJSONObject, UUID } from '@lumino/coreutils';
 import { ISignal, Signal } from '@lumino/signaling';
 
 import { IWidgetConfig } from './token';
-import { ChatChange, IYmessage, YChat } from './ychat';
+import { ChatChanges, IYmessage, YChat } from './ychat';
 
 /**
  * Collaborative chat namespace.
@@ -44,6 +44,8 @@ export class CollaborativeChatModel
     } else {
       this._sharedModel = YChat.create();
     }
+
+    this.id = this._sharedModel.id;
 
     this.sharedModel.changed.connect(this._onchange, this);
 
@@ -169,9 +171,9 @@ export class CollaborativeChatModel
     this.sharedModel.updateMessage(index, message);
   }
 
-  private _onchange = (_: YChat, change: ChatChange) => {
-    if (change.messageChanges) {
-      const msgDelta = change.messageChanges;
+  private _onchange = (_: YChat, changes: ChatChanges) => {
+    if (changes.messageChanges) {
+      const msgDelta = changes.messageChanges;
       let index = 0;
       msgDelta.forEach(delta => {
         if (delta.retain) {
@@ -191,6 +193,16 @@ export class CollaborativeChatModel
           index += messages.length;
         } else if (delta.delete) {
           this.messagesDeleted(index, delta.delete);
+        }
+      });
+    }
+
+    if (changes.metadataChanges) {
+      changes.metadataChanges.forEach(change => {
+        // no need to search for update or add, if the new value contains ID, let's
+        // update the model ID.
+        if (change.key === 'id') {
+          this.id = change.newValue as string;
         }
       });
     }
