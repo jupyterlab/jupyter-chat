@@ -263,7 +263,7 @@ class ChatSection extends PanelWithToolbar {
     this.title.caption = this._name;
     this.toolbar.addClass(TOOLBAR_CLASS);
 
-    this._markAsReadButton = new ToolbarButton({
+    this._markAsRead = new ToolbarButton({
       icon: readIcon,
       iconLabel: 'Mark the chat as read',
       className: 'jp-mod-styled',
@@ -293,15 +293,15 @@ class ChatSection extends PanelWithToolbar {
       }
     });
 
-    this.toolbar.addItem('collaborativeChat-main', this._markAsReadButton);
-    this.toolbar.addItem('collaborativeChat-main', moveToMain);
+    this.toolbar.addItem('collaborativeChat-markRead', this._markAsRead);
+    this.toolbar.addItem('collaborativeChat-moveMain', moveToMain);
     this.toolbar.addItem('collaborativeChat-close', closeButton);
 
     this.addWidget(options.widget);
 
     this.model.unreadChanged?.connect(this._unreadChanged);
 
-    this._markAsReadButton.enabled = this.model.unreadMessages.length > 0;
+    this._markAsRead.enabled = this.model.unreadMessages.length > 0;
 
     options.widget.node.style.height = '100%';
   }
@@ -337,12 +337,12 @@ class ChatSection extends PanelWithToolbar {
    * time.
    */
   private _unreadChanged = (_: IChatModel, unread: number[]) => {
-    this._markAsReadButton.enabled = unread.length > 0;
+    this._markAsRead.enabled = unread.length > 0;
     // this.title.label = `${unread.length ? '* ' : ''}${this._name}`;
   };
 
   private _name: string;
-  private _markAsReadButton: ToolbarButton;
+  private _markAsRead: ToolbarButton;
 }
 
 /**
