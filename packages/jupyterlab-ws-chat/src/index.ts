@@ -3,7 +3,12 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { buildChatSidebar, buildErrorWidget } from '@jupyter/chat';
+import {
+  AutocompletionRegistry,
+  IAutocompletionRegistry,
+  buildChatSidebar,
+  buildErrorWidget
+} from '@jupyter/chat';
 import {
   ILayoutRestorer,
   JupyterFrontEnd,
@@ -15,19 +20,42 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 import { WebSocketHandler } from './handlers/websocket-handler';
 
-const pluginId = 'jupyterlab-ws-chat:chat';
+const pluginIds = {
+  acRegistry: 'jupyterlab-ws-chat:autocompletionRegistry',
+  chat: 'jupyterlab-ws-chat:chat'
+};
+
+/**
+ * Extension providing the autocompletion registry.
+ */
+const autocompletionPlugin: JupyterFrontEndPlugin<IAutocompletionRegistry> = {
+  id: pluginIds.acRegistry,
+  description: 'An autocompletion registry',
+  autoStart: true,
+  provides: IAutocompletionRegistry,
+  activate: (app: JupyterFrontEnd): IAutocompletionRegistry => {
+    return new AutocompletionRegistry();
+  }
+};
+
 /**
  * Initialization of the @jupyterlab/chat extension.
  */
 const chat: JupyterFrontEndPlugin<void> = {
-  id: pluginId,
+  id: pluginIds.chat,
   description: 'A chat extension for Jupyterlab',
   autoStart: true,
-  optional: [ILayoutRestorer, ISettingRegistry, IThemeManager],
   requires: [IRenderMimeRegistry],
+  optional: [
+    IAutocompletionRegistry,
+    ILayoutRestorer,
+    ISettingRegistry,
+    IThemeManager
+  ],
   activate: async (
     app: JupyterFrontEnd,
     rmRegistry: IRenderMimeRegistry,
+    autocompletionRegistry: IAutocompletionRegistry,
     restorer: ILayoutRestorer | null,
     settingsRegistry: ISettingRegistry | null,
     themeManager: IThemeManager | null
@@ -59,7 +87,7 @@ const chat: JupyterFrontEndPlugin<void> = {
 
     // Wait for the application to be restored and
     // for the settings to be loaded
-    Promise.all([app.restored, settingsRegistry?.load(pluginId)])
+    Promise.all([app.restored, settingsRegistry?.load(pluginIds.chat)])
       .then(([, settings]) => {
         if (!settings) {
           console.warn(
@@ -86,7 +114,8 @@ const chat: JupyterFrontEndPlugin<void> = {
       chatWidget = buildChatSidebar({
         model: chatHandler,
         themeManager,
-        rmRegistry
+        rmRegistry,
+        autocompletionRegistry
       });
     } catch (e) {
       chatWidget = buildErrorWidget(themeManager);
@@ -105,4 +134,4 @@ const chat: JupyterFrontEndPlugin<void> = {
   }
 };
 
-export default chat;
+export default [autocompletionPlugin, chat];

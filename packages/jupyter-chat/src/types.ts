@@ -81,6 +81,9 @@ export type AutocompleteCommand = {
 
 /**
  * The properties of the autocompletion.
+ *
+ * The autocompletion component will open if the 'opener' string is typed at the
+ * beginning of the input field.
  */
 export interface IAutocompletionCommandsProps {
   /**
@@ -99,6 +102,7 @@ export interface IAutocompletionCommandsProps {
    * ## NOTES:
    * - providing `options` will overwrite the commands argument.
    * - providing `renderInput` will overwrite the input component.
+   * - providing `renderOptions` allows to customize the rendering of the component.
    * - some arguments should not be provided and would be overwritten:
    *   - inputValue
    *   - onInputChange

@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import {
   Autocomplete,
@@ -17,13 +17,16 @@ import {
 import { Send, Cancel } from '@mui/icons-material';
 import clsx from 'clsx';
 import { AutocompleteCommand, IAutocompletionCommandsProps } from '../types';
+import { IAutocompletionRegistry } from '../registry';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
 const SEND_BUTTON_CLASS = 'jp-chat-send-button';
 const CANCEL_BUTTON_CLASS = 'jp-chat-cancel-button';
 
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
-  const { autocompletion, sendWithShiftEnter } = props;
+  const { autocompletionName, autocompletionRegistry, sendWithShiftEnter } =
+    props;
+  const autocompletion = useRef<IAutocompletionCommandsProps>();
   const [input, setInput] = useState<string>(props.value || '');
 
   // The autocomplete commands options.
@@ -39,15 +42,25 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
    * Effect: fetch the list of available autocomplete commands.
    */
   useEffect(() => {
-    if (autocompletion === undefined || !autocompletion.commands) {
+    if (autocompletionRegistry === undefined) {
       return;
     }
-    if (Array.isArray(autocompletion.commands)) {
-      setCommandOptions(autocompletion.commands);
-    } else if (typeof autocompletion.commands === 'function') {
-      autocompletion.commands().then((commands: AutocompleteCommand[]) => {
-        setCommandOptions(commands);
-      });
+    autocompletion.current = autocompletionName
+      ? autocompletionRegistry.get(autocompletionName)
+      : autocompletionRegistry.getDefault();
+
+    if (autocompletion.current === undefined) {
+      return;
+    }
+
+    if (Array.isArray(autocompletion.current.commands)) {
+      setCommandOptions(autocompletion.current.commands);
+    } else if (typeof autocompletion.current.commands === 'function') {
+      autocompletion.current
+        .commands()
+        .then((commands: AutocompleteCommand[]) => {
+          setCommandOptions(commands);
+        });
     }
   }, []);
 
@@ -57,10 +70,11 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
    * the user clears the chat input.
    */
   useEffect(() => {
-    if (!autocompletion?.opener) {
+    if (!autocompletion.current?.opener) {
       return;
     }
-    if (input === props.autocompletion?.opener) {
+
+    if (input === autocompletion.current?.opener) {
       setOpen(true);
       return;
     }
@@ -182,7 +196,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
             helperText={input.length > 2 ? helperText : ' '}
           />
         )}
-        {...autocompletion?.props}
+        {...autocompletion.current?.props}
         inputValue={input}
         onInputChange={(_, newValue: string) => {
           setInput(newValue);
@@ -245,6 +259,10 @@ export namespace ChatInput {
     /**
      * Autocompletion properties.
      */
-    autocompletion?: IAutocompletionCommandsProps;
+    autocompletionRegistry?: IAutocompletionRegistry;
+    /**
+     * Autocompletion name.
+     */
+    autocompletionName?: string;
   }
 }
