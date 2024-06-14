@@ -265,7 +265,7 @@ class ChatSection extends PanelWithToolbar {
 
     this._markAsRead = new ToolbarButton({
       icon: readIcon,
-      iconLabel: 'Mark the chat as read',
+      iconLabel: 'Mark chat as read',
       className: 'jp-mod-styled',
       onClick: () => (this.model.unreadMessages = [])
     });
