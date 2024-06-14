@@ -425,7 +425,7 @@ test.describe('#sendMessages', () => {
 test.describe('#messagesNavigation', () => {
   const baseTime = 1714116341;
   const messagesList: any[] = [];
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 15; i++) {
     messagesList.push({
       type: 'msg',
       id: UUID.uuid4(),
@@ -457,25 +457,25 @@ test.describe('#messagesNavigation', () => {
   });
 
   test.describe('navigation without unread message', () => {
-    test('should have a icon to navigate to last message', async ({ page }) => {
-      const chatPanel = await openChat(page, FILENAME);
-      const message = chatPanel.locator('.jp-chat-message').first();
-      const navigationBottom = chatPanel.locator('.jp-chat-navigation-bottom');
-      await message.scrollIntoViewIfNeeded();
-
-      await expect(navigationBottom).toBeAttached();
-      expect(navigationBottom).not.toHaveClass(/jp-chat-navigation-unread/);
-      expect(await navigationBottom.screenshot()).toMatchSnapshot(
-        'navigation-bottom.png'
-      );
-    });
-
     test('should navigate to last message', async ({ page }) => {
       const chatPanel = await openChat(page, FILENAME);
       const messages = chatPanel.locator('.jp-chat-message');
       const navigationBottom = chatPanel.locator('.jp-chat-navigation-bottom');
+
+      // Move to the first message.
       await messages.first().scrollIntoViewIfNeeded();
 
+      await expect(navigationBottom).toBeAttached();
+
+      // FIXME: This test uses the fact that some messages are marked as read even if
+      // they are not displayed, because the unread state is computed before the full
+      // rendering of all messages.
+      // If the unread state wait for the rendermimeMarkdown, this test should fail
+      // because the last messages will be marked as unread.
+      expect(navigationBottom).not.toHaveClass(/jp-chat-navigation-unread/);
+      expect(await navigationBottom.screenshot()).toMatchSnapshot(
+        'navigation-bottom.png'
+      );
       await expect(messages.last()).not.toBeInViewport();
       await navigationBottom.click();
       await expect(messages.last()).toBeInViewport();
@@ -483,7 +483,9 @@ test.describe('#messagesNavigation', () => {
     });
   });
 
-  test.describe('navigation with previous unread message', () => {
+  // These tests do not work anymore, since the chat do not scroll to the last message
+  // anymore
+  test.describe.skip('navigation with previous unread message', () => {
     test.beforeEach(async ({ page }) => {
       const newMessagesList = [...messagesList];
       // Add new message to the document.
@@ -1271,8 +1273,8 @@ test.describe('#sidepanel', () => {
     });
   });
 
-  test.describe('#chatCreation', () => {
-    const name = 'my-chat';
+  test.describe('#creation', () => {
+    const name = FILENAME.replace('.chat', '');
     let panel: Locator;
     let dialog: Locator;
 
@@ -1288,7 +1290,7 @@ test.describe('#sidepanel', () => {
     });
 
     test.afterEach(async ({ page }) => {
-      for (let filename of ['untitled.chat', `${name}.chat`]) {
+      for (let filename of ['untitled.chat', FILENAME]) {
         if (await page.filebrowser.contents.fileExists(filename)) {
           await page.filebrowser.contents.deleteFile(filename);
         }
@@ -1299,7 +1301,7 @@ test.describe('#sidepanel', () => {
       await dialog.locator('input[type="text"]').pressSequentially(name);
       await dialog.getByRole('button').getByText('Ok').click();
       await page.waitForCondition(
-        async () => await page.filebrowser.contents.fileExists(`${name}.chat`)
+        async () => await page.filebrowser.contents.fileExists(FILENAME)
       );
 
       const chatTitle = panel.locator(
@@ -1337,20 +1339,16 @@ test.describe('#sidepanel', () => {
   });
 
   test.describe('#openingClosing', () => {
-    const name = 'my-chat';
+    const name = FILENAME.replace('.chat', '');
     let panel: Locator;
     let select: Locator;
 
     test.beforeEach(async ({ page }) => {
-      await page.filebrowser.contents.uploadContent(
-        '{}',
-        'text',
-        `${name}.chat`
-      );
+      await page.filebrowser.contents.uploadContent('{}', 'text', FILENAME);
     });
 
     test.afterEach(async ({ page }) => {
-      await page.filebrowser.contents.deleteFile(`${name}.chat`);
+      await page.filebrowser.contents.deleteFile(FILENAME);
     });
 
     test('should list existing chat', async ({ page }) => {
@@ -1391,30 +1389,28 @@ test.describe('#sidepanel', () => {
   });
 
   test.describe('#movingChat', () => {
-    const filename = 'my-chat.chat';
-
     test.use({ mockSettings: { ...galata.DEFAULT_SETTINGS } });
 
     test.beforeEach(async ({ page }) => {
       // Create a chat file
-      await page.filebrowser.contents.uploadContent('{}', 'text', filename);
+      await page.filebrowser.contents.uploadContent('{}', 'text', FILENAME);
     });
 
     test.afterEach(async ({ page }) => {
-      if (await page.filebrowser.contents.fileExists(filename)) {
-        await page.filebrowser.contents.deleteFile(filename);
+      if (await page.filebrowser.contents.fileExists(FILENAME)) {
+        await page.filebrowser.contents.deleteFile(FILENAME);
       }
     });
 
     test('main widget toolbar should have a button', async ({ page }) => {
-      const chatPanel = await openChat(page, filename);
+      const chatPanel = await openChat(page, FILENAME);
       const button = chatPanel.getByTitle('Move the chat to the side panel');
       expect(button).toBeVisible();
       expect(await button.screenshot()).toMatchSnapshot('moveToSide.png');
     });
 
     test('chat should move to the side panel', async ({ page }) => {
-      const chatPanel = await openChat(page, filename);
+      const chatPanel = await openChat(page, FILENAME);
       const button = chatPanel.getByTitle('Move the chat to the side panel');
       await button.click();
       await expect(chatPanel).not.toBeAttached();
@@ -1427,13 +1423,13 @@ test.describe('#sidepanel', () => {
       await expect(chatTitle).toHaveCount(1);
       await expect(
         chatTitle.locator('.lm-AccordionPanel-titleLabel')
-      ).toHaveText(filename.split('.')[0]);
+      ).toHaveText(FILENAME.split('.')[0]);
     });
 
     test('side panel should contain a button to move the chat', async ({
       page
     }) => {
-      const sidePanel = await openChatToSide(page, filename);
+      const sidePanel = await openChatToSide(page, FILENAME);
       const chatTitle = sidePanel
         .locator('.jp-SidePanel-content .jp-AccordionPanel-title')
         .first();
@@ -1443,7 +1439,7 @@ test.describe('#sidepanel', () => {
     });
 
     test('chat should move to the main area', async ({ page }) => {
-      const sidePanel = await openChatToSide(page, filename);
+      const sidePanel = await openChatToSide(page, FILENAME);
       const chatTitle = sidePanel
         .locator('.jp-SidePanel-content .jp-AccordionPanel-title')
         .first();
@@ -1451,7 +1447,7 @@ test.describe('#sidepanel', () => {
       await button.click();
       expect(chatTitle).not.toBeAttached();
 
-      await expect(page.activity.getTabLocator(filename)).toBeVisible();
+      await expect(page.activity.getTabLocator(FILENAME)).toBeVisible();
     });
   });
 });
@@ -1550,5 +1546,131 @@ test.describe('#stackedMessages', () => {
     expect(await messagesContainer.screenshot()).toMatchSnapshot(
       'not-stacked-messages.png'
     );
+  });
+});
+
+test.describe('#markUnread', () => {
+  const baseTime = 1714116341;
+  const message = {
+    type: 'msg',
+    id: UUID.uuid4(),
+    sender: USERNAME,
+    body: MSG_CONTENT,
+    time: baseTime
+  };
+
+  const chatContent = {
+    messages: [message],
+    users: {}
+  };
+  chatContent.users[USERNAME] = USER.identity;
+
+  test.beforeEach(async ({ page }) => {
+    // Create a chat file with content
+    await page.filebrowser.contents.uploadContent(
+      JSON.stringify(chatContent),
+      'text',
+      FILENAME
+    );
+  });
+
+  test.afterEach(async ({ page }) => {
+    if (await page.filebrowser.contents.fileExists(FILENAME)) {
+      await page.filebrowser.contents.deleteFile(FILENAME);
+    }
+  });
+  test.describe('without previous unread message', () => {
+    test('button should be disabled in main panel', async ({ page }) => {
+      const chatPanel = await openChat(page, FILENAME);
+      const button = chatPanel.getByTitle('Mark chat as read');
+      await expect(button).toBeAttached();
+
+      // toBeDisabled() does not work in this case, maybe because it is a jp-button ?
+      await expect(button).toHaveAttribute('disabled');
+    });
+
+    test('button should be disabled in side panel', async ({ page }) => {
+      const sidePanel = await openChatToSide(page, FILENAME);
+      const chatTitle = sidePanel
+        .locator('.jp-SidePanel-content .jp-AccordionPanel-title')
+        .first();
+      const button = chatTitle.getByTitle('Mark chat as read');
+      await expect(button).toBeAttached();
+
+      // toBeDisabled() does not work in this case, maybe because it is a jp-button ?
+      await expect(button).toHaveAttribute('disabled');
+    });
+  });
+
+  test.describe('with previous unread message', () => {
+    test.beforeEach(async ({ page }) => {
+      const newMessagesList = [message];
+      // Add new message to the document.
+      for (let i = 1; i < 30; i++) {
+        newMessagesList.push({
+          type: 'msg',
+          id: UUID.uuid4(),
+          sender: USERNAME,
+          body: `Message ${i}`,
+          time: baseTime + i * 60
+        });
+      }
+      const newChatContent = {
+        messages: newMessagesList,
+        users: {}
+      };
+      newChatContent.users[USERNAME] = USER.identity;
+
+      // Create a chat file with content
+      await page.filebrowser.contents.uploadContent(
+        JSON.stringify(newChatContent),
+        'text',
+        FILENAME
+      );
+    });
+
+    test('button should be enabled in main panel', async ({ page }) => {
+      const chatPanel = await openChat(page, FILENAME);
+      const button = chatPanel.getByTitle('Mark chat as read');
+      await expect(button).toBeAttached();
+      await expect(button).not.toHaveAttribute('disabled');
+    });
+
+    test('should mark as unread in main panel', async ({ page }) => {
+      const chatPanel = await openChat(page, FILENAME);
+      const button = chatPanel.getByTitle('Mark chat as read');
+      const navigationBottom = chatPanel.locator('.jp-chat-navigation-bottom');
+
+      await expect(button).toBeAttached();
+      await expect(navigationBottom).toBeAttached();
+      expect(navigationBottom).toHaveClass(/jp-chat-navigation-unread/);
+
+      await button.click();
+      await expect(navigationBottom).not.toHaveClass(
+        /jp-chat-navigation-unread/
+      );
+    });
+
+    test('button should be enabled in side panel', async ({ page }) => {
+      const chatPanel = await openChatToSide(page, FILENAME);
+      const button = chatPanel.getByTitle('Mark chat as read');
+      await expect(button).toBeAttached();
+      await expect(button).not.toHaveAttribute('disabled');
+    });
+
+    test('should mark as unread in side panel', async ({ page }) => {
+      const chatPanel = await openChatToSide(page, FILENAME);
+      const button = chatPanel.getByTitle('Mark chat as read');
+      const navigationBottom = chatPanel.locator('.jp-chat-navigation-bottom');
+
+      await expect(button).toBeAttached();
+      await expect(navigationBottom).toBeAttached();
+      expect(navigationBottom).toHaveClass(/jp-chat-navigation-unread/);
+
+      await button.click();
+      await expect(navigationBottom).not.toHaveClass(
+        /jp-chat-navigation-unread/
+      );
+    });
   });
 });

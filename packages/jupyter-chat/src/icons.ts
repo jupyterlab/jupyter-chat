@@ -8,8 +8,14 @@
 import { LabIcon } from '@jupyterlab/ui-components';
 
 import chatSvgStr from '../style/icons/chat.svg';
+import readSvgStr from '../style/icons/read.svg';
 
 export const chatIcon = new LabIcon({
   name: 'jupyter-chat::chat',
   svgstr: chatSvgStr
+});
+
+export const readIcon = new LabIcon({
+  name: 'jupyter-chat::read',
+  svgstr: readSvgStr
 });

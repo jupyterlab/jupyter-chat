@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { ChatWidget, IChatModel, IConfig } from '@jupyter/chat';
+import { ChatWidget, IChatModel, IConfig, readIcon } from '@jupyter/chat';
 import { ICollaborativeDrive } from '@jupyter/docprovider';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { PathExt } from '@jupyterlab/coreutils';
@@ -263,6 +263,13 @@ class ChatSection extends PanelWithToolbar {
     this.title.caption = this._name;
     this.toolbar.addClass(TOOLBAR_CLASS);
 
+    this._markAsRead = new ToolbarButton({
+      icon: readIcon,
+      iconLabel: 'Mark chat as read',
+      className: 'jp-mod-styled',
+      onClick: () => (this.model.unreadMessages = [])
+    });
+
     const moveToMain = new ToolbarButton({
       icon: launchIcon,
       iconLabel: 'Move the chat to the main area',
@@ -285,12 +292,16 @@ class ChatSection extends PanelWithToolbar {
         this.dispose();
       }
     });
-    this.toolbar.addItem('collaborativeChat-main', moveToMain);
+
+    this.toolbar.addItem('collaborativeChat-markRead', this._markAsRead);
+    this.toolbar.addItem('collaborativeChat-moveMain', moveToMain);
     this.toolbar.addItem('collaborativeChat-close', closeButton);
 
     this.addWidget(options.widget);
 
     this.model.unreadChanged?.connect(this._unreadChanged);
+
+    this._markAsRead.enabled = this.model.unreadMessages.length > 0;
 
     options.widget.node.style.height = '100%';
   }
@@ -326,10 +337,12 @@ class ChatSection extends PanelWithToolbar {
    * time.
    */
   private _unreadChanged = (_: IChatModel, unread: number[]) => {
+    this._markAsRead.enabled = unread.length > 0;
     // this.title.label = `${unread.length ? '* ' : ''}${this._name}`;
   };
 
   private _name: string;
+  private _markAsRead: ToolbarButton;
 }
 
 /**

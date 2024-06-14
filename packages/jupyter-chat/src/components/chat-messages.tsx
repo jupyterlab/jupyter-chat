@@ -475,6 +475,13 @@ export function Navigation(props: NavigationProps): JSX.Element {
 
     unreadChanged(model, model.unreadMessages);
 
+    // Move to first the unread message or to last message on first rendering.
+    if (model.unreadMessages.length) {
+      gotoMessage(Math.min(...model.unreadMessages));
+    } else {
+      gotoMessage(model.messages.length - 1);
+    }
+
     return () => {
       model.unreadChanged?.disconnect(unreadChanged);
     };
