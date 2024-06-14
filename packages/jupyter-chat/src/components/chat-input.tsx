@@ -138,7 +138,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     <Box sx={props.sx} className={clsx(INPUT_BOX_CLASS)}>
       <Autocomplete
         options={commandOptions}
-        value=""
+        value={props.value}
         open={open}
         autoHighlight
         freeSolo
@@ -150,6 +150,13 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
           paper: {
             sx: {
               border: '1px solid lightgray'
+            }
+          }
+        }}
+        ListboxProps={{
+          sx: {
+            '& .MuiAutocomplete-option': {
+              padding: 2
             }
           }
         }}
@@ -170,7 +177,6 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
                       size="small"
                       color="primary"
                       onClick={onCancel}
-                      disabled={!input.trim().length}
                       title={'Cancel edition'}
                       className={clsx(CANCEL_BUTTON_CLASS)}
                     >
@@ -181,7 +187,11 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
                     size="small"
                     color="primary"
                     onClick={onSend}
-                    disabled={!input.trim().length}
+                    disabled={
+                      props.onCancel
+                        ? input === props.value
+                        : !input.trim().length
+                    }
                     title={`Send message ${sendWithShiftEnter ? '(SHIFT+ENTER)' : '(ENTER)'}`}
                     className={clsx(SEND_BUTTON_CLASS)}
                   >
@@ -223,6 +233,8 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
             setOpen(false);
           }
         }
+        // hide default extra right padding in the text field
+        disableClearable
       />
     </Box>
   );

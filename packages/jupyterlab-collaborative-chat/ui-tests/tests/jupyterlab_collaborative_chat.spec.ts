@@ -128,7 +128,7 @@ const sendMessage = async (
   const chatPanel = await openChat(page, filename);
   const input = chatPanel
     .locator('.jp-chat-input-container')
-    .getByRole('textbox');
+    .getByRole('combobox');
   const sendButton = chatPanel
     .locator('.jp-chat-input-container')
     .getByRole('button');
@@ -304,7 +304,7 @@ test.describe('#sendMessages', () => {
     const chatPanel = await openChat(page, FILENAME);
     const input = chatPanel
       .locator('.jp-chat-input-container')
-      .getByRole('textbox');
+      .getByRole('combobox');
     const sendButton = chatPanel
       .locator('.jp-chat-input-container')
       .getByRole('button');
@@ -323,7 +323,7 @@ test.describe('#sendMessages', () => {
     const chatPanel = await openChat(page, FILENAME);
     const input = chatPanel
       .locator('.jp-chat-input-container')
-      .getByRole('textbox');
+      .getByRole('combobox');
     await input.pressSequentially(MSG_CONTENT);
     await input.press('Enter');
 
@@ -358,7 +358,7 @@ test.describe('#sendMessages', () => {
     const messages = chatPanel.locator('.jp-chat-messages-container');
     const input = chatPanel
       .locator('.jp-chat-input-container')
-      .getByRole('textbox');
+      .getByRole('combobox');
     await input!.pressSequentially(MSG_CONTENT);
     await input!.press('Enter');
 
@@ -404,7 +404,7 @@ test.describe('#sendMessages', () => {
     const messages = chatPanel.locator('.jp-chat-messages-container');
     const input = chatPanel
       .locator('.jp-chat-input-container')
-      .getByRole('textbox');
+      .getByRole('combobox');
     await input!.pressSequentially(MSG_CONTENT);
     await input!.press('Enter');
 
@@ -1033,7 +1033,7 @@ test.describe('#messageToolbar', () => {
 
     const editInput = chatPanel
       .locator('.jp-chat-messages-container .jp-chat-input-container')
-      .getByRole('textbox');
+      .getByRole('combobox');
 
     await expect(editInput).toBeVisible();
     await editInput.focus();
@@ -1065,7 +1065,7 @@ test.describe('#messageToolbar', () => {
 
     const editInput = chatPanel
       .locator('.jp-chat-messages-container .jp-chat-input-container')
-      .getByRole('textbox');
+      .getByRole('combobox');
 
     await expect(editInput).toBeVisible();
     await editInput.focus();
@@ -1130,7 +1130,7 @@ test.describe('#ychat', () => {
     const chatPanel = await openChat(page, FILENAME);
     await chatPanel
       .locator('.jp-chat-input-container')
-      .getByRole('textbox')
+      .getByRole('combobox')
       .waitFor();
     const hasId = async () => {
       const model = await readFileContent(page, FILENAME);
