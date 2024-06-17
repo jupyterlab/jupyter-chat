@@ -1643,7 +1643,7 @@ test.describe('#markUnread', () => {
 
       await expect(button).toBeAttached();
       await expect(navigationBottom).toBeAttached();
-      expect(navigationBottom).toHaveClass(/jp-chat-navigation-unread/);
+      await expect(navigationBottom).toHaveClass(/jp-chat-navigation-unread/);
 
       await button.click();
       await expect(navigationBottom).not.toHaveClass(
@@ -1665,7 +1665,7 @@ test.describe('#markUnread', () => {
 
       await expect(button).toBeAttached();
       await expect(navigationBottom).toBeAttached();
-      expect(navigationBottom).toHaveClass(/jp-chat-navigation-unread/);
+      await expect(navigationBottom).toHaveClass(/jp-chat-navigation-unread/);
 
       await button.click();
       await expect(navigationBottom).not.toHaveClass(
