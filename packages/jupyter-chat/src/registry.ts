@@ -117,6 +117,13 @@ export class AutocompletionRegistry {
     return this._autocompletions.delete(name);
   }
 
+  /**
+   * Remove all registered autocompletions.
+   */
+  removeAll(): void {
+    this._autocompletions.clear();
+  }
+
   private _default: string | null = null;
   private _autocompletions = new Map<string, IAutocompletionCommandsProps>();
 }

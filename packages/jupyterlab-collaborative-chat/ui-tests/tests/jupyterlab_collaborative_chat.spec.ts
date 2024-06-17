@@ -10,7 +10,7 @@ import {
   test
 } from '@jupyterlab/galata';
 import { Contents, User } from '@jupyterlab/services';
-import { PartialJSONObject, ReadonlyJSONObject, UUID } from '@lumino/coreutils';
+import { ReadonlyJSONObject, UUID } from '@lumino/coreutils';
 import { Locator } from '@playwright/test';
 
 const FILENAME = 'my-chat.chat';
