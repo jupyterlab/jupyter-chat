@@ -24,7 +24,7 @@ export interface IAutocompletionRegistry {
   /**
    * Get the default autocompletion.
    */
-  getDefault(): IAutocompletionCommandsProps | undefined;
+  getDefaultCompletion(): IAutocompletionCommandsProps | undefined;
   /**
    * Return a registered autocomplete props.
    *
@@ -51,7 +51,7 @@ export interface IAutocompletionRegistry {
 /**
  * A registry to provide autocompleters.
  */
-export class AutocompletionRegistry {
+export class AutocompletionRegistry implements IAutocompletionRegistry {
   /**
    * Getter and setter for the default autocompletion name.
    */
@@ -69,7 +69,7 @@ export class AutocompletionRegistry {
   /**
    * Get the default autocompletion.
    */
-  getDefault(): IAutocompletionCommandsProps | undefined {
+  getDefaultCompletion(): IAutocompletionCommandsProps | undefined {
     if (this._default === null) {
       return undefined;
     }

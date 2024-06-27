@@ -47,7 +47,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     }
     autocompletion.current = autocompletionName
       ? autocompletionRegistry.get(autocompletionName)
-      : autocompletionRegistry.getDefault();
+      : autocompletionRegistry.getDefaultCompletion();
 
     if (autocompletion.current === undefined) {
       return;
