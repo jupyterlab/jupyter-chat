@@ -1605,8 +1605,11 @@ test.describe('#markUnread', () => {
   test.describe('with previous unread message', () => {
     test.beforeEach(async ({ page }) => {
       const newMessagesList = [message];
-      // Add new message to the document.
-      for (let i = 1; i < 30; i++) {
+      // Add new messages to the document.
+      // We need to add many messages because they are currently marked unread
+      // before being fully rendered by the markdownRenderer. Many messages are marked
+      // unread even if they are not in the viewport after render.
+      for (let i = 1; i < 50; i++) {
         newMessagesList.push({
           type: 'msg',
           id: UUID.uuid4(),
@@ -1643,7 +1646,7 @@ test.describe('#markUnread', () => {
 
       await expect(button).toBeAttached();
       await expect(navigationBottom).toBeAttached();
-      expect(navigationBottom).toHaveClass(/jp-chat-navigation-unread/);
+      await expect(navigationBottom).toHaveClass(/jp-chat-navigation-unread/);
 
       await button.click();
       await expect(navigationBottom).not.toHaveClass(
@@ -1665,7 +1668,7 @@ test.describe('#markUnread', () => {
 
       await expect(button).toBeAttached();
       await expect(navigationBottom).toBeAttached();
-      expect(navigationBottom).toHaveClass(/jp-chat-navigation-unread/);
+      await expect(navigationBottom).toHaveClass(/jp-chat-navigation-unread/);
 
       await button.click();
       await expect(navigationBottom).not.toHaveClass(
