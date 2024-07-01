@@ -1201,6 +1201,9 @@ test.describe('#outofband', () => {
     const messages = chatPanel.locator(
       '.jp-chat-messages-container .jp-chat-message'
     );
+    await page.waitForCondition(async () =>
+      messages.first().locator('.jp-chat-rendermime-markdown').isVisible()
+    );
     const newMsg = {
       type: 'msg',
       id: UUID.uuid4(),
