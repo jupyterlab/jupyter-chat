@@ -44,7 +44,7 @@ type BaseMessageProps = {
  */
 export function ChatMessages(props: BaseMessageProps): JSX.Element {
   const { model } = props;
-  const [messages, setMessages] = useState<IChatMessage[]>([]);
+  const [messages, setMessages] = useState<IChatMessage[]>(model.messages);
   const refMsgBox = useRef<HTMLDivElement>(null);
   const inViewport = useRef<number[]>([]);
 
