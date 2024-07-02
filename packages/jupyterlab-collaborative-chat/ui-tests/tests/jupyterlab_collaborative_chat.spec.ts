@@ -1150,7 +1150,8 @@ test.describe('#outofband', () => {
     id: UUID.uuid4(),
     sender: USERNAME,
     body: MSG_CONTENT,
-    time: 1714116341
+    time: 1714116341,
+    raw_time: false
   };
   const chatContent = {
     messages: [msg],
@@ -1201,15 +1202,13 @@ test.describe('#outofband', () => {
     const messages = chatPanel.locator(
       '.jp-chat-messages-container .jp-chat-message'
     );
-    await page.waitForCondition(async () =>
-      messages.first().locator('.jp-chat-rendermime-markdown').isVisible()
-    );
     const newMsg = {
       type: 'msg',
       id: UUID.uuid4(),
       sender: USERNAME,
       body: newMsgContent,
-      time: msg.time + 5
+      time: msg.time + 5,
+      raw_time: false
     };
     const newContent = {
       messages: [msg, newMsg],
