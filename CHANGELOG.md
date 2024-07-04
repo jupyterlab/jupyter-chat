@@ -2,6 +2,46 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.2.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.1.0...234e231ccadb198409e6a4250fdcbe05c32895e7))
+
+### Enhancements made
+
+- Autocomplete commands [#57](https://github.com/jupyterlab/jupyter-chat/pull/57) ([@brichet](https://github.com/brichet))
+- Buttons to mark chat as read [#56](https://github.com/jupyterlab/jupyter-chat/pull/56) ([@brichet](https://github.com/brichet))
+- Add metadata to ychat, id to model and store last unread in localStorage [#54](https://github.com/jupyterlab/jupyter-chat/pull/54) ([@brichet](https://github.com/brichet))
+- Add the panel tracker to the chat factory token [#47](https://github.com/jupyterlab/jupyter-chat/pull/47) ([@brichet](https://github.com/brichet))
+- Notifications for unread messages [#43](https://github.com/jupyterlab/jupyter-chat/pull/43) ([@brichet](https://github.com/brichet))
+- Stack consecutive messages from same user [#40](https://github.com/jupyterlab/jupyter-chat/pull/40) ([@brichet](https://github.com/brichet))
+
+### Bugs fixed
+
+- Fix the initialization of the messages component [#60](https://github.com/jupyterlab/jupyter-chat/pull/60) ([@brichet](https://github.com/brichet))
+
+### Maintenance and upkeep improvements
+
+- Fix bump version [#62](https://github.com/jupyterlab/jupyter-chat/pull/62) ([@brichet](https://github.com/brichet))
+- Prevent dependabot from using yarn 4 [#59](https://github.com/jupyterlab/jupyter-chat/pull/59) ([@brichet](https://github.com/brichet))
+- Use the Chat.IOptions as option for the Widget and Sidebar [#55](https://github.com/jupyterlab/jupyter-chat/pull/55) ([@brichet](https://github.com/brichet))
+- Depend on `pydantic` directly instead of `langchain` [#48](https://github.com/jupyterlab/jupyter-chat/pull/48) ([@jtpio](https://github.com/jtpio))
+- Refactoring to avoid unecessary react rendering [#44](https://github.com/jupyterlab/jupyter-chat/pull/44) ([@brichet](https://github.com/brichet))
+- Add binder link in README and on PR [#41](https://github.com/jupyterlab/jupyter-chat/pull/41) ([@brichet](https://github.com/brichet))
+- Fix the release workflow [#39](https://github.com/jupyterlab/jupyter-chat/pull/39) ([@brichet](https://github.com/brichet))
+- Code refactoring [#38](https://github.com/jupyterlab/jupyter-chat/pull/38) ([@brichet](https://github.com/brichet))
+
+### Documentation improvements
+
+- Add screenshot to the README [#46](https://github.com/jupyterlab/jupyter-chat/pull/46) ([@jtpio](https://github.com/jtpio))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2024-05-16&to=2024-07-04&type=c))
+
+[@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2024-05-16..2024-07-04&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2024-05-16..2024-07-04&type=Issues) | [@jtpio](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2024-05-16..2024-07-04&type=Issues) | [@welcome](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Awelcome+updated%3A2024-05-16..2024-07-04&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.1.0
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/877bbc1a13706c69ad5b41b79a697ab64ac447e8...0b72a3b62a3615688d3e744d6fa52f76427f9cf5))
@@ -56,5 +96,3 @@ A lot of the UI components of this project come from [jupyter-ai](https://github
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2023-02-10&to=2024-05-16&type=c))
 
 [@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2023-02-10..2024-05-16&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adependabot+updated%3A2023-02-10..2024-05-16&type=Issues) | [@welcome](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Awelcome+updated%3A2023-02-10..2024-05-16&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->

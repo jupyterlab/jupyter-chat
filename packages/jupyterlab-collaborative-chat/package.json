@@ -1,6 +1,6 @@
 {
   "name": "jupyterlab-collaborative-chat",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A chat extension based on shared documents",
   "keywords": [
     "jupyter",
@@ -57,7 +57,7 @@
     "watch:labextension": "jupyter labextension watch ."
   },
   "dependencies": {
-    "@jupyter/chat": "^0.1.0",
+    "@jupyter/chat": "^0.2.0",
     "@jupyter/collaboration": "^2.0.11",
     "@jupyter/docprovider": "^2.0.11",
     "@jupyterlab/application": "^4.0.0",
