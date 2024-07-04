@@ -21,7 +21,7 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { WebSocketHandler } from './handlers/websocket-handler';
 
 const pluginIds = {
-  acRegistry: 'jupyterlab-ws-chat:autocompletionRegistry',
+  autocompletionRegistry: 'jupyterlab-ws-chat:autocompletionRegistry',
   chat: 'jupyterlab-ws-chat:chat'
 };
 
@@ -29,7 +29,7 @@ const pluginIds = {
  * Extension providing the autocompletion registry.
  */
 const autocompletionPlugin: JupyterFrontEndPlugin<IAutocompletionRegistry> = {
-  id: pluginIds.acRegistry,
+  id: pluginIds.autocompletionRegistry,
   description: 'An autocompletion registry',
   autoStart: true,
   provides: IAutocompletionRegistry,

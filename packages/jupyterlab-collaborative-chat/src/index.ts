@@ -47,7 +47,8 @@ import { YChat } from './ychat';
 const FACTORY = 'Chat';
 
 const pluginIds = {
-  acRegistry: 'jupyterlab-collaborative-chat:autocompletionRegistry',
+  autocompletionRegistry:
+    'jupyterlab-collaborative-chat:autocompletionRegistry',
   chatCommands: 'jupyterlab-collaborative-chat:commands',
   docFactories: 'jupyterlab-collaborative-chat:factory',
   chatPanel: 'jupyterlab-collaborative-chat:chat-panel'
@@ -57,7 +58,7 @@ const pluginIds = {
  * Extension providing the autocompletion registry.
  */
 const autocompletionPlugin: JupyterFrontEndPlugin<IAutocompletionRegistry> = {
-  id: pluginIds.acRegistry,
+  id: pluginIds.autocompletionRegistry,
   description: 'An autocompletion registry',
   autoStart: true,
   provides: IAutocompletionRegistry,
