@@ -71,3 +71,42 @@ export interface INewMessage {
  * An empty interface to describe optional settings that could be fetched from server.
  */
 export interface ISettings {}
+
+/**
+ * The autocomplete command type.
+ */
+export type AutocompleteCommand = {
+  label: string;
+};
+
+/**
+ * The properties of the autocompletion.
+ *
+ * The autocompletion component will open if the 'opener' string is typed at the
+ * beginning of the input field.
+ */
+export interface IAutocompletionCommandsProps {
+  /**
+   * The string that open the completer.
+   */
+  opener: string;
+  /**
+   * The list of available commands.
+   */
+  commands?: AutocompleteCommand[] | (() => Promise<AutocompleteCommand[]>);
+  /**
+   * The props for the Autocomplete component.
+   *
+   * Must be compatible with https://mui.com/material-ui/api/autocomplete/#props.
+   *
+   * ## NOTES:
+   * - providing `options` will overwrite the commands argument.
+   * - providing `renderInput` will overwrite the input component.
+   * - providing `renderOptions` allows to customize the rendering of the component.
+   * - some arguments should not be provided and would be overwritten:
+   *   - inputValue
+   *   - onInputChange
+   *   - onHighlightChange
+   */
+  props?: any;
+}

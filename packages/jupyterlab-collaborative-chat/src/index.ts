@@ -3,7 +3,12 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { chatIcon, readIcon } from '@jupyter/chat';
+import {
+  AutocompletionRegistry,
+  IAutocompletionRegistry,
+  chatIcon,
+  readIcon
+} from '@jupyter/chat';
 import { ICollaborativeDrive } from '@jupyter/docprovider';
 import {
   ILayoutRestorer,
@@ -42,9 +47,24 @@ import { YChat } from './ychat';
 const FACTORY = 'Chat';
 
 const pluginIds = {
+  autocompletionRegistry:
+    'jupyterlab-collaborative-chat:autocompletionRegistry',
   chatCommands: 'jupyterlab-collaborative-chat:commands',
   docFactories: 'jupyterlab-collaborative-chat:factory',
   chatPanel: 'jupyterlab-collaborative-chat:chat-panel'
+};
+
+/**
+ * Extension providing the autocompletion registry.
+ */
+const autocompletionPlugin: JupyterFrontEndPlugin<IAutocompletionRegistry> = {
+  id: pluginIds.autocompletionRegistry,
+  description: 'An autocompletion registry',
+  autoStart: true,
+  provides: IAutocompletionRegistry,
+  activate: (app: JupyterFrontEnd): IAutocompletionRegistry => {
+    return new AutocompletionRegistry();
+  }
 };
 
 /**
@@ -56,6 +76,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
   autoStart: true,
   requires: [IRenderMimeRegistry],
   optional: [
+    IAutocompletionRegistry,
     ICollaborativeDrive,
     ILayoutRestorer,
     ISettingRegistry,
@@ -67,6 +88,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
   activate: (
     app: JupyterFrontEnd,
     rmRegistry: IRenderMimeRegistry,
+    autocompletionRegistry: IAutocompletionRegistry,
     drive: ICollaborativeDrive | null,
     restorer: ILayoutRestorer | null,
     settingRegistry: ISettingRegistry | null,
@@ -187,7 +209,8 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
       themeManager,
       rmRegistry,
       toolbarFactory,
-      translator
+      translator,
+      autocompletionRegistry
     });
 
     // Add the widget to the tracker when it's created
@@ -480,11 +503,12 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
   autoStart: true,
   provides: IChatPanel,
   requires: [ICollaborativeDrive, IRenderMimeRegistry],
-  optional: [ILayoutRestorer, IThemeManager],
+  optional: [IAutocompletionRegistry, ILayoutRestorer, IThemeManager],
   activate: (
     app: JupyterFrontEnd,
     drive: ICollaborativeDrive,
     rmRegistry: IRenderMimeRegistry,
+    autocompletionRegistry: IAutocompletionRegistry,
     restorer: ILayoutRestorer | null,
     themeManager: IThemeManager | null
   ): ChatPanel => {
@@ -497,7 +521,8 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
       commands,
       drive,
       rmRegistry,
-      themeManager
+      themeManager,
+      autocompletionRegistry
     });
     chatPanel.id = 'JupyterCollaborationChat:sidepanel';
     chatPanel.title.icon = chatIcon;
@@ -560,4 +585,4 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
   }
 };
 
-export default [chatCommands, docFactories, chatPanel];
+export default [autocompletionPlugin, chatCommands, docFactories, chatPanel];

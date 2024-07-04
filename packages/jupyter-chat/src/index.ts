@@ -5,6 +5,7 @@
 
 export * from './icons';
 export * from './model';
+export * from './registry';
 export * from './types';
 export * from './widgets/chat-error';
 export * from './widgets/chat-sidebar';

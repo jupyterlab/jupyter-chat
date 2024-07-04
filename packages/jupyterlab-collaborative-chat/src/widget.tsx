@@ -3,7 +3,13 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { ChatWidget, IChatModel, IConfig, readIcon } from '@jupyter/chat';
+import {
+  ChatWidget,
+  IAutocompletionRegistry,
+  IChatModel,
+  IConfig,
+  readIcon
+} from '@jupyter/chat';
 import { ICollaborativeDrive } from '@jupyter/docprovider';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { PathExt } from '@jupyterlab/coreutils';
@@ -101,6 +107,7 @@ export class ChatPanel extends SidePanel {
     this._drive = options.drive;
     this._rmRegistry = options.rmRegistry;
     this._themeManager = options.themeManager;
+    this._autocompletionRegistry = options.autocompletionRegistry;
 
     const addChat = new CommandToolbarButton({
       commands: this._commands,
@@ -158,7 +165,8 @@ export class ChatPanel extends SidePanel {
     const widget = new ChatWidget({
       model: model,
       rmRegistry: this._rmRegistry,
-      themeManager: this._themeManager
+      themeManager: this._themeManager,
+      autocompletionRegistry: this._autocompletionRegistry
     });
     this.addWidget(new ChatSection({ name, widget, commands: this._commands }));
   }
@@ -231,6 +239,7 @@ export class ChatPanel extends SidePanel {
   private _openChat: ReactWidget;
   private _rmRegistry: IRenderMimeRegistry;
   private _themeManager: IThemeManager | null;
+  private _autocompletionRegistry?: IAutocompletionRegistry;
 }
 
 /**
@@ -245,6 +254,7 @@ export namespace ChatPanel {
     drive: ICollaborativeDrive;
     rmRegistry: IRenderMimeRegistry;
     themeManager: IThemeManager | null;
+    autocompletionRegistry?: IAutocompletionRegistry;
   }
 }
 

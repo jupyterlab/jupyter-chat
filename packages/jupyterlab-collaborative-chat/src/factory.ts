@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { ChatWidget, IConfig } from '@jupyter/chat';
+import { ChatWidget, IAutocompletionRegistry, IConfig } from '@jupyter/chat';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { ABCWidgetFactory, DocumentRegistry } from '@jupyterlab/docregistry';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
@@ -52,6 +52,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
     super(options);
     this._themeManager = options.themeManager;
     this._rmRegistry = options.rmRegistry;
+    this._autocompletionRegistry = options.autocompletionRegistry;
   }
 
   /**
@@ -65,6 +66,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
   ): CollaborativeChatPanel {
     context.rmRegistry = this._rmRegistry;
     context.themeManager = this._themeManager;
+    context.autocompletionRegistry = this._autocompletionRegistry;
     return new CollaborativeChatPanel({
       context,
       content: new ChatWidget(context)
@@ -73,6 +75,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
 
   private _themeManager: IThemeManager | null;
   private _rmRegistry: IRenderMimeRegistry;
+  private _autocompletionRegistry?: IAutocompletionRegistry;
 }
 
 export namespace ChatWidgetFactory {
@@ -80,12 +83,14 @@ export namespace ChatWidgetFactory {
     extends DocumentRegistry.IContext<CollaborativeChatModel> {
     themeManager: IThemeManager | null;
     rmRegistry: IRenderMimeRegistry;
+    autocompletionRegistry?: IAutocompletionRegistry;
   }
 
   export interface IOptions<T extends CollaborativeChatPanel>
     extends DocumentRegistry.IWidgetFactoryOptions<T> {
     themeManager: IThemeManager | null;
     rmRegistry: IRenderMimeRegistry;
+    autocompletionRegistry?: IAutocompletionRegistry;
   }
 }
 
