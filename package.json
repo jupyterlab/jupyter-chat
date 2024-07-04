@@ -1,142 +1,142 @@
 {
-    "name": "jupyter-chat-root",
-    "version": "0.1.0",
-    "description": "A chat package for Jupyterlab extension",
-    "private": true,
-    "keywords": [
-        "jupyter",
-        "jupyterlab",
-        "jupyterlab-extension"
+  "name": "jupyter-chat-root",
+  "version": "0.1.0",
+  "description": "A chat package for Jupyterlab extension",
+  "private": true,
+  "keywords": [
+    "jupyter",
+    "jupyterlab",
+    "jupyterlab-extension"
+  ],
+  "homepage": "https://github.com/jupyterlab/jupyter-chat",
+  "bugs": {
+    "url": "https://github.com/jupyterlab/jupyter-chat/issues"
+  },
+  "license": "BSD-3-Clause",
+  "author": {
+    "name": "Jupyter Development Team",
+    "email": "jupyter@googlegroups.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jupyterlab/jupyter-chat.git"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "lerna run build --stream",
+    "build:core": "lerna run build --stream --scope \"@jupyter/chat\"",
+    "build:collaborative": "lerna run build --scope=jupyterlab-collaborative-chat --include-filtered-dependencies",
+    "build:ws": "lerna run build --scope=jupyterlab-ws-chat --include-filtered-dependencies",
+    "build:prod": "lerna run build:prod --stream",
+    "clean": "lerna run clean",
+    "clean:all": "lerna run clean:all",
+    "dev": "jupyter lab --config playground/config.py",
+    "dev-install": "lerna run dev-install --stream",
+    "dev-uninstall": "lerna run dev-uninstall --stream",
+    "install-from-src": "lerna run install-from-src --stream",
+    "lint": "jlpm && lerna run prettier && lerna run eslint",
+    "lint:check": "lerna run prettier:check && lerna run eslint:check",
+    "watch": "lerna run watch --parallel --stream",
+    "test": "lerna run test"
+  },
+  "devDependencies": {
+    "lerna": "^6.4.1"
+  },
+  "eslintIgnore": [
+    "node_modules",
+    "dist",
+    "coverage",
+    "**/*.d.ts",
+    "tests",
+    "**/__tests__",
+    "ui-tests"
+  ],
+  "eslintConfig": {
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/eslint-recommended",
+      "plugin:@typescript-eslint/recommended",
+      "plugin:prettier/recommended"
     ],
-    "homepage": "https://github.com/jupyterlab/jupyter-chat",
-    "bugs": {
-        "url": "https://github.com/jupyterlab/jupyter-chat/issues"
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+      "project": "tsconfig.json",
+      "sourceType": "module"
     },
-    "license": "BSD-3-Clause",
-    "author": {
-        "name": "Jupyter Development Team",
-        "email": "jupyter@googlegroups.com"
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/jupyterlab/jupyter-chat.git"
-    },
-    "workspaces": [
-        "packages/*"
+    "plugins": [
+      "@typescript-eslint"
     ],
-    "scripts": {
-        "build": "lerna run build --stream",
-        "build:core": "lerna run build --stream --scope \"@jupyter/chat\"",
-        "build:collaborative": "lerna run build --scope=jupyterlab-collaborative-chat --include-filtered-dependencies",
-        "build:ws": "lerna run build --scope=jupyterlab-ws-chat --include-filtered-dependencies",
-        "build:prod": "lerna run build:prod --stream",
-        "clean": "lerna run clean",
-        "clean:all": "lerna run clean:all",
-        "dev": "jupyter lab --config playground/config.py",
-        "dev-install": "lerna run dev-install --stream",
-        "dev-uninstall": "lerna run dev-uninstall --stream",
-        "install-from-src": "lerna run install-from-src --stream",
-        "lint": "jlpm && lerna run prettier && lerna run eslint",
-        "lint:check": "lerna run prettier:check && lerna run eslint:check",
-        "watch": "lerna run watch --parallel --stream",
-        "test": "lerna run test"
-    },
-    "devDependencies": {
-        "lerna": "^6.4.1"
-    },
-    "eslintIgnore": [
-        "node_modules",
-        "dist",
-        "coverage",
-        "**/*.d.ts",
-        "tests",
-        "**/__tests__",
-        "ui-tests"
-    ],
-    "eslintConfig": {
-        "extends": [
-            "eslint:recommended",
-            "plugin:@typescript-eslint/eslint-recommended",
-            "plugin:@typescript-eslint/recommended",
-            "plugin:prettier/recommended"
-        ],
-        "parser": "@typescript-eslint/parser",
-        "parserOptions": {
-            "project": "tsconfig.json",
-            "sourceType": "module"
-        },
-        "plugins": [
-            "@typescript-eslint"
-        ],
-        "rules": {
-            "@typescript-eslint/naming-convention": [
-                "error",
-                {
-                    "selector": "interface",
-                    "format": [
-                        "PascalCase"
-                    ],
-                    "custom": {
-                        "regex": "^I[A-Z]",
-                        "match": true
-                    }
-                }
-            ],
-            "@typescript-eslint/no-unused-vars": [
-                "warn",
-                {
-                    "args": "none"
-                }
-            ],
-            "@typescript-eslint/no-explicit-any": "off",
-            "@typescript-eslint/no-namespace": "off",
-            "@typescript-eslint/no-use-before-define": "off",
-            "@typescript-eslint/quotes": [
-                "error",
-                "single",
-                {
-                    "avoidEscape": true,
-                    "allowTemplateLiterals": false
-                }
-            ],
-            "curly": [
-                "error",
-                "all"
-            ],
-            "eqeqeq": "error",
-            "prefer-arrow-callback": "error"
+    "rules": {
+      "@typescript-eslint/naming-convention": [
+        "error",
+        {
+          "selector": "interface",
+          "format": [
+            "PascalCase"
+          ],
+          "custom": {
+            "regex": "^I[A-Z]",
+            "match": true
+          }
         }
-    },
-    "prettier": {
-        "singleQuote": true,
-        "trailingComma": "none",
-        "arrowParens": "avoid",
-        "endOfLine": "auto",
-        "overrides": [
-            {
-                "files": "package.json",
-                "options": {
-                    "tabWidth": 4
-                }
-            }
-        ]
-    },
-    "stylelint": {
-        "extends": [
-            "stylelint-config-recommended",
-            "stylelint-config-standard",
-            "stylelint-prettier/recommended"
-        ],
-        "plugins": [
-            "stylelint-csstree-validator"
-        ],
-        "rules": {
-            "csstree/validator": true,
-            "property-no-vendor-prefix": null,
-            "selector-class-pattern": "^([a-z][A-z\\d]*)(-[A-z\\d]+)*$",
-            "selector-no-vendor-prefix": null,
-            "value-no-vendor-prefix": null
+      ],
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          "args": "none"
         }
-    },
-    "packageManager": "yarn@3.5.0"
+      ],
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-namespace": "off",
+      "@typescript-eslint/no-use-before-define": "off",
+      "@typescript-eslint/quotes": [
+        "error",
+        "single",
+        {
+          "avoidEscape": true,
+          "allowTemplateLiterals": false
+        }
+      ],
+      "curly": [
+        "error",
+        "all"
+      ],
+      "eqeqeq": "error",
+      "prefer-arrow-callback": "error"
+    }
+  },
+  "prettier": {
+    "singleQuote": true,
+    "trailingComma": "none",
+    "arrowParens": "avoid",
+    "endOfLine": "auto",
+    "overrides": [
+      {
+        "files": "package.json",
+        "options": {
+          "tabWidth": 2
+        }
+      }
+    ]
+  },
+  "stylelint": {
+    "extends": [
+      "stylelint-config-recommended",
+      "stylelint-config-standard",
+      "stylelint-prettier/recommended"
+    ],
+    "plugins": [
+      "stylelint-csstree-validator"
+    ],
+    "rules": {
+      "csstree/validator": true,
+      "property-no-vendor-prefix": null,
+      "selector-class-pattern": "^([a-z][A-z\\d]*)(-[A-z\\d]+)*$",
+      "selector-no-vendor-prefix": null,
+      "value-no-vendor-prefix": null
+    }
+  },
+  "packageManager": "yarn@3.5.0"
 }
