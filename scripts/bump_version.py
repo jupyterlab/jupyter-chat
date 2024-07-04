@@ -63,7 +63,10 @@ def bump(force, skip_if_dirty, spec):
         raise Exception("Must be in a clean git state with no untracked files")
 
     current = get_version()
-    version = parse_version(increment_version(current, spec))
+    try:
+        version = parse_version(spec)
+    except:
+        version = parse_version(increment_version(current, spec))
 
     # convert the Python version
     js_version = f"{version.major}.{version.minor}.{version.micro}"
