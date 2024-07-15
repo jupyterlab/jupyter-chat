@@ -55,16 +55,16 @@
   },
   "dependencies": {
     "@jupyter/chat": "^0.2.0",
-    "@jupyterlab/apputils": "^4.0.0",
-    "@jupyterlab/coreutils": "^6.0.0",
-    "@jupyterlab/rendermime": "^4.0.0",
-    "@jupyterlab/services": "^7.0.0",
-    "@jupyterlab/settingregistry": "^4.0.0",
+    "@jupyterlab/apputils": "^4.3.0",
+    "@jupyterlab/coreutils": "^6.2.0",
+    "@jupyterlab/rendermime": "^4.2.0",
+    "@jupyterlab/services": "^7.2.0",
+    "@jupyterlab/settingregistry": "^4.2.0",
     "@lumino/coreutils": "^2.0.0"
   },
   "devDependencies": {
-    "@jupyterlab/builder": "^4.0.0",
-    "@jupyterlab/testutils": "^4.0.0",
+    "@jupyterlab/builder": "^4.2.0",
+    "@jupyterlab/testutils": "^4.2.0",
     "@types/json-schema": "^7.0.11",
     "@types/react": "^18.2.0",
     "@types/react-addons-linked-state-mixin": "^0.14.22",

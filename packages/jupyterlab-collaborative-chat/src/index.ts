@@ -9,7 +9,10 @@ import {
   chatIcon,
   readIcon
 } from '@jupyter/chat';
-import { ICollaborativeDrive } from '@jupyter/docprovider';
+import {
+  ICollaborativeDrive,
+  SharedDocumentFactory
+} from '@jupyter/docprovider';
 import {
   ILayoutRestorer,
   JupyterFrontEnd,
@@ -174,7 +177,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     app.docRegistry.addFileType(chatFileType);
 
     if (drive) {
-      const chatFactory = () => {
+      const chatFactory: SharedDocumentFactory = () => {
         return YChat.create();
       };
       drive.sharedModelFactory.registerDocumentFactory('chat', chatFactory);

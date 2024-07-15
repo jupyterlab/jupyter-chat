@@ -11,7 +11,7 @@ import { PartialJSONObject, UUID } from '@lumino/coreutils';
 import { ISignal, Signal } from '@lumino/signaling';
 
 import { IWidgetConfig } from './token';
-import { ChatChanges, IYmessage, YChat } from './ychat';
+import { IChatChanges, IYmessage, YChat } from './ychat';
 
 /**
  * Collaborative chat namespace.
@@ -171,7 +171,7 @@ export class CollaborativeChatModel
     this.sharedModel.updateMessage(index, message);
   }
 
-  private _onchange = (_: YChat, changes: ChatChanges) => {
+  private _onchange = (_: YChat, changes: IChatChanges) => {
     if (changes.messageChanges) {
       const msgDelta = changes.messageChanges;
       let index = 0;
