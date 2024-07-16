@@ -21,7 +21,7 @@ export type IMetadata = PartialJSONValue;
 /**
  * Definition of the shared Chat changes.
  */
-export type ChatChanges = DocumentChange & {
+export interface IChatChanges extends DocumentChange {
   /**
    * Changes in messages.
    */
@@ -34,7 +34,7 @@ export type ChatChanges = DocumentChange & {
    * Changes in metadata.
    */
   metadataChanges?: MetadataChange[];
-};
+}
 
 /**
  * The message change type.
@@ -54,7 +54,7 @@ export type MetadataChange = IMapChange<IMetadata>;
 /**
  * The collaborative chat shared document.
  */
-export class YChat extends YDocument<ChatChanges> {
+export class YChat extends YDocument<IChatChanges> {
   /**
    * Create a new collaborative chat model.
    */
@@ -169,14 +169,14 @@ export class YChat extends YDocument<ChatChanges> {
       }
     });
 
-    this._changed.emit({ userChange: userChange } as Partial<ChatChanges>);
+    this._changed.emit({ userChange: userChange } as Partial<IChatChanges>);
   };
 
   private _messagesObserver = (event: Y.YArrayEvent<IYmessage>): void => {
     const messageChanges = event.delta;
     this._changed.emit({
       messageChanges: messageChanges
-    } as Partial<ChatChanges>);
+    } as Partial<IChatChanges>);
   };
 
   private _metadataObserver = (event: Y.YMapEvent<IMetadata>): void => {
@@ -210,7 +210,7 @@ export class YChat extends YDocument<ChatChanges> {
 
     this._changed.emit({
       metadataChanges: metadataChange
-    } as Partial<ChatChanges>);
+    } as Partial<IChatChanges>);
   };
 
   private _users: Y.Map<IUser>;
