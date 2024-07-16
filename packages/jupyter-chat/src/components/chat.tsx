@@ -14,6 +14,10 @@ import React, { useState } from 'react';
 import { JlThemeProvider } from './jl-theme-provider';
 import { ChatMessages } from './chat-messages';
 import { ChatInput } from './chat-input';
+import {
+  ActiveCellContextProvider,
+  ActiveCellManager
+} from '../contexts/active-cell-context';
 import { IChatModel } from '../model';
 import { IAutocompletionRegistry } from '../registry';
 
@@ -53,47 +57,49 @@ export function Chat(props: Chat.IOptions): JSX.Element {
   const [view, setView] = useState<Chat.View>(props.chatView || Chat.View.chat);
   return (
     <JlThemeProvider themeManager={props.themeManager ?? null}>
-      <Box
-        // root box should not include padding as it offsets the vertical
-        // scrollbar to the left
-        sx={{
-          width: '100%',
-          height: '100%',
-          boxSizing: 'border-box',
-          background: 'var(--jp-layout-color0)',
-          display: 'flex',
-          flexDirection: 'column'
-        }}
-      >
-        {/* top bar */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          {view !== Chat.View.chat ? (
-            <IconButton onClick={() => setView(Chat.View.chat)}>
-              <ArrowBackIcon />
-            </IconButton>
-          ) : (
-            <Box />
+      <ActiveCellContextProvider activeCellManager={props.activeCellManager}>
+        <Box
+          // root box should not include padding as it offsets the vertical
+          // scrollbar to the left
+          sx={{
+            width: '100%',
+            height: '100%',
+            boxSizing: 'border-box',
+            background: 'var(--jp-layout-color0)',
+            display: 'flex',
+            flexDirection: 'column'
+          }}
+        >
+          {/* top bar */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+            {view !== Chat.View.chat ? (
+              <IconButton onClick={() => setView(Chat.View.chat)}>
+                <ArrowBackIcon />
+              </IconButton>
+            ) : (
+              <Box />
+            )}
+            {view !== Chat.View.settings && props.settingsPanel ? (
+              <IconButton onClick={() => setView(Chat.View.settings)}>
+                <SettingsIcon />
+              </IconButton>
+            ) : (
+              <Box />
+            )}
+          </Box>
+          {/* body */}
+          {view === Chat.View.chat && (
+            <ChatBody
+              model={props.model}
+              rmRegistry={props.rmRegistry}
+              autocompletionRegistry={props.autocompletionRegistry}
+            />
           )}
-          {view !== Chat.View.settings && props.settingsPanel ? (
-            <IconButton onClick={() => setView(Chat.View.settings)}>
-              <SettingsIcon />
-            </IconButton>
-          ) : (
-            <Box />
+          {view === Chat.View.settings && props.settingsPanel && (
+            <props.settingsPanel />
           )}
         </Box>
-        {/* body */}
-        {view === Chat.View.chat && (
-          <ChatBody
-            model={props.model}
-            rmRegistry={props.rmRegistry}
-            autocompletionRegistry={props.autocompletionRegistry}
-          />
-        )}
-        {view === Chat.View.settings && props.settingsPanel && (
-          <props.settingsPanel />
-        )}
-      </Box>
+      </ActiveCellContextProvider>
     </JlThemeProvider>
   );
 }
@@ -140,6 +146,7 @@ export namespace Chat {
      * A settings panel that can be used for dedicated settings (e.g. jupyter-ai)
      */
     settingsPanel?: () => JSX.Element;
+    activeCellManager?: ActiveCellManager;
   }
 
   /**
