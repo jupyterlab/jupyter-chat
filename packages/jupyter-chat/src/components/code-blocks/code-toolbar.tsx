@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) Jupyter Development Team.
+ * Distributed under the terms of the Modified BSD License.
+ */
+
 import { addAboveIcon, addBelowIcon } from '@jupyterlab/ui-components';
 import { Box } from '@mui/material';
 import React, { useEffect, useState } from 'react';
