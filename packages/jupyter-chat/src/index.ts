@@ -7,7 +7,7 @@ export * from './icons';
 export * from './model';
 export * from './registry';
 export * from './types';
-export * from './contexts/active-cell-context';
+export * from './active-cell-manager';
 export * from './widgets/chat-error';
 export * from './widgets/chat-sidebar';
 export * from './widgets/chat-widget';

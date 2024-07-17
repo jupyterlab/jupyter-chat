@@ -4,7 +4,6 @@ import { IChangedArgs } from '@jupyterlab/coreutils';
 import { INotebookTracker, NotebookActions } from '@jupyterlab/notebook';
 import { IError as CellError } from '@jupyterlab/nbformat';
 import { ISignal, Signal } from '@lumino/signaling';
-import React, { useState, useContext, useEffect } from 'react';
 
 type CellContent = {
   type: string;
@@ -21,7 +20,7 @@ type CellWithErrorContent = {
   };
 };
 
-export interface IActiveCellMAnager {
+export interface IActiveCellManager {
   /**
    * Whether the notebook is available and an active cell exists.
    */
@@ -89,7 +88,7 @@ export namespace ActiveCellManager {
  * The current active cell should be obtained by listening to the
  * `activeCellChanged` signal.
  */
-export class ActiveCellManager implements IActiveCellMAnager {
+export class ActiveCellManager implements IActiveCellManager {
   constructor(options: ActiveCellManager.IOptions) {
     this._notebookTracker = options.tracker;
     this._notebookTracker.activeCellChanged.connect(this._onActiveCellChanged);
@@ -253,9 +252,11 @@ export class ActiveCellManager implements IActiveCellMAnager {
     if (this._activeCell !== activeCell) {
       this._activeCell?.model.stateChanged.disconnect(this._cellStateChange);
       this._activeCell = activeCell;
-      this._activeCell?.model.stateChanged.connect(this._cellStateChange);
-      this._available = !!this._activeCell && this._notebookVisible;
-      this._availabilityChanged.emit(this._available);
+      activeCell?.ready.then(() => {
+        this._activeCell?.model.stateChanged.connect(this._cellStateChange);
+        this._available = !!this._activeCell && this._notebookVisible;
+        this._availabilityChanged.emit(this._available);
+      });
     }
   };
 
@@ -305,87 +306,4 @@ export class ActiveCellManager implements IActiveCellMAnager {
   private _activeCellError: CellError | null = null;
   private _availabilityChanged = new Signal<this, boolean>(this);
   private _activeCellErrorChanged = new Signal<this, CellError | null>(this);
-}
-
-type ActiveCellContextReturn = {
-  enable: boolean;
-  hasError: boolean;
-  manager: ActiveCellManager;
-};
-
-type ActiveCellContextValue = {
-  enable: boolean;
-  hasError: boolean;
-  manager: ActiveCellManager | null;
-};
-
-const defaultActiveCellContext: ActiveCellContextValue = {
-  enable: false,
-  hasError: false,
-  manager: null
-};
-
-const ActiveCellContext = React.createContext<ActiveCellContextValue>(
-  defaultActiveCellContext
-);
-
-type ActiveCellContextProps = {
-  children: React.ReactNode;
-  activeCellManager?: ActiveCellManager;
-};
-
-export function ActiveCellContextProvider(
-  props: ActiveCellContextProps
-): JSX.Element {
-  const [enable, setEnable] = useState<boolean>(false);
-  const [hasError, setHasError] = useState<boolean>(false);
-
-  useEffect(() => {
-    const manager = props.activeCellManager;
-
-    manager?.availabilityChanged.connect((_, available) => {
-      setEnable(available);
-    });
-    manager?.activeCellErrorChanged.connect((_, newActiveCellError) => {
-      setHasError(!!newActiveCellError);
-    });
-
-    setEnable(manager?.available ?? false);
-    setHasError(!!manager?.activeCellError);
-  }, [props.activeCellManager]);
-
-  return (
-    <ActiveCellContext.Provider
-      value={{
-        enable,
-        hasError,
-        manager: props.activeCellManager ?? null
-      }}
-    >
-      {props.children}
-    </ActiveCellContext.Provider>
-  );
-}
-
-/**
- * Usage: `const activeCell = useActiveCellContext()`
- *
- * Returns an object `activeCell` with the following properties:
- * - `activeCell.enable`: whether an active cell is available
- *   (notebook visible and cell exists)
- * - `activeCell.hasError`: whether an active cell exists with an error output
- * - `activeCell.manager`: the `ActiveCellManager` singleton
- */
-export function useActiveCellContext(): ActiveCellContextReturn | null {
-  const { enable, hasError, manager } = useContext(ActiveCellContext);
-
-  if (!manager) {
-    return null;
-  }
-
-  return {
-    enable,
-    hasError,
-    manager
-  };
 }

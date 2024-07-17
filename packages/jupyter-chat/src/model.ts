@@ -14,6 +14,7 @@ import {
   IConfig,
   IUser
 } from './types';
+import { IActiveCellManager } from './active-cell-manager';
 
 /**
  * The chat model interface.
@@ -48,6 +49,11 @@ export interface IChatModel extends IDisposable {
    * The chat messages list.
    */
   readonly messages: IChatMessage[];
+
+  /**
+   * Get the active cell manager.
+   */
+  readonly activeCellManager: IActiveCellManager | null;
 
   /**
    * A signal emitting when the messages list is updated.
@@ -151,6 +157,8 @@ export class ChatModel implements IChatModel {
     this._config = { stackMessages: true, ...config };
 
     this._commands = options.commands;
+
+    this._activeCellManager = options.activeCellManager ?? null;
   }
 
   /**
@@ -160,6 +168,9 @@ export class ChatModel implements IChatModel {
     return this._messages;
   }
 
+  get activeCellManager(): IActiveCellManager | null {
+    return this._activeCellManager;
+  }
   /**
    * The chat model id.
    */
@@ -481,6 +492,7 @@ export class ChatModel implements IChatModel {
   private _config: IConfig;
   private _isDisposed = false;
   private _commands?: CommandRegistry;
+  private _activeCellManager: IActiveCellManager | null;
   private _notificationId: string | null = null;
   private _messagesUpdated = new Signal<IChatModel, void>(this);
   private _configChanged = new Signal<IChatModel, IConfig>(this);
@@ -505,5 +517,10 @@ export namespace ChatModel {
      * Commands registry.
      */
     commands?: CommandRegistry;
+
+    /**
+     * Active cell manager
+     */
+    activeCellManager?: IActiveCellManager | null;
   }
 }

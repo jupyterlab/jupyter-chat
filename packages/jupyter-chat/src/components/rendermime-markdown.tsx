@@ -9,6 +9,7 @@ import { createPortal } from 'react-dom';
 
 import { CodeToolbar, CodeToolbarProps } from './code-blocks/code-toolbar';
 import { MessageToolbar } from './toolbar';
+import { IChatModel } from '../model';
 
 const MD_MIME_TYPE = 'text/markdown';
 const RENDERMIME_MD_CLASS = 'jp-chat-rendermime-markdown';
@@ -17,6 +18,7 @@ type RendermimeMarkdownProps = {
   markdownStr: string;
   rmRegistry: IRenderMimeRegistry;
   appendContent?: boolean;
+  model: IChatModel;
   edit?: () => void;
   delete?: () => void;
 };
@@ -71,7 +73,7 @@ function RendermimeMarkdownBase(props: RendermimeMarkdownProps): JSX.Element {
         );
         newCodeToolbarDefns.push([
           codeToolbarRoot,
-          { content: preBlock.textContent || '' }
+          { model: props.model, content: preBlock.textContent || '' }
         ]);
       });
 
