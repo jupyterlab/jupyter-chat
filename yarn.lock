@@ -2283,6 +2283,7 @@ __metadata:
     "@jupyter/react-components": ^0.15.2
     "@jupyterlab/application": ^4.2.0
     "@jupyterlab/apputils": ^4.3.0
+    "@jupyterlab/notebook": ^4.2.0
     "@jupyterlab/rendermime": ^4.2.0
     "@jupyterlab/ui-components": ^4.2.0
     "@lumino/commands": ^2.0.0
@@ -2784,7 +2785,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyterlab/notebook@npm:^4.2.3":
+"@jupyterlab/notebook@npm:^4.2.0, @jupyterlab/notebook@npm:^4.2.3":
   version: 4.2.3
   resolution: "@jupyterlab/notebook@npm:4.2.3"
   dependencies:
@@ -9857,6 +9858,7 @@ __metadata:
     "@jupyterlab/coreutils": ^6.2.0
     "@jupyterlab/docregistry": ^4.2.0
     "@jupyterlab/launcher": ^4.2.0
+    "@jupyterlab/notebook": ^4.2.0
     "@jupyterlab/rendermime": ^4.2.0
     "@jupyterlab/services": ^7.2.0
     "@jupyterlab/settingregistry": ^4.2.0

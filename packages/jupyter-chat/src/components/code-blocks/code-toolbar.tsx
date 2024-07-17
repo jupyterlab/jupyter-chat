@@ -27,7 +27,7 @@ export function CodeToolbar(props: CodeToolbarProps): JSX.Element {
   const sharedToolbarButtonProps = {
     content: props.content,
     activeCellManager: activeCell.manager,
-    activeCellExists: activeCell.exists
+    activeCellExists: activeCell.enable
   };
 
   return (

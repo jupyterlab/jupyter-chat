@@ -1,35 +1,10 @@
-import React, { useState, useContext, useEffect } from 'react';
-
-import { JupyterFrontEnd } from '@jupyterlab/application';
-import { DocumentWidget } from '@jupyterlab/docregistry';
-import { Notebook, NotebookActions } from '@jupyterlab/notebook';
-import { Cell } from '@jupyterlab/cells';
+import { JupyterFrontEnd, LabShell } from '@jupyterlab/application';
+import { Cell, ICellModel } from '@jupyterlab/cells';
+import { IChangedArgs } from '@jupyterlab/coreutils';
+import { INotebookTracker, NotebookActions } from '@jupyterlab/notebook';
 import { IError as CellError } from '@jupyterlab/nbformat';
-
-import { Widget } from '@lumino/widgets';
-import { Signal } from '@lumino/signaling';
-
-function getNotebook(widget: Widget | null): Notebook | null {
-  if (!(widget instanceof DocumentWidget)) {
-    return null;
-  }
-
-  const { content } = widget;
-  if (!(content instanceof Notebook)) {
-    return null;
-  }
-
-  return content;
-}
-
-function getActiveCell(widget: Widget | null): Cell | null {
-  const notebook = getNotebook(widget);
-  if (!notebook) {
-    return null;
-  }
-
-  return notebook.activeCell;
-}
+import { ISignal, Signal } from '@lumino/signaling';
+import React, { useState, useContext, useEffect } from 'react';
 
 type CellContent = {
   type: string;
@@ -46,6 +21,66 @@ type CellWithErrorContent = {
   };
 };
 
+export interface IActiveCellMAnager {
+  /**
+   * Whether the notebook is available and an active cell exists.
+   */
+  readonly available: boolean;
+  /**
+   * The `CellError` output within the active cell, if any.
+   */
+  readonly activeCellError: CellError | null;
+  /**
+   * A signal emitting when the active cell changed.
+   */
+  readonly availabilityChanged: ISignal<this, boolean>;
+  /**
+   * A signal emitting when the error state of the active cell changed.
+   */
+  readonly activeCellErrorChanged: ISignal<this, CellError | null>;
+  /**
+   * Returns an `ActiveCellContent` object that describes the current active
+   * cell. If no active cell exists, this method returns `null`.
+   *
+   * When called with `withError = true`, this method returns `null` if the
+   * active cell does not have an error output. Otherwise it returns an
+   * `ActiveCellContentWithError` object that describes both the active cell and
+   * the error output.
+   */
+  getContent(withError: boolean): CellContent | CellWithErrorContent | null;
+  /**
+   * Inserts `content` in a new cell above the active cell.
+   */
+  insertAbove(content: string): void;
+  /**
+   * Inserts `content` in a new cell below the active cell.
+   */
+  insertBelow(content: string): void;
+  /**
+   * Replaces the contents of the active cell.
+   */
+  replace(content: string): Promise<void>;
+}
+
+/**
+ * The active cell manager namespace.
+ */
+export namespace ActiveCellManager {
+  /**
+   * The constructor options.
+   */
+  export interface IOptions {
+    /**
+     * The notebook tracker.
+     */
+    tracker: INotebookTracker;
+    /**
+     * The current shell of the application.
+     */
+    shell: JupyterFrontEnd.IShell;
+  }
+}
+
 /**
  * A manager that maintains a reference to the current active notebook cell in
  * the main panel (if any), and provides methods for inserting or appending
@@ -54,23 +89,42 @@ type CellWithErrorContent = {
  * The current active cell should be obtained by listening to the
  * `activeCellChanged` signal.
  */
-export class ActiveCellManager {
-  constructor(shell: JupyterFrontEnd.IShell) {
-    this._shell = shell;
-    this._shell.currentChanged?.connect((sender, args) => {
-      this._mainAreaWidget = args.newValue;
-    });
-
-    setInterval(() => {
-      this._pollActiveCell();
-    }, 200);
+export class ActiveCellManager implements IActiveCellMAnager {
+  constructor(options: ActiveCellManager.IOptions) {
+    this._notebookTracker = options.tracker;
+    this._notebookTracker.activeCellChanged.connect(this._onActiveCellChanged);
+    options.shell.currentChanged?.connect(this._onMainAreaChanged);
+    if (options.shell instanceof LabShell) {
+      options.shell.layoutModified?.connect(this._onMainAreaChanged);
+    }
+    this._onMainAreaChanged();
   }
 
-  get activeCellChanged(): Signal<this, Cell | null> {
-    return this._activeCellChanged;
+  /**
+   * Whether the notebook is available and an active cell exists.
+   */
+  get available(): boolean {
+    return this._available;
   }
 
-  get activeCellErrorChanged(): Signal<this, CellError | null> {
+  /**
+   * The `CellError` output within the active cell, if any.
+   */
+  get activeCellError(): CellError | null {
+    return this._activeCellError;
+  }
+
+  /**
+   * A signal emitting when the active cell changed.
+   */
+  get availabilityChanged(): ISignal<this, boolean> {
+    return this._availabilityChanged;
+  }
+
+  /**
+   * A signal emitting when the error state of the active cell changed.
+   */
+  get activeCellErrorChanged(): ISignal<this, CellError | null> {
     return this._activeCellErrorChanged;
   }
 
@@ -86,7 +140,7 @@ export class ActiveCellManager {
   getContent(withError: false): CellContent | null;
   getContent(withError: true): CellWithErrorContent | null;
   getContent(withError = false): CellContent | CellWithErrorContent | null {
-    const sharedModel = this._activeCell?.model.sharedModel;
+    const sharedModel = this._notebookTracker.activeCell?.model.sharedModel;
     if (!sharedModel) {
       return null;
     }
@@ -120,15 +174,13 @@ export class ActiveCellManager {
    * Inserts `content` in a new cell above the active cell.
    */
   insertAbove(content: string): void {
-    const notebook = getNotebook(this._mainAreaWidget);
-    if (!notebook) {
+    const notebookPanel = this._notebookTracker.currentWidget;
+    if (!notebookPanel || !notebookPanel.isVisible) {
       return;
     }
 
     // create a new cell above the active cell and mark new cell as active
-    NotebookActions.insertAbove(notebook);
-    // emit activeCellChanged event to consumers
-    this._pollActiveCell();
+    NotebookActions.insertAbove(notebookPanel.content);
     // replace content of this new active cell
     this.replace(content);
   }
@@ -137,15 +189,13 @@ export class ActiveCellManager {
    * Inserts `content` in a new cell below the active cell.
    */
   insertBelow(content: string): void {
-    const notebook = getNotebook(this._mainAreaWidget);
-    if (!notebook) {
+    const notebookPanel = this._notebookTracker.currentWidget;
+    if (!notebookPanel || !notebookPanel.isVisible) {
       return;
     }
 
     // create a new cell below the active cell and mark new cell as active
-    NotebookActions.insertBelow(notebook);
-    // emit activeCellChanged event to consumers
-    this._pollActiveCell();
+    NotebookActions.insertBelow(notebookPanel.content);
     // replace content of this new active cell
     this.replace(content);
   }
@@ -154,9 +204,13 @@ export class ActiveCellManager {
    * Replaces the contents of the active cell.
    */
   async replace(content: string): Promise<void> {
+    const notebookPanel = this._notebookTracker.currentWidget;
+    if (!notebookPanel || !notebookPanel.isVisible) {
+      return;
+    }
     // get reference to active cell directly from Notebook API. this avoids the
     // possibility of acting on an out-of-date reference.
-    const activeCell = getNotebook(this._mainAreaWidget)?.activeCell;
+    const activeCell = this._notebookTracker.activeCell;
     if (!activeCell) {
       return;
     }
@@ -180,30 +234,40 @@ export class ActiveCellManager {
     activeCell.editor?.model.sharedModel.setSource(content);
   }
 
-  protected _pollActiveCell(): void {
-    const prevActiveCell = this._activeCell;
-    const currActiveCell = getActiveCell(this._mainAreaWidget);
-
-    // emit activeCellChanged when active cell changes
-    if (prevActiveCell !== currActiveCell) {
-      this._activeCell = currActiveCell;
-      this._activeCellChanged.emit(currActiveCell);
+  private _onMainAreaChanged = () => {
+    const value = this._notebookTracker.currentWidget?.isVisible ?? false;
+    if (value !== this._notebookVisible) {
+      this._notebookVisible = value;
+      this._available = !!this._activeCell && this._notebookVisible;
+      this._availabilityChanged.emit(this._available);
     }
+  };
 
-    const currSharedModel = currActiveCell?.model.sharedModel;
-    const prevExecutionCount = this._activeCellExecutionCount;
-    const currExecutionCount: number | null =
-      currSharedModel && 'execution_count' in currSharedModel
-        ? currSharedModel?.execution_count
-        : null;
-    this._activeCellExecutionCount = currExecutionCount;
+  /**
+   * Handle the change of active notebook cell.
+   */
+  private _onActiveCellChanged = (
+    _: INotebookTracker,
+    activeCell: Cell<ICellModel> | null
+  ): void => {
+    if (this._activeCell !== activeCell) {
+      this._activeCell?.model.stateChanged.disconnect(this._cellStateChange);
+      this._activeCell = activeCell;
+      this._activeCell?.model.stateChanged.connect(this._cellStateChange);
+      this._available = !!this._activeCell && this._notebookVisible;
+      this._availabilityChanged.emit(this._available);
+    }
+  };
 
-    // emit activeCellErrorChanged when active cell changes or when the
-    // execution count changes
-    if (
-      prevActiveCell !== currActiveCell ||
-      prevExecutionCount !== currExecutionCount
-    ) {
+  /**
+   * Handle the change of the active cell state.
+   */
+  private _cellStateChange = (
+    _: ICellModel,
+    change: IChangedArgs<boolean, boolean, any>
+  ): void => {
+    if (change.name === 'executionCount') {
+      const currSharedModel = this._activeCell?.model.sharedModel;
       const prevActiveCellError = this._activeCellError;
       let currActiveCellError: CellError | null = null;
       if (currSharedModel && 'outputs' in currSharedModel) {
@@ -223,44 +287,40 @@ export class ActiveCellManager {
         this._activeCellErrorChanged.emit(this._activeCellError);
       }
     }
-  }
+  };
 
-  protected _shell: JupyterFrontEnd.IShell;
-  protected _mainAreaWidget: Widget | null = null;
-
+  /**
+   * The notebook tracker.
+   */
+  private _notebookTracker: INotebookTracker;
+  /**
+   * Whether the current notebook panel is visible or not.
+   */
+  private _notebookVisible: boolean = false;
   /**
    * The active cell.
    */
-  protected _activeCell: Cell | null = null;
-  /**
-   * The execution count of the active cell. This is the number shown on the
-   * left in square brackets after running a cell. Changes to this indicate that
-   * the error output may have changed.
-   */
-  protected _activeCellExecutionCount: number | null = null;
-  /**
-   * The `CellError` output within the active cell, if any.
-   */
-  protected _activeCellError: CellError | null = null;
-
-  protected _activeCellChanged = new Signal<this, Cell | null>(this);
-  protected _activeCellErrorChanged = new Signal<this, CellError | null>(this);
+  private _activeCell: Cell | null = null;
+  private _available: boolean = false;
+  private _activeCellError: CellError | null = null;
+  private _availabilityChanged = new Signal<this, boolean>(this);
+  private _activeCellErrorChanged = new Signal<this, CellError | null>(this);
 }
 
 type ActiveCellContextReturn = {
-  exists: boolean;
+  enable: boolean;
   hasError: boolean;
   manager: ActiveCellManager;
 };
 
 type ActiveCellContextValue = {
-  exists: boolean;
+  enable: boolean;
   hasError: boolean;
   manager: ActiveCellManager | null;
 };
 
 const defaultActiveCellContext: ActiveCellContextValue = {
-  exists: false,
+  enable: false,
   hasError: false,
   manager: null
 };
@@ -277,24 +337,27 @@ type ActiveCellContextProps = {
 export function ActiveCellContextProvider(
   props: ActiveCellContextProps
 ): JSX.Element {
-  const [exists, setExists] = useState<boolean>(false);
+  const [enable, setEnable] = useState<boolean>(false);
   const [hasError, setHasError] = useState<boolean>(false);
 
   useEffect(() => {
     const manager = props.activeCellManager;
 
-    manager?.activeCellChanged.connect((_, newActiveCell) => {
-      setExists(!!newActiveCell);
+    manager?.availabilityChanged.connect((_, available) => {
+      setEnable(available);
     });
     manager?.activeCellErrorChanged.connect((_, newActiveCellError) => {
       setHasError(!!newActiveCellError);
     });
+
+    setEnable(manager?.available ?? false);
+    setHasError(!!manager?.activeCellError);
   }, [props.activeCellManager]);
 
   return (
     <ActiveCellContext.Provider
       value={{
-        exists,
+        enable,
         hasError,
         manager: props.activeCellManager ?? null
       }}
@@ -308,19 +371,20 @@ export function ActiveCellContextProvider(
  * Usage: `const activeCell = useActiveCellContext()`
  *
  * Returns an object `activeCell` with the following properties:
- * - `activeCell.exists`: whether an active cell exists
+ * - `activeCell.enable`: whether an active cell is available
+ *   (notebook visible and cell exists)
  * - `activeCell.hasError`: whether an active cell exists with an error output
  * - `activeCell.manager`: the `ActiveCellManager` singleton
  */
 export function useActiveCellContext(): ActiveCellContextReturn | null {
-  const { exists, hasError, manager } = useContext(ActiveCellContext);
+  const { enable, hasError, manager } = useContext(ActiveCellContext);
 
   if (!manager) {
     return null;
   }
 
   return {
-    exists,
+    enable,
     hasError,
     manager
   };
