@@ -7,15 +7,6 @@
   },
   "jupyter.lab.transform": true,
   "properties": {
-    "toolbar": {
-      "title": "File browser toolbar items",
-      "description": "Note: To disable a toolbar item,\ncopy it to User Preferences and add the\n\"disabled\" key. The following example will disable the uploader button:\n{\n  \"toolbar\": [\n    {\n      \"name\": \"uploader\",\n      \"disabled\": true\n    }\n  ]\n}\n\nToolbar description:",
-      "items": {
-        "$ref": "#/definitions/toolbarItem"
-      },
-      "type": "array",
-      "default": []
-    },
     "sendWithShiftEnter": {
       "description": "Whether to send a message via Shift-Enter instead of Enter.",
       "type": "boolean",
@@ -33,6 +24,21 @@
       "type": "boolean",
       "default": true,
       "readOnly": false
+    },
+    "enableCodeToolbar": {
+      "description": "Whether to enable or not the code toolbar.",
+      "type": "boolean",
+      "default": true,
+      "readOnly": false
+    },
+    "toolbar": {
+      "title": "File browser toolbar items",
+      "description": "Note: To disable a toolbar item,\ncopy it to User Preferences and add the\n\"disabled\" key. The following example will disable the uploader button:\n{\n  \"toolbar\": [\n    {\n      \"name\": \"uploader\",\n      \"disabled\": true\n    }\n  ]\n}\n\nToolbar description:",
+      "items": {
+        "$ref": "#/definitions/toolbarItem"
+      },
+      "type": "array",
+      "default": []
     }
   },
   "additionalProperties": false,

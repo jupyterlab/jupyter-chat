@@ -128,6 +128,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     let sendWithShiftEnter = false;
     let stackMessages = true;
     let unreadNotifications = true;
+    let enableCodeToolbar = true;
     function loadSetting(setting: ISettingRegistry.ISettings): void {
       // Read the settings and convert to the correct type
       sendWithShiftEnter = setting.get('sendWithShiftEnter')
@@ -135,10 +136,12 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
       stackMessages = setting.get('stackMessages').composite as boolean;
       unreadNotifications = setting.get('unreadNotifications')
         .composite as boolean;
+      enableCodeToolbar = setting.get('enableCodeToolbar').composite as boolean;
       widgetConfig.configChanged.emit({
         sendWithShiftEnter,
         stackMessages,
-        unreadNotifications
+        unreadNotifications,
+        enableCodeToolbar
       });
     }
 
@@ -177,7 +180,8 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     const widgetConfig = new WidgetConfig({
       sendWithShiftEnter,
       stackMessages,
-      unreadNotifications
+      unreadNotifications,
+      enableCodeToolbar
     });
 
     // Namespace for the tracker

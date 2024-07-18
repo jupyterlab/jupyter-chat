@@ -25,14 +25,23 @@ export type CodeToolbarProps = {
 };
 
 export function CodeToolbar(props: CodeToolbarProps): JSX.Element {
-  const activeCellManager = props.model.activeCellManager;
+  const { content, model } = props;
+  const [toolbarEnable, setToolbarEnable] = useState<boolean>(
+    model.config.enableCodeToolbar ?? true
+  );
 
-  if (activeCellManager === null) {
+  useEffect(() => {
+    setToolbarEnable(model.config.enableCodeToolbar ?? true);
+  }, [model.config.enableCodeToolbar]);
+
+  const activeCellManager = model.activeCellManager;
+
+  if (activeCellManager === null || !toolbarEnable) {
     return <></>;
   }
 
   const [toolbarBtnProps, setToolbarBtnProps] = useState<ToolbarButtonProps>({
-    content: props.content,
+    content: content,
     activeCellManager: activeCellManager,
     activeCellAvailable: activeCellManager.available
   });
@@ -40,12 +49,12 @@ export function CodeToolbar(props: CodeToolbarProps): JSX.Element {
   useEffect(() => {
     activeCellManager.availabilityChanged.connect(() => {
       setToolbarBtnProps({
-        content: props.content,
+        content,
         activeCellManager: activeCellManager,
         activeCellAvailable: activeCellManager.available
       });
     });
-  }, [props.model]);
+  }, [model]);
 
   return (
     <Box
@@ -62,7 +71,7 @@ export function CodeToolbar(props: CodeToolbarProps): JSX.Element {
       <InsertAboveButton {...toolbarBtnProps} />
       <InsertBelowButton {...toolbarBtnProps} />
       <ReplaceButton {...toolbarBtnProps} />
-      <CopyButton value={props.content} />
+      <CopyButton value={content} />
     </Box>
   );
 }

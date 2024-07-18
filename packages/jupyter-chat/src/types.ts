@@ -35,6 +35,10 @@ export interface IConfig {
    * Whether to enable or not the notifications on unread messages.
    */
   unreadNotifications?: boolean;
+  /**
+   * Whether to enable or not the code toolbar.
+   */
+  enableCodeToolbar?: boolean;
 }
 
 /**
