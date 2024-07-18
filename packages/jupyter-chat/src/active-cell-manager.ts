@@ -257,10 +257,14 @@ export class ActiveCellManager implements IActiveCellManager {
     if (this._activeCell !== activeCell) {
       this._activeCell?.model.stateChanged.disconnect(this._cellStateChange);
       this._activeCell = activeCell;
+
       activeCell?.ready.then(() => {
         this._activeCell?.model.stateChanged.connect(this._cellStateChange);
         this._available = !!this._activeCell && this._notebookVisible;
         this._availabilityChanged.emit(this._available);
+        this._activeCell?.disposed.connect(() => {
+          this._activeCell = null;
+        });
       });
     }
   };
