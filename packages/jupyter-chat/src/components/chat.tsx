@@ -42,7 +42,7 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
           paddingBottom: 0,
           borderTop: '1px solid var(--jp-border-color1)'
         }}
-        sendWithShiftEnter={model.config.sendWithShiftEnter ?? false}
+        model={model}
         autocompletionRegistry={autocompletionRegistry}
       />
     </>

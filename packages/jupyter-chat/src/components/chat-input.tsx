@@ -16,18 +16,27 @@ import {
 } from '@mui/material';
 import { Send, Cancel } from '@mui/icons-material';
 import clsx from 'clsx';
-import { AutocompleteCommand, IAutocompletionCommandsProps } from '../types';
+import { IChatModel } from '../model';
 import { IAutocompletionRegistry } from '../registry';
+import { AutocompleteCommand, IAutocompletionCommandsProps } from '../types';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
 const SEND_BUTTON_CLASS = 'jp-chat-send-button';
 const CANCEL_BUTTON_CLASS = 'jp-chat-cancel-button';
 
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
-  const { autocompletionName, autocompletionRegistry, sendWithShiftEnter } =
-    props;
+  const { autocompletionName, autocompletionRegistry, model } = props;
   const autocompletion = useRef<IAutocompletionCommandsProps>();
   const [input, setInput] = useState<string>(props.value || '');
+  const [sendWithShiftEnter, setSendWithShiftEnter] = useState<boolean>(
+    model.config.sendWithShiftEnter ?? false
+  );
+
+  useEffect(() => {
+    model.configChanged.connect((_, config) => {
+      setSendWithShiftEnter(config.sendWithShiftEnter ?? false);
+    });
+  }, [model]);
 
   // The autocomplete commands options.
   const [commandOptions, setCommandOptions] = useState<AutocompleteCommand[]>(
@@ -124,7 +133,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   }
 
   // Set the helper text based on whether Shift+Enter is used for sending.
-  const helperText = props.sendWithShiftEnter ? (
+  const helperText = sendWithShiftEnter ? (
     <span>
       Press <b>Shift</b>+<b>Enter</b> to send message
     </span>
@@ -249,6 +258,10 @@ export namespace ChatInput {
    */
   export interface IProps {
     /**
+     * The chat model.
+     */
+    model: IChatModel;
+    /**
      * The initial value of the input (default to '')
      */
     value?: string;
@@ -260,10 +273,6 @@ export namespace ChatInput {
      * The function to be called to cancel editing.
      */
     onCancel?: () => unknown;
-    /**
-     * Whether using shift+enter to send the message.
-     */
-    sendWithShiftEnter: boolean;
     /**
      * Custom mui/material styles.
      */
