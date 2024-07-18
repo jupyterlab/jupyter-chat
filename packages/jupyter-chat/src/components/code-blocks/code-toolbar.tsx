@@ -30,33 +30,31 @@ export function CodeToolbar(props: CodeToolbarProps): JSX.Element {
     model.config.enableCodeToolbar ?? true
   );
 
-  useEffect(() => {
-    setToolbarEnable(model.config.enableCodeToolbar ?? true);
-  }, [model.config.enableCodeToolbar]);
-
   const activeCellManager = model.activeCellManager;
-
-  if (activeCellManager === null || !toolbarEnable) {
-    return <></>;
-  }
 
   const [toolbarBtnProps, setToolbarBtnProps] = useState<ToolbarButtonProps>({
     content: content,
     activeCellManager: activeCellManager,
-    activeCellAvailable: activeCellManager.available
+    activeCellAvailable: activeCellManager?.available ?? false
   });
 
   useEffect(() => {
-    activeCellManager.availabilityChanged.connect(() => {
+    activeCellManager?.availabilityChanged.connect(() => {
       setToolbarBtnProps({
         content,
         activeCellManager: activeCellManager,
         activeCellAvailable: activeCellManager.available
       });
     });
+
+    model.configChanged.connect((_, config) => {
+      setToolbarEnable(config.enableCodeToolbar ?? true);
+    });
   }, [model]);
 
-  return (
+  return activeCellManager === null || !toolbarEnable ? (
+    <></>
+  ) : (
     <Box
       sx={{
         display: 'flex',
@@ -78,8 +76,8 @@ export function CodeToolbar(props: CodeToolbarProps): JSX.Element {
 
 type ToolbarButtonProps = {
   content: string;
-  activeCellAvailable: boolean;
-  activeCellManager: IActiveCellManager;
+  activeCellAvailable?: boolean;
+  activeCellManager: IActiveCellManager | null;
 };
 
 function InsertAboveButton(props: ToolbarButtonProps) {
@@ -90,7 +88,7 @@ function InsertAboveButton(props: ToolbarButtonProps) {
   return (
     <TooltippedIconButton
       tooltip={tooltip}
-      onClick={() => props.activeCellManager.insertAbove(props.content)}
+      onClick={() => props.activeCellManager?.insertAbove(props.content)}
       disabled={!props.activeCellAvailable}
     >
       <addAboveIcon.react height="16px" width="16px" />
@@ -107,7 +105,7 @@ function InsertBelowButton(props: ToolbarButtonProps) {
     <TooltippedIconButton
       tooltip={tooltip}
       disabled={!props.activeCellAvailable}
-      onClick={() => props.activeCellManager.insertBelow(props.content)}
+      onClick={() => props.activeCellManager?.insertBelow(props.content)}
     >
       <addBelowIcon.react height="16px" width="16px" />
     </TooltippedIconButton>
@@ -123,7 +121,7 @@ function ReplaceButton(props: ToolbarButtonProps) {
     <TooltippedIconButton
       tooltip={tooltip}
       disabled={!props.activeCellAvailable}
-      onClick={() => props.activeCellManager.replace(props.content)}
+      onClick={() => props.activeCellManager?.replace(props.content)}
     >
       <replaceCellIcon.react height="16px" width="16px" />
     </TooltippedIconButton>
