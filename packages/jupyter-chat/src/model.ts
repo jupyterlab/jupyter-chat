@@ -55,6 +55,11 @@ export interface IChatModel extends IDisposable {
   readonly messagesUpdated: ISignal<IChatModel, void>;
 
   /**
+   * A signal emitting when the messages list is updated.
+   */
+  get configChanged(): ISignal<IChatModel, IConfig>;
+
+  /**
    * A signal emitting when unread messages change.
    */
   readonly unreadChanged?: ISignal<IChatModel, number[]>;
@@ -215,6 +220,9 @@ export class ChatModel implements IChatModel {
 
     this._config = { ...this._config, ...value };
 
+    this._configChanged.emit(this._config);
+
+    // Update the stacked status of the messages and the view.
     if (stackMessagesChanged) {
       if (this._config.stackMessages) {
         this._messages.slice(1).forEach((message, idx) => {
@@ -286,6 +294,13 @@ export class ChatModel implements IChatModel {
    */
   get messagesUpdated(): ISignal<IChatModel, void> {
     return this._messagesUpdated;
+  }
+
+  /**
+   * A signal emitting when the messages list is updated.
+   */
+  get configChanged(): ISignal<IChatModel, IConfig> {
+    return this._configChanged;
   }
 
   /**
@@ -468,6 +483,7 @@ export class ChatModel implements IChatModel {
   private _commands?: CommandRegistry;
   private _notificationId: string | null = null;
   private _messagesUpdated = new Signal<IChatModel, void>(this);
+  private _configChanged = new Signal<IChatModel, IConfig>(this);
   private _unreadChanged = new Signal<IChatModel, number[]>(this);
   private _viewportChanged = new Signal<IChatModel, number[]>(this);
 }

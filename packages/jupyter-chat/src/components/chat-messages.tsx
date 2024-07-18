@@ -74,7 +74,7 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
    * Effect: listen to chat messages.
    */
   useEffect(() => {
-    function handleChatEvents(_: IChatModel) {
+    function handleChatEvents() {
       setMessages([...model.messages]);
     }
 
@@ -392,7 +392,7 @@ export function ChatMessage(props: ChatMessageProps): JSX.Element {
           value={message.body}
           onSend={(input: string) => updateMessage(message.id, input)}
           onCancel={() => cancelEdition()}
-          sendWithShiftEnter={model.config.sendWithShiftEnter ?? false}
+          model={model}
         />
       ) : (
         <RendermimeMarkdown
