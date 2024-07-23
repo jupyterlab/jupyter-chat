@@ -7,7 +7,7 @@ import { expect, test } from '@jupyterlab/galata';
 
 import { openChat } from './test-utils';
 
-const FILENAME = 'my-chat.chat';
+const FILENAME = 'autocompletion.chat';
 const opener = '?';
 const commands = ['?test', '?other-test', '?last-test'];
 
