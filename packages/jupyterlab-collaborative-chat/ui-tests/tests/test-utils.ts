@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) Jupyter Development Team.
+ * Distributed under the terms of the Modified BSD License.
+ */
+
 import { IJupyterLabPageFixture } from '@jupyterlab/galata';
 import { User } from '@jupyterlab/services';
 import { UUID } from '@lumino/coreutils';
