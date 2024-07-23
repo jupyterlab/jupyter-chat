@@ -23,6 +23,7 @@ const COPYBTN_TEXT_BY_STATUS: Record<CopyStatus, string> = {
 
 type CopyButtonProps = {
   value: string;
+  className?: string;
 };
 
 export function CopyButton(props: CopyButtonProps): JSX.Element {
@@ -55,6 +56,7 @@ export function CopyButton(props: CopyButtonProps): JSX.Element {
 
   return (
     <TooltippedIconButton
+      className={props.className}
       tooltip={COPYBTN_TEXT_BY_STATUS[copyStatus]}
       placement="top"
       onClick={copy}

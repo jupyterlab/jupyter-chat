@@ -13,19 +13,11 @@ import { Contents, User } from '@jupyterlab/services';
 import { ReadonlyJSONObject, UUID } from '@lumino/coreutils';
 import { Locator } from '@playwright/test';
 
+import { openChat, sendMessage, USER } from './test-utils';
+
 const FILENAME = 'my-chat.chat';
 const MSG_CONTENT = 'Hello World!';
-const USERNAME = UUID.uuid4();
-const USER: User.IUser = {
-  identity: {
-    username: USERNAME,
-    name: 'jovyan',
-    display_name: 'jovyan',
-    initials: 'JP',
-    color: 'var(--jp-collaborator-color1)'
-  },
-  permissions: {}
-};
+const USERNAME = USER.identity.username;
 
 test.use({
   mockUser: USER,
@@ -49,26 +41,6 @@ const readFileContent = async (
   return await page.evaluate(async filepath => {
     return await window.jupyterapp.serviceManager.contents.get(filepath);
   }, filename);
-};
-
-const openChat = async (
-  page: IJupyterLabPageFixture,
-  filename: string
-): Promise<Locator> => {
-  const panel = await page.activity.getPanelLocator(filename);
-  if (panel !== null && (await panel.count())) {
-    return panel;
-  }
-
-  await page.evaluate(async filepath => {
-    await window.jupyterapp.commands.execute('collaborative-chat:open', {
-      filepath
-    });
-  }, filename);
-  await page.waitForCondition(
-    async () => await page.activity.isTabActive(filename)
-  );
-  return (await page.activity.getPanelLocator(filename)) as Locator;
 };
 
 const openChatToSide = async (
@@ -118,22 +90,6 @@ const openSidePanel = async (
     await expect(panel).toBeVisible();
   }
   return panel.first();
-};
-
-const sendMessage = async (
-  page: IJupyterLabPageFixture,
-  filename: string = FILENAME,
-  content: string = MSG_CONTENT
-) => {
-  const chatPanel = await openChat(page, filename);
-  const input = chatPanel
-    .locator('.jp-chat-input-container')
-    .getByRole('combobox');
-  const sendButton = chatPanel
-    .locator('.jp-chat-input-container')
-    .getByRole('button');
-  await input.pressSequentially(content);
-  await sendButton.click();
 };
 
 test.describe('#commandPalette', () => {
@@ -590,7 +546,7 @@ test.describe('#messagesNavigation', () => {
       await expect(navigationBottom).toBeAttached();
       expect(navigationBottom).not.toHaveClass(/jp-chat-navigation-unread/);
 
-      await sendMessage(guestPage);
+      await sendMessage(guestPage, FILENAME, MSG_CONTENT);
 
       await expect(navigationBottom).toHaveClass(/jp-chat-navigation-unread/);
       expect(await navigationBottom.screenshot()).toMatchSnapshot(
@@ -604,7 +560,7 @@ test.describe('#messagesNavigation', () => {
       const navigationBottom = chatPanel.locator('.jp-chat-navigation-bottom');
       await messages.first().scrollIntoViewIfNeeded();
 
-      await sendMessage(guestPage);
+      await sendMessage(guestPage, FILENAME, MSG_CONTENT);
 
       await expect(navigationBottom).toHaveClass(/jp-chat-navigation-unread/);
       await navigationBottom.click();
@@ -686,7 +642,7 @@ test.describe('#notifications', () => {
     const messages = chatPanel.locator('.jp-chat-message');
     await messages.first().scrollIntoViewIfNeeded();
 
-    await sendMessage(guestPage);
+    await sendMessage(guestPage, FILENAME, MSG_CONTENT);
     await page.waitForCondition(
       async () => (await page.notifications).length > 0
     );
@@ -707,7 +663,7 @@ test.describe('#notifications', () => {
     const messages = chatPanel.locator('.jp-chat-message');
     await messages.first().scrollIntoViewIfNeeded();
 
-    await sendMessage(guestPage);
+    await sendMessage(guestPage, FILENAME, MSG_CONTENT);
     await page.waitForCondition(
       async () => (await page.notifications).length > 0
     );
@@ -727,7 +683,7 @@ test.describe('#notifications', () => {
     const messages = chatPanel.locator('.jp-chat-message');
     await messages.first().scrollIntoViewIfNeeded();
 
-    await sendMessage(guestPage);
+    await sendMessage(guestPage, FILENAME, MSG_CONTENT);
     await page.waitForCondition(
       async () => (await page.notifications).length > 0
     );
@@ -738,7 +694,7 @@ test.describe('#notifications', () => {
       '1 incoming message(s) in my-chat.chat'
     );
 
-    await sendMessage(guestPage);
+    await sendMessage(guestPage, FILENAME, MSG_CONTENT);
     notifications = await page.notifications;
     expect(notifications[0].message).toBe(
       '2 incoming message(s) in my-chat.chat'
@@ -750,7 +706,7 @@ test.describe('#notifications', () => {
     const messages = chatPanel.locator('.jp-chat-message');
     await messages.first().scrollIntoViewIfNeeded();
 
-    await sendMessage(guestPage);
+    await sendMessage(guestPage, FILENAME, MSG_CONTENT);
     await page.waitForCondition(
       async () => (await page.notifications).length > 0
     );
@@ -780,7 +736,7 @@ test.describe('#notifications', () => {
       async () => (await page.notifications).length === 0
     );
 
-    await sendMessage(guestPage);
+    await sendMessage(guestPage, FILENAME, MSG_CONTENT);
     await expect(messages).toHaveCount(messagesCount + 2);
 
     notifications = await page.notifications;
@@ -796,7 +752,7 @@ test.describe('#notifications', () => {
     const tabLabel = tab.locator('.lm-TabBar-tabLabel');
     await expect(tabLabel).toHaveText(FILENAME);
 
-    await sendMessage(guestPage);
+    await sendMessage(guestPage, FILENAME, MSG_CONTENT);
     const beforePseudo = tabLabel.evaluate(elem => {
       return window.getComputedStyle(elem, ':before');
     });
@@ -965,7 +921,7 @@ test.describe('#raw_time', () => {
     );
 
     // Send a new message
-    await sendMessage(page);
+    await sendMessage(page, FILENAME, MSG_CONTENT);
 
     expect(messages).toHaveCount(3);
     await expect(

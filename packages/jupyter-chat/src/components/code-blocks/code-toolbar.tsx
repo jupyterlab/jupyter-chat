@@ -13,6 +13,9 @@ import { IActiveCellManager } from '../../active-cell-manager';
 import { replaceCellIcon } from '../../icons';
 import { IChatModel } from '../../model';
 
+const CODE_TOOLBAR_CLASS = 'jp-chat-code-toolbar';
+const CODE_TOOLBAR_ITEM_CLASS = 'jp-chat-code-toolbar-item';
+
 export type CodeToolbarProps = {
   /**
    * The chat model.
@@ -65,11 +68,18 @@ export function CodeToolbar(props: CodeToolbarProps): JSX.Element {
         border: '1px solid var(--jp-cell-editor-border-color)',
         borderTop: 'none'
       }}
+      className={CODE_TOOLBAR_CLASS}
     >
-      <InsertAboveButton {...toolbarBtnProps} />
-      <InsertBelowButton {...toolbarBtnProps} />
-      <ReplaceButton {...toolbarBtnProps} />
-      <CopyButton value={content} />
+      <InsertAboveButton
+        {...toolbarBtnProps}
+        className={CODE_TOOLBAR_ITEM_CLASS}
+      />
+      <InsertBelowButton
+        {...toolbarBtnProps}
+        className={CODE_TOOLBAR_ITEM_CLASS}
+      />
+      <ReplaceButton {...toolbarBtnProps} className={CODE_TOOLBAR_ITEM_CLASS} />
+      <CopyButton value={content} className={CODE_TOOLBAR_ITEM_CLASS} />
     </Box>
   );
 }
@@ -78,6 +88,7 @@ type ToolbarButtonProps = {
   content: string;
   activeCellAvailable?: boolean;
   activeCellManager: IActiveCellManager | null;
+  className?: string;
 };
 
 function InsertAboveButton(props: ToolbarButtonProps) {
@@ -87,6 +98,7 @@ function InsertAboveButton(props: ToolbarButtonProps) {
 
   return (
     <TooltippedIconButton
+      className={props.className}
       tooltip={tooltip}
       onClick={() => props.activeCellManager?.insertAbove(props.content)}
       disabled={!props.activeCellAvailable}
@@ -103,6 +115,7 @@ function InsertBelowButton(props: ToolbarButtonProps) {
 
   return (
     <TooltippedIconButton
+      className={props.className}
       tooltip={tooltip}
       disabled={!props.activeCellAvailable}
       onClick={() => props.activeCellManager?.insertBelow(props.content)}
@@ -119,6 +132,7 @@ function ReplaceButton(props: ToolbarButtonProps) {
 
   return (
     <TooltippedIconButton
+      className={props.className}
       tooltip={tooltip}
       disabled={!props.activeCellAvailable}
       onClick={() => props.activeCellManager?.replace(props.content)}

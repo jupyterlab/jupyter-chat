@@ -3,8 +3,9 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { expect, IJupyterLabPageFixture, test } from '@jupyterlab/galata';
-import { Locator } from '@playwright/test';
+import { expect, test } from '@jupyterlab/galata';
+
+import { openChat } from './test-utils';
 
 const FILENAME = 'my-chat.chat';
 const opener = '?';
@@ -44,26 +45,6 @@ const getPlugin = (pluginId: string): Promise<any> => {
       }
     }
   });
-};
-
-const openChat = async (
-  page: IJupyterLabPageFixture,
-  filename: string
-): Promise<Locator> => {
-  const panel = await page.activity.getPanelLocator(filename);
-  if (panel !== null && (await panel.count())) {
-    return panel;
-  }
-
-  await page.evaluate(async filepath => {
-    await window.jupyterapp.commands.execute('collaborative-chat:open', {
-      filepath
-    });
-  }, filename);
-  await page.waitForCondition(
-    async () => await page.activity.isTabActive(filename)
-  );
-  return (await page.activity.getPanelLocator(filename)) as Locator;
 };
 
 test.beforeEach(async ({ page }) => {

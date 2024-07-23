@@ -12,6 +12,7 @@ export type TooltippedIconButtonProps = {
   onClick: () => unknown;
   tooltip: string;
   children: JSX.Element;
+  className?: string;
   disabled?: boolean;
   placement?: TooltipProps['placement'];
   /**
@@ -67,7 +68,7 @@ export function TooltippedIconButton(
 
         See: https://mui.com/material-ui/react-tooltip/#disabled-elements
       */}
-      <span>
+      <span className={props.className}>
         <IconButton
           {...props.iconButtonProps}
           onClick={props.onClick}
