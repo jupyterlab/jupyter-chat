@@ -4,7 +4,9 @@
  */
 
 import {
+  ActiveCellManager,
   AutocompletionRegistry,
+  IActiveCellManager,
   IAutocompletionRegistry,
   chatIcon,
   readIcon
@@ -30,6 +32,7 @@ import {
 import { PathExt } from '@jupyterlab/coreutils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { ILauncher } from '@jupyterlab/launcher';
+import { INotebookTracker } from '@jupyterlab/notebook';
 import { IObservableList } from '@jupyterlab/observables';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { Contents } from '@jupyterlab/services';
@@ -43,13 +46,20 @@ import {
   CollaborativeChatModelFactory
 } from './factory';
 import { CollaborativeChatModel } from './model';
-import { chatFileType, CommandIDs, IChatPanel, IChatFactory } from './token';
+import {
+  chatFileType,
+  CommandIDs,
+  IChatPanel,
+  IChatFactory,
+  IActiveCellManagerToken
+} from './token';
 import { ChatPanel, CollaborativeChatPanel } from './widget';
 import { YChat } from './ychat';
 
 const FACTORY = 'Chat';
 
 const pluginIds = {
+  activeCellManager: 'jupyterlab-collaborative-chat:activeCellManager',
   autocompletionRegistry:
     'jupyterlab-collaborative-chat:autocompletionRegistry',
   chatCommands: 'jupyterlab-collaborative-chat:commands',
@@ -79,6 +89,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
   autoStart: true,
   requires: [IRenderMimeRegistry],
   optional: [
+    IActiveCellManagerToken,
     IAutocompletionRegistry,
     ICollaborativeDrive,
     ILayoutRestorer,
@@ -91,6 +102,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
   activate: (
     app: JupyterFrontEnd,
     rmRegistry: IRenderMimeRegistry,
+    activeCellManager: IActiveCellManager | null,
     autocompletionRegistry: IAutocompletionRegistry,
     drive: ICollaborativeDrive | null,
     restorer: ILayoutRestorer | null,
@@ -116,6 +128,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     let sendWithShiftEnter = false;
     let stackMessages = true;
     let unreadNotifications = true;
+    let enableCodeToolbar = true;
     function loadSetting(setting: ISettingRegistry.ISettings): void {
       // Read the settings and convert to the correct type
       sendWithShiftEnter = setting.get('sendWithShiftEnter')
@@ -123,10 +136,12 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
       stackMessages = setting.get('stackMessages').composite as boolean;
       unreadNotifications = setting.get('unreadNotifications')
         .composite as boolean;
+      enableCodeToolbar = setting.get('enableCodeToolbar').composite as boolean;
       widgetConfig.configChanged.emit({
         sendWithShiftEnter,
         stackMessages,
-        unreadNotifications
+        unreadNotifications,
+        enableCodeToolbar
       });
     }
 
@@ -165,7 +180,8 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     const widgetConfig = new WidgetConfig({
       sendWithShiftEnter,
       stackMessages,
-      unreadNotifications
+      unreadNotifications,
+      enableCodeToolbar
     });
 
     // Namespace for the tracker
@@ -190,7 +206,8 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
         const modelFactory = new CollaborativeChatModelFactory({
           user,
           widgetConfig,
-          commands: app.commands
+          commands: app.commands,
+          activeCellManager
         });
         app.docRegistry.addModelFactory(modelFactory);
       })
@@ -255,11 +272,12 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
   description: 'The commands to create or open a chat',
   autoStart: true,
   requires: [ICollaborativeDrive, IChatFactory],
-  optional: [IChatPanel, ICommandPalette, ILauncher],
+  optional: [IActiveCellManagerToken, IChatPanel, ICommandPalette, ILauncher],
   activate: (
     app: JupyterFrontEnd,
     drive: ICollaborativeDrive,
     factory: IChatFactory,
+    activeCellManager: IActiveCellManager | null,
     chatPanel: ChatPanel | null,
     commandPalette: ICommandPalette | null,
     launcher: ILauncher | null
@@ -463,7 +481,8 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
                 user,
                 sharedModel,
                 widgetConfig,
-                commands: app.commands
+                commands: app.commands,
+                activeCellManager
               });
 
               /**
@@ -506,13 +525,19 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
   autoStart: true,
   provides: IChatPanel,
   requires: [ICollaborativeDrive, IRenderMimeRegistry],
-  optional: [IAutocompletionRegistry, ILayoutRestorer, IThemeManager],
+  optional: [
+    IAutocompletionRegistry,
+    ILayoutRestorer,
+    INotebookTracker,
+    IThemeManager
+  ],
   activate: (
     app: JupyterFrontEnd,
     drive: ICollaborativeDrive,
     rmRegistry: IRenderMimeRegistry,
     autocompletionRegistry: IAutocompletionRegistry,
     restorer: ILayoutRestorer | null,
+    notebookTracker: INotebookTracker,
     themeManager: IThemeManager | null
   ): ChatPanel => {
     const { commands } = app;
@@ -588,4 +613,30 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
   }
 };
 
-export default [autocompletionPlugin, chatCommands, docFactories, chatPanel];
+/**
+ * Extension providing the active cell manager.
+ */
+const activeCellManager: JupyterFrontEndPlugin<IActiveCellManager> = {
+  id: pluginIds.activeCellManager,
+  description: 'the active cell manager plugin',
+  autoStart: true,
+  requires: [INotebookTracker],
+  provides: IActiveCellManagerToken,
+  activate: (
+    app: JupyterFrontEnd,
+    notebookTracker: INotebookTracker
+  ): IActiveCellManager => {
+    return new ActiveCellManager({
+      tracker: notebookTracker,
+      shell: app.shell
+    });
+  }
+};
+
+export default [
+  activeCellManager,
+  autocompletionPlugin,
+  chatCommands,
+  docFactories,
+  chatPanel
+];

@@ -398,6 +398,7 @@ export function ChatMessage(props: ChatMessageProps): JSX.Element {
         <RendermimeMarkdown
           rmRegistry={rmRegistry}
           markdownStr={message.body}
+          model={model}
           edit={canEdit ? () => setEdit(true) : undefined}
           delete={canDelete ? () => deleteMessage(message.id) : undefined}
         />

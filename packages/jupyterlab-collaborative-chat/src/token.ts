@@ -93,3 +93,10 @@ export const CommandIDs = {
 export const IChatPanel = new Token<ChatPanel>(
   'jupyter-collaborative-chat:IChatPanel'
 );
+
+/**
+ * The active cell manager plugin.
+ */
+export const IActiveCellManagerToken = new Token<ChatPanel>(
+  'jupyter-collaborative-chat:IActiveCellManager'
+);

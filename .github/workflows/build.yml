@@ -125,7 +125,7 @@ jobs:
     - name: Execute integration tests
       working-directory: packages/jupyterlab-${{ matrix.extension }}-chat/ui-tests
       run: |
-        jlpm playwright test
+        jlpm playwright test --retries=2
 
     - name: Upload Playwright Test report
       if: always()

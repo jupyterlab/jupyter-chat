@@ -4,6 +4,7 @@
  */
 
 import {
+  ActiveCellManager,
   AutocompletionRegistry,
   IAutocompletionRegistry,
   buildChatSidebar,
@@ -15,6 +16,7 @@ import {
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 import { ReactWidget, IThemeManager } from '@jupyterlab/apputils';
+import { INotebookTracker } from '@jupyterlab/notebook';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
@@ -49,6 +51,7 @@ const chat: JupyterFrontEndPlugin<void> = {
   optional: [
     IAutocompletionRegistry,
     ILayoutRestorer,
+    INotebookTracker,
     ISettingRegistry,
     IThemeManager
   ],
@@ -57,13 +60,23 @@ const chat: JupyterFrontEndPlugin<void> = {
     rmRegistry: IRenderMimeRegistry,
     autocompletionRegistry: IAutocompletionRegistry,
     restorer: ILayoutRestorer | null,
+    notebookTracker: INotebookTracker,
     settingsRegistry: ISettingRegistry | null,
     themeManager: IThemeManager | null
   ) => {
+    // Create an active cell manager for code toolbar.
+    const activeCellManager = new ActiveCellManager({
+      tracker: notebookTracker,
+      shell: app.shell
+    });
+
     /**
      * Initialize chat handler, open WS connection
      */
-    const chatHandler = new WebSocketHandler({ commands: app.commands });
+    const chatHandler = new WebSocketHandler({
+      commands: app.commands,
+      activeCellManager
+    });
 
     /**
      * Load the settings.
@@ -71,6 +84,7 @@ const chat: JupyterFrontEndPlugin<void> = {
     let sendWithShiftEnter = false;
     let stackMessages = true;
     let unreadNotifications = true;
+    let enableCodeToolbar = true;
     function loadSetting(setting: ISettingRegistry.ISettings): void {
       // Read the settings and convert to the correct type
       sendWithShiftEnter = setting.get('sendWithShiftEnter')
@@ -78,10 +92,12 @@ const chat: JupyterFrontEndPlugin<void> = {
       stackMessages = setting.get('stackMessages').composite as boolean;
       unreadNotifications = setting.get('unreadNotifications')
         .composite as boolean;
+      enableCodeToolbar = setting.get('enableCodeToolbar').composite as boolean;
       chatHandler.config = {
         sendWithShiftEnter,
         stackMessages,
-        unreadNotifications
+        unreadNotifications,
+        enableCodeToolbar
       };
     }
 
