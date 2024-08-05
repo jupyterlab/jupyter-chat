@@ -2274,7 +2274,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyter/chat@^0.2.0, @jupyter/chat@workspace:packages/jupyter-chat":
+"@jupyter/chat@^0.3.0, @jupyter/chat@workspace:packages/jupyter-chat":
   version: 0.0.0-use.local
   resolution: "@jupyter/chat@workspace:packages/jupyter-chat"
   dependencies:
@@ -9848,7 +9848,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "jupyterlab-collaborative-chat@workspace:packages/jupyterlab-collaborative-chat"
   dependencies:
-    "@jupyter/chat": ^0.2.0
+    "@jupyter/chat": ^0.3.0
     "@jupyter/collaboration": ^2.1.0
     "@jupyter/docprovider": ^2.1.0
     "@jupyter/ydoc": ^1.1.1
@@ -9902,7 +9902,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "jupyterlab-ws-chat@workspace:packages/jupyterlab-ws-chat"
   dependencies:
-    "@jupyter/chat": ^0.2.0
+    "@jupyter/chat": ^0.3.0
     "@jupyterlab/apputils": ^4.3.0
     "@jupyterlab/builder": ^4.2.0
     "@jupyterlab/coreutils": ^6.2.0

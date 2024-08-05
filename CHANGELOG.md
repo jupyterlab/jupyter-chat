@@ -2,6 +2,29 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.3.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.2.0...08b371dd6a9616b70d42a93165c5b18274ff00f9))
+
+### Enhancements made
+
+- Add a configChanged signal to the model [#68](https://github.com/jupyterlab/jupyter-chat/pull/68) ([@brichet](https://github.com/brichet))
+- Code toolbar [#67](https://github.com/jupyterlab/jupyter-chat/pull/67) ([@brichet](https://github.com/brichet))
+
+### Maintenance and upkeep improvements
+
+- Update to jupyterlab 4.2.x [#66](https://github.com/jupyterlab/jupyter-chat/pull/66) ([@brichet](https://github.com/brichet))
+- Updated integration tests workflow [#65](https://github.com/jupyterlab/jupyter-chat/pull/65) ([@krassowski](https://github.com/krassowski))
+- Bump the npm_and_yarn group across 2 directories with 4 updates [#63](https://github.com/jupyterlab/jupyter-chat/pull/63) ([@dependabot](https://github.com/dependabot))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2024-07-04&to=2024-08-05&type=c))
+
+[@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2024-07-04..2024-08-05&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adependabot+updated%3A2024-07-04..2024-08-05&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2024-07-04..2024-08-05&type=Issues) | [@krassowski](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Akrassowski+updated%3A2024-07-04..2024-08-05&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.2.0
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.1.0...234e231ccadb198409e6a4250fdcbe05c32895e7))
@@ -39,8 +62,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2024-05-16&to=2024-07-04&type=c))
 
 [@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2024-05-16..2024-07-04&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2024-05-16..2024-07-04&type=Issues) | [@jtpio](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2024-05-16..2024-07-04&type=Issues) | [@welcome](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Awelcome+updated%3A2024-05-16..2024-07-04&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.1.0
 

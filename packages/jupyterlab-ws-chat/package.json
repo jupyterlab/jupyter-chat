@@ -1,6 +1,6 @@
 {
   "name": "jupyterlab-ws-chat",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A chat extension for Jupyterlab",
   "keywords": [
     "jupyter",
@@ -54,7 +54,7 @@
     "watch:src": "tsc -w --sourceMap"
   },
   "dependencies": {
-    "@jupyter/chat": "^0.2.0",
+    "@jupyter/chat": "^0.3.0",
     "@jupyterlab/apputils": "^4.3.0",
     "@jupyterlab/coreutils": "^6.2.0",
     "@jupyterlab/notebook": "^4.2.0",
