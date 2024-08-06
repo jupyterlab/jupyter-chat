@@ -1,9 +1,9 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from typing import Any, Dict, List, Literal, Optional, Union
-
 from pydantic.v1 import BaseModel, validator
+from typing import Literal, Optional, Union
+
 
 DEFAULT_CHUNK_SIZE = 2000
 DEFAULT_CHUNK_OVERLAP = 100
@@ -55,7 +55,7 @@ Message = Union[ChatMessage, ConnectionMessage, ClearMessage]
 class ChatHistory(BaseModel):
     """History of chat messages"""
 
-    messages: List[ChatMessage]
+    messages: list[ChatMessage]
 
 
 class DescribeConfigResponse(BaseModel):

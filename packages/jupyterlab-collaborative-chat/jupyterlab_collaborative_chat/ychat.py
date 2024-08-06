@@ -7,10 +7,9 @@ import json
 import time
 import asyncio
 from functools import partial
-from typing import Any, Callable, Dict, List, Set
-from uuid import uuid4
-
 from jupyter_ydoc.ybasedoc import YBaseDoc
+from typing import Any, Callable, Set
+from uuid import uuid4
 from pycrdt import Array, ArrayEvent, Map, MapEvent
 
 
@@ -42,40 +41,91 @@ class YChat(YBaseDoc):
         task.add_done_callback(self._background_tasks.discard)
 
     @property
-    def messages(self) -> List:
-        return self._ymessages.to_py()
+    def ymessages(self) -> Array:
+        return self._ymessages
 
     @property
-    def users(self) -> Map:
-        return self._yusers.to_py()
+    def yusers(self) -> Map:
+        return self._yusers
 
     @property
-    def metadata(self) -> Map:
-        return self._ymetadata.to_py()
+    def ymetadata(self) -> Map:
+        return self._ymetadata
 
-    def get_users(self) -> Dict:
+    def get_user(self, username: str) -> dict[str, str] | None:
+        """
+        Returns a message from its id, or None
+        """
+        return self.get_users().get(username, None)
+
+    def get_user_by_name(self, name: str) -> dict[str, str] | None:
+        """
+        Returns a user from its name property, or None.
+        """
+        return next(
+            (user for user in self.get_users().values() if user["name"] == name),
+            None
+        )
+
+    def get_users(self) -> dict[str, dict[str, str]]:
         """
         Returns the users of the document.
         :return: Document's users.
-        :rtype: string
         """
+        return self._yusers.to_py()
 
-        users = self._yusers.to_py()
-        return dict(users=users)
+    def set_user(self, user: dict[str, str]) -> None:
+        """
+        Adds or modifies a user.
+        """
+        with self._ydoc.transaction():
+            self._yusers.update({user["username"]: user})
 
-    def get_messages(self) -> Dict:
+    def get_message(self, id: str) -> dict | None:
+        """
+        Returns a message from its id, or None
+        """
+        return next(
+            (msg for msg in self.get_messages() if msg["id"] == id),
+            None
+        )
+
+    def get_messages(self) -> list[dict]:
         """
         Returns the messages of the document.
         :return: Document's messages.
-        :rtype: string
         """
+        return self._ymessages.to_py()
 
-        messages = self._ymessages.to_py()
-        return dict(messages=messages)
+    def add_message(self, message: dict) -> None:
+        """
+        Appends a message to the document.
+        """
+        with self._ydoc.transaction():
+            self._ymessages.append(message)
+
+    def get_single_metadata(self, name) -> dict:
+        """
+        Return a single metadata.
+        """
+        return self.get_metadata().get(name, {})
+
+    def get_metadata(self) -> dict[str, dict]:
+        """
+        Returns the metadata of the document.
+        """
+        return self._ymetadata.to_py()
+
+    def set_metadata(self, name: str, metadata: dict):
+        """
+        Adds or modifies a metadata of the document.
+        """
+        with self._ydoc.transaction():
+            self._ymetadata.update({name: metadata})
 
     async def create_id(self) -> str:
         """
-        Create a new ID for the document.
+        Creates a new ID for the document.
         """
         id = str(uuid4())
         self.set_id(id)
@@ -97,13 +147,12 @@ class YChat(YBaseDoc):
     def get(self) -> str:
         """
         Returns the contents of the document.
-        :return: Document's contents.
-        :rtype: string
+        :return: Document's contents in JSON.
         """
         return json.dumps({
-            "messages": self.messages,
-            "users": self.users,
-            "metadata": self.metadata
+            "messages": self.get_messages(),
+            "users": self.get_users(),
+            "metadata": self.get_metadata()
         })
 
     def set(self, value: str) -> None:
@@ -209,7 +258,7 @@ class YChat(YBaseDoc):
             # should be the last one.
             # The next() function below return the index of the first message with a timestamp inferior of the
             # current one, starting from the end of the list.
-            new_idx = len(self._ymessages) - next((i for i, v in enumerate(self._ymessages.to_py()[::-1]) if v["time"] < timestamp), len(self._ymessages))
+            new_idx = len(self._ymessages) - next((i for i, v in enumerate(self.get_messages()[::-1]) if v["time"] < timestamp), len(self._ymessages))
             if msg_idx != new_idx:
                 message = self._ymessages.pop(msg_idx)
                 self._ymessages.insert(new_idx, message)
