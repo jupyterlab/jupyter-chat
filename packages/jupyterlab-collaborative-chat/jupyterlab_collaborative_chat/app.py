@@ -17,7 +17,6 @@ if int(jupyter_collaboration.__version__[0]) >= 3:
     COLLAB_VERSION = 3
 else:
     COLLAB_VERSION = 2
-    from jupyter_collaboration.utils import encode_file_path, room_id_from_encoded_path
 
 BOT = {
     "username": str(uuid.uuid4()),
