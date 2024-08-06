@@ -56,11 +56,7 @@ class YChat(YBaseDoc):
         """
         Returns a message from its id, or None
         """
-        users = self.get_users()
-        if username in users.keys():
-            return users[username]
-        else:
-            return None
+        return self.get_users().get(username, None)
 
     def get_user_by_name(self, name: str) -> dict[str, str] | None:
         """
@@ -78,9 +74,9 @@ class YChat(YBaseDoc):
         """
         return self._yusers.to_py()
 
-    def add_user(self, user: dict[str, str]) -> None:
+    def set_user(self, user: dict[str, str]) -> None:
         """
-        Adds a user to the document.
+        Adds or modifies a user.
         """
         with self._ydoc.transaction():
             self._yusers.update({user["username"]: user})
@@ -108,8 +104,24 @@ class YChat(YBaseDoc):
         with self._ydoc.transaction():
             self._ymessages.append(message)
 
+    def get_single_metadata(self, name) -> dict:
+        """
+        Return a single metadata.
+        """
+        return self.get_metadata().get(name, {})
+
     def get_metadata(self) -> dict[str, dict]:
+        """
+        Returns the metadata of the document.
+        """
         return self._ymetadata.to_py()
+
+    def set_metadata(self, name: str, metadata: dict):
+        """
+        Adds or modifies a metadata of the document.
+        """
+        with self._ydoc.transaction():
+            self._ymetadata.update({name: metadata})
 
     async def create_id(self) -> str:
         """
