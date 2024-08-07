@@ -93,10 +93,16 @@ The chat UI is composed of a list of messages and an input to send new messages.
 
 A message can be edited or deleted by its author, using a toolbar in the message.
 
+### Notifications and navigation
+
+If enabled in [settings](#chat-settings), new unread messages generate a notification.
+
+A down arrow in the messages list allow to navigate to the last message. This button is highlighted if some new messages are unread.
+
 ### Code toolbar
 
 When code is inserted in a message, a toolbar is displayed under the code section (if
-the options is set up from the settings).
+the options is set up from the [settings](#chat-settings)).
 
 From this toolbar, the code can be copied to the clipboard: ![code toolbar copy](../_static/images/code-toolbar-copy.png){w=24px}.
 
@@ -105,3 +111,31 @@ If a notebook is opened and visible, other actions are available:
 - copy the code to a new cell above the current one: ![code toolbar cell above](../_static/images/code-toolbar-above.png){w=24px}
 - copy the the code to a new cell below the current one: ![code toolbar cell below](../_static/images/code-toolbar-below.png){w=24px}
 - replace the content of the current cell with the code: ![code toolbar cell replace](../_static/images/code-toolbar-replace.png){w=24px}
+
+(chat-settings)=
+
+## Chat settings
+
+Some jupyterlab settings are available for the chats (included with `jupyterlab-collaborative-chat` and `jupyterlab-ws-chat`), in the setting panel (menu `Settings->Settings Editor`), with the entry *Chat*.
+
+These settings includes:
+
+- **sendWithShiftEnter**
+
+  Whether to send a message via Shift-Enter instead of Enter.\
+  Default: false
+
+- **stackMessages**
+
+  Whether to stack consecutive messages from same user.\
+  Default: true
+
+- **unreadNotifications**
+
+  Whether to enable or not the notifications on unread messages.\
+  Default: true
+
+- **enableCodeToolbar**
+
+  Whether to enable or not the code toolbar.\
+  Default: true
