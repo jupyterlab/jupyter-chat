@@ -27,6 +27,14 @@ classifiers = [
 ]
 dynamic = ["version", "description", "authors", "urls", "keywords"]
 
+[project.optional-dependencies]
+docs = [
+    "jupyterlab>=4.0.0",
+    "sphinx",
+    "myst-parser",
+    "pydata-sphinx-theme"
+]
+
 [tool.hatch.version]
 source = "nodejs"
 path = "package.json"
