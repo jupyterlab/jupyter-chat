@@ -6,11 +6,10 @@ extensions provided in this repo (jupyterlab-collaborative-chat or jupyterlab-ws
 
 ## Building the package
 
-The following commands are using `jlpm` but should work as well using `yarn` instead.
-
 From the root of the repository:
 
 ```bash
+# In the following command, 'jlpm' can be replaced with 'yarn'
 jlpm build:core
 ```
 
