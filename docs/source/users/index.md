@@ -1,6 +1,6 @@
 # Users
 
-## jupyterlab-collaborative-chat
+## Collaborative chat
 
 The `jupyterlab-collaborative-chat` extension adds collaborative chats to jupyterlab.
 
@@ -61,7 +61,7 @@ area, like any other document.
 Opening a chat from the left panel will open it in the left panel.
 ```
 
-## jupyterlab-ws-chat
+## Websocket chat
 
 The `jupyterlab-ws-chat` extension adds a chat panel relying on websocket for messaging.
 
@@ -87,7 +87,7 @@ pip uninstall jupyterlab-ws-chat
 
 The chat can be opened from the left panel ![chat icon](../../../packages/jupyter-chat/style/icons/chat.svg){w=24px}.
 
-## Using the chat
+## Chat usage
 
 The chat UI is composed of a list of messages and an input to send new messages.
 

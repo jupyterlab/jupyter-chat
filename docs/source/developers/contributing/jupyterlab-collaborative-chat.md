@@ -1,4 +1,4 @@
-# jupyterlab-collaborative-chat
+# Collaborative chat
 
 The `jupyterlab-collaborative-chat` extension adds collaborative chats to jupyterlab.
 

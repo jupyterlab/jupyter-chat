@@ -1,4 +1,4 @@
-# jupyterlab-collaborative-chat
+# Websocket chat
 
 The `jupyterlab-ws-chat` extension adds a chat panel relying on websocket for messaging.
 

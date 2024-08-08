@@ -2,7 +2,7 @@
 
 This section is addressed to developers, and contains documentation about:
 
-- how to develop an extension providing a chat or extending a chat extension
+- how to develop an extension providing a chat or to include a chat extension
 - how to contribute to this project
 
 ```{toctree}

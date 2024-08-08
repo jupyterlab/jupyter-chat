@@ -303,6 +303,8 @@ const myChatExtension: JupyterFrontEndPlugin<void> = {
 };
 ```
 
+(autocompletion-registry)=
+
 ### autocompletionRegistry
 
 The `autocompletionRegistry` adds autocompletion feature to the chat input. This can be
