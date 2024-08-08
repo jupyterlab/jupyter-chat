@@ -11,6 +11,8 @@ except ImportError:
     warnings.warn("Importing 'jupyterlab_collaborative_chat' outside a proper installation.")
     __version__ = "dev"
 
+from .app import CollaborativeChat
+
 
 def _jupyter_labextension_paths():
     return [{
@@ -21,7 +23,8 @@ def _jupyter_labextension_paths():
 
 def _jupyter_server_extension_points():
     return [{
-        "module": "jupyterlab_collaborative_chat"
+        "module": "jupyterlab_collaborative_chat",
+        "app": CollaborativeChat
     }]
 
 
