@@ -99,6 +99,8 @@ If enabled in [settings](#chat-settings), new unread messages generate a notific
 
 A down arrow in the messages list allow to navigate to the last message. This button is highlighted if some new messages are unread.
 
+(code-toolbar)=
+
 ### Code toolbar
 
 When code is inserted in a message, a toolbar is displayed under the code section (if

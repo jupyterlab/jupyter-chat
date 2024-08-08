@@ -1,0 +1,1 @@
+# Extending a chat extension

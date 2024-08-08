@@ -17,13 +17,14 @@ author = 'Jupyter Development Team'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-  'myst_parser'
+  'myst_parser',
+  'sphinx_copybutton'
 ]
 
 templates_path = ['_templates']
 exclude_patterns = []
 
-myst_enable_extensions = ["attrs_inline"]
+myst_enable_extensions = ["attrs_block", "attrs_inline"]
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

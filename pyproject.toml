@@ -30,9 +30,10 @@ dynamic = ["version", "description", "authors", "urls", "keywords"]
 [project.optional-dependencies]
 docs = [
     "jupyterlab>=4.0.0",
-    "sphinx",
     "myst-parser",
-    "pydata-sphinx-theme"
+    "pydata-sphinx-theme",
+    "sphinx",
+    "sphinx-copybutton"
 ]
 
 [tool.hatch.version]

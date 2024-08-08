@@ -1,0 +1,377 @@
+# Providing a chat in a jupyter extension
+
+Since `@jupyter/chat` is a front end package, extensions using it needs to depend on it
+from the javascript package.
+
+The package is available on [npmjs](https://www.npmjs.com/package/@jupyter/chat).
+
+This package provides all the UI components to build a chat, including a widget,
+but is not tied to any messaging technology.
+
+```{important}
+It's up to the extension to choose which messaging technology to use.
+```
+
+## Add the dependency
+
+In the extension *package.json* file, the dependency must be added to the `dependencies`
+section.
+
+```json
+"@jupyter/chat": "^0.3.0"
+```
+
+## Including a chat in an extension
+
+The package provide a jupyterlab widget (UI), that can be instantiated from the extension.
+
+```typescript
+import { ChatWidget } from '@jupyter/chat';
+```
+
+This widget needs at least 2 arguments, the [model](#model) and the
+[rendermime registry](#rendermime-registry).
+
+(model)=
+
+### Model
+
+The model is the entry point to use the chat in a javascript/typescript package.
+
+A model is provided by the package, and already includes all the required method to
+interact with the UI part of the chat.
+
+The extension has to provide a class extending the `@jupyter/chat` model, including the
+method `addMessage()`.
+
+This method is called when a user send a message using the input of the chat. It should
+contain the code that will dispatch the message through the messaging technology.
+
+In the following example, the message is logged to the console and added in the message
+list.
+
+```typescript
+import { ChatModel, IChatMessage, INewMessage } from '@jupyter/chat';
+
+class MyModel extends ChatModel {
+  addMessage(
+    newMessage: INewMessage
+  ): Promise<boolean | void> | boolean | void {
+    console.log(`New Message:\n${newMessage.body}`);
+    const message: IChatMessage = {
+      body: newMessage.body,
+      id: newMessage.id ?? UUID.uuid4(),
+      type: 'msg',
+      time: Date.now() / 1000,
+      sender: { username: 'me' }
+    };
+    this.messageAdded(message);
+  }
+}
+```
+
+(rendermime-registry)=
+
+### Rendermime registry
+
+The rendermime registry is required to display the messages using markdown syntax.
+This registry is provided by jupyterlab with a token, and must be required by the
+extension.
+
+### A full example
+
+The example below adds a new chat panel to the right.
+
+When a user sends a message, it is logged in the console and added to the message list.
+
+```{tip}
+In this example, no messages are sent to other potential users.
+
+An exchange system must be included and use the `addMessage()` and `messageAdded()`
+methods to correctly manage message transmission and reception.
+```
+
+```typescript
+import {
+  ChatModel,
+  ChatWidget,
+  IChatMessage,
+  INewMessage
+} from '@jupyter/chat';
+import {
+  JupyterFrontEnd,
+  JupyterFrontEndPlugin
+} from '@jupyterlab/application';
+import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
+import { UUID } from '@lumino/coreutils';
+
+class MyModel extends ChatModel {
+  addMessage(
+    newMessage: INewMessage
+  ): Promise<boolean | void> | boolean | void {
+    console.log(`New Message:\n${newMessage.body}`);
+    const message: IChatMessage = {
+      body: newMessage.body,
+      id: newMessage.id ?? UUID.uuid4(),
+      type: 'msg',
+      time: Date.now() / 1000,
+      sender: { username: 'me' }
+    };
+    this.messageAdded(message);
+  }
+}
+
+const myChatExtension: JupyterFrontEndPlugin<void> = {
+  id: 'myExtension:plugin',
+  autoStart: true,
+  requires: [IRenderMimeRegistry],
+  activate: (app: JupyterFrontEnd, rmRegistry: IRenderMimeRegistry): void => {
+    const model = new MyModel();
+    const widget = new ChatWidget({ model, rmRegistry });
+
+    app.shell.add(widget, 'right');
+  }
+};
+
+export default [myChatExtension];
+```
+
+## Optional parameters of the model
+
+The model accept some options in the constructor, which bring some additional
+features to the chat.
+
+```typescript
+interface IOptions {
+  /**
+   * Initial config for the chat widget.
+   */
+  config?: IConfig;
+
+  /**
+   * Commands registry.
+   */
+  commands?: CommandRegistry;
+
+  /**
+   * Active cell manager
+   */
+  activeCellManager?: IActiveCellManager | null;
+}
+```
+
+### config
+
+The config option can be used to set initial [settings](#chat-settings) to the model.
+
+Here is the definition of the config option:
+
+```typescript
+interface IConfig {
+  /**
+   * Whether to send a message via Shift-Enter instead of Enter.
+   */
+  sendWithShiftEnter?: boolean;
+  /**
+   * Last read message (no use yet).
+   */
+  lastRead?: number;
+  /**
+   * Whether to stack consecutive messages from same user.
+   */
+  stackMessages?: boolean;
+  /**
+   * Whether to enable or not the notifications on unread messages.
+   */
+  unreadNotifications?: boolean;
+  /**
+   * Whether to enable or not the code toolbar.
+   */
+  enableCodeToolbar?: boolean;
+}
+```
+
+If the option is not provided, the default values will be used.
+
+The config can still be modified later using the setter, which allow partial config
+object:
+
+```typescript
+set config(value: Partial<IConfig>)
+```
+
+### commands
+
+The *commands* option is mandatory to handle the notifications in the chat.
+
+It is the `CommandRegistry` provided by the jupyterlab application. In the previous
+example, the modification would be:
+
+{emphasize-lines="6,7"}
+
+```typescript
+const myChatExtension: JupyterFrontEndPlugin<void> = {
+  id: 'myExtension:plugin',
+  autoStart: true,
+  requires: [IRenderMimeRegistry],
+  activate: (app: JupyterFrontEnd, rmRegistry: IRenderMimeRegistry): void => {
+    const { commands } = app;
+    const model = new MyModel({ commands });
+    const widget = new ChatWidget({ model, rmRegistry });
+
+    app.shell.add(widget, 'right');
+  }
+};
+```
+
+### activeCellManager
+
+The *activeCellManager* is mandatory to include the [code toolbar](#code-toolbar) to the
+chat.
+
+The active cell manager will ensure that a Notebook is visible, with an active cell, to
+enable the buttons in the code toolbar.
+
+This active cell manager must be instantiate in the extension to be propagated to the
+model. It requires the `INotebookTracker` token, provided by the *notebook-extension* of
+jupyterlab. Again, in the previous example, the modification would be:
+
+{emphasize-lines="2,14,17,20,21,22,23,24"}
+
+```typescript
+import {
+  ActiveCellManager,
+  ChatModel,
+  ChatWidget,
+  IChatMessage,
+  INewMessage
+} from '@jupyter/chat';
+
+...
+
+const myChatExtension: JupyterFrontEndPlugin<void> = {
+  id: 'myExtension:plugin',
+  autoStart: true,
+  requires: [INotebookTracker, IRenderMimeRegistry],
+  activate: (
+    app: JupyterFrontEnd,
+    notebookTracker: INotebookTracker,
+    rmRegistry: IRenderMimeRegistry
+  ): void => {
+    const activeCellManager = new ActiveCellManager({
+      tracker: notebookTracker,
+      shell: app.shell
+    });
+    const model = new MyModel({ activeCellManager });
+    const widget = new ChatWidget({ model, rmRegistry });
+
+    app.shell.add(widget, 'right');
+  }
+};
+```
+
+## Optional parameters of the widget
+
+### themeManager
+
+The `themeManager` allows to get the themes from jupyterlab. It is not mandatory but
+some components would not be visible with some themes if it is not provided.
+
+This Theme manager can come from the `IThemeManager` token, provided by the
+*apputils-extension* of jupyterlab.
+
+{emphasize-lines="1,7,11,14"}
+
+```typescript
+import { IThemeManager } from '@jupyterlab/apputils';
+
+const myChatExtension: JupyterFrontEndPlugin<void> = {
+  id: 'myExtension:plugin',
+  autoStart: true,
+  requires: [IRenderMimeRegistry],
+  optional: [IThemeManager],
+  activate: (
+    app: JupyterFrontEnd,
+    rmRegistry: IRenderMimeRegistry,
+    themeManager: IThemeManager | null
+  ): void => {
+    const model = new MyModel();
+    const widget = new ChatWidget({ model, rmRegistry, themeManager });
+
+    app.shell.add(widget, 'right');
+  }
+};
+```
+
+### autocompletionRegistry
+
+The `autocompletionRegistry` adds autocompletion feature to the chat input. This can be
+useful for automating chat reading, like in [jupyter-ai](https://github.com/jupyterlab/jupyter-ai).
+
+It uses the `Autocomplete` from [Material UI](https://mui.com/material-ui/react-autocomplete/),
+and can be customized using its [API](https://mui.com/material-ui/api/autocomplete/).
+
+Several *Autocompletion properties* objects (implementing `IAutocompletionCommandsProps`) can be
+added to the registry.
+
+```{warning}
+Currently, only one *autocompletion properties* object can be used for a chat widget,
+even if several coexist in the registry.\
+The used one will be designed by the widget's option `autocompletionName`, otherwise a
+default will be used.
+```
+
+An *autocompletion properties* object needs at least two properties:
+
+- **opener**, a character string that triggers the opening of the popup if entered at
+the beginning of the input.\
+  For example typing `/` could open propositions like (`/ask`, `/help`, ...).
+- **commands**, a list of commands or a functions returning a list commands.
+
+```{tip}
+The *autocompletion command* is an object containing at least a `label` property, but
+which can also contain a `value` property.
+```
+
+As a simple example using a commands list (commands list from *jupyter-ai*):
+
+```typescript
+import {
+  AutocompletionRegistry,
+  ChatModel,
+  ChatWidget,
+  IChatMessage,
+  IAutocompletionCommandsProps,
+  INewMessage
+} from '@jupyter/chat';
+
+...
+
+const options = ['/ask', '/clear', '/export', '/generate', '/help', '/learn'];
+const autocompletionCommands: IAutocompletionCommandsProps = {
+  opener: '/',
+  commands: options.map(option => {
+    return { label: option };
+  })
+};
+
+const myChatExtension: JupyterFrontEndPlugin<void> = {
+  id: 'myExtension:plugin',
+  autoStart: true,
+  requires: [IRenderMimeRegistry],
+  activate: (app: JupyterFrontEnd, rmRegistry: IRenderMimeRegistry): void => {
+    const autocompletionRegistry = new AutocompletionRegistry();
+    autocompletionRegistry.add('default', autocompletionCommands);
+
+    const model = new MyModel();
+    const widget = new ChatWidget({
+      model,
+      rmRegistry,
+      autocompletionRegistry
+    });
+
+    app.shell.add(widget, 'right');
+  }
+};
+
+```

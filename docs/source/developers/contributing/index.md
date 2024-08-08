@@ -11,4 +11,5 @@ maxdepth: 2
 
 ./jupyter-chat
 ./jupyterlab-collaborative-chat
+./jupyterlab-ws-chat
 ```
