@@ -1,8 +1,10 @@
 # @jupyter/chat
 
 The `@jupyter/chat` package is a frontend package (React) compatible with jupyterlab.
-It is not an extension, and cannot be used on its own. It can be used with one of the
-extensions provided in this repo (jupyterlab-collaborative-chat or jupyterlab-ws-chat).
+It is not an extension, and cannot be used on its own. It is designed to be used in an
+extension.\
+In this repository, it is currently used in `jupyterlab-collaborative-chat` and
+`jupyterlab-ws-chat`.
 
 ## Building the package
 

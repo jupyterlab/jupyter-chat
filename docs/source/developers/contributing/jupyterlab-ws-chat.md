@@ -4,7 +4,8 @@ The `jupyterlab-ws-chat` extension adds a chat panel relying on websocket for me
 
 ## Development installation
 
-Installing this extension in development mode requires an environment with *python* and *nodejs*.
+Installing this extension in development mode requires an environment with *python* and
+*nodejs*.
 
 ```bash
 # In the following commands, 'mamba' can be replaced with 'conda'
@@ -12,7 +13,7 @@ mamba create -n jupyter-chat python nodejs
 mamba activate jupyter-chat
 ```
 
-The following command install the extension in development mode:
+The following commands install the extension in development mode:
 
 ```bash
 # Install the extension

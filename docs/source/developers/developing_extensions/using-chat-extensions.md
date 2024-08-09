@@ -6,15 +6,16 @@ The collaborative chat depends on [jupyter collaboration](https://jupyterlab-rea
 to exchange the messages.
 
 As a very brief summary, jupyter collaboration allows jupyterlab users to share a
-document in real time, based on [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type).
-All changes made to the document are propagated to all users. These change can occur
-from the frontend or from the backend. The shared document has an object representation
-in Typescript (for the frontend) and in Python (for the backend). These representation
+document in real time, based on
+[CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type). Any change
+made to the document is propagated to all users. These change can occur from the
+frontend or from the backend. The shared document has an object representation in
+Typescript (for the frontend) and in Python (for the backend). These representations
 can be accessed and used by external extensions.
 
 ### Exposed token
 
-`jupyterlab-collaborative-chat` expose several token that allow external extension to
+`jupyterlab-collaborative-chat` expose several tokens that allow external extensions to
 interact with.
 
 #### IChatFactory
@@ -23,25 +24,26 @@ This token is composed of:
 
 - `widgetConfig` object, to retrieve and change the current [settings](#chat-settings)
 of all the chats
-- `tracker`, a widget tracker that allow to track all the collaborative chats, and to
-get the current one.
+- `tracker`, a widget tracker that allows to track all the collaborative chats, and to
+retrieve the current one.
 
 ```{caution}
-Currently the widget tracker only track the main area widgets, not the one opened in the
-side panel.
+Currently the widget tracker only track the main area widgets, not the ones opened in
+the side panel.
 ```
 
 #### IChatPanel
 
 This token is a pointer to the left panel containing chats.\
-It can be useful to programmatically open chat in the panel for example, or to list the
+It can be used to programmatically open chat in the panel for example, or to list the
 opened chats.
 
 #### IAutocompletionRegistry
 
-this is the [autocompletion registry](#autocompletion-registry) used by the chat widgets.
+This is the [autocompletion registry](#autocompletion-registry) used by the chat
+widgets.
 
-Autocompletion commands can be added to it, and than usable from the chat widget.
+Autocompletion commands can be added to it, and than usable from the chat input.
 
 ### Interact with the chat from the backend
 
@@ -49,10 +51,10 @@ Autocompletion commands can be added to it, and than usable from the chat widget
 on the server side. This websocket server allows to retrieve a shared document.
 
 In addition, when a shared document is created, an event is emitted. We can use that
-event data to trigger a connection to the shared document.
+event to trigger a connection to the shared document.
 
-Below is an example of an server extension that respond every message written to any
-collaborative chat:
+Here's an example of a server extension that responds to every message received in one
+of the collaborative chats:
 
 ```python
 import jupyter_collaboration
@@ -72,7 +74,7 @@ if int(jupyter_collaboration.__version__[0]) >= 3:
 else:
     COLLAB_VERSION = 2
 
-BOT = {
+USER = {
     "username": str(uuid.uuid4()),
     "name": "user",
     "display_name": "User"
@@ -125,7 +127,7 @@ class MyExtension(ExtensionApp):
                 continue
             messages = change["insert"]
             for message in messages:
-                if message["sender"] == BOT["username"] or message["raw_time"]:
+                if message["sender"] == USER["username"] or message["raw_time"]:
                     continue
                 chat.create_task(
                     self.write_message(
@@ -134,18 +136,18 @@ class MyExtension(ExtensionApp):
                 )
 
     async def write_message(self, chat: YChat, body: str) -> None:
-        bot = chat.get_user_by_name(BOT["name"])
+        bot = chat.get_user_by_name(USER["name"])
         if not bot:
-            chat.set_user(BOT)
+            chat.set_user(USER)
         else:
-            BOT["username"] = bot["username"]
+            USER["username"] = bot["username"]
 
         chat.add_message({
             "type": "msg",
             "body": body,
             "id": str(uuid.uuid4()),
             "time": time.time(),
-            "sender": BOT["username"],
+            "sender": USER["username"],
             "raw_time": False
         })
 

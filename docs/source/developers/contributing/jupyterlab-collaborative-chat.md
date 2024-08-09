@@ -4,7 +4,8 @@ The `jupyterlab-collaborative-chat` extension adds collaborative chats to jupyte
 
 ## Development installation
 
-Installing this extension in development mode requires an environment with *python* and *nodejs*.
+Installing this extension in development mode requires an environment with *python* and
+*nodejs*.
 
 ```bash
 # In the following commands, 'mamba' can be replaced with 'conda'
@@ -12,7 +13,7 @@ mamba create -n jupyter-chat python nodejs
 mamba activate jupyter-chat
 ```
 
-The following command install the extension in development mode:
+The following commands install the extension in development mode:
 
 ```bash
 # Install the extension
@@ -43,7 +44,7 @@ jlpm build:collaborative
 
 ### Unit tests
 
-There are a few unit tests in *packages/jupyterlab-collaborative-chat/src/__tests__*.
+There are a few unit tests in *packages/jupyterlab-collaborative-chat/src/\_\_tests\_\_*.
 
 They make use of [jest](https://jestjs.io/).
 
@@ -56,7 +57,7 @@ jlpm test
 
 ### Integration tests
 
-There are more integration tests, located in *packages/jupyterlab-collaborative-chat/ui-tests*.
+The integration tests are located in *packages/jupyterlab-collaborative-chat/ui-tests*.
 
 They make use of [playwright](https://playwright.dev/).
 

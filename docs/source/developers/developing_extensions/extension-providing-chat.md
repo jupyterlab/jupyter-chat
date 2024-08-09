@@ -12,7 +12,7 @@ but is not tied to any messaging technology.
 It's up to the extension to choose which messaging technology to use.
 ```
 
-## Add the dependency
+## Adding the dependency
 
 In the extension *package.json* file, the dependency must be added to the `dependencies`
 section.
@@ -23,7 +23,8 @@ section.
 
 ## Including a chat in an extension
 
-The package provide a jupyterlab widget (UI), that can be instantiated from the extension.
+The package provide a jupyterlab widget (UI), that can be instantiated from the
+extension.
 
 ```typescript
 import { ChatWidget } from '@jupyter/chat';
@@ -38,17 +39,17 @@ This widget needs at least 2 arguments, the [model](#model) and the
 
 The model is the entry point to use the chat in a javascript/typescript package.
 
-A model is provided by the package, and already includes all the required method to
+A model is provided by the package, and already includes all the required methods to
 interact with the UI part of the chat.
 
-The extension has to provide a class extending the `@jupyter/chat` model, including the
-method `addMessage()`.
+The extension has to provide a class extending the `@jupyter/chat` model, implementing
+at least the `addMessage()` method.
 
 This method is called when a user send a message using the input of the chat. It should
 contain the code that will dispatch the message through the messaging technology.
 
-In the following example, the message is logged to the console and added in the message
-list.
+As an example, here is a simple model that log the message to the console and add it in
+the message list.
 
 ```typescript
 import { ChatModel, IChatMessage, INewMessage } from '@jupyter/chat';
@@ -80,7 +81,7 @@ extension.
 
 ### A full example
 
-The example below adds a new chat panel to the right.
+The example below adds a new chat to the right panel.
 
 When a user sends a message, it is logged in the console and added to the message list.
 
@@ -134,11 +135,12 @@ const myChatExtension: JupyterFrontEndPlugin<void> = {
 };
 
 export default [myChatExtension];
+
 ```
 
 ## Optional parameters of the model
 
-The model accept some options in the constructor, which bring some additional
+The model accepts some options in the constructor, which bring some additional
 features to the chat.
 
 ```typescript
@@ -229,12 +231,12 @@ const myChatExtension: JupyterFrontEndPlugin<void> = {
 The *activeCellManager* is mandatory to include the [code toolbar](#code-toolbar) to the
 chat.
 
-The active cell manager will ensure that a Notebook is visible, with an active cell, to
+The active cell manager ensures that a Notebook is visible and has an active cell, to
 enable the buttons in the code toolbar.
 
-This active cell manager must be instantiate in the extension to be propagated to the
+This active cell manager must be instantiate in the extension, to be propagated to the
 model. It requires the `INotebookTracker` token, provided by the *notebook-extension* of
-jupyterlab. Again, in the previous example, the modification would be:
+jupyterlab. In the previous example, the modification would be:
 
 {emphasize-lines="2,14,17,20,21,22,23,24"}
 
@@ -308,13 +310,15 @@ const myChatExtension: JupyterFrontEndPlugin<void> = {
 ### autocompletionRegistry
 
 The `autocompletionRegistry` adds autocompletion feature to the chat input. This can be
-useful for automating chat reading, like in [jupyter-ai](https://github.com/jupyterlab/jupyter-ai).
+useful for automating chat messages reading, like in
+[jupyter-ai](https://github.com/jupyterlab/jupyter-ai).
 
-It uses the `Autocomplete` from [Material UI](https://mui.com/material-ui/react-autocomplete/),
+It uses the `Autocomplete` from
+[Material UI](https://mui.com/material-ui/react-autocomplete/),
 and can be customized using its [API](https://mui.com/material-ui/api/autocomplete/).
 
-Several *Autocompletion properties* objects (implementing `IAutocompletionCommandsProps`) can be
-added to the registry.
+Several *Autocompletion properties* objects (implementing
+`IAutocompletionCommandsProps`) can be added to the registry.
 
 ```{warning}
 Currently, only one *autocompletion properties* object can be used for a chat widget,
@@ -335,7 +339,13 @@ The *autocompletion command* is an object containing at least a `label` property
 which can also contain a `value` property.
 ```
 
-As a simple example using a commands list (commands list from *jupyter-ai*):
+```{tip}
+Adding the `renderOption` in the property `props` of the *autocompletion command* allows
+to customize the rendering of the entries. Some documentation about it can be found in
+the [Material UI API](https://mui.com/material-ui/api/autocomplete/).
+```
+
+Here is a simple example using a commands list (commands list copied from *jupyter-ai*):
 
 ```typescript
 import {
@@ -375,5 +385,4 @@ const myChatExtension: JupyterFrontEndPlugin<void> = {
     app.shell.add(widget, 'right');
   }
 };
-
 ```

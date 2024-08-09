@@ -1,8 +1,8 @@
 # Developers
 
-This section is addressed to developers, and contains documentation about:
+This section is aimed at developers and contains documentation on :
 
-- how to develop an extension providing a chat or to include a chat extension
+- how to develop a chat extension or include one of the chat extensions
 - how to contribute to this project
 
 ```{toctree}
