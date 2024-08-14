@@ -23,7 +23,7 @@ section.
 
 ## Including a chat in an extension
 
-The package provide a jupyterlab widget (UI), that can be instantiated from the
+The package provides a jupyterlab widget (UI), that can be instantiated from the
 extension.
 
 ```typescript
@@ -45,10 +45,10 @@ interact with the UI part of the chat.
 The extension has to provide a class extending the `@jupyter/chat` model, implementing
 at least the `addMessage()` method.
 
-This method is called when a user send a message using the input of the chat. It should
+This method is called when a user sends a message using the input of the chat. It should
 contain the code that will dispatch the message through the messaging technology.
 
-As an example, here is a simple model that log the message to the console and add it in
+As an example, here is a simple model that logs the message to the console and adds it to
 the message list.
 
 ```typescript
@@ -234,7 +234,7 @@ chat.
 The active cell manager ensures that a Notebook is visible and has an active cell, to
 enable the buttons in the code toolbar.
 
-This active cell manager must be instantiate in the extension, to be propagated to the
+This active cell manager must be instantiated in the extension, to be propagated to the
 model. It requires the `INotebookTracker` token, provided by the *notebook-extension* of
 jupyterlab. In the previous example, the modification would be:
 

@@ -32,7 +32,7 @@ pip uninstall jupyterlab-collaborative-chat
 ## Building the assets
 
 Changes in typescript sources of `@jupyter/chat` or `jupyterlab-collaborative-chat` must
-be build again to be available in the jupyterlab.
+be built again to be available in the jupyterlab.
 
 ```bash
 jlpm build:collaborative

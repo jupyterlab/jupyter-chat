@@ -8,7 +8,7 @@ to exchange the messages.
 As a very brief summary, jupyter collaboration allows jupyterlab users to share a
 document in real time, based on
 [CRDT](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type). Any change
-made to the document is propagated to all users. These change can occur from the
+made to the document is propagated to all users. These changes can occur from the
 frontend or from the backend. The shared document has an object representation in
 Typescript (for the frontend) and in Python (for the backend). These representations
 can be accessed and used by external extensions.
@@ -28,7 +28,7 @@ of all the chats
 retrieve the current one.
 
 ```{caution}
-Currently the widget tracker only track the main area widgets, not the ones opened in
+Currently the widget tracker only tracks the main area widgets, not the ones opened in
 the side panel.
 ```
 
@@ -43,7 +43,7 @@ opened chats.
 This is the [autocompletion registry](#autocompletion-registry) used by the chat
 widgets.
 
-Autocompletion commands can be added to it, and than usable from the chat input.
+Autocompletion commands can be added to it, and then be used from the chat input.
 
 ### Interact with the chat from the backend
 
