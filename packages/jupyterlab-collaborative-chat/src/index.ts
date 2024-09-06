@@ -137,12 +137,12 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
       unreadNotifications = setting.get('unreadNotifications')
         .composite as boolean;
       enableCodeToolbar = setting.get('enableCodeToolbar').composite as boolean;
-      widgetConfig.configChanged.emit({
+      widgetConfig.config = {
         sendWithShiftEnter,
         stackMessages,
         unreadNotifications,
         enableCodeToolbar
-      });
+      };
     }
 
     if (settingRegistry) {

@@ -14,7 +14,7 @@ import { ABCWidgetFactory, DocumentRegistry } from '@jupyterlab/docregistry';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { Contents, User } from '@jupyterlab/services';
 import { CommandRegistry } from '@lumino/commands';
-import { Signal } from '@lumino/signaling';
+import { ISignal, Signal } from '@lumino/signaling';
 
 import { CollaborativeChatModel } from './model';
 import { CollaborativeChatPanel } from './widget';
@@ -31,14 +31,29 @@ export class WidgetConfig implements IWidgetConfig {
    * The constructor of the WidgetConfig.
    */
   constructor(config: Partial<IConfig>) {
-    this.config = config;
-    this.configChanged.connect((_, config) => {
-      this.config = { ...this.config, ...config };
-    });
+    this._config = config;
   }
 
-  config: Partial<IConfig>;
-  configChanged = new Signal<this, Partial<IConfig>>(this);
+  /**
+   * Getter and setter for the config.
+   */
+  get config(): Partial<IConfig> {
+    return this._config;
+  }
+  set config(value: Partial<IConfig>) {
+    this._config = { ...this._config, ...value };
+    this._configChanged.emit(value);
+  }
+
+  /**
+   * Getter for the configChanged signal
+   */
+  get configChanged(): ISignal<WidgetConfig, Partial<IConfig>> {
+    return this._configChanged;
+  }
+
+  private _config: Partial<IConfig>;
+  private _configChanged = new Signal<WidgetConfig, Partial<IConfig>>(this);
 }
 
 /**
