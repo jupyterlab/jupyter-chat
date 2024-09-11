@@ -67,7 +67,7 @@ test.describe('#autocompletionRegistry', () => {
       async options => {
         // register a basic autocompletion object in registry.
         const registry = await window.getPlugin(
-          'jupyterlab-collaborative-chat:autocompletionRegistry'
+          'jupyterlab-collaborative-chat-extension:autocompletionRegistry'
         );
 
         registry.removeAll();
@@ -147,7 +147,7 @@ test.describe('#autocompletionRegistry', () => {
     await page.evaluate(
       async options => {
         const registry = await window.getPlugin(
-          'jupyterlab-collaborative-chat:autocompletionRegistry'
+          'jupyterlab-collaborative-chat-extension:autocompletionRegistry'
         );
         registry.remove('test-completion');
       },
@@ -171,7 +171,7 @@ test.describe('#autocompletionRegistry', () => {
     await page.evaluate(
       async options => {
         const registry = await window.getPlugin(
-          'jupyterlab-collaborative-chat:autocompletionRegistry'
+          'jupyterlab-collaborative-chat-extension:autocompletionRegistry'
         );
         const autocompletion = {
           opener: options.newOpener,
@@ -211,7 +211,7 @@ test.describe('#autocompletionRegistry', () => {
     const added = await page.evaluate(
       async options => {
         const registry = await window.getPlugin(
-          'jupyterlab-collaborative-chat:autocompletionRegistry'
+          'jupyterlab-collaborative-chat-extension:autocompletionRegistry'
         );
         const autocompletion = {
           opener: options.newOpener,
@@ -246,7 +246,7 @@ test.describe('#autocompletionRegistry', () => {
     await page.evaluate(
       async options => {
         const registry = await window.getPlugin(
-          'jupyterlab-collaborative-chat:autocompletionRegistry'
+          'jupyterlab-collaborative-chat-extension:autocompletionRegistry'
         );
         const autocompletion = {
           opener: options.newOpener,
@@ -277,7 +277,7 @@ test('should use properties from autocompletion object', async ({ page }) => {
   await page.evaluate(
     async options => {
       const registry = await window.getPlugin(
-        'jupyterlab-collaborative-chat:autocompletionRegistry'
+        'jupyterlab-collaborative-chat-extension:autocompletionRegistry'
       );
       registry.removeAll();
       const autocompletion = {
@@ -312,7 +312,7 @@ test('single autocompletion should be the default', async ({ page }) => {
   await page.evaluate(
     async options => {
       const registry = await window.getPlugin(
-        'jupyterlab-collaborative-chat:autocompletionRegistry'
+        'jupyterlab-collaborative-chat-extension:autocompletionRegistry'
       );
       registry.removeAll();
       const autocompletion = {

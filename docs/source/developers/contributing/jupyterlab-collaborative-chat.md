@@ -20,7 +20,7 @@ The following commands install the extension in development mode:
 ./scripts/install.sh collaborative
 
 # Symlink the assets
-jupyter labextension develop --overwrite packages/jupyterlab-collaborative-chat
+jupyter labextension develop --overwrite python/jupyterlab-collaborative-chat
 ```
 
 To uninstall it, run:
@@ -44,27 +44,27 @@ jlpm build:collaborative
 
 ### Unit tests
 
-There are a few unit tests in *packages/jupyterlab-collaborative-chat/src/\_\_tests\_\_*.
+There are a few unit tests in *python/jupyterlab-collaborative-chat/src/\_\_tests\_\_*.
 
 They make use of [jest](https://jestjs.io/).
 
 The following commands run them:
 
 ```bash
-cd ./packages/jupyterlab-collaborative-chat
+cd ./python/jupyterlab-collaborative-chat
 jlpm test
 ```
 
 ### Integration tests
 
-The integration tests are located in *packages/jupyterlab-collaborative-chat/ui-tests*.
+The integration tests are located in *python/jupyterlab-collaborative-chat/ui-tests*.
 
 They make use of [playwright](https://playwright.dev/).
 
 The following commands run them:
 
 ```bash
-cd ./packages/jupyterlab-collaborative-chat/ui-tests
+cd ./python/jupyterlab-collaborative-chat/ui-tests
 
 # Install the tests dependencies
 jlpm install
