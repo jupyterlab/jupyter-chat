@@ -1,7 +1,7 @@
 {
   "name": "jupyterlab-collaborative-chat",
   "version": "0.3.1",
-  "description": "A chat extension based on shared documents",
+  "description": "The library to build a chat based on shared document",
   "keywords": [
     "jupyter",
     "jupyterlab",
@@ -19,8 +19,7 @@
   "files": [
     "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}",
     "style/**/*.{css,js,eot,gif,html,jpg,json,png,svg,woff2,ttf}",
-    "src/**/*.{ts,tsx}",
-    "schema/*.json"
+    "src/**/*.{ts,tsx}"
   ],
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -30,17 +29,14 @@
     "url": "https://github.com/jupyterlab/jupyter-chat.git"
   },
   "scripts": {
-    "build": "jlpm build:lib && jlpm build:labextension:dev",
-    "build:prod": "jlpm clean && jlpm build:lib:prod && jlpm build:labextension",
-    "build:labextension": "jupyter labextension build .",
-    "build:labextension:dev": "jupyter labextension build --development True .",
+    "build": "jlpm build:lib",
+    "build:prod": "jlpm clean && jlpm build:lib:prod",
     "build:lib": "tsc --sourceMap",
     "build:lib:prod": "tsc",
     "clean": "jlpm clean:lib",
     "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
     "clean:lintcache": "rimraf .eslintcache .stylelintcache",
-    "clean:labextension": "rimraf jupyterlab_collaborative_chat/labextension jupyterlab_collaborative_chat/_version.py",
-    "clean:all": "jlpm clean:lib && jlpm clean:labextension && jlpm clean:lintcache",
+    "clean:all": "jlpm clean:lib && jlpm clean:lintcache",
     "eslint": "jlpm eslint:check --fix",
     "eslint:check": "eslint . --cache --ext .ts,.tsx",
     "install:extension": "jlpm build",
@@ -52,9 +48,7 @@
     "stylelint": "jlpm stylelint:check --fix",
     "stylelint:check": "stylelint --cache \"style/**/*.css\"",
     "test": "jest --coverage",
-    "watch": "run-p watch:src watch:labextension",
-    "watch:src": "tsc -w --sourceMap",
-    "watch:labextension": "jupyter labextension watch ."
+    "watch:src": "tsc -w --sourceMap"
   },
   "dependencies": {
     "@jupyter/chat": "^0.3.1",
@@ -81,8 +75,6 @@
     "yjs": "^13.5.40"
   },
   "devDependencies": {
-    "@jupyterlab/builder": "^4.2.0",
-    "@jupyterlab/testutils": "^4.2.0",
     "@types/jest": "^29.2.0",
     "@types/json-schema": "^7.0.11",
     "@types/react": "^18.2.0",
@@ -115,27 +107,6 @@
   "styleModule": "style/index.js",
   "publishConfig": {
     "access": "public"
-  },
-  "jupyterlab": {
-    "discovery": {
-      "server": {
-        "managers": [
-          "pip"
-        ],
-        "base": {
-          "name": "jupyterlab_collaborative_chat"
-        }
-      }
-    },
-    "extension": true,
-    "outputDir": "jupyterlab_collaborative_chat/labextension",
-    "schemaDir": "schema",
-    "sharedPackages": {
-      "@jupyter/docprovider": {
-        "bundled": true,
-        "singleton": true
-      }
-    }
   },
   "eslintIgnore": [
     "node_modules",

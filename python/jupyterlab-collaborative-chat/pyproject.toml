@@ -54,7 +54,7 @@ artifacts = ["jupyterlab_collaborative_chat/labextension"]
 exclude = [".github", "binder"]
 
 [tool.hatch.build.targets.wheel.shared-data]
-"jupyterlab_collaborative_chat/labextension" = "share/jupyter/labextensions/jupyterlab-collaborative-chat"
+"jupyterlab_collaborative_chat/labextension" = "share/jupyter/labextensions/jupyterlab-collaborative-chat-extension"
 "install.json" = "share/jupyter/labextensions/jupyterlab-collaborative-chat/install.json"
 "jupyter-config/server-config" = "etc/jupyter/jupyter_server_config.d"
 

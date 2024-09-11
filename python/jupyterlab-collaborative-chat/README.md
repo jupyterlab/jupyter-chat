@@ -4,7 +4,7 @@
 A chat extension based on shared documents
 
 This extension is composed of a Python package named `jupyterlab_collaborative_chat`
-for the server extension and a NPM package named `jupyterlab-collaborative-chat`
+for the server extension and a NPM package named `jupyterlab-collaborative-chat-extension`
 for the frontend extension.
 
 This extension registers a `YChat` shared document, and associate the document to a
