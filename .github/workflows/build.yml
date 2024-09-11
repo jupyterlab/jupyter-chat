@@ -65,15 +65,15 @@ jobs:
     - name: Package extension
       run: |
         set -eux
-        pip install build packages/jupyterlab-${{ matrix.extension }}-chat
-        python -m build packages/jupyterlab-${{ matrix.extension }}-chat
+        pip install build python/jupyterlab-${{ matrix.extension }}-chat
+        python -m build python/jupyterlab-${{ matrix.extension }}-chat
         pip uninstall -y "jupyterlab_${{ matrix.extension }}_chat" jupyterlab
 
     - name: Upload package
       uses: actions/upload-artifact@v3
       with:
         name: jupyterlab_${{ matrix.extension }}_chat-artifacts
-        path: packages/jupyterlab-${{ matrix.extension }}-chat/dist/jupyterlab_${{ matrix.extension }}_chat*
+        path: python/jupyterlab-${{ matrix.extension }}-chat/dist/jupyterlab_${{ matrix.extension }}_chat*
         if-no-files-found: error
 
   integration-tests:
@@ -105,7 +105,7 @@ jobs:
         python -m pip install "jupyterlab>=4.0.0,<5" jupyterlab_${{ matrix.extension }}_chat*.whl
 
     - name: Install dependencies
-      working-directory: packages/jupyterlab-${{ matrix.extension }}-chat/ui-tests
+      working-directory: python/jupyterlab-${{ matrix.extension }}-chat/ui-tests
       env:
         YARN_ENABLE_IMMUTABLE_INSTALLS: 0
         PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
@@ -120,10 +120,10 @@ jobs:
 
     - name: Install browser
       run: jlpm playwright install chromium
-      working-directory: packages/jupyterlab-${{ matrix.extension }}-chat/ui-tests
+      working-directory: python/jupyterlab-${{ matrix.extension }}-chat/ui-tests
 
     - name: Execute integration tests
-      working-directory: packages/jupyterlab-${{ matrix.extension }}-chat/ui-tests
+      working-directory: python/jupyterlab-${{ matrix.extension }}-chat/ui-tests
       run: |
         jlpm playwright test --retries=2
 
@@ -133,8 +133,8 @@ jobs:
       with:
         name: jupyterlab_${{ matrix.extension }}_chat-playwright-tests
         path: |
-          packages/jupyterlab-${{ matrix.extension }}-chat/ui-tests/test-results
-          packages/jupyterlab-${{ matrix.extension }}-chat/ui-tests/playwright-report
+          python/jupyterlab-${{ matrix.extension }}-chat/ui-tests/test-results
+          python/jupyterlab-${{ matrix.extension }}-chat/ui-tests/playwright-report
 
   check_links:
     name: Check Links

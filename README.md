@@ -22,7 +22,7 @@ used by a jupyterlab extension to create a chat.
 
 ### Jupyterlab extensions
 
-#### Chat extension based on shared document: *packages/jupyterlab-collaborative-chat*
+#### Chat extension based on shared document: *python/jupyterlab-collaborative-chat*
 
 This extension is an implementation of the `@jupyter/chat` package, relying on
 shared document (see [jupyter_ydoc](https://github.com/jupyter-server/jupyter_ydoc)).
@@ -33,7 +33,7 @@ It is composed of:
   the `YChat` shared document in jupyter_ydoc
 - a NPM package named `jupyterlab-collaborative-chat`.
 
-#### Chat extension based on websocket: *packages/jupyterlab-ws-chat*
+#### Chat extension based on websocket: *python/jupyterlab-ws-chat*
 
 This extension is an implementation of the `@jupyter/chat` package, relying on
 websocket for the communication between server and front end.
