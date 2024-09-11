@@ -1,7 +1,0 @@
-{
-  "NotebookApp": {
-    "nbserver_extensions": {
-      "jupyterlab_ws_chat": true
-    }
-  }
-}
