@@ -1,5 +1,5 @@
 {
-  "name": "jupyterlab-ws-chat",
+  "name": "jupyterlab-ws-chat-extension",
   "version": "0.3.1",
   "description": "A chat extension for Jupyterlab",
   "keywords": [
@@ -40,7 +40,7 @@
     "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
     "clean:lintcache": "rimraf .eslintcache .stylelintcache",
     "clean:labextension": "rimraf jupyterlab_ws_chat/labextension jupyterlab_ws_chat/_version.py",
-    "clean:all": "jlpm clean:lib && clean:labextension && jlpm clean:lintcache",
+    "clean:all": "jlpm clean:lib && jlpm clean:labextension && jlpm clean:lintcache",
     "eslint": "jlpm eslint:check --fix",
     "eslint:check": "eslint . --cache --ext .ts,.tsx",
     "install:extension": "jlpm build",
@@ -51,7 +51,9 @@
     "prettier:check": "jlpm prettier:base --check",
     "stylelint": "jlpm stylelint:check --fix",
     "stylelint:check": "stylelint --cache \"style/**/*.css\"",
-    "watch:src": "tsc -w --sourceMap"
+    "watch": "run-p watch:src watch:labextension",
+    "watch:src": "tsc -w --sourceMap",
+    "watch:labextension": "jupyter labextension watch ."
   },
   "dependencies": {
     "@jupyter/chat": "^0.3.1",
@@ -65,7 +67,6 @@
   },
   "devDependencies": {
     "@jupyterlab/builder": "^4.2.0",
-    "@jupyterlab/testutils": "^4.2.0",
     "@types/json-schema": "^7.0.11",
     "@types/react": "^18.2.0",
     "@types/react-addons-linked-state-mixin": "^0.14.22",
@@ -119,7 +120,6 @@
     "coverage",
     "**/*.d.ts",
     "tests",
-    "**/__tests__",
     "ui-tests"
   ],
   "eslintConfig": {

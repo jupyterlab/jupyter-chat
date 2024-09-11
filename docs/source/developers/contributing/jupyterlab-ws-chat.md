@@ -20,7 +20,7 @@ The following commands install the extension in development mode:
 ./scripts/install.sh ws
 
 # Symlink the assets
-jupyter labextension develop --overwrite packages/jupyterlab-ws-chat
+jupyter labextension develop --overwrite python/jupyterlab-ws-chat
 ```
 
 To uninstall it, run:

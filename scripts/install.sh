@@ -14,7 +14,7 @@ if [ -z "${EXTENSION}" ]; then
   pip install -e python/jupyterlab-collaborative-chat[test]
 
   # install websocket chat extension
-  pip install -e packages/jupyterlab-ws-chat[test]
+  pip install -e python/jupyterlab-ws-chat[test]
 else
   PACKAGE="jupyterlab-${EXTENSION}-chat"
   jlpm build:${EXTENSION}
