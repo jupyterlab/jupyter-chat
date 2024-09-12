@@ -23,6 +23,14 @@
       }
     ]
   },
+  "jupyter.lab.shortcuts": [
+    {
+      "command": "collaborative-chat:focusInput",
+      "keys": ["Accel Shift 1"],
+      "selector": "body",
+      "preventDefault": false
+    }
+  ],
   "properties": {},
   "additionalProperties": false
 }

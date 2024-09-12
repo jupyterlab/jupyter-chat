@@ -76,6 +76,11 @@ export interface IChatModel extends IDisposable {
   readonly viewportChanged?: ISignal<IChatModel, number[]>;
 
   /**
+   * A signal emitting when the focus is requested on the input.
+   */
+  readonly focusInputSignal?: ISignal<IChatModel, void>;
+
+  /**
    * Send a message, to be defined depending on the chosen technology.
    * Default to no-op.
    *
@@ -139,6 +144,11 @@ export interface IChatModel extends IDisposable {
    * @param count - the number of messages to delete.
    */
   messagesDeleted(index: number, count: number): void;
+
+  /**
+   * Function to request the focus on the input of the chat.
+   */
+  focusInput(): void;
 }
 
 /**
@@ -329,6 +339,13 @@ export class ChatModel implements IChatModel {
   }
 
   /**
+   * A signal emitting when the focus is requested on the input.
+   */
+  get focusInputSignal(): ISignal<IChatModel, void> {
+    return this._focusInputSignal;
+  }
+
+  /**
    * Send a message, to be defined depending on the chosen technology.
    * Default to no-op.
    *
@@ -436,6 +453,13 @@ export class ChatModel implements IChatModel {
   }
 
   /**
+   * Function to request the focus on the input of the chat.
+   */
+  focusInput(): void {
+    this._focusInputSignal.emit();
+  }
+
+  /**
    * Add unread messages to the list.
    * @param indexes - list of new indexes.
    */
@@ -498,6 +522,7 @@ export class ChatModel implements IChatModel {
   private _configChanged = new Signal<IChatModel, IConfig>(this);
   private _unreadChanged = new Signal<IChatModel, number[]>(this);
   private _viewportChanged = new Signal<IChatModel, number[]>(this);
+  private _focusInputSignal = new Signal<ChatModel, void>(this);
 }
 
 /**
