@@ -23,8 +23,8 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { WebSocketHandler } from './handlers/websocket-handler';
 
 const pluginIds = {
-  autocompletionRegistry: 'jupyterlab-ws-chat:autocompletionRegistry',
-  chat: 'jupyterlab-ws-chat:chat'
+  autocompletionRegistry: 'jupyterlab-ws-chat-extension:autocompletionRegistry',
+  chat: 'jupyterlab-ws-chat-extension:chat'
 };
 
 /**

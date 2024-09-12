@@ -1,10 +1,11 @@
 # jupyterlab_collaborative_chat
 
 [![Github Actions Status](https://github.com/jupyterlab/jupyter-chat/workflows/Build/badge.svg)](https://github.com/jupyterlab/jupyter-chat/actions/workflows/build.yml)[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jupyterlab/jupyter-chat/main?urlpath=lab)
-A chat extension based on shared documents
+
+A chat extension based on shared documents.
 
 This extension is composed of a Python package named `jupyterlab_collaborative_chat`
-for the server extension and a NPM package named `jupyterlab-collaborative-chat`
+for the server extension and a NPM package named `jupyterlab-collaborative-chat-extension`
 for the frontend extension.
 
 This extension registers a `YChat` shared document, and associate the document to a
@@ -65,8 +66,6 @@ The `jlpm` command is JupyterLab's pinned version of
 pip install -e ".[test]"
 # Link your development version of the extension with JupyterLab
 jupyter labextension develop . --overwrite
-# Server extension must be manually installed in develop mode
-jupyter server extension enable jupyterlab_collaborative_chat
 # Rebuild extension Typescript source after making changes
 jlpm build
 ```
@@ -91,34 +90,14 @@ jupyter lab build --minimize=False
 ### Development uninstall
 
 ```bash
-# Server extension must be manually disabled in develop mode
-jupyter server extension disable jupyterlab_collaborative_chat
 pip uninstall jupyterlab_collaborative_chat
 ```
 
 In development mode, you will also need to remove the symlink created by `jupyter labextension develop`
 command. To find its location, you can run `jupyter labextension list` to figure out where the `labextensions`
-folder is located. Then you can remove the symlink named `jupyterlab-collaborative-chat` within that folder.
+folder is located. Then you can remove the symlink named `jupyterlab-collaborative-chat-extension` within that folder.
 
 ### Testing the extension
-
-#### Server tests
-
-This extension is using [Pytest](https://docs.pytest.org/) for Python code testing.
-
-Install test dependencies (needed only once):
-
-```sh
-pip install -e ".[test]"
-# Each time you install the Python package, you need to restore the front-end extension link
-jupyter labextension develop . --overwrite
-```
-
-To execute them, run:
-
-```sh
-pytest -vv -r ap --cov jupyterlab_collaborative_chat
-```
 
 #### Frontend tests
 

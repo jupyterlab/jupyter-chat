@@ -225,7 +225,7 @@ test.describe('#settings', () => {
     const settings = await openSettings(page, true);
     await expect(
       settings.locator(
-        '.jp-PluginList-entry[data-id="jupyterlab-collaborative-chat:factory"]'
+        '.jp-PluginList-entry[data-id="jupyterlab-collaborative-chat-extension:factory"]'
       )
     ).toBeVisible();
   });

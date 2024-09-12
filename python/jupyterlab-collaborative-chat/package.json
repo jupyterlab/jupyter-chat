@@ -1,7 +1,7 @@
 {
-  "name": "jupyterlab-ws-chat",
+  "name": "jupyterlab-collaborative-chat-extension",
   "version": "0.3.1",
-  "description": "A chat extension for Jupyterlab",
+  "description": "A chat extension based on shared documents",
   "keywords": [
     "jupyter",
     "jupyterlab",
@@ -39,8 +39,8 @@
     "clean": "jlpm clean:lib",
     "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
     "clean:lintcache": "rimraf .eslintcache .stylelintcache",
-    "clean:labextension": "rimraf jupyterlab_ws_chat/labextension jupyterlab_ws_chat/_version.py",
-    "clean:all": "jlpm clean:lib && clean:labextension && jlpm clean:lintcache",
+    "clean:labextension": "rimraf jupyterlab_collaborative_chat/labextension jupyterlab_collaborative_chat/_version.py",
+    "clean:all": "jlpm clean:lib && jlpm clean:labextension && jlpm clean:lintcache",
     "eslint": "jlpm eslint:check --fix",
     "eslint:check": "eslint . --cache --ext .ts,.tsx",
     "install:extension": "jlpm build",
@@ -51,25 +51,39 @@
     "prettier:check": "jlpm prettier:base --check",
     "stylelint": "jlpm stylelint:check --fix",
     "stylelint:check": "stylelint --cache \"style/**/*.css\"",
-    "watch:src": "tsc -w --sourceMap"
+    "watch": "run-p watch:src watch:labextension",
+    "watch:src": "tsc -w --sourceMap",
+    "watch:labextension": "jupyter labextension watch ."
   },
   "dependencies": {
-    "@jupyter/chat": "^0.3.1",
+    "@jupyter/collaboration": "^2.1.0",
+    "@jupyter/docprovider": "^2.1.0",
+    "@jupyter/ydoc": "^1.1.1",
+    "@jupyterlab/application": "^4.2.0",
     "@jupyterlab/apputils": "^4.3.0",
     "@jupyterlab/coreutils": "^6.2.0",
+    "@jupyterlab/docregistry": "^4.2.0",
+    "@jupyterlab/launcher": "^4.2.0",
     "@jupyterlab/notebook": "^4.2.0",
     "@jupyterlab/rendermime": "^4.2.0",
     "@jupyterlab/services": "^7.2.0",
     "@jupyterlab/settingregistry": "^4.2.0",
-    "@lumino/coreutils": "^2.0.0"
+    "@jupyterlab/translation": "^4.2.0",
+    "@jupyterlab/ui-components": "^4.2.0",
+    "@lumino/commands": "^2.0.0",
+    "@lumino/coreutils": "^2.0.0",
+    "@lumino/signaling": "^2.0.0",
+    "@lumino/widgets": "^2.0.0",
+    "jupyterlab-collaborative-chat": "^0.3.1",
+    "react": "^18.2.0",
+    "y-protocols": "^1.0.5",
+    "yjs": "^13.5.40"
   },
   "devDependencies": {
     "@jupyterlab/builder": "^4.2.0",
-    "@jupyterlab/testutils": "^4.2.0",
     "@types/json-schema": "^7.0.11",
     "@types/react": "^18.2.0",
     "@types/react-addons-linked-state-mixin": "^0.14.22",
-    "@types/react-dom": "^18.2.0",
     "@typescript-eslint/eslint-plugin": "^6.1.0",
     "@typescript-eslint/parser": "^6.1.0",
     "css-loader": "^6.7.1",
@@ -105,13 +119,23 @@
           "pip"
         ],
         "base": {
-          "name": "jupyterlab_ws_chat"
+          "name": "jupyterlab_collaborative_chat"
         }
       }
     },
     "extension": true,
-    "outputDir": "jupyterlab_ws_chat/labextension",
-    "schemaDir": "schema"
+    "outputDir": "jupyterlab_collaborative_chat/labextension",
+    "schemaDir": "schema",
+    "sharedPackages": {
+      "@jupyter/docprovider": {
+        "bundled": true,
+        "singleton": true
+      },
+      "jupyterlab-collaborative-chat": {
+        "bundled": true,
+        "singleton": true
+      }
+    }
   },
   "eslintIgnore": [
     "node_modules",
@@ -119,7 +143,6 @@
     "coverage",
     "**/*.d.ts",
     "tests",
-    "**/__tests__",
     "ui-tests"
   ],
   "eslintConfig": {

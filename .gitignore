@@ -7,14 +7,19 @@ node_modules/
 *.egg-info/
 .ipynb_checkpoints
 *.tsbuildinfo
-jupyter_chat/labextension
 .jupyter_ystore.db
+labextension
+
 # Version file is handled by hatchling
-jupyter_chat/_version.py
+python/**/_version.py
+
+# jest test reports
+packages/jupyter-chat/junit.xml
+packages/jupyterlab-collaborative-chat/junit.xml
 
 # Integration tests
-ui-tests/test-results/
-ui-tests/playwright-report/
+python/jupyterlab-collaborative-chat/ui-tests/test-results/
+python/jupyterlab-collaborative-chat/ui-tests/playwright-report/
 
 # Created by https://www.gitignore.io/api/python
 # Edit at https://www.gitignore.io/?templates=python

@@ -22,13 +22,15 @@
     "url": "https://github.com/jupyterlab/jupyter-chat.git"
   },
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "python/jupyterlab-collaborative-chat",
+    "python/jupyterlab-ws-chat"
   ],
   "scripts": {
     "build": "lerna run build --stream",
     "build:core": "lerna run build --stream --scope \"@jupyter/chat\"",
-    "build:collaborative": "lerna run build --scope=jupyterlab-collaborative-chat --include-filtered-dependencies",
-    "build:ws": "lerna run build --scope=jupyterlab-ws-chat --include-filtered-dependencies",
+    "build:collaborative": "lerna run build --scope=jupyterlab-collaborative-chat-extension --include-filtered-dependencies",
+    "build:ws": "lerna run build --scope=jupyterlab-ws-chat-extension --include-filtered-dependencies",
     "build:prod": "lerna run build:prod --stream",
     "clean": "lerna run clean",
     "clean:all": "lerna run clean:all",
