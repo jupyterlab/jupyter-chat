@@ -64,6 +64,8 @@ const chat: JupyterFrontEndPlugin<void> = {
     settingsRegistry: ISettingRegistry | null,
     themeManager: IThemeManager | null
   ) => {
+    const { commands } = app;
+
     // Create an active cell manager for code toolbar.
     const activeCellManager = new ActiveCellManager({
       tracker: notebookTracker,
@@ -146,7 +148,17 @@ const chat: JupyterFrontEndPlugin<void> = {
       restorer.add(chatWidget as ReactWidget, 'jupyter-chat');
     }
 
-    console.log('Chat extension initialized');
+    // The command to focus the input of the chat widget.
+    commands.addCommand('websocket-chat:focusInput', {
+      caption: 'Focus the input of the chat widget',
+      isEnabled: () => chatWidget !== null,
+      execute: async () => {
+        if (chatWidget !== null) {
+          app.shell.activateById(chatWidget.id);
+          chatHandler.focusInput();
+        }
+      }
+    });
   }
 };
 
