@@ -18,7 +18,11 @@ import { Send, Cancel } from '@mui/icons-material';
 import clsx from 'clsx';
 import { IChatModel } from '../model';
 import { IAutocompletionRegistry } from '../registry';
-import { AutocompleteCommand, IAutocompletionCommandsProps } from '../types';
+import {
+  AutocompleteCommand,
+  IAutocompletionCommandsProps,
+  IConfig
+} from '../types';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
 const SEND_BUTTON_CLASS = 'jp-chat-send-button';
@@ -32,10 +36,26 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     model.config.sendWithShiftEnter ?? false
   );
 
+  // store reference to the input element to enable focusing it easily
+  const inputRef = useRef<HTMLInputElement>();
+
   useEffect(() => {
-    model.configChanged.connect((_, config) => {
+    const configChanged = (_: IChatModel, config: IConfig) => {
       setSendWithShiftEnter(config.sendWithShiftEnter ?? false);
-    });
+    };
+    model.configChanged.connect(configChanged);
+
+    const focusInputElement = () => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    };
+    model.focusInputSignal?.connect(focusInputElement);
+
+    return () => {
+      model.configChanged?.disconnect(configChanged);
+      model.focusInputSignal?.disconnect(focusInputElement);
+    };
   }, [model]);
 
   // The autocomplete commands options.
@@ -177,6 +197,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
             multiline
             onKeyDown={handleKeyDown}
             placeholder="Start chatting"
+            inputRef={inputRef}
             InputProps={{
               ...params.InputProps,
               endAdornment: (
