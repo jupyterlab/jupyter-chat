@@ -73,7 +73,7 @@ export class CollaborativeChatPanel extends DocumentWidget<
    * The model for the widget.
    */
   get model(): CollaborativeChatModel {
-    return this.content.model as CollaborativeChatModel;
+    return this.context.model;
   }
 
   /**

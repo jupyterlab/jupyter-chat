@@ -78,13 +78,17 @@ export const CommandIDs = {
    */
   openChat: 'collaborative-chat:open',
   /**
-   * Move a main widget to the side panel
+   * Move a main widget to the side panel.
    */
   moveToSide: 'collaborative-chat:moveToSide',
   /**
    * Mark as read.
    */
-  markAsRead: 'collaborative-chat:markAsRead'
+  markAsRead: 'collaborative-chat:markAsRead',
+  /**
+   * Focus the input of the current chat.
+   */
+  focusInput: 'collaborative-chat:focusInput'
 };
 
 /**

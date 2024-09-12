@@ -512,6 +512,25 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
       .catch(e =>
         console.error('The command to open a chat is not initialized\n', e)
       );
+
+    // The command to focus the input of the current chat widget.
+    commands.addCommand(CommandIDs.focusInput, {
+      caption: 'Focus the input of the current chat widget',
+      isEnabled: () => tracker.currentWidget !== null,
+      execute: async () => {
+        const widget = tracker.currentWidget;
+        // Ensure widget is a CollaborativeChatPanel and is in main area
+        if (
+          !widget ||
+          !(widget instanceof CollaborativeChatPanel) ||
+          !Array.from(app.shell.widgets('main')).includes(widget)
+        ) {
+          return;
+        }
+        app.shell.activateById(widget.id);
+        widget.model.focusInput();
+      }
+    });
   }
 };
 
