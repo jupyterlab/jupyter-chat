@@ -2,6 +2,37 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.4.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.3.1...67dbc0d100da651bfbaaf8a52ddf1490b18128ee))
+
+### Enhancements made
+
+- Ychat update messages [#81](https://github.com/jupyterlab/jupyter-chat/pull/81) ([@brichet](https://github.com/brichet))
+- Use getter and setter for the config in the collaborative chat [#77](https://github.com/jupyterlab/jupyter-chat/pull/77) ([@brichet](https://github.com/brichet))
+
+### Maintenance and upkeep improvements
+
+- Shortcut to focus on the chat input [#80](https://github.com/jupyterlab/jupyter-chat/pull/80) ([@brichet](https://github.com/brichet))
+- Fix labextension in develop mode in dev install [#79](https://github.com/jupyterlab/jupyter-chat/pull/79) ([@brichet](https://github.com/brichet))
+- Reoganize the project to split typescript packages and extensions [#78](https://github.com/jupyterlab/jupyter-chat/pull/78) ([@brichet](https://github.com/brichet))
+- Bump micromatch from 4.0.7 to 4.0.8 in the npm_and_yarn group across 1 directory [#76](https://github.com/jupyterlab/jupyter-chat/pull/76) ([@dependabot](https://github.com/dependabot))
+- Bump webpack from 5.93.0 to 5.94.0 in the npm_and_yarn group across 1 directory [#75](https://github.com/jupyterlab/jupyter-chat/pull/75) ([@dependabot](https://github.com/dependabot))
+- Bump the npm_and_yarn group across 3 directories with 3 updates [#73](https://github.com/jupyterlab/jupyter-chat/pull/73) ([@dependabot](https://github.com/dependabot))
+
+### Documentation improvements
+
+- Fix ReadTheDocs [#74](https://github.com/jupyterlab/jupyter-chat/pull/74) ([@jtpio](https://github.com/jtpio))
+- Add documentation [#71](https://github.com/jupyterlab/jupyter-chat/pull/71) ([@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2024-08-07&to=2024-09-13&type=c))
+
+[@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2024-08-07..2024-09-13&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adependabot+updated%3A2024-08-07..2024-09-13&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2024-08-07..2024-09-13&type=Issues) | [@jtpio](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2024-08-07..2024-09-13&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.3.1
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.3.0...fe37f7ddc158787bf2a5a77343391379a6216b14))
@@ -15,8 +46,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2024-08-05&to=2024-08-06&type=c))
 
 [@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2024-08-05..2024-08-06&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2024-08-05..2024-08-06&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.3.0
 

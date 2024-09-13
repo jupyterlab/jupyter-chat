@@ -2430,7 +2430,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyter/chat@^0.3.1, @jupyter/chat@workspace:packages/jupyter-chat":
+"@jupyter/chat@^0.4.0, @jupyter/chat@workspace:packages/jupyter-chat":
   version: 0.0.0-use.local
   resolution: "@jupyter/chat@workspace:packages/jupyter-chat"
   dependencies:
@@ -10042,7 +10042,7 @@ __metadata:
     eslint: ^8.36.0
     eslint-config-prettier: ^8.8.0
     eslint-plugin-prettier: ^5.0.0
-    jupyterlab-collaborative-chat: ^0.3.1
+    jupyterlab-collaborative-chat: ^0.4.0
     mkdirp: ^1.0.3
     npm-run-all: ^4.1.5
     prettier: ^3.0.0
@@ -10061,11 +10061,11 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"jupyterlab-collaborative-chat@^0.3.1, jupyterlab-collaborative-chat@workspace:packages/jupyterlab-collaborative-chat":
+"jupyterlab-collaborative-chat@^0.4.0, jupyterlab-collaborative-chat@workspace:packages/jupyterlab-collaborative-chat":
   version: 0.0.0-use.local
   resolution: "jupyterlab-collaborative-chat@workspace:packages/jupyterlab-collaborative-chat"
   dependencies:
-    "@jupyter/chat": ^0.3.1
+    "@jupyter/chat": ^0.4.0
     "@jupyter/collaboration": ^2.1.0
     "@jupyter/docprovider": ^2.1.0
     "@jupyter/ydoc": ^1.1.1
@@ -10118,7 +10118,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "jupyterlab-ws-chat-extension@workspace:python/jupyterlab-ws-chat"
   dependencies:
-    "@jupyter/chat": ^0.3.1
+    "@jupyter/chat": ^0.4.0
     "@jupyterlab/apputils": ^4.3.0
     "@jupyterlab/builder": ^4.2.0
     "@jupyterlab/coreutils": ^6.2.0
