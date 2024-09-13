@@ -101,9 +101,12 @@ class YChat(YBaseDoc):
         """
         Append a message to the document.
         """
+        timestamp: float = time.time()
+        message["time"] = timestamp
         with self._ydoc.transaction():
-            self._ymessages.append(message)
-            return len(self._ymessages) - 1
+            index = len(self._ymessages) - next((i for i, v in enumerate(self.get_messages()[::-1]) if v["time"] < timestamp), len(self._ymessages))
+            self._ymessages.insert(index, message)
+            return index
 
     def update_message(self, message: dict, index: int, append: bool = False):
         """
