@@ -57,7 +57,13 @@ jobs:
     - name: Install dependencies
       run: python -m pip install -U "jupyterlab>=4.0.0,<5"
 
-    - name: Build package
+    - name: Build the extensions
+      run: |
+        set -eux
+        ./scripts/install.sh ${{ matrix.extension }}
+        pytest -vv -r ap --cov python/jupyterlab-${{ matrix.extension }}-chat
+
+    - name: Package the extensions
       run:  |
         jlpm install
         jlpm build:${{ matrix.extension }}
