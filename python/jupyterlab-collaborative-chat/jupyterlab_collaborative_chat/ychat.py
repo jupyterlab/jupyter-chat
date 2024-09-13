@@ -81,13 +81,13 @@ class YChat(YBaseDoc):
         with self._ydoc.transaction():
             self._yusers.update({user["username"]: user})
 
-    def get_message(self, id: str) -> dict | None:
+    def get_message(self, id: str) -> tuple[dict | None, int | None]:
         """
-        Returns a message from its id, or None
+        Returns a message and its index from its id, or None
         """
         return next(
-            (msg for msg in self.get_messages() if msg["id"] == id),
-            None
+            ((msg, i) for i, msg in enumerate(self.get_messages()) if msg["id"] == id),
+            (None, None)
         )
 
     def get_messages(self) -> list[dict]:
@@ -97,12 +97,45 @@ class YChat(YBaseDoc):
         """
         return self._ymessages.to_py()
 
-    def add_message(self, message: dict) -> None:
+    def add_message(self, message: dict) -> int:
         """
-        Appends a message to the document.
+        Append a message to the document.
+        """
+        timestamp: float = time.time()
+        message["time"] = timestamp
+        with self._ydoc.transaction():
+            index = len(self._ymessages) - next((i for i, v in enumerate(self.get_messages()[::-1]) if v["time"] < timestamp), len(self._ymessages))
+            self._ymessages.insert(index, message)
+            return index
+
+    def update_message(self, message: dict, index: int, append: bool = False):
+        """
+        Update a message of the document.
+        If append is True, the content will be append to the previous content.
         """
         with self._ydoc.transaction():
-            self._ymessages.append(message)
+            initial_message = self._ymessages.pop(index)
+            if append:
+                message["body"] = initial_message["body"] + message["body"]
+            self._ymessages.insert(index, message)
+
+    def set_message(self, message: dict, index: int | None = None, append: bool = False):
+        """
+        Update or append a message.
+        """
+
+        if index is not None and 0 <= index < len(self._ymessages):
+            initial_message = self._ymessages[index]
+        else:
+            return self.add_message(message)
+
+        if not initial_message["id"] == message["id"]:
+            initial_message, index = self.get_message(message["id"])
+            if initial_message is None:
+                return self.add_message(message)
+
+        self.update_message(message, index, append)
+        return index
 
     def get_single_metadata(self, name) -> dict:
         """
