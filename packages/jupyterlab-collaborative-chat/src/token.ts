@@ -3,7 +3,12 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { IConfig, chatIcon } from '@jupyter/chat';
+import {
+  IConfig,
+  chatIcon,
+  IActiveCellManager,
+  ISelectionWatcher
+} from '@jupyter/chat';
 import { IWidgetTracker } from '@jupyterlab/apputils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { Token } from '@lumino/coreutils';
@@ -101,6 +106,13 @@ export const IChatPanel = new Token<ChatPanel>(
 /**
  * The active cell manager plugin.
  */
-export const IActiveCellManagerToken = new Token<ChatPanel>(
+export const IActiveCellManagerToken = new Token<IActiveCellManager>(
   'jupyter-collaborative-chat:IActiveCellManager'
+);
+
+/**
+ * The selection watcher plugin.
+ */
+export const ISelectionWatcherToken = new Token<ISelectionWatcher>(
+  'jupyter-collaborative-chat:ISelectionWatcher'
 );
