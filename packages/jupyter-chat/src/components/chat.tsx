@@ -27,7 +27,7 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
   // handled by the listeners registered in the effect hooks above.
   const onSend = async (input: string) => {
     // send message to backend
-    model.addMessage({ body: input });
+    model.sendMessage({ body: input });
   };
 
   return (

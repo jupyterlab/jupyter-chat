@@ -87,7 +87,7 @@ export interface IChatModel extends IDisposable {
    * @param message - the message to send.
    * @returns whether the message has been sent or not, or nothing if not needed.
    */
-  addMessage(message: INewMessage): Promise<boolean | void> | boolean | void;
+  sendMessage(message: INewMessage): Promise<boolean | void> | boolean | void;
 
   /**
    * Optional, to update a message from the chat panel.
@@ -352,7 +352,7 @@ export class ChatModel implements IChatModel {
    * @param message - the message to send.
    * @returns whether the message has been sent or not.
    */
-  addMessage(message: INewMessage): Promise<boolean | void> | boolean | void {}
+  sendMessage(message: INewMessage): Promise<boolean | void> | boolean | void {}
 
   /**
    * Dispose the chat model.
