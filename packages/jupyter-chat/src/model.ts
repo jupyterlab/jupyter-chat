@@ -15,6 +15,7 @@ import {
   IUser
 } from './types';
 import { IActiveCellManager } from './active-cell-manager';
+import { ISelectionWatcher } from './selection-watcher';
 
 /**
  * The chat model interface.
@@ -54,6 +55,11 @@ export interface IChatModel extends IDisposable {
    * Get the active cell manager.
    */
   readonly activeCellManager: IActiveCellManager | null;
+
+  /**
+   * Get the selection watcher.
+   */
+  readonly selectionWatcher: ISelectionWatcher | null;
 
   /**
    * A signal emitting when the messages list is updated.
@@ -169,18 +175,10 @@ export class ChatModel implements IChatModel {
     this._commands = options.commands;
 
     this._activeCellManager = options.activeCellManager ?? null;
+
+    this._selectionWatcher = options.selectionWatcher ?? null;
   }
 
-  /**
-   * The chat messages list.
-   */
-  get messages(): IChatMessage[] {
-    return this._messages;
-  }
-
-  get activeCellManager(): IActiveCellManager | null {
-    return this._activeCellManager;
-  }
   /**
    * The chat model id.
    */
@@ -199,6 +197,26 @@ export class ChatModel implements IChatModel {
   }
   set name(value: string) {
     this._name = value;
+  }
+
+  /**
+   * The chat messages list.
+   */
+  get messages(): IChatMessage[] {
+    return this._messages;
+  }
+  /**
+   * Get the active cell manager.
+   */
+  get activeCellManager(): IActiveCellManager | null {
+    return this._activeCellManager;
+  }
+
+  /**
+   * Get the selection watcher.
+   */
+  get selectionWatcher(): ISelectionWatcher | null {
+    return this._selectionWatcher;
   }
 
   /**
@@ -517,6 +535,7 @@ export class ChatModel implements IChatModel {
   private _isDisposed = false;
   private _commands?: CommandRegistry;
   private _activeCellManager: IActiveCellManager | null;
+  private _selectionWatcher: ISelectionWatcher | null;
   private _notificationId: string | null = null;
   private _messagesUpdated = new Signal<IChatModel, void>(this);
   private _configChanged = new Signal<IChatModel, IConfig>(this);
@@ -544,8 +563,13 @@ export namespace ChatModel {
     commands?: CommandRegistry;
 
     /**
-     * Active cell manager
+     * Active cell manager.
      */
     activeCellManager?: IActiveCellManager | null;
+
+    /**
+     * Selection watcher.
+     */
+    selectionWatcher?: ISelectionWatcher | null;
   }
 }

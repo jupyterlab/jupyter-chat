@@ -14,18 +14,20 @@ import {
   TextField,
   Theme
 } from '@mui/material';
-import { Send, Cancel } from '@mui/icons-material';
+import { Cancel } from '@mui/icons-material';
 import clsx from 'clsx';
+
+import { SendButton } from './input/send-button';
 import { IChatModel } from '../model';
 import { IAutocompletionRegistry } from '../registry';
 import {
   AutocompleteCommand,
   IAutocompletionCommandsProps,
-  IConfig
+  IConfig,
+  Selection
 } from '../types';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
-const SEND_BUTTON_CLASS = 'jp-chat-send-button';
 const CANCEL_BUTTON_CLASS = 'jp-chat-cancel-button';
 
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
@@ -139,9 +141,18 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   /**
    * Triggered when sending the message.
    */
-  function onSend() {
+  function onSend(selection?: Selection) {
+    let content = input;
+    if (selection) {
+      content += `
+
+\`\`\`
+${selection.source}
+\`\`\`
+`;
+    }
+    props.onSend(content);
     setInput('');
-    props.onSend(input);
   }
 
   /**
@@ -213,20 +224,12 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
                       <Cancel />
                     </IconButton>
                   )}
-                  <IconButton
-                    size="small"
-                    color="primary"
-                    onClick={onSend}
-                    disabled={
-                      props.onCancel
-                        ? input === props.value
-                        : !input.trim().length
-                    }
-                    title={`Send message ${sendWithShiftEnter ? '(SHIFT+ENTER)' : '(ENTER)'}`}
-                    className={clsx(SEND_BUTTON_CLASS)}
-                  >
-                    <Send />
-                  </IconButton>
+                  <SendButton
+                    model={model}
+                    sendWithShiftEnter={sendWithShiftEnter}
+                    inputExists={input.length > 0}
+                    onSend={onSend}
+                  />
                 </InputAdornment>
               )
             }}
