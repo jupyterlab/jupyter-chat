@@ -7,6 +7,7 @@ import {
   ActiveCellManager,
   AutocompletionRegistry,
   IAutocompletionRegistry,
+  SelectionWatcher,
   buildChatSidebar,
   buildErrorWidget
 } from '@jupyter/chat';
@@ -72,12 +73,18 @@ const chat: JupyterFrontEndPlugin<void> = {
       shell: app.shell
     });
 
+    // Create an watcher (to send selection).
+    const selectionWatcher = new SelectionWatcher({
+      shell: app.shell
+    });
+
     /**
      * Initialize chat handler, open WS connection
      */
     const chatHandler = new WebSocketHandler({
       commands: app.commands,
-      activeCellManager
+      activeCellManager,
+      selectionWatcher
     });
 
     /**
