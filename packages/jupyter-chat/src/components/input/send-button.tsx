@@ -21,10 +21,12 @@ export type SendButtonProps = {
   sendWithShiftEnter: boolean;
   inputExists: boolean;
   onSend: (selection?: Selection) => unknown;
+  includeSelectionVisible?: boolean;
 };
 
 export function SendButton(props: SendButtonProps): JSX.Element {
   const { activeCellManager, selectionWatcher } = props.model;
+  const includeSelectionVisible = props.includeSelectionVisible ?? true;
   const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -58,15 +60,16 @@ export function SendButton(props: SendButtonProps): JSX.Element {
       setSelectionTooltip(tooltip);
     };
 
-    selectionWatcher?.selectionChanged.connect(toggleIncludeState);
-    activeCellManager?.availabilityChanged.connect(toggleIncludeState);
-
-    toggleIncludeState();
+    if (includeSelectionVisible) {
+      selectionWatcher?.selectionChanged.connect(toggleIncludeState);
+      activeCellManager?.availabilityChanged.connect(toggleIncludeState);
+      toggleIncludeState();
+    }
     return () => {
       selectionWatcher?.selectionChanged.disconnect(toggleIncludeState);
       activeCellManager?.availabilityChanged.disconnect(toggleIncludeState);
     };
-  }, [selectionWatcher, activeCellManager]);
+  }, [activeCellManager, selectionWatcher, includeSelectionVisible]);
 
   const defaultTooltip = props.sendWithShiftEnter
     ? 'Send message (SHIFT+ENTER)'
@@ -115,73 +118,79 @@ export function SendButton(props: SendButtonProps): JSX.Element {
       >
         <SendIcon />
       </TooltippedButton>
-      <TooltippedButton
-        onClick={e => {
-          openMenu(e.currentTarget);
-        }}
-        disabled={disabled}
-        tooltip=""
-        buttonProps={{
-          variant: 'contained',
-          onKeyDown: e => {
-            if (e.key !== 'Enter' && e.key !== ' ') {
-              return;
-            }
-            openMenu(e.currentTarget);
-            // stopping propagation of this event prevents the prompt from being
-            // sent when the dropdown button is selected and clicked via 'Enter'.
-            e.stopPropagation();
-          }
-        }}
-        sx={{
-          minWidth: 'unset',
-          padding: '4px 0px',
-          borderRadius: '0px 2px 2px 0px',
-          borderLeft: '1px solid white'
-        }}
-      >
-        <KeyboardArrowDown />
-      </TooltippedButton>
-      <Menu
-        open={menuOpen}
-        onClose={closeMenu}
-        anchorEl={menuAnchorEl}
-        anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'right'
-        }}
-        transformOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right'
-        }}
-        sx={{
-          '& .MuiMenuItem-root': {
-            display: 'flex',
-            alignItems: 'centincludeSelectionDisableder',
-            gap: '8px'
-          },
-          '& svg': {
-            lineHeight: 0
-          }
-        }}
-      >
-        <MenuItem
-          onClick={e => {
-            sendWithSelection();
-            // prevent sending second message with no selection
-            e.stopPropagation();
-          }}
-          disabled={disableInclude}
-        >
-          <includeSelectionIcon.react />
-          <Box>
-            <Typography display="block">Send message with selection</Typography>
-            <Typography display="block" sx={{ opacity: 0.618 }}>
-              {selectionTooltip}
-            </Typography>
-          </Box>
-        </MenuItem>
-      </Menu>
+      {includeSelectionVisible && (
+        <>
+          <TooltippedButton
+            onClick={e => {
+              openMenu(e.currentTarget);
+            }}
+            disabled={disabled}
+            tooltip=""
+            buttonProps={{
+              variant: 'contained',
+              onKeyDown: e => {
+                if (e.key !== 'Enter' && e.key !== ' ') {
+                  return;
+                }
+                openMenu(e.currentTarget);
+                // stopping propagation of this event prevents the prompt from being
+                // sent when the dropdown button is selected and clicked via 'Enter'.
+                e.stopPropagation();
+              }
+            }}
+            sx={{
+              minWidth: 'unset',
+              padding: '4px 0px',
+              borderRadius: '0px 2px 2px 0px',
+              borderLeft: '1px solid white'
+            }}
+          >
+            <KeyboardArrowDown />
+          </TooltippedButton>
+          <Menu
+            open={menuOpen}
+            onClose={closeMenu}
+            anchorEl={menuAnchorEl}
+            anchorOrigin={{
+              vertical: 'top',
+              horizontal: 'right'
+            }}
+            transformOrigin={{
+              vertical: 'bottom',
+              horizontal: 'right'
+            }}
+            sx={{
+              '& .MuiMenuItem-root': {
+                display: 'flex',
+                alignItems: 'centincludeSelectionDisableder',
+                gap: '8px'
+              },
+              '& svg': {
+                lineHeight: 0
+              }
+            }}
+          >
+            <MenuItem
+              onClick={e => {
+                sendWithSelection();
+                // prevent sending second message with no selection
+                e.stopPropagation();
+              }}
+              disabled={disableInclude}
+            >
+              <includeSelectionIcon.react />
+              <Box>
+                <Typography display="block">
+                  Send message with selection
+                </Typography>
+                <Typography display="block" sx={{ opacity: 0.618 }}>
+                  {selectionTooltip}
+                </Typography>
+              </Box>
+            </MenuItem>
+          </Menu>
+        </>
+      )}
     </Box>
   );
 }

@@ -393,6 +393,7 @@ export function ChatMessage(props: ChatMessageProps): JSX.Element {
           onSend={(input: string) => updateMessage(message.id, input)}
           onCancel={() => cancelEdition()}
           model={model}
+          includeSelectionVisible={false}
         />
       ) : (
         <RendermimeMarkdown

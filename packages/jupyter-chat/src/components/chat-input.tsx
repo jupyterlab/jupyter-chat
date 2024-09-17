@@ -38,6 +38,13 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     model.config.sendWithShiftEnter ?? false
   );
 
+  // Display the include selection menu if it is not explicitly hidden, and if at least
+  // one of the tool to check for text or cell selection is enabled.
+  let includeSelectionVisible = props.includeSelectionVisible ?? true;
+  if (model.activeCellManager === null && model.selectionWatcher === null) {
+    includeSelectionVisible = false;
+  }
+
   // store reference to the input element to enable focusing it easily
   const inputRef = useRef<HTMLInputElement>();
 
@@ -140,6 +147,8 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
 
   /**
    * Triggered when sending the message.
+   *
+   * Add code block if cell or text is selected.
    */
   function onSend(selection?: Selection) {
     let content = input;
@@ -229,6 +238,7 @@ ${selection.source}
                     sendWithShiftEnter={sendWithShiftEnter}
                     inputExists={input.length > 0}
                     onSend={onSend}
+                    includeSelectionVisible={includeSelectionVisible}
                   />
                 </InputAdornment>
               )
@@ -297,6 +307,10 @@ export namespace ChatInput {
      * The function to be called to cancel editing.
      */
     onCancel?: () => unknown;
+    /**
+     * Whether to allow or not including selection.
+     */
+    includeSelectionVisible?: boolean;
     /**
      * Custom mui/material styles.
      */
