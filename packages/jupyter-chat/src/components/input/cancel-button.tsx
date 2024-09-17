@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) Jupyter Development Team.
+ * Distributed under the terms of the Modified BSD License.
+ */
+
 import CancelIcon from '@mui/icons-material/Cancel';
 import React from 'react';
 import { TooltippedButton } from '../mui-extras/tooltipped-button';
