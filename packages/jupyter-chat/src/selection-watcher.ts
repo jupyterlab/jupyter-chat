@@ -71,7 +71,18 @@ export class SelectionWatcher {
   constructor(options: SelectionWatcher.IOptions) {
     this._shell = options.shell;
     this._shell.currentChanged?.connect((sender, args) => {
-      this._mainAreaWidget = args.newValue;
+      // Do not change the main area widget if the new one has no editor, for example
+      // a chat panel. However, the selected text is only available if the main area
+      // widget is visible. (to avoid confusion in inclusion/replacement).
+      const widget = args.newValue;
+      if (widget === null) {
+        this._mainAreaWidget = widget;
+      }
+      const editor = getEditor(widget);
+      // widget type check is redundant but hints the type to TypeScript
+      if (editor && widget instanceof DocumentWidget) {
+        this._mainAreaWidget = widget;
+      }
     });
 
     setInterval(this._poll.bind(this), 200);
@@ -93,7 +104,8 @@ export class SelectionWatcher {
       this._shell.widgets(),
       widget => widget.id === selection.widgetId
     );
-    if (!(widget instanceof DocumentWidget)) {
+    // Do not allow replacement on non visible widget (to avoid confusion).
+    if (!widget?.isVisible || !(widget instanceof DocumentWidget)) {
       return;
     }
 
@@ -126,13 +138,17 @@ export class SelectionWatcher {
   }
 
   protected _poll(): void {
-    const prevSelection = this._selection;
-    const currSelection = getTextSelection(this._mainAreaWidget);
+    let currSelection: SelectionWatcher.Selection | null = null;
 
-    if (prevSelection?.text === currSelection?.text) {
-      return;
+    // Do not return selected text if the main area widget is hidden.
+    if (this._mainAreaWidget?.isVisible) {
+      const prevSelection = this._selection;
+      currSelection = getTextSelection(this._mainAreaWidget);
+
+      if (prevSelection?.text === currSelection?.text) {
+        return;
+      }
     }
-
     this._selection = currSelection;
     this._selectionChanged.emit(currSelection);
   }
