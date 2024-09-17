@@ -7,7 +7,7 @@ import clsx from 'clsx';
 import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
 import SendIcon from '@mui/icons-material/Send';
 import { Box, Menu, MenuItem, Typography } from '@mui/material';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { IChatModel } from '../../model';
 import { TooltippedButton } from '../mui-extras/tooltipped-button';
@@ -24,7 +24,7 @@ export type SendButtonProps = {
 };
 
 export function SendButton(props: SendButtonProps): JSX.Element {
-  const { model } = props;
+  const { activeCellManager, selectionWatcher } = props.model;
   const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -39,23 +39,34 @@ export function SendButton(props: SendButtonProps): JSX.Element {
 
   const disabled = !props.inputExists;
 
-  const includeSelectionDisabled = !model.selectionWatcher;
-  // const includeSelectionDisabled = !(activeCell.exists || textSelection);
-  const buildSelectionTooltip = () => {
-    return model.selectionWatcher?.selection
-      ? `${model.selectionWatcher.selection.numLines} lines selected`
-      : model.activeCellManager?.available
-        ? 'Code from 1 active cell'
-        : 'No selection or active cell';
-  };
+  const [selectionTooltip, setSelectionTooltip] = useState<string>('');
+  const [disableInclude, setDisableInclude] = useState<boolean>(true);
 
-  const [selectionTooltip, setSelectionTooltip] = useState<string>(
-    buildSelectionTooltip()
-  );
+  useEffect(() => {
+    /**
+     * Enable or disable the include selection button, and adapt the tooltip.
+     */
+    const toggleIncludeState = () => {
+      setDisableInclude(
+        !(selectionWatcher?.selection || activeCellManager?.available)
+      );
+      const tooltip = selectionWatcher?.selection
+        ? `${selectionWatcher.selection.numLines} lines selected`
+        : activeCellManager?.available
+          ? 'Code from 1 active cell'
+          : 'No selection or active cell';
+      setSelectionTooltip(tooltip);
+    };
 
-  model.selectionWatcher?.selectionChanged.connect(() => {
-    setSelectionTooltip(buildSelectionTooltip());
-  });
+    selectionWatcher?.selectionChanged.connect(toggleIncludeState);
+    activeCellManager?.availabilityChanged.connect(toggleIncludeState);
+
+    toggleIncludeState();
+    return () => {
+      selectionWatcher?.selectionChanged.disconnect(toggleIncludeState);
+      activeCellManager?.availabilityChanged.disconnect(toggleIncludeState);
+    };
+  }, [selectionWatcher, activeCellManager]);
 
   const defaultTooltip = props.sendWithShiftEnter
     ? 'Send message (SHIFT+ENTER)'
@@ -63,22 +74,22 @@ export function SendButton(props: SendButtonProps): JSX.Element {
   const tooltip = defaultTooltip;
 
   function sendWithSelection() {
-    // otherwise, parse the text selection or active cell, with the text
-    // selection taking precedence.
-    if (model.selectionWatcher?.selection) {
+    // Append the selected text if exists.
+    if (selectionWatcher?.selection) {
       props.onSend({
         type: 'text',
-        source: model.selectionWatcher.selection.text
+        source: selectionWatcher.selection.text
       });
       closeMenu();
       return;
     }
 
-    if (model.activeCellManager?.available) {
+    // Append the active cell content if exists.
+    if (activeCellManager?.available) {
       props.onSend({
         type: 'cell',
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        source: model.activeCellManager.getContent(false)!.source
+        source: activeCellManager.getContent(false)!.source
       });
       closeMenu();
       return;
@@ -146,7 +157,7 @@ export function SendButton(props: SendButtonProps): JSX.Element {
         sx={{
           '& .MuiMenuItem-root': {
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'centincludeSelectionDisableder',
             gap: '8px'
           },
           '& svg': {
@@ -160,7 +171,7 @@ export function SendButton(props: SendButtonProps): JSX.Element {
             // prevent sending second message with no selection
             e.stopPropagation();
           }}
-          disabled={includeSelectionDisabled}
+          disabled={disableInclude}
         >
           <includeSelectionIcon.react />
           <Box>
