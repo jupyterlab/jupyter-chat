@@ -21,12 +21,12 @@ export type SendButtonProps = {
   sendWithShiftEnter: boolean;
   inputExists: boolean;
   onSend: (selection?: Selection) => unknown;
-  includeSelectionVisible?: boolean;
+  hideIncludeSelection?: boolean;
 };
 
 export function SendButton(props: SendButtonProps): JSX.Element {
   const { activeCellManager, selectionWatcher } = props.model;
-  const includeSelectionVisible = props.includeSelectionVisible ?? true;
+  const hideIncludeSelection = props.hideIncludeSelection ?? true;
   const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -60,7 +60,7 @@ export function SendButton(props: SendButtonProps): JSX.Element {
       setSelectionTooltip(tooltip);
     };
 
-    if (includeSelectionVisible) {
+    if (!hideIncludeSelection) {
       selectionWatcher?.selectionChanged.connect(toggleIncludeState);
       activeCellManager?.availabilityChanged.connect(toggleIncludeState);
       toggleIncludeState();
@@ -69,7 +69,7 @@ export function SendButton(props: SendButtonProps): JSX.Element {
       selectionWatcher?.selectionChanged.disconnect(toggleIncludeState);
       activeCellManager?.availabilityChanged.disconnect(toggleIncludeState);
     };
-  }, [activeCellManager, selectionWatcher, includeSelectionVisible]);
+  }, [activeCellManager, selectionWatcher, hideIncludeSelection]);
 
   const defaultTooltip = props.sendWithShiftEnter
     ? 'Send message (SHIFT+ENTER)'
@@ -118,7 +118,7 @@ export function SendButton(props: SendButtonProps): JSX.Element {
       >
         <SendIcon />
       </TooltippedButton>
-      {includeSelectionVisible && (
+      {!hideIncludeSelection && (
         <>
           <TooltippedButton
             onClick={e => {
