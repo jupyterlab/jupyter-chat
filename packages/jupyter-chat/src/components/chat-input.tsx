@@ -8,15 +8,14 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Autocomplete,
   Box,
-  IconButton,
   InputAdornment,
   SxProps,
   TextField,
   Theme
 } from '@mui/material';
-import { Cancel } from '@mui/icons-material';
 import clsx from 'clsx';
 
+import { CancelButton } from './input/cancel-button';
 import { SendButton } from './input/send-button';
 import { IChatModel } from '../model';
 import { IAutocompletionRegistry } from '../registry';
@@ -28,7 +27,6 @@ import {
 } from '../types';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
-const CANCEL_BUTTON_CLASS = 'jp-chat-cancel-button';
 
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
   const { autocompletionName, autocompletionRegistry, model } = props;
@@ -223,15 +221,10 @@ ${selection.source}
               endAdornment: (
                 <InputAdornment position="end">
                   {props.onCancel && (
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      onClick={onCancel}
-                      title={'Cancel edition'}
-                      className={clsx(CANCEL_BUTTON_CLASS)}
-                    >
-                      <Cancel />
-                    </IconButton>
+                    <CancelButton
+                      inputExists={input.length > 0}
+                      onCancel={onCancel}
+                    />
                   )}
                   <SendButton
                     model={model}
@@ -239,6 +232,7 @@ ${selection.source}
                     inputExists={input.length > 0}
                     onSend={onSend}
                     hideIncludeSelection={hideIncludeSelection}
+                    hasButtonOnLeft={!!props.onCancel}
                   />
                 </InputAdornment>
               )

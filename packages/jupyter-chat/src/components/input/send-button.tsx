@@ -3,7 +3,6 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import clsx from 'clsx';
 import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
 import SendIcon from '@mui/icons-material/Send';
 import { Box, Menu, MenuItem, Typography } from '@mui/material';
@@ -16,17 +15,25 @@ import { Selection } from '../../types';
 
 const SEND_BUTTON_CLASS = 'jp-chat-send-button';
 
+/**
+ * The send button props.
+ */
 export type SendButtonProps = {
   model: IChatModel;
   sendWithShiftEnter: boolean;
   inputExists: boolean;
   onSend: (selection?: Selection) => unknown;
   hideIncludeSelection?: boolean;
+  hasButtonOnLeft?: boolean;
 };
 
+/**
+ * The send button, with optional 'include selection' menu.
+ */
 export function SendButton(props: SendButtonProps): JSX.Element {
   const { activeCellManager, selectionWatcher } = props.model;
-  const hideIncludeSelection = props.hideIncludeSelection ?? true;
+  const hideIncludeSelection = props.hideIncludeSelection ?? false;
+  const hasButtonOnLeft = props.hasButtonOnLeft ?? false;
   const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -109,11 +116,14 @@ export function SendButton(props: SendButtonProps): JSX.Element {
           size: 'small',
           title: defaultTooltip,
           variant: 'contained',
-          className: clsx(SEND_BUTTON_CLASS)
+          className: SEND_BUTTON_CLASS
         }}
         sx={{
           minWidth: 'unset',
-          borderRadius: '2px 0px 0px 2px'
+          borderTopLeftRadius: hasButtonOnLeft ? '0px' : '2px',
+          borderTopRightRadius: hideIncludeSelection ? '2px' : '0px',
+          borderBottomRightRadius: hideIncludeSelection ? '2px' : '0px',
+          borderBottomLeftRadius: hasButtonOnLeft ? '0px' : '2px'
         }}
       >
         <SendIcon />
@@ -142,7 +152,7 @@ export function SendButton(props: SendButtonProps): JSX.Element {
               minWidth: 'unset',
               padding: '4px 0px',
               borderRadius: '0px 2px 2px 0px',
-              borderLeft: '1px solid white'
+              marginLeft: '1px'
             }}
           >
             <KeyboardArrowDown />
