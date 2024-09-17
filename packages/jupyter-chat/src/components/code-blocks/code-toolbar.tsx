@@ -12,6 +12,7 @@ import { TooltippedIconButton } from '../mui-extras/tooltipped-icon-button';
 import { IActiveCellManager } from '../../active-cell-manager';
 import { replaceCellIcon } from '../../icons';
 import { IChatModel } from '../../model';
+import { ISelectionWatcher } from '../../selection-watcher';
 
 const CODE_TOOLBAR_CLASS = 'jp-chat-code-toolbar';
 const CODE_TOOLBAR_ITEM_CLASS = 'jp-chat-code-toolbar-item';
@@ -34,25 +35,41 @@ export function CodeToolbar(props: CodeToolbarProps): JSX.Element {
   );
 
   const activeCellManager = model.activeCellManager;
+  const selectionWatcher = model.selectionWatcher;
 
   const [toolbarBtnProps, setToolbarBtnProps] = useState<ToolbarButtonProps>({
-    content: content,
-    activeCellManager: activeCellManager,
-    activeCellAvailable: activeCellManager?.available ?? false
+    content,
+    activeCellManager,
+    selectionWatcher,
+    activeCellAvailable: !!activeCellManager?.available,
+    selectionExists: !!selectionWatcher?.selection
   });
 
   useEffect(() => {
-    activeCellManager?.availabilityChanged.connect(() => {
+    const toggleToolbar = () => {
+      setToolbarEnable(model.config.enableCodeToolbar ?? true);
+    };
+
+    const selectionStatusChange = () => {
       setToolbarBtnProps({
         content,
-        activeCellManager: activeCellManager,
-        activeCellAvailable: activeCellManager.available
+        activeCellManager,
+        selectionWatcher,
+        activeCellAvailable: !!activeCellManager?.available,
+        selectionExists: !!selectionWatcher?.selection
       });
-    });
+    };
 
-    model.configChanged.connect((_, config) => {
-      setToolbarEnable(config.enableCodeToolbar ?? true);
-    });
+    activeCellManager?.availabilityChanged.connect(selectionStatusChange);
+    selectionWatcher?.selectionChanged.connect(selectionStatusChange);
+    model.configChanged.connect(toggleToolbar);
+
+    selectionStatusChange();
+    return () => {
+      activeCellManager?.availabilityChanged.disconnect(selectionStatusChange);
+      selectionWatcher?.selectionChanged.disconnect(selectionStatusChange);
+      model.configChanged.disconnect(toggleToolbar);
+    };
   }, [model]);
 
   return activeCellManager === null || !toolbarEnable ? (
@@ -86,8 +103,10 @@ export function CodeToolbar(props: CodeToolbarProps): JSX.Element {
 
 type ToolbarButtonProps = {
   content: string;
-  activeCellAvailable?: boolean;
   activeCellManager: IActiveCellManager | null;
+  activeCellAvailable?: boolean;
+  selectionWatcher: ISelectionWatcher | null;
+  selectionExists?: boolean;
   className?: string;
 };
 
@@ -126,16 +145,35 @@ function InsertBelowButton(props: ToolbarButtonProps) {
 }
 
 function ReplaceButton(props: ToolbarButtonProps) {
-  const tooltip = props.activeCellAvailable
-    ? 'Replace active cell'
-    : 'Replace active cell (no active cell)';
+  const tooltip = props.selectionExists
+    ? `Replace selection (${props.selectionWatcher?.selection?.numLines} line(s))`
+    : props.activeCellAvailable
+      ? 'Replace selection (active cell)'
+      : 'Replace selection (no selection)';
+
+  const disabled = !props.activeCellAvailable && !props.selectionExists;
+
+  const replace = () => {
+    if (props.selectionExists) {
+      const selection = props.selectionWatcher?.selection;
+      if (!selection) {
+        return;
+      }
+      props.selectionWatcher?.replaceSelection({
+        ...selection,
+        text: props.content
+      });
+    } else if (props.activeCellAvailable) {
+      props.activeCellManager?.replace(props.content);
+    }
+  };
 
   return (
     <TooltippedIconButton
       className={props.className}
       tooltip={tooltip}
-      disabled={!props.activeCellAvailable}
-      onClick={() => props.activeCellManager?.replace(props.content)}
+      disabled={disabled}
+      onClick={replace}
     >
       <replaceCellIcon.react height="16px" width="16px" />
     </TooltippedIconButton>
