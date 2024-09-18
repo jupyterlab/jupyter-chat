@@ -49,8 +49,7 @@ export const sendMessage = async (
     .locator('.jp-chat-input-container')
     .getByRole('combobox');
   const sendButton = chatPanel
-    .locator('.jp-chat-input-container')
-    .getByRole('button');
+    .locator('.jp-chat-input-container .jp-chat-send-button');
   await input.pressSequentially(content);
   await sendButton.click();
 };
