@@ -261,8 +261,9 @@ test.describe('#sendMessages', () => {
     const input = chatPanel
       .locator('.jp-chat-input-container')
       .getByRole('combobox');
-    const sendButton = chatPanel
-      .locator('.jp-chat-input-container .jp-chat-send-button');
+    const sendButton = chatPanel.locator(
+      '.jp-chat-input-container .jp-chat-send-button'
+    );
     await input.pressSequentially(MSG_CONTENT);
     await sendButton.click();
 
