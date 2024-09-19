@@ -3,14 +3,9 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import {
-  expect,
-  galata,
-  IJupyterLabPageFixture,
-  test
-} from '@jupyterlab/galata';
+import { expect, galata, test } from '@jupyterlab/galata';
 
-import { openChat, sendMessage, USER } from './test-utils';
+import { openChat, sendMessage, splitMainArea, USER } from './test-utils';
 
 test.use({
   mockUser: USER,
@@ -25,20 +20,6 @@ test.use({
 const FILENAME = 'toolbar.chat';
 const CONTENT = 'print("This is a code cell")';
 const MESSAGE = `\`\`\`\n${CONTENT}\n\`\`\``;
-
-async function splitMainArea(page: IJupyterLabPageFixture, name: string) {
-  // Emulate drag and drop
-  const viewerHandle = page.activity.getTabLocator(name);
-  const viewerBBox = await viewerHandle.boundingBox();
-
-  await page.mouse.move(
-    viewerBBox!.x + 0.5 * viewerBBox!.width,
-    viewerBBox!.y + 0.5 * viewerBBox!.height
-  );
-  await page.mouse.down();
-  await page.mouse.move(viewerBBox!.x + 0.5 * viewerBBox!.width, 600);
-  await page.mouse.up();
-}
 
 test.describe('#codeToolbar', () => {
   test.beforeEach(async ({ page }) => {
@@ -161,19 +142,22 @@ test.describe('#codeToolbar', () => {
     expect(await page.notebook.getCellTextInput(1)).toBe(`${CONTENT}\n`);
   });
 
-  test('replace active cell', async ({ page }) => {
+  test('replace active cell content', async ({ page }) => {
     const chatPanel = await openChat(page, FILENAME);
     const message = chatPanel.locator('.jp-chat-message');
-    const toolbarButtons = message.locator('.jp-chat-code-toolbar-item button');
+    const toolbarButtons = message.locator('.jp-chat-code-toolbar-item');
 
     const notebook = await page.notebook.createNew();
+    // write content in the first cell.
+    const cell = await page.notebook.getCellLocator(0);
+    await cell?.getByRole('textbox').pressSequentially('initial content');
 
     await sendMessage(page, FILENAME, MESSAGE);
     await splitMainArea(page, notebook!);
 
-    // write content in the first cell.
-    const cell = await page.notebook.getCellLocator(0);
-    await cell?.getByRole('textbox').pressSequentially('initial content');
+    await expect(toolbarButtons.nth(2)).toHaveAccessibleName(
+      'Replace selection (active cell)'
+    );
     await toolbarButtons.nth(2).click();
 
     await page.activity.activateTab(notebook!);
@@ -184,10 +168,52 @@ test.describe('#codeToolbar', () => {
     expect(await page.notebook.getCellTextInput(0)).toBe(`${CONTENT}\n`);
   });
 
+  test('replace current selection', async ({ page }) => {
+    const cellContent = 'a = 1\nprint(f"a={a}")';
+    const chatPanel = await openChat(page, FILENAME);
+    const message = chatPanel.locator('.jp-chat-message');
+    const toolbarButtons = message.locator('.jp-chat-code-toolbar-item');
+
+    const notebook = await page.notebook.createNew();
+    // write content in the first cell.
+    const cell = (await page.notebook.getCellLocator(0))!;
+    await cell.getByRole('textbox').pressSequentially(cellContent);
+
+    // wait for code mirror to be ready.
+    await expect(cell.locator('.cm-line')).toHaveCount(2);
+    await expect(
+      cell.locator('.cm-line').nth(1).locator('.cm-builtin')
+    ).toBeAttached();
+
+    // select the 'print' statement in the second line.
+    const selection = cell
+      ?.locator('.cm-line')
+      .nth(1)
+      .locator('.cm-builtin')
+      .first();
+    await selection.dblclick({ position: { x: 10, y: 10 } });
+
+    await sendMessage(page, FILENAME, MESSAGE);
+    await splitMainArea(page, notebook!);
+
+    await expect(toolbarButtons.nth(2)).toHaveAccessibleName(
+      'Replace selection (1 line(s))'
+    );
+    await toolbarButtons.nth(2).click();
+
+    await page.activity.activateTab(notebook!);
+    await page.waitForCondition(
+      async () => (await page.notebook.getCellTextInput(0)) !== cellContent
+    );
+    expect(await page.notebook.getCellTextInput(0)).toBe(
+      `a = 1\n${CONTENT}\n(f"a={a}")`
+    );
+  });
+
   test('should copy code content', async ({ page }) => {
     const chatPanel = await openChat(page, FILENAME);
     const message = chatPanel.locator('.jp-chat-message');
-    const toolbarButtons = message.locator('.jp-chat-code-toolbar-item button');
+    const toolbarButtons = message.locator('.jp-chat-code-toolbar-item');
 
     const notebook = await page.notebook.createNew();
 
@@ -195,6 +221,10 @@ test.describe('#codeToolbar', () => {
 
     // Copy the message code content to clipboard.
     await toolbarButtons.last().click();
+
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+      `${CONTENT}\n`
+    );
 
     await page.activity.activateTab(notebook!);
     const cell = await page.notebook.getCellLocator(0);

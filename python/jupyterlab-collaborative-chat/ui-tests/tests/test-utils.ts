@@ -54,3 +54,20 @@ export const sendMessage = async (
   await input.pressSequentially(content);
   await sendButton.click();
 };
+
+export const splitMainArea = async (
+  page: IJupyterLabPageFixture,
+  name: string
+) => {
+  // Emulate drag and drop
+  const viewerHandle = page.activity.getTabLocator(name);
+  const viewerBBox = await viewerHandle.boundingBox();
+
+  await page.mouse.move(
+    viewerBBox!.x + 0.5 * viewerBBox!.width,
+    viewerBBox!.y + 0.5 * viewerBBox!.height
+  );
+  await page.mouse.down();
+  await page.mouse.move(viewerBBox!.x + 0.5 * viewerBBox!.width, 600);
+  await page.mouse.up();
+};
