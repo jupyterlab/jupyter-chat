@@ -14,6 +14,8 @@ import { includeSelectionIcon } from '../../icons';
 import { Selection } from '../../types';
 
 const SEND_BUTTON_CLASS = 'jp-chat-send-button';
+const SEND_INCLUDE_OPENER_CLASS = 'jp-chat-send-include-opener';
+const SEND_INCLUDE_LI_CLASS = 'jp-chat-send-include';
 
 /**
  * The send button props.
@@ -60,7 +62,7 @@ export function SendButton(props: SendButtonProps): JSX.Element {
         !(selectionWatcher?.selection || activeCellManager?.available)
       );
       const tooltip = selectionWatcher?.selection
-        ? `${selectionWatcher.selection.numLines} lines selected`
+        ? `${selectionWatcher.selection.numLines} line(s) selected`
         : activeCellManager?.available
           ? 'Code from 1 active cell'
           : 'No selection or active cell';
@@ -146,7 +148,8 @@ export function SendButton(props: SendButtonProps): JSX.Element {
                 // stopping propagation of this event prevents the prompt from being
                 // sent when the dropdown button is selected and clicked via 'Enter'.
                 e.stopPropagation();
-              }
+              },
+              className: SEND_INCLUDE_OPENER_CLASS
             }}
             sx={{
               minWidth: 'unset',
@@ -172,7 +175,7 @@ export function SendButton(props: SendButtonProps): JSX.Element {
             sx={{
               '& .MuiMenuItem-root': {
                 display: 'flex',
-                alignItems: 'centincludeSelectionDisableder',
+                alignItems: 'center',
                 gap: '8px'
               },
               '& svg': {
@@ -187,6 +190,7 @@ export function SendButton(props: SendButtonProps): JSX.Element {
                 e.stopPropagation();
               }}
               disabled={disableInclude}
+              className={SEND_INCLUDE_LI_CLASS}
             >
               <includeSelectionIcon.react />
               <Box>

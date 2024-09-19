@@ -75,13 +75,25 @@ export class SelectionWatcher {
       // a chat panel. However, the selected text is only available if the main area
       // widget is visible. (to avoid confusion in inclusion/replacement).
       const widget = args.newValue;
+
+      // if there is no main area widget, set it to null.
       if (widget === null) {
-        this._mainAreaWidget = widget;
+        this._mainAreaDocumentWidget = null;
+        return;
       }
+
       const editor = getEditor(widget);
-      // widget type check is redundant but hints the type to TypeScript
-      if (editor && widget instanceof DocumentWidget) {
-        this._mainAreaWidget = widget;
+      if (
+        widget instanceof DocumentWidget &&
+        (editor || widget.content instanceof Notebook)
+      ) {
+        // if the new widget is a DocumentWidget and has an editor, set it.
+        // NOTE: special case for notebook which do not has an active cell at that stage,
+        // and so the editor can't be retrieved too.
+        this._mainAreaDocumentWidget = widget;
+      } else if (this._mainAreaDocumentWidget?.isDisposed) {
+        // if the previous document widget has been closed, set it to null.
+        this._mainAreaDocumentWidget = null;
       }
     });
 
@@ -139,22 +151,19 @@ export class SelectionWatcher {
 
   protected _poll(): void {
     let currSelection: SelectionWatcher.Selection | null = null;
-
+    const prevSelection = this._selection;
     // Do not return selected text if the main area widget is hidden.
-    if (this._mainAreaWidget?.isVisible) {
-      const prevSelection = this._selection;
-      currSelection = getTextSelection(this._mainAreaWidget);
-
-      if (prevSelection?.text === currSelection?.text) {
-        return;
-      }
+    if (this._mainAreaDocumentWidget?.isVisible) {
+      currSelection = getTextSelection(this._mainAreaDocumentWidget);
     }
-    this._selection = currSelection;
-    this._selectionChanged.emit(currSelection);
+    if (prevSelection?.text !== currSelection?.text) {
+      this._selection = currSelection;
+      this._selectionChanged.emit(currSelection);
+    }
   }
 
   protected _shell: JupyterFrontEnd.IShell;
-  protected _mainAreaWidget: Widget | null = null;
+  protected _mainAreaDocumentWidget: Widget | null = null;
   protected _selection: SelectionWatcher.Selection | null = null;
   protected _selectionChanged = new Signal<
     this,
