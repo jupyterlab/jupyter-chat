@@ -15,6 +15,7 @@ import {
   IUser
 } from './types';
 import { IActiveCellManager } from './active-cell-manager';
+import { ISelectionWatcher } from './selection-watcher';
 
 /**
  * The chat model interface.
@@ -56,6 +57,11 @@ export interface IChatModel extends IDisposable {
   readonly activeCellManager: IActiveCellManager | null;
 
   /**
+   * Get the selection watcher.
+   */
+  readonly selectionWatcher: ISelectionWatcher | null;
+
+  /**
    * A signal emitting when the messages list is updated.
    */
   readonly messagesUpdated: ISignal<IChatModel, void>;
@@ -87,7 +93,7 @@ export interface IChatModel extends IDisposable {
    * @param message - the message to send.
    * @returns whether the message has been sent or not, or nothing if not needed.
    */
-  addMessage(message: INewMessage): Promise<boolean | void> | boolean | void;
+  sendMessage(message: INewMessage): Promise<boolean | void> | boolean | void;
 
   /**
    * Optional, to update a message from the chat panel.
@@ -169,18 +175,10 @@ export class ChatModel implements IChatModel {
     this._commands = options.commands;
 
     this._activeCellManager = options.activeCellManager ?? null;
+
+    this._selectionWatcher = options.selectionWatcher ?? null;
   }
 
-  /**
-   * The chat messages list.
-   */
-  get messages(): IChatMessage[] {
-    return this._messages;
-  }
-
-  get activeCellManager(): IActiveCellManager | null {
-    return this._activeCellManager;
-  }
   /**
    * The chat model id.
    */
@@ -199,6 +197,26 @@ export class ChatModel implements IChatModel {
   }
   set name(value: string) {
     this._name = value;
+  }
+
+  /**
+   * The chat messages list.
+   */
+  get messages(): IChatMessage[] {
+    return this._messages;
+  }
+  /**
+   * Get the active cell manager.
+   */
+  get activeCellManager(): IActiveCellManager | null {
+    return this._activeCellManager;
+  }
+
+  /**
+   * Get the selection watcher.
+   */
+  get selectionWatcher(): ISelectionWatcher | null {
+    return this._selectionWatcher;
   }
 
   /**
@@ -352,7 +370,7 @@ export class ChatModel implements IChatModel {
    * @param message - the message to send.
    * @returns whether the message has been sent or not.
    */
-  addMessage(message: INewMessage): Promise<boolean | void> | boolean | void {}
+  sendMessage(message: INewMessage): Promise<boolean | void> | boolean | void {}
 
   /**
    * Dispose the chat model.
@@ -517,6 +535,7 @@ export class ChatModel implements IChatModel {
   private _isDisposed = false;
   private _commands?: CommandRegistry;
   private _activeCellManager: IActiveCellManager | null;
+  private _selectionWatcher: ISelectionWatcher | null;
   private _notificationId: string | null = null;
   private _messagesUpdated = new Signal<IChatModel, void>(this);
   private _configChanged = new Signal<IChatModel, IConfig>(this);
@@ -544,8 +563,13 @@ export namespace ChatModel {
     commands?: CommandRegistry;
 
     /**
-     * Active cell manager
+     * Active cell manager.
      */
     activeCellManager?: IActiveCellManager | null;
+
+    /**
+     * Selection watcher.
+     */
+    selectionWatcher?: ISelectionWatcher | null;
   }
 }

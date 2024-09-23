@@ -2439,6 +2439,7 @@ __metadata:
     "@jupyter/react-components": ^0.15.2
     "@jupyterlab/application": ^4.2.0
     "@jupyterlab/apputils": ^4.3.0
+    "@jupyterlab/fileeditor": ^4.2.0
     "@jupyterlab/notebook": ^4.2.0
     "@jupyterlab/rendermime": ^4.2.0
     "@jupyterlab/testing": ^4.2.0
@@ -2903,6 +2904,32 @@ __metadata:
     "@lumino/widgets": ^2.3.2
     react: ^18.2.0
   checksum: d0a4027d7fe277449f54b07e7778903eb1ba99fd983289fb6fb186e9e8237ba393ad377d06dcaa73a3e0b40826ba0e61403bc932df70923fa78ef7f93e3f9e1c
+  languageName: node
+  linkType: hard
+
+"@jupyterlab/fileeditor@npm:^4.2.0":
+  version: 4.2.3
+  resolution: "@jupyterlab/fileeditor@npm:4.2.3"
+  dependencies:
+    "@jupyter/ydoc": ^2.0.1
+    "@jupyterlab/apputils": ^4.3.3
+    "@jupyterlab/codeeditor": ^4.2.3
+    "@jupyterlab/codemirror": ^4.2.3
+    "@jupyterlab/coreutils": ^6.2.3
+    "@jupyterlab/docregistry": ^4.2.3
+    "@jupyterlab/documentsearch": ^4.2.3
+    "@jupyterlab/lsp": ^4.2.3
+    "@jupyterlab/statusbar": ^4.2.3
+    "@jupyterlab/toc": ^6.2.3
+    "@jupyterlab/translation": ^4.2.3
+    "@jupyterlab/ui-components": ^4.2.3
+    "@lumino/commands": ^2.3.0
+    "@lumino/coreutils": ^2.1.2
+    "@lumino/messaging": ^2.0.1
+    "@lumino/widgets": ^2.3.2
+    react: ^18.2.0
+    regexp-match-indices: ^1.0.2
+  checksum: 54470a0a71f3110640c687e8e3a0b09afad5dd5470caad04c95744732212d2aaac14db6168100d31f80244dc42d09f927d524989223832787168c3d11a9a206e
   languageName: node
   linkType: hard
 
@@ -12872,6 +12899,24 @@ __metadata:
   dependencies:
     "@babel/runtime": ^7.8.4
   checksum: 20b6f9377d65954980fe044cfdd160de98df415b4bff38fbade67b3337efaf078308c4fed943067cd759827cc8cfeca9cb28ccda1f08333b85d6a2acbd022c27
+  languageName: node
+  linkType: hard
+
+"regexp-match-indices@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "regexp-match-indices@npm:1.0.2"
+  dependencies:
+    regexp-tree: ^0.1.11
+  checksum: 8cc779f6cf8f404ead828d09970a7d4bd66bd78d43ab9eb2b5e65f2ef2ba1ed53536f5b5fa839fb90b350365fb44b6a851c7f16289afc3f37789c113ab2a7916
+  languageName: node
+  linkType: hard
+
+"regexp-tree@npm:^0.1.11":
+  version: 0.1.27
+  resolution: "regexp-tree@npm:0.1.27"
+  bin:
+    regexp-tree: bin/regexp-tree
+  checksum: 129aebb34dae22d6694ab2ac328be3f99105143737528ab072ef624d599afecbcfae1f5c96a166fa9e5f64fa1ecf30b411c4691e7924c3e11bbaf1712c260c54
   languageName: node
   linkType: hard
 

@@ -7,7 +7,8 @@ import {
   ChatWidget,
   IActiveCellManager,
   IAutocompletionRegistry,
-  IConfig
+  IConfig,
+  ISelectionWatcher
 } from '@jupyter/chat';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { ABCWidgetFactory, DocumentRegistry } from '@jupyterlab/docregistry';
@@ -122,6 +123,7 @@ export class CollaborativeChatModelFactory
     this._widgetConfig = options.widgetConfig;
     this._commands = options.commands;
     this._activeCellManager = options.activeCellManager ?? null;
+    this._selectionWatcher = options.selectionWatcher ?? null;
   }
 
   collaborative = true;
@@ -195,7 +197,8 @@ export class CollaborativeChatModelFactory
       user: this._user,
       widgetConfig: this._widgetConfig,
       commands: this._commands,
-      activeCellManager: this._activeCellManager
+      activeCellManager: this._activeCellManager,
+      selectionWatcher: this._selectionWatcher
     });
   }
 
@@ -204,4 +207,5 @@ export class CollaborativeChatModelFactory
   private _widgetConfig: IWidgetConfig;
   private _commands?: CommandRegistry;
   private _activeCellManager: IActiveCellManager | null;
+  private _selectionWatcher: ISelectionWatcher | null;
 }

@@ -8,25 +8,25 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Autocomplete,
   Box,
-  IconButton,
   InputAdornment,
   SxProps,
   TextField,
   Theme
 } from '@mui/material';
-import { Send, Cancel } from '@mui/icons-material';
 import clsx from 'clsx';
+
+import { CancelButton } from './input/cancel-button';
+import { SendButton } from './input/send-button';
 import { IChatModel } from '../model';
 import { IAutocompletionRegistry } from '../registry';
 import {
   AutocompleteCommand,
   IAutocompletionCommandsProps,
-  IConfig
+  IConfig,
+  Selection
 } from '../types';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
-const SEND_BUTTON_CLASS = 'jp-chat-send-button';
-const CANCEL_BUTTON_CLASS = 'jp-chat-cancel-button';
 
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
   const { autocompletionName, autocompletionRegistry, model } = props;
@@ -35,6 +35,13 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   const [sendWithShiftEnter, setSendWithShiftEnter] = useState<boolean>(
     model.config.sendWithShiftEnter ?? false
   );
+
+  // Display the include selection menu if it is not explicitly hidden, and if at least
+  // one of the tool to check for text or cell selection is enabled.
+  let hideIncludeSelection = props.hideIncludeSelection ?? false;
+  if (model.activeCellManager === null && model.selectionWatcher === null) {
+    hideIncludeSelection = true;
+  }
 
   // store reference to the input element to enable focusing it easily
   const inputRef = useRef<HTMLInputElement>();
@@ -138,10 +145,21 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
 
   /**
    * Triggered when sending the message.
+   *
+   * Add code block if cell or text is selected.
    */
-  function onSend() {
+  function onSend(selection?: Selection) {
+    let content = input;
+    if (selection) {
+      content += `
+
+\`\`\`
+${selection.source}
+\`\`\`
+`;
+    }
+    props.onSend(content);
     setInput('');
-    props.onSend(input);
   }
 
   /**
@@ -203,30 +221,19 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
               endAdornment: (
                 <InputAdornment position="end">
                   {props.onCancel && (
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      onClick={onCancel}
-                      title={'Cancel edition'}
-                      className={clsx(CANCEL_BUTTON_CLASS)}
-                    >
-                      <Cancel />
-                    </IconButton>
+                    <CancelButton
+                      inputExists={input.length > 0}
+                      onCancel={onCancel}
+                    />
                   )}
-                  <IconButton
-                    size="small"
-                    color="primary"
-                    onClick={onSend}
-                    disabled={
-                      props.onCancel
-                        ? input === props.value
-                        : !input.trim().length
-                    }
-                    title={`Send message ${sendWithShiftEnter ? '(SHIFT+ENTER)' : '(ENTER)'}`}
-                    className={clsx(SEND_BUTTON_CLASS)}
-                  >
-                    <Send />
-                  </IconButton>
+                  <SendButton
+                    model={model}
+                    sendWithShiftEnter={sendWithShiftEnter}
+                    inputExists={input.length > 0}
+                    onSend={onSend}
+                    hideIncludeSelection={hideIncludeSelection}
+                    hasButtonOnLeft={!!props.onCancel}
+                  />
                 </InputAdornment>
               )
             }}
@@ -294,6 +301,10 @@ export namespace ChatInput {
      * The function to be called to cancel editing.
      */
     onCancel?: () => unknown;
+    /**
+     * Whether to allow or not including selection.
+     */
+    hideIncludeSelection?: boolean;
     /**
      * Custom mui/material styles.
      */

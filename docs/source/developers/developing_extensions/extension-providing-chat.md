@@ -43,7 +43,7 @@ A model is provided by the package, and already includes all the required method
 interact with the UI part of the chat.
 
 The extension has to provide a class extending the `@jupyter/chat` model, implementing
-at least the `addMessage()` method.
+at least the `sendMessage()` method.
 
 This method is called when a user sends a message using the input of the chat. It should
 contain the code that will dispatch the message through the messaging technology.
@@ -55,7 +55,7 @@ the message list.
 import { ChatModel, IChatMessage, INewMessage } from '@jupyter/chat';
 
 class MyModel extends ChatModel {
-  addMessage(
+  sendMessage(
     newMessage: INewMessage
   ): Promise<boolean | void> | boolean | void {
     console.log(`New Message:\n${newMessage.body}`);
@@ -88,7 +88,7 @@ When a user sends a message, it is logged in the console and added to the messag
 ```{tip}
 In this example, no messages are sent to other potential users.
 
-An exchange system must be included and use the `addMessage()` and `messageAdded()`
+An exchange system must be included and use the `sendMessage()` and `messageAdded()`
 methods to correctly manage message transmission and reception.
 ```
 
@@ -107,7 +107,7 @@ import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { UUID } from '@lumino/coreutils';
 
 class MyModel extends ChatModel {
-  addMessage(
+  sendMessage(
     newMessage: INewMessage
   ): Promise<boolean | void> | boolean | void {
     console.log(`New Message:\n${newMessage.body}`);

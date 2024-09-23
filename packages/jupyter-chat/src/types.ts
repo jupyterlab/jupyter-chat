@@ -84,6 +84,27 @@ export type AutocompleteCommand = {
 };
 
 /**
+ * Representation of a selected text.
+ */
+export type TextSelection = {
+  type: 'text';
+  source: string;
+};
+
+/**
+ * Representation of a selected cell.
+ */
+export type CellSelection = {
+  type: 'cell';
+  source: string;
+};
+
+/**
+ * Selection object (text or cell).
+ */
+export type Selection = TextSelection | CellSelection;
+
+/**
  * The properties of the autocompletion.
  *
  * The autocompletion component will open if the 'opener' string is typed at the

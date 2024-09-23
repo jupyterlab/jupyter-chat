@@ -25,6 +25,9 @@ type CellWithErrorContent = {
   };
 };
 
+/**
+ * The active cell interface.
+ */
 export interface IActiveCellManager {
   /**
    * Whether the notebook is available and an active cell exists.

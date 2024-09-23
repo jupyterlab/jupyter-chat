@@ -8,6 +8,7 @@
 import { LabIcon } from '@jupyterlab/ui-components';
 
 import chatSvgStr from '../style/icons/chat.svg';
+import includeSelectionIconStr from '../style/icons/include-selection.svg';
 import readSvgStr from '../style/icons/read.svg';
 import replaceCellSvg from '../style/icons/replace-cell.svg';
 
@@ -24,4 +25,9 @@ export const readIcon = new LabIcon({
 export const replaceCellIcon = new LabIcon({
   name: 'jupyter-ai::replace-cell',
   svgstr: replaceCellSvg
+});
+
+export const includeSelectionIcon = new LabIcon({
+  name: 'jupyter-chat::include',
+  svgstr: includeSelectionIconStr
 });

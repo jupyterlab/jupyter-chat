@@ -85,7 +85,7 @@ export class WebSocketHandler extends ChatModel {
    * Sends a message across the WebSocket. Promise resolves to the message ID
    * when the server sends the same message back, acknowledging receipt.
    */
-  addMessage(message: INewMessage): Promise<boolean> {
+  sendMessage(message: INewMessage): Promise<boolean> {
     message.id = UUID.uuid4();
     return new Promise(resolve => {
       this._socket?.send(JSON.stringify(message));

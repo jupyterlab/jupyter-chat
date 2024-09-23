@@ -118,7 +118,7 @@ export class CollaborativeChatModel
     // nothing to do
   }
 
-  addMessage(message: INewMessage): Promise<boolean | void> | boolean | void {
+  sendMessage(message: INewMessage): Promise<boolean | void> | boolean | void {
     const msg: IYmessage = {
       type: 'msg',
       id: UUID.uuid4(),

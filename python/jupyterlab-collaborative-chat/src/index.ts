@@ -8,6 +8,8 @@ import {
   AutocompletionRegistry,
   IActiveCellManager,
   IAutocompletionRegistry,
+  ISelectionWatcher,
+  SelectionWatcher,
   chatIcon,
   readIcon
 } from '@jupyter/chat';
@@ -51,7 +53,8 @@ import {
   IChatFactory,
   IChatPanel,
   WidgetConfig,
-  YChat
+  YChat,
+  ISelectionWatcherToken
 } from 'jupyterlab-collaborative-chat';
 
 const FACTORY = 'Chat';
@@ -62,8 +65,9 @@ const pluginIds = {
   autocompletionRegistry:
     'jupyterlab-collaborative-chat-extension:autocompletionRegistry',
   chatCommands: 'jupyterlab-collaborative-chat-extension:commands',
+  chatPanel: 'jupyterlab-collaborative-chat-extension:chat-panel',
   docFactories: 'jupyterlab-collaborative-chat-extension:factory',
-  chatPanel: 'jupyterlab-collaborative-chat-extension:chat-panel'
+  selectionWatcher: 'jupyterlab-collaborative-chat-extension:selectionWatcher'
 };
 
 /**
@@ -92,6 +96,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     IAutocompletionRegistry,
     ICollaborativeDrive,
     ILayoutRestorer,
+    ISelectionWatcherToken,
     ISettingRegistry,
     IThemeManager,
     IToolbarWidgetRegistry,
@@ -105,6 +110,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     autocompletionRegistry: IAutocompletionRegistry,
     drive: ICollaborativeDrive | null,
     restorer: ILayoutRestorer | null,
+    selectionWatcher: ISelectionWatcher | null,
     settingRegistry: ISettingRegistry | null,
     themeManager: IThemeManager | null,
     toolbarRegistry: IToolbarWidgetRegistry | null,
@@ -206,7 +212,8 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
           user,
           widgetConfig,
           commands: app.commands,
-          activeCellManager
+          activeCellManager,
+          selectionWatcher
         });
         app.docRegistry.addModelFactory(modelFactory);
       })
@@ -271,7 +278,13 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
   description: 'The commands to create or open a chat',
   autoStart: true,
   requires: [ICollaborativeDrive, IChatFactory],
-  optional: [IActiveCellManagerToken, IChatPanel, ICommandPalette, ILauncher],
+  optional: [
+    IActiveCellManagerToken,
+    IChatPanel,
+    ICommandPalette,
+    ILauncher,
+    ISelectionWatcherToken
+  ],
   activate: (
     app: JupyterFrontEnd,
     drive: ICollaborativeDrive,
@@ -279,7 +292,8 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     activeCellManager: IActiveCellManager | null,
     chatPanel: ChatPanel | null,
     commandPalette: ICommandPalette | null,
-    launcher: ILauncher | null
+    launcher: ILauncher | null,
+    selectionWatcher: ISelectionWatcher | null
   ) => {
     const { commands } = app;
     const { tracker, widgetConfig } = factory;
@@ -481,7 +495,8 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
                 sharedModel,
                 widgetConfig,
                 commands: app.commands,
-                activeCellManager
+                activeCellManager,
+                selectionWatcher
               });
 
               /**
@@ -651,10 +666,27 @@ const activeCellManager: JupyterFrontEndPlugin<IActiveCellManager> = {
   }
 };
 
+/**
+ * Extension providing the selection watcher.
+ */
+const selectionWatcher: JupyterFrontEndPlugin<ISelectionWatcher> = {
+  id: pluginIds.selectionWatcher,
+  description: 'the selection watcher plugin',
+  autoStart: true,
+  requires: [],
+  provides: ISelectionWatcherToken,
+  activate: (app: JupyterFrontEnd): ISelectionWatcher => {
+    return new SelectionWatcher({
+      shell: app.shell
+    });
+  }
+};
+
 export default [
   activeCellManager,
   autocompletionPlugin,
   chatCommands,
+  chatPanel,
   docFactories,
-  chatPanel
+  selectionWatcher
 ];
