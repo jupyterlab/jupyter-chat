@@ -123,6 +123,10 @@ export class CollaborativeChatModel
   }
 
   sendMessage(message: INewMessage): Promise<boolean | void> | boolean | void {
+    this._resetWritingStatus();
+    if (this._timeoutWriting !== null) {
+      window.clearTimeout(this._timeoutWriting);
+    }
     const msg: IYmessage = {
       type: 'msg',
       id: UUID.uuid4(),
@@ -188,10 +192,7 @@ export class CollaborativeChatModel
     }
     awareness.setLocalStateField('isWriting', true);
     this._timeoutWriting = window.setTimeout(() => {
-      const states = awareness.getLocalState();
-      delete states?.isWriting;
-      awareness.setLocalState(states);
-      this._timeoutWriting = null;
+      this._resetWritingStatus();
     }, WRITING_DELAY);
   }
 
@@ -213,6 +214,14 @@ export class CollaborativeChatModel
     }
     this.updateWriters(writers);
   };
+
+  private _resetWritingStatus() {
+    const awareness = this.sharedModel.awareness;
+    const states = awareness.getLocalState();
+    delete states?.isWriting;
+    awareness.setLocalState(states);
+    this._timeoutWriting = null;
+  }
 
   private _onchange = (_: YChat, changes: IChatChanges) => {
     if (changes.messageChanges) {
