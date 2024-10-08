@@ -185,7 +185,11 @@ export class ChatModel implements IChatModel {
     const config = options.config ?? {};
 
     // Stack consecutive messages from the same user by default.
-    this._config = { stackMessages: true, ...config };
+    this._config = {
+      stackMessages: true,
+      sendTypingNotification: true,
+      ...config
+    };
 
     this._commands = options.commands;
 

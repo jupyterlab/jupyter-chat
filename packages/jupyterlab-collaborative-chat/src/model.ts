@@ -179,7 +179,7 @@ export class CollaborativeChatModel
    * Function called by the input on key pressed.
    */
   inputChanged(input?: string): void {
-    if (!input) {
+    if (!input || !this.config.sendTypingNotification) {
       return;
     }
     const awareness = this.sharedModel.awareness;
