@@ -12,13 +12,7 @@ import {
 import { Contents, User } from '@jupyterlab/services';
 import { ReadonlyJSONObject, UUID } from '@lumino/coreutils';
 
-import {
-  openChat,
-  openChatToSide,
-  openSettings,
-  sendMessage,
-  USER
-} from './test-utils';
+import { openChat, openSettings, sendMessage, USER } from './test-utils';
 
 const FILENAME = 'my-chat.chat';
 const MSG_CONTENT = 'Hello World!';
