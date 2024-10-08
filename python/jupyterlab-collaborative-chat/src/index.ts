@@ -128,25 +128,25 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
       | undefined;
 
     /**
+     * The chat config object.
+     */
+    const widgetConfig = new WidgetConfig({});
+
+    /**
      * Load the settings for the chat widgets.
      */
-    let sendWithShiftEnter = false;
-    let stackMessages = true;
-    let unreadNotifications = true;
-    let enableCodeToolbar = true;
     function loadSetting(setting: ISettingRegistry.ISettings): void {
       // Read the settings and convert to the correct type
-      sendWithShiftEnter = setting.get('sendWithShiftEnter')
-        .composite as boolean;
-      stackMessages = setting.get('stackMessages').composite as boolean;
-      unreadNotifications = setting.get('unreadNotifications')
-        .composite as boolean;
-      enableCodeToolbar = setting.get('enableCodeToolbar').composite as boolean;
       widgetConfig.config = {
-        sendWithShiftEnter,
-        stackMessages,
-        unreadNotifications,
-        enableCodeToolbar
+        sendWithShiftEnter: setting.get('sendWithShiftEnter')
+          .composite as boolean,
+        stackMessages: setting.get('stackMessages').composite as boolean,
+        unreadNotifications: setting.get('unreadNotifications')
+          .composite as boolean,
+        enableCodeToolbar: setting.get('enableCodeToolbar')
+          .composite as boolean,
+        sendTypingNotification: setting.get('sendTypingNotification')
+          .composite as boolean
       };
     }
 
@@ -178,16 +178,6 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
           );
         });
     }
-
-    /**
-     * The chat config object.
-     */
-    const widgetConfig = new WidgetConfig({
-      sendWithShiftEnter,
-      stackMessages,
-      unreadNotifications,
-      enableCodeToolbar
-    });
 
     // Namespace for the tracker
     const namespace = 'chat';

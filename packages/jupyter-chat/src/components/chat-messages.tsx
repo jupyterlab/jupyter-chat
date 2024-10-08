@@ -10,7 +10,7 @@ import {
   caretDownEmptyIcon,
   classes
 } from '@jupyterlab/ui-components';
-import { Avatar, Box, Typography } from '@mui/material';
+import { Avatar as MuiAvatar, Box, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
 import clsx from 'clsx';
 import React, { useEffect, useState, useRef } from 'react';
@@ -19,13 +19,14 @@ import { ChatInput } from './chat-input';
 import { RendermimeMarkdown } from './rendermime-markdown';
 import { ScrollContainer } from './scroll-container';
 import { IChatModel } from '../model';
-import { IChatMessage } from '../types';
+import { IChatMessage, IUser } from '../types';
 
 const MESSAGES_BOX_CLASS = 'jp-chat-messages-container';
 const MESSAGE_CLASS = 'jp-chat-message';
 const MESSAGE_STACKED_CLASS = 'jp-chat-message-stacked';
 const MESSAGE_HEADER_CLASS = 'jp-chat-message-header';
 const MESSAGE_TIME_CLASS = 'jp-chat-message-time';
+const WRITERS_CLASS = 'jp-chat-writers';
 const NAVIGATION_BUTTON_CLASS = 'jp-chat-navigation';
 const NAVIGATION_UNREAD_CLASS = 'jp-chat-navigation-unread';
 const NAVIGATION_TOP_CLASS = 'jp-chat-navigation-top';
@@ -47,6 +48,7 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
   const [messages, setMessages] = useState<IChatMessage[]>(model.messages);
   const refMsgBox = useRef<HTMLDivElement>(null);
   const inViewport = useRef<number[]>([]);
+  const [currentWriters, setCurrentWriters] = useState<IUser[]>([]);
 
   // The intersection observer that listen to all the message visibility.
   const observerRef = useRef<IntersectionObserver>(
@@ -68,6 +70,7 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
     }
 
     fetchHistory();
+    setCurrentWriters([]);
   }, [model]);
 
   /**
@@ -78,9 +81,16 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
       setMessages([...model.messages]);
     }
 
+    function handleWritersChange(_: IChatModel, writers: IUser[]) {
+      setCurrentWriters(writers);
+    }
+
     model.messagesUpdated.connect(handleChatEvents);
+    model.writersChanged?.connect(handleWritersChange);
+
     return function cleanup() {
       model.messagesUpdated.disconnect(handleChatEvents);
+      model.writersChanged?.disconnect(handleChatEvents);
     };
   }, [model]);
 
@@ -144,6 +154,7 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
             );
           })}
         </Box>
+        <Writers writers={currentWriters}></Writers>
       </ScrollContainer>
       <Navigation {...props} refMsgBox={refMsgBox} />
     </>
@@ -163,10 +174,6 @@ type ChatMessageHeaderProps = {
  */
 export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
   const [datetime, setDatetime] = useState<Record<number, string>>({});
-  const sharedStyles: SxProps<Theme> = {
-    height: '24px',
-    width: '24px'
-  };
   const message = props.message;
   const sender = message.sender;
   /**
@@ -206,32 +213,7 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
     }
   });
 
-  const bgcolor = sender.color;
-  const avatar = message.stacked ? null : sender.avatar_url ? (
-    <Avatar
-      sx={{
-        ...sharedStyles,
-        ...(bgcolor && { bgcolor })
-      }}
-      src={sender.avatar_url}
-    ></Avatar>
-  ) : sender.initials ? (
-    <Avatar
-      sx={{
-        ...sharedStyles,
-        ...(bgcolor && { bgcolor })
-      }}
-    >
-      <Typography
-        sx={{
-          fontSize: 'var(--jp-ui-font-size1)',
-          color: 'var(--jp-ui-inverse-font-color1)'
-        }}
-      >
-        {sender.initials}
-      </Typography>
-    </Avatar>
-  ) : null;
+  const avatar = message.stacked ? null : Avatar({ user: sender });
 
   const name =
     sender.display_name ?? sender.name ?? (sender.username || 'User undefined');
@@ -409,6 +391,45 @@ export function ChatMessage(props: ChatMessageProps): JSX.Element {
 }
 
 /**
+ * The writers component props.
+ */
+type writersProps = {
+  /**
+   * The list of users currently writing.
+   */
+  writers: IUser[];
+};
+
+/**
+ * The writers component, displaying the current writers.
+ */
+export function Writers(props: writersProps): JSX.Element | null {
+  const { writers } = props;
+  return writers.length > 0 ? (
+    <Box className={WRITERS_CLASS}>
+      {writers.map((writer, index) => (
+        <div>
+          <Avatar user={writer} small />
+          <span>
+            {writer.display_name ??
+              writer.name ??
+              (writer.username || 'User undefined')}
+          </span>
+          <span>
+            {index < writers.length - 1
+              ? index < writers.length - 2
+                ? ', '
+                : ' and '
+              : ''}
+          </span>
+        </div>
+      ))}
+      <span>{(writers.length > 1 ? ' are' : ' is') + ' writing'}</span>
+    </Box>
+  ) : null;
+}
+
+/**
  * The navigation component props.
  */
 type NavigationProps = BaseMessageProps & {
@@ -543,4 +564,56 @@ export function Navigation(props: NavigationProps): JSX.Element {
       )}
     </>
   );
+}
+
+/**
+ * The avatar props.
+ */
+type AvatarProps = {
+  /**
+   * The user to display an avatar.
+   */
+  user: IUser;
+  /**
+   * Whether the avatar should be small.
+   */
+  small?: boolean;
+};
+
+/**
+ * the avatar component.
+ */
+export function Avatar(props: AvatarProps): JSX.Element | null {
+  const { user } = props;
+
+  const sharedStyles: SxProps<Theme> = {
+    height: `${props.small ? '16' : '24'}px`,
+    width: `${props.small ? '16' : '24'}px`,
+    bgcolor: user.color,
+    fontSize: `var(--jp-ui-font-size${props.small ? '0' : '1'})`
+  };
+
+  return user.avatar_url ? (
+    <MuiAvatar
+      sx={{
+        ...sharedStyles
+      }}
+      src={user.avatar_url}
+    ></MuiAvatar>
+  ) : user.initials ? (
+    <MuiAvatar
+      sx={{
+        ...sharedStyles
+      }}
+    >
+      <Typography
+        sx={{
+          fontSize: `var(--jp-ui-font-size${props.small ? '0' : '1'})`,
+          color: 'var(--jp-ui-inverse-font-color1)'
+        }}
+      >
+        {user.initials}
+      </Typography>
+    </MuiAvatar>
+  ) : null;
 }

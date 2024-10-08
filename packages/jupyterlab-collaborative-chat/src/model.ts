@@ -13,6 +13,8 @@ import { ISignal, Signal } from '@lumino/signaling';
 import { IWidgetConfig } from './token';
 import { IChatChanges, IYmessage, YChat } from './ychat';
 
+const WRITING_DELAY = 1000;
+
 /**
  * Collaborative chat namespace.
  */
@@ -54,6 +56,8 @@ export class CollaborativeChatModel
     widgetConfig.configChanged.connect((_, config) => {
       this.config = config;
     });
+
+    this.sharedModel.awareness.on('change', this.onAwarenessChange);
   }
 
   readonly collaborative = true;
@@ -119,6 +123,10 @@ export class CollaborativeChatModel
   }
 
   sendMessage(message: INewMessage): Promise<boolean | void> | boolean | void {
+    this._resetWritingStatus();
+    if (this._timeoutWriting !== null) {
+      window.clearTimeout(this._timeoutWriting);
+    }
     const msg: IYmessage = {
       type: 'msg',
       id: UUID.uuid4(),
@@ -171,6 +179,50 @@ export class CollaborativeChatModel
     this.sharedModel.updateMessage(index, message);
   }
 
+  /**
+   * Function called by the input on key pressed.
+   */
+  inputChanged(input?: string): void {
+    if (!input || !this.config.sendTypingNotification) {
+      return;
+    }
+    const awareness = this.sharedModel.awareness;
+    if (this._timeoutWriting !== null) {
+      window.clearTimeout(this._timeoutWriting);
+    }
+    awareness.setLocalStateField('isWriting', true);
+    this._timeoutWriting = window.setTimeout(() => {
+      this._resetWritingStatus();
+    }, WRITING_DELAY);
+  }
+
+  /**
+   * Triggered when an awareness state changes.
+   * Used to populate the writers list.
+   */
+  onAwarenessChange = () => {
+    const writers: IUser[] = [];
+    const states = this.sharedModel.awareness.getStates();
+    for (const stateID of states.keys()) {
+      const state = states.get(stateID);
+      if (!state || !state.user || state.user.username === this.user.username) {
+        continue;
+      }
+      if (state.isWriting) {
+        writers.push(state.user);
+      }
+    }
+    this.updateWriters(writers);
+  };
+
+  private _resetWritingStatus() {
+    const awareness = this.sharedModel.awareness;
+    const states = awareness.getLocalState();
+    delete states?.isWriting;
+    awareness.setLocalState(states);
+    this._timeoutWriting = null;
+  }
+
   private _onchange = (_: YChat, changes: IChatChanges) => {
     if (changes.messageChanges) {
       const msgDelta = changes.messageChanges;
@@ -218,6 +270,7 @@ export class CollaborativeChatModel
   private _disposed = new Signal<this, void>(this);
   private _contentChanged = new Signal<this, void>(this);
   private _stateChanged = new Signal<this, IChangedArgs<any>>(this);
+  private _timeoutWriting: number | null = null;
 
   private _user: IUser;
 }

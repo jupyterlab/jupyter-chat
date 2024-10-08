@@ -35,6 +35,9 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   const [sendWithShiftEnter, setSendWithShiftEnter] = useState<boolean>(
     model.config.sendWithShiftEnter ?? false
   );
+  const [typingNotification, setTypingNotification] = useState<boolean>(
+    model.config.sendTypingNotification ?? false
+  );
 
   // Display the include selection menu if it is not explicitly hidden, and if at least
   // one of the tool to check for text or cell selection is enabled.
@@ -49,6 +52,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   useEffect(() => {
     const configChanged = (_: IChatModel, config: IConfig) => {
       setSendWithShiftEnter(config.sendWithShiftEnter ?? false);
+      setTypingNotification(config.sendTypingNotification ?? false);
     };
     model.configChanged.connect(configChanged);
 
@@ -247,6 +251,9 @@ ${selection.source}
         inputValue={input}
         onInputChange={(_, newValue: string) => {
           setInput(newValue);
+          if (typingNotification && model.inputChanged) {
+            model.inputChanged(newValue);
+          }
         }}
         onHighlightChange={
           /**

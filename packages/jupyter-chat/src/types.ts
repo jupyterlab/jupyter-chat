@@ -39,6 +39,10 @@ export interface IConfig {
    * Whether to enable or not the code toolbar.
    */
   enableCodeToolbar?: boolean;
+  /**
+   * Whether to send typing notification.
+   */
+  sendTypingNotification?: boolean;
 }
 
 /**

@@ -63,6 +63,19 @@
   margin-top: 0px;
 }
 
+.jp-chat-writers {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.jp-chat-writers > div {
+  display: flex;
+  align-items: center;
+  gap: 0.2em;
+  white-space: pre;
+  padding-left: 0.5em;
+}
+
 .jp-chat-navigation {
   position: absolute;
   right: 10px;
