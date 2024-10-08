@@ -39,6 +39,22 @@ export const openChat = async (
   return (await page.activity.getPanelLocator(filename)) as Locator;
 };
 
+export const openChatToSide = async (
+  page: IJupyterLabPageFixture,
+  filename: string
+): Promise<Locator> => {
+  const panel = page.locator('.jp-SidePanel.jp-collab-chat-sidepanel');
+  await page.evaluate(async filepath => {
+    const inSidePanel = true;
+    await window.jupyterapp.commands.execute('collaborative-chat:open', {
+      filepath,
+      inSidePanel
+    });
+  }, filename);
+  await page.waitForCondition(() => panel.isVisible());
+  return panel;
+};
+
 export const sendMessage = async (
   page: IJupyterLabPageFixture,
   filename: string,
