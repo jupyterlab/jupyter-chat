@@ -82,6 +82,11 @@ export interface IChatModel extends IDisposable {
   readonly viewportChanged?: ISignal<IChatModel, number[]>;
 
   /**
+   * A signal emitting when the writers change.
+   */
+  readonly writersChanged?: ISignal<IChatModel, IUser[]>;
+
+  /**
    * A signal emitting when the focus is requested on the input.
    */
   readonly focusInputSignal?: ISignal<IChatModel, void>;
@@ -152,9 +157,19 @@ export interface IChatModel extends IDisposable {
   messagesDeleted(index: number, count: number): void;
 
   /**
+   * Update the current writers list.
+   */
+  updateWriters(writers: IUser[]): void;
+
+  /**
    * Function to request the focus on the input of the chat.
    */
   focusInput(): void;
+
+  /**
+   * Function called by the input on key pressed.
+   */
+  inputKeyPressed?(key?: string): void;
 }
 
 /**
@@ -357,6 +372,13 @@ export class ChatModel implements IChatModel {
   }
 
   /**
+   * A signal emitting when the writers change.
+   */
+  get writersChanged(): ISignal<IChatModel, IUser[]> {
+    return this._writersChanged;
+  }
+
+  /**
    * A signal emitting when the focus is requested on the input.
    */
   get focusInputSignal(): ISignal<IChatModel, void> {
@@ -471,11 +493,24 @@ export class ChatModel implements IChatModel {
   }
 
   /**
+   * Update the current writers list.
+   * This implementation only propagate the list via a signal.
+   */
+  updateWriters(writers: IUser[]): void {
+    this._writersChanged.emit(writers);
+  }
+
+  /**
    * Function to request the focus on the input of the chat.
    */
   focusInput(): void {
     this._focusInputSignal.emit();
   }
+
+  /**
+   * Function called by the input on key pressed.
+   */
+  inputKeyPressed?(key?: string): void {}
 
   /**
    * Add unread messages to the list.
@@ -541,6 +576,7 @@ export class ChatModel implements IChatModel {
   private _configChanged = new Signal<IChatModel, IConfig>(this);
   private _unreadChanged = new Signal<IChatModel, number[]>(this);
   private _viewportChanged = new Signal<IChatModel, number[]>(this);
+  private _writersChanged = new Signal<IChatModel, IUser[]>(this);
   private _focusInputSignal = new Signal<ChatModel, void>(this);
 }
 
