@@ -13,7 +13,7 @@ import { ISignal, Signal } from '@lumino/signaling';
 import { IWidgetConfig } from './token';
 import { IChatChanges, IYmessage, YChat } from './ychat';
 
-const WRITING_DELAY = 2000;
+const WRITING_DELAY = 1000;
 
 /**
  * Collaborative chat namespace.
