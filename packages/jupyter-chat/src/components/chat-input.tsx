@@ -122,10 +122,6 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   }, [input]);
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
-    if (model.inputKeyPressed) {
-      model.inputKeyPressed(event.key);
-    }
-
     if (event.key !== 'Enter') {
       return;
     }
@@ -251,6 +247,9 @@ ${selection.source}
         inputValue={input}
         onInputChange={(_, newValue: string) => {
           setInput(newValue);
+          if (model.inputChanged) {
+            model.inputChanged(newValue);
+          }
         }}
         onHighlightChange={
           /**

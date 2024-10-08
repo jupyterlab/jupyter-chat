@@ -169,7 +169,7 @@ export interface IChatModel extends IDisposable {
   /**
    * Function called by the input on key pressed.
    */
-  inputKeyPressed?(key?: string): void;
+  inputChanged?(input?: string): void;
 }
 
 /**
@@ -510,7 +510,7 @@ export class ChatModel implements IChatModel {
   /**
    * Function called by the input on key pressed.
    */
-  inputKeyPressed?(key?: string): void {}
+  inputChanged?(input?: string): void {}
 
   /**
    * Add unread messages to the list.
