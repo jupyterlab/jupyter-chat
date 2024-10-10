@@ -494,7 +494,11 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
                */
               chatPanel.addChat(
                 chat,
-                PathExt.basename(model.name, chatFileType.extensions[0])
+                PathExt.join(
+                  PathExt.dirname(model.path),
+                  PathExt.basename(model.name, chatFileType.extensions[0])
+                ),
+                model.path
               );
             } else {
               // The chat is opened in the main area
