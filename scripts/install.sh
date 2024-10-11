@@ -4,22 +4,14 @@
 
 EXTENSION=$1
 
-# install core packages
+# install dependencies
 pip install jupyterlab~=4.0
+
+# install typescript dependencies
 jlpm install
 
 if [ -z "${EXTENSION}" ]; then
-  jlpm build
-  # install the collaborative chat extension
-  pip install -e python/jupyterlab-collaborative-chat[test]
-  jupyter labextension develop --overwrite python/jupyterlab-collaborative-chat
-
-  # install websocket chat extension
-  pip install -e python/jupyterlab-ws-chat[test]
-  jupyter labextension develop --overwrite python/jupyterlab-ws-chat
+  jlpm dev-install
 else
-  PACKAGE="jupyterlab-${EXTENSION}-chat"
-  jlpm build:${EXTENSION}
-  pip install -e python/${PACKAGE}[test]
-  jupyter labextension develop --overwrite python/${PACKAGE}
+  jlpm dev-install:${EXTENSION}
 fi
