@@ -57,7 +57,7 @@ jobs:
     - name: Build the extensions
       run: |
         set -eux
-        ./scripts/install.sh
+        ./scripts/dev_install.sh
         pytest -vv -r ap --cov
 
   build_extensions:

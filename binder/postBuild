@@ -4,7 +4,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 # Install collaborative chat
-./scripts/install.sh collaborative
+./scripts/dev_install.sh collaborative
 
 jupyter troubleshoot
 jupyter notebook --show-config

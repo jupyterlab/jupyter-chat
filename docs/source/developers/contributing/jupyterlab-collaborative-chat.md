@@ -17,7 +17,7 @@ The following commands install the extension in development mode:
 
 ```bash
 # Install the extension
-./scripts/install.sh collaborative
+./scripts/dev_install.sh collaborative
 
 # Symlink the assets
 jupyter labextension develop --overwrite python/jupyterlab-collaborative-chat
