@@ -58,10 +58,11 @@ test.describe('#sidepanel', () => {
     const name = FILENAME.replace('.chat', '');
     let panel: Locator;
     let dialog: Locator;
+    let addButton: Locator;
 
     test.beforeEach(async ({ page }) => {
       panel = await openSidePanel(page);
-      const addButton = panel.locator(
+      addButton = panel.locator(
         '.jp-SidePanel-toolbar .jp-Toolbar-item.jp-collab-chat-add'
       );
       await addButton.click();
@@ -89,6 +90,7 @@ test.describe('#sidepanel', () => {
         '.jp-SidePanel-content .jp-AccordionPanel-title'
       );
       await expect(chatTitle).toHaveCount(1);
+      await expect(chatTitle).toHaveClass(/lm-mod-expanded/);
       await expect(
         chatTitle.locator('.lm-AccordionPanel-titleLabel')
       ).toHaveText(name);
@@ -116,6 +118,39 @@ test.describe('#sidepanel', () => {
 
       const content = panel.locator('.jp-SidePanel-content');
       await expect(content).toBeEmpty();
+    });
+
+    test('should reveal the existing chat when creating again', async ({
+      page
+    }) => {
+      await dialog.locator('input[type="text"]').pressSequentially(name);
+      await dialog.getByRole('button').getByText('Ok').click();
+      await page.waitForCondition(
+        async () => await page.filebrowser.contents.fileExists(FILENAME)
+      );
+
+      const chatTitle = panel.locator(
+        '.jp-SidePanel-content .jp-AccordionPanel-title'
+      );
+      await expect(chatTitle).toHaveCount(1);
+      await expect(
+        chatTitle.locator('.lm-AccordionPanel-titleLabel')
+      ).toHaveText(name);
+
+      // Collapse the chat.
+      await chatTitle.click();
+      await expect(chatTitle).not.toHaveClass(/lm-mod-expanded/);
+
+      await addButton.click();
+
+      // try to recreate the same chat.
+      dialog = page.locator('.jp-Dialog');
+      await dialog.waitFor();
+      await dialog.locator('input[type="text"]').pressSequentially(name);
+      await dialog.getByRole('button').getByText('Ok').click();
+
+      // the chat should be expanded.
+      await expect(chatTitle).toHaveClass(/lm-mod-expanded/);
     });
   });
 
@@ -205,6 +240,56 @@ test.describe('#sidepanel', () => {
       await expect(
         chatTitle.locator('.lm-AccordionPanel-titleLabel')
       ).toHaveText(FILENAME.split('.')[0]);
+    });
+
+    test('should reveal the existing chat in side panel when moving again', async ({
+      page
+    }) => {
+      let chatPanel = await openChat(page, FILENAME);
+      const button = chatPanel.getByTitle('Move the chat to the side panel');
+      await button.click();
+      await expect(chatPanel).not.toBeAttached();
+
+      const sidePanel = page.locator('.jp-SidePanel.jp-collab-chat-sidepanel');
+      await expect(sidePanel).toBeVisible();
+      const chatTitle = sidePanel.locator(
+        '.jp-SidePanel-content .jp-AccordionPanel-title'
+      );
+      await expect(chatTitle).toHaveCount(1);
+      await expect(
+        chatTitle.locator('.lm-AccordionPanel-titleLabel')
+      ).toHaveText(FILENAME.split('.')[0]);
+
+      await chatTitle.click();
+      await expect(chatTitle).not.toHaveClass(/lm-mod-expanded/);
+
+      chatPanel = await openChat(page, FILENAME);
+      await button.click();
+      await expect(chatPanel).not.toBeAttached();
+      await expect(chatTitle).toHaveClass(/lm-mod-expanded/);
+    });
+
+    test('chat section should contain the file path', async ({ page }) => {
+      // Create a nested chat file and open it.
+      const dirName = 'my-dir';
+      const nestedPath = [dirName, FILENAME].join('/');
+      await page.filebrowser.contents.createDirectory(dirName);
+      await page.filebrowser.contents.uploadContent('{}', 'text', nestedPath);
+
+      const chatPanel = await openChat(page, nestedPath);
+      const button = chatPanel.getByTitle('Move the chat to the side panel');
+      await button.click();
+      await expect(chatPanel).not.toBeAttached();
+
+      // Move the chat to the side panel.
+      const sidePanel = page.locator('.jp-SidePanel.jp-collab-chat-sidepanel');
+      await expect(sidePanel).toBeVisible();
+      const chatTitle = sidePanel.locator(
+        '.jp-SidePanel-content .jp-AccordionPanel-title'
+      );
+      await expect(
+        chatTitle.locator('.lm-AccordionPanel-titleLabel')
+      ).toHaveText(nestedPath.split('.')[0]);
     });
 
     test('side panel should contain a button to move the chat', async ({
