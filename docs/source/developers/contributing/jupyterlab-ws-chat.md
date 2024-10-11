@@ -17,7 +17,7 @@ The following commands install the extension in development mode:
 
 ```bash
 # Install the extension
-./scripts/install.sh ws
+./scripts/dev_install.sh ws
 
 # Symlink the assets
 jupyter labextension develop --overwrite python/jupyterlab-ws-chat
