@@ -173,6 +173,9 @@ export class ChatPanel extends SidePanel {
     );
   }
 
+  /**
+   * Update the list of available chats in the root directory of the drive.
+   */
   updateChatNames = async (): Promise<void> => {
     const extension = chatFileType.extensions[0];
     this._drive
@@ -191,11 +194,43 @@ export class ChatPanel extends SidePanel {
   };
 
   /**
+   * Open a chat if it exists in the side panel.
+   *
+   * @param path - the path of the chat.
+   * @returns a boolean, whether the chat existed in the side panel or not.
+   */
+  openIfExists(path: string): boolean {
+    const index = this._getChatIndex(path);
+    if (index > -1) {
+      this._expandChat(index);
+    }
+    return index > -1;
+  }
+
+  /**
    * A message handler invoked on an `'after-show'` message.
    */
   protected onAfterShow(msg: Message): void {
     // Wait for the component to be rendered.
     this._openChat.renderPromise?.then(() => this.updateChatNames());
+  }
+
+  /**
+   * Return the index of the chat in the list (-1 if not opened).
+   *
+   * @param name - the chat name.
+   */
+  private _getChatIndex(path: string) {
+    return this.widgets.findIndex(w => (w as ChatSection).path === path);
+  }
+
+  /**
+   * Expand the chat from its index.
+   */
+  private _expandChat(index: number): void {
+    if (!this.widgets[index].isVisible) {
+      (this.content as AccordionPanel).expand(index);
+    }
   }
 
   /**
@@ -211,15 +246,10 @@ export class ChatPanel extends SidePanel {
       return;
     }
 
-    const index = this.widgets.findIndex(w => (w as ChatSection).path === path);
-    if (index === -1) {
-      this._commands.execute(CommandIDs.openChat, {
-        filepath: path,
-        inSidePanel: true
-      });
-    } else if (!this.widgets[index].isVisible) {
-      (this.content as AccordionPanel).expand(index);
-    }
+    this._commands.execute(CommandIDs.openChat, {
+      filepath: path,
+      inSidePanel: true
+    });
     event.target.selectedIndex = 0;
   };
 

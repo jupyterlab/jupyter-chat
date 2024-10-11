@@ -465,6 +465,11 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
             if (inSidePanel && chatPanel) {
               // The chat is opened in the chat panel.
               app.shell.activateById(chatPanel.id);
+
+              if (chatPanel.openIfExists(filepath)) {
+                return;
+              }
+
               const model = await drive.get(filepath);
 
               /**
