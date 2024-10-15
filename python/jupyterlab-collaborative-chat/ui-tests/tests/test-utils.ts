@@ -33,10 +33,12 @@ export const openChat = async (
       filepath
     });
   }, filename);
+  const splitPath = filename.split('/');
+  const tabName = splitPath[splitPath.length - 1];
   await page.waitForCondition(
-    async () => await page.activity.isTabActive(filename)
+    async () => await page.activity.isTabActive(tabName)
   );
-  return (await page.activity.getPanelLocator(filename)) as Locator;
+  return (await page.activity.getPanelLocator(tabName)) as Locator;
 };
 
 export const openChatToSide = async (

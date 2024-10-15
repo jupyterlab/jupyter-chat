@@ -151,7 +151,7 @@ export class ChatPanel extends SidePanel {
    * @param model - the model of the chat widget
    * @param name - the name of the chat.
    */
-  addChat(model: IChatModel, name: string): void {
+  addChat(model: IChatModel, name: string, path: string): void {
     // Collapse all chats
     const content = this.content as AccordionPanel;
     for (let i = 0; i < this.widgets.length; i++) {
@@ -168,21 +168,44 @@ export class ChatPanel extends SidePanel {
       themeManager: this._themeManager,
       autocompletionRegistry: this._autocompletionRegistry
     });
-    this.addWidget(new ChatSection({ name, widget, commands: this._commands }));
+    this.addWidget(
+      new ChatSection({ name, widget, commands: this._commands, path })
+    );
   }
 
+  /**
+   * Update the list of available chats in the root directory of the drive.
+   */
   updateChatNames = async (): Promise<void> => {
     const extension = chatFileType.extensions[0];
     this._drive
       .get('.')
-      .then(model => {
-        const chatsName = (model.content as any[])
+      .then(contentModel => {
+        const chatsNames: { [name: string]: string } = {};
+        (contentModel.content as any[])
           .filter(f => f.type === 'file' && f.name.endsWith(extension))
-          .map(f => PathExt.basename(f.name, extension));
-        this._chatNamesChanged.emit(chatsName);
+          .forEach(
+            f => (chatsNames[PathExt.basename(f.name, extension)] = f.name)
+          );
+
+        this._chatNamesChanged.emit(chatsNames);
       })
       .catch(e => console.error('Error getting the chat files from drive', e));
   };
+
+  /**
+   * Open a chat if it exists in the side panel.
+   *
+   * @param path - the path of the chat.
+   * @returns a boolean, whether the chat existed in the side panel or not.
+   */
+  openIfExists(path: string): boolean {
+    const index = this._getChatIndex(path);
+    if (index > -1) {
+      this._expandChat(index);
+    }
+    return index > -1;
+  }
 
   /**
    * A message handler invoked on an `'after-show'` message.
@@ -193,27 +216,40 @@ export class ChatPanel extends SidePanel {
   }
 
   /**
+   * Return the index of the chat in the list (-1 if not opened).
+   *
+   * @param name - the chat name.
+   */
+  private _getChatIndex(path: string) {
+    return this.widgets.findIndex(w => (w as ChatSection).path === path);
+  }
+
+  /**
+   * Expand the chat from its index.
+   */
+  private _expandChat(index: number): void {
+    if (!this.widgets[index].isVisible) {
+      (this.content as AccordionPanel).expand(index);
+    }
+  }
+
+  /**
    * Handle `change` events for the HTMLSelect component.
    */
   private _chatSelected = (
     event: React.ChangeEvent<HTMLSelectElement>
   ): void => {
-    const value = event.target.value;
-    if (value === '-') {
+    const select = event.target;
+    const path = select.value;
+    const name = select.options[select.selectedIndex].textContent;
+    if (name === '-') {
       return;
     }
 
-    const index = this.widgets.findIndex(
-      w => (w as ChatSection).name === value
-    );
-    if (index === -1) {
-      this._commands.execute(CommandIDs.openChat, {
-        filepath: `${value}${chatFileType.extensions[0]}`,
-        inSidePanel: true
-      });
-    } else if (!this.widgets[index].isVisible) {
-      (this.content as AccordionPanel).expand(index);
-    }
+    this._commands.execute(CommandIDs.openChat, {
+      filepath: path,
+      inSidePanel: true
+    });
     event.target.selectedIndex = 0;
   };
 
@@ -232,7 +268,9 @@ export class ChatPanel extends SidePanel {
     }
   }
 
-  private _chatNamesChanged = new Signal<this, string[]>(this);
+  private _chatNamesChanged = new Signal<this, { [name: string]: string }>(
+    this
+  );
   private _commands: CommandRegistry;
   private _config: IConfig = {};
   private _drive: ICollaborativeDrive;
@@ -269,8 +307,9 @@ class ChatSection extends PanelWithToolbar {
     super(options);
     this.addClass(SECTION_CLASS);
     this._name = options.name;
+    this._path = options.path;
     this.title.label = this._name;
-    this.title.caption = this._name;
+    this.title.caption = this._path;
     this.toolbar.addClass(TOOLBAR_CLASS);
 
     this._markAsRead = new ToolbarButton({
@@ -317,6 +356,13 @@ class ChatSection extends PanelWithToolbar {
   }
 
   /**
+   * The path of the chat.
+   */
+  get path(): string {
+    return this._path;
+  }
+
+  /**
    * The name of the chat.
    */
   get name(): string {
@@ -353,6 +399,7 @@ class ChatSection extends PanelWithToolbar {
 
   private _name: string;
   private _markAsRead: ToolbarButton;
+  private _path: string;
 }
 
 /**
@@ -366,11 +413,12 @@ export namespace ChatSection {
     commands: CommandRegistry;
     name: string;
     widget: ChatWidget;
+    path: string;
   }
 }
 
 type ChatSelectProps = {
-  chatNamesChanged: ISignal<ChatPanel, string[]>;
+  chatNamesChanged: ISignal<ChatPanel, { [name: string]: string }>;
   handleChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
 };
 
@@ -381,7 +429,9 @@ function ChatSelect({
   chatNamesChanged,
   handleChange
 }: ChatSelectProps): JSX.Element {
-  const [chatNames, setChatNames] = useState<string[]>([]);
+  // An object associating a chat name to its path. Both are purely indicative, the name
+  // is the section title and the path is used as caption.
+  const [chatNames, setChatNames] = useState<{ [name: string]: string }>({});
 
   // Update the chat list.
   chatNamesChanged.connect((_, chatNames) => {
@@ -391,8 +441,8 @@ function ChatSelect({
   return (
     <HTMLSelect onChange={handleChange}>
       <option value="-">Open a chat</option>
-      {chatNames.map(name => (
-        <option value={name}>{name}</option>
+      {Object.keys(chatNames).map(name => (
+        <option value={chatNames[name]}>{name}</option>
       ))}
     </HTMLSelect>
   );
