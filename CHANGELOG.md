@@ -2,6 +2,35 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.5.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.4.0...52019670352c8011c5f22726bf87b5b1141b63ae))
+
+### Enhancements made
+
+- Add typing notifications [#85](https://github.com/jupyterlab/jupyter-chat/pull/85) ([@brichet](https://github.com/brichet))
+- Send with selection [#82](https://github.com/jupyterlab/jupyter-chat/pull/82) ([@brichet](https://github.com/brichet))
+
+### Bugs fixed
+
+- Fix duplicated chats [#87](https://github.com/jupyterlab/jupyter-chat/pull/87) ([@brichet](https://github.com/brichet))
+
+### Maintenance and upkeep improvements
+
+- Update jupyter_collaboration dependency [#90](https://github.com/jupyterlab/jupyter-chat/pull/90) ([@brichet](https://github.com/brichet))
+- Bundle @jupyter/chat [#89](https://github.com/jupyterlab/jupyter-chat/pull/89) ([@brichet](https://github.com/brichet))
+- Improve dev script [#88](https://github.com/jupyterlab/jupyter-chat/pull/88) ([@brichet](https://github.com/brichet))
+- Refactor UI tests [#86](https://github.com/jupyterlab/jupyter-chat/pull/86) ([@brichet](https://github.com/brichet))
+- Fix the update snapshot workflow [#84](https://github.com/jupyterlab/jupyter-chat/pull/84) ([@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2024-09-13&to=2024-10-21&type=c))
+
+[@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2024-09-13..2024-10-21&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2024-09-13..2024-10-21&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.4.0
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.3.1...67dbc0d100da651bfbaaf8a52ddf1490b18128ee))
@@ -30,8 +59,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2024-08-07&to=2024-09-13&type=c))
 
 [@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2024-08-07..2024-09-13&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adependabot+updated%3A2024-08-07..2024-09-13&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2024-08-07..2024-09-13&type=Issues) | [@jtpio](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2024-08-07..2024-09-13&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.3.1
 
