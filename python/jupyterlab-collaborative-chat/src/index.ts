@@ -75,7 +75,7 @@ const pluginIds = {
  */
 const autocompletionPlugin: JupyterFrontEndPlugin<IAutocompletionRegistry> = {
   id: pluginIds.autocompletionRegistry,
-  description: 'An autocompletion registry',
+  description: 'The autocompletion registry.',
   autoStart: true,
   provides: IAutocompletionRegistry,
   activate: (app: JupyterFrontEnd): IAutocompletionRegistry => {
@@ -88,7 +88,7 @@ const autocompletionPlugin: JupyterFrontEndPlugin<IAutocompletionRegistry> = {
  */
 const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
   id: pluginIds.docFactories,
-  description: 'A document factories for collaborative chat',
+  description: 'Document factories for collaborative chat.',
   autoStart: true,
   requires: [IRenderMimeRegistry],
   optional: [
@@ -265,7 +265,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
  */
 const chatCommands: JupyterFrontEndPlugin<void> = {
   id: pluginIds.chatCommands,
-  description: 'The commands to create or open a chat',
+  description: 'The commands to create or open a chat.',
   autoStart: true,
   requires: [ICollaborativeDrive, IChatFactory],
   optional: [
@@ -352,7 +352,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           if (!model) {
             showErrorMessage(
               'Error creating a chat',
-              'An error occured while creating the chat'
+              'An error occurred while creating the chat'
             );
             return '';
           }
@@ -472,9 +472,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
 
               const model = await drive.get(filepath);
 
-              /**
-               * Create a share model from the chat file
-               */
+              // Create a share model from the chat file
               const sharedModel = drive.sharedModelFactory.createNew({
                 path: model.path,
                 format: model.format,
@@ -482,9 +480,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
                 collaborative: true
               }) as YChat;
 
-              /**
-               * Initialize the chat model with the share model
-               */
+              // Initialize the chat model with the share model
               const chat = new CollaborativeChatModel({
                 user,
                 sharedModel,
@@ -494,9 +490,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
                 selectionWatcher
               });
 
-              /**
-               * Add a chat widget to the side panel.
-               */
+              // Add a chat widget to the side panel.
               chatPanel.addChat(
                 chat,
                 PathExt.join(
@@ -553,7 +547,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
  */
 const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
   id: pluginIds.chatPanel,
-  description: 'A chat extension for Jupyter',
+  description: 'The chat panel widget.',
   autoStart: true,
   provides: IChatPanel,
   requires: [ICollaborativeDrive, IRenderMimeRegistry],
@@ -611,7 +605,6 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
 
     /*
      * Command to move a chat from the main area to the side panel.
-     *
      */
     commands.addCommand(CommandIDs.moveToSide, {
       label: 'Move the chat to the side panel',
@@ -650,7 +643,7 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
  */
 const activeCellManager: JupyterFrontEndPlugin<IActiveCellManager> = {
   id: pluginIds.activeCellManager,
-  description: 'the active cell manager plugin',
+  description: 'The active cell manager plugin.',
   autoStart: true,
   requires: [INotebookTracker],
   provides: IActiveCellManagerToken,
@@ -670,7 +663,7 @@ const activeCellManager: JupyterFrontEndPlugin<IActiveCellManager> = {
  */
 const selectionWatcher: JupyterFrontEndPlugin<ISelectionWatcher> = {
   id: pluginIds.selectionWatcher,
-  description: 'the selection watcher plugin',
+  description: 'The selection watcher plugin.',
   autoStart: true,
   requires: [],
   provides: ISelectionWatcherToken,

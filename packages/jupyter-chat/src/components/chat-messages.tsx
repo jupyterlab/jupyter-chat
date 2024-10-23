@@ -581,7 +581,7 @@ type AvatarProps = {
 };
 
 /**
- * the avatar component.
+ * The avatar component.
  */
 export function Avatar(props: AvatarProps): JSX.Element | null {
   const { user } = props;
@@ -593,18 +593,24 @@ export function Avatar(props: AvatarProps): JSX.Element | null {
     fontSize: `var(--jp-ui-font-size${props.small ? '0' : '1'})`
   };
 
+  const name =
+    user.display_name ?? user.name ?? (user.username || 'User undefined');
   return user.avatar_url ? (
     <MuiAvatar
       sx={{
         ...sharedStyles
       }}
       src={user.avatar_url}
+      alt={name}
+      title={name}
     ></MuiAvatar>
   ) : user.initials ? (
     <MuiAvatar
       sx={{
         ...sharedStyles
       }}
+      alt={name}
+      title={name}
     >
       <Typography
         sx={{
