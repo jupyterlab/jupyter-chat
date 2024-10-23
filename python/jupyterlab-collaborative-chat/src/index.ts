@@ -136,6 +136,31 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
      * Load the settings for the chat widgets.
      */
     function loadSetting(setting: ISettingRegistry.ISettings): void {
+      // Remove the previous directory if it is empty and has changed.
+      const previousDirectory = widgetConfig.config.defaultDirectory;
+      const currentDirectory = setting.get('defaultDirectory')
+        .composite as string;
+
+      if (
+        drive &&
+        previousDirectory &&
+        previousDirectory !== currentDirectory &&
+        previousDirectory !== '.'
+      ) {
+        drive
+          .get(previousDirectory)
+          .then(contentModel => {
+            if (contentModel.content.length === 0) {
+              drive.delete(previousDirectory).catch(e => {
+                // no-op, the directory might not be empty
+              });
+            }
+          })
+          .catch(() => {
+            // no-op, the directory does not exists.
+          });
+      }
+
       // Read the settings and convert to the correct type
       widgetConfig.config = {
         sendWithShiftEnter: setting.get('sendWithShiftEnter')
@@ -146,8 +171,33 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
         enableCodeToolbar: setting.get('enableCodeToolbar')
           .composite as boolean,
         sendTypingNotification: setting.get('sendTypingNotification')
-          .composite as boolean
+          .composite as boolean,
+        defaultDirectory: currentDirectory
       };
+
+      // Create the new directory if necessary.
+      if (
+        drive &&
+        currentDirectory &&
+        previousDirectory !== currentDirectory &&
+        currentDirectory !== '.'
+      ) {
+        drive.get(currentDirectory, { content: false }).catch(() => {
+          drive
+            .newUntitled({
+              type: 'directory'
+            })
+            .then(contentModel => {
+              drive.rename(contentModel.path, currentDirectory).catch(e => {
+                drive.delete(contentModel.path);
+                throw e;
+              });
+            })
+            .catch(e => {
+              throw e;
+            });
+        });
+      }
     }
 
     if (settingRegistry) {
@@ -326,6 +376,11 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           } else {
             filepath = `${name}${chatFileType.extensions[0]}`;
           }
+          // Add the default directory to the path.
+          filepath = PathExt.join(
+            widgetConfig.config.defaultDirectory || '.',
+            filepath
+          );
         }
 
         let fileExist = true;

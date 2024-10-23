@@ -37,6 +37,12 @@
       "default": true,
       "readOnly": false
     },
+    "defaultDirectory": {
+      "description": "Default directory where to create and look for chat.",
+      "type": "string",
+      "default": ".",
+      "readOnly": false
+    },
     "toolbar": {
       "title": "File browser toolbar items",
       "description": "Note: To disable a toolbar item,\ncopy it to User Preferences and add the\n\"disabled\" key. The following example will disable the uploader button:\n{\n  \"toolbar\": [\n    {\n      \"name\": \"uploader\",\n      \"disabled\": true\n    }\n  ]\n}\n\nToolbar description:",
