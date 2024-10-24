@@ -190,9 +190,8 @@ export class ChatPanel extends SidePanel {
    */
   updateChatList = async (): Promise<void> => {
     const extension = chatFileType.extensions[0];
-    const defaultDirectory = this._defaultDirectory || '';
     this._drive
-      .get(defaultDirectory)
+      .get(this._defaultDirectory)
       .then(contentModel => {
         const chatsNames: { [name: string]: string } = {};
         (contentModel.content as any[])

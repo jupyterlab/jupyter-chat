@@ -161,7 +161,9 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
       }
 
       // Create the new directory if necessary.
-      let directoryCreation = new Promise<Contents.IModel | null>(r => r(null));
+      let directoryCreation: Promise<Contents.IModel | null> =
+        Promise.resolve(null);
+
       if (drive && currentDirectory && previousDirectory !== currentDirectory) {
         directoryCreation = drive
           .get(currentDirectory, { content: false })
@@ -171,23 +173,22 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
                 type: 'directory'
               })
               .then(async contentModel => {
-                console.log('Renaming the directory');
                 return drive
                   .rename(contentModel.path, currentDirectory)
                   .catch(e => {
                     drive.delete(contentModel.path);
-                    throw e;
+                    throw new Error(e);
                   });
               })
               .catch(e => {
-                throw e;
+                throw new Error(e);
               });
           });
       }
 
       // Wait for the new directory to be created to update the config, to avoid error
       // trying to read that directory to update the chat list in the side panel.
-      directoryCreation.then(model => {
+      directoryCreation.then(() => {
         widgetConfig.config = {
           sendWithShiftEnter: setting.get('sendWithShiftEnter')
             .composite as boolean,
@@ -632,7 +633,7 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
     chatPanel.title.caption = 'Jupyter Chat'; // TODO: i18n/
 
     factory.widgetConfig.configChanged.connect((_, config) => {
-      if (config.defaultDirectory) {
+      if (config.defaultDirectory !== undefined) {
         chatPanel.defaultDirectory = config.defaultDirectory;
       }
     });
