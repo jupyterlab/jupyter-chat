@@ -11,7 +11,7 @@ import {
 } from '@jupyterlab/galata';
 import { Locator } from '@playwright/test';
 
-import { openChat, openChatToSide } from './test-utils';
+import { openChat, openChatToSide, openSettings } from './test-utils';
 
 const FILENAME = 'my-chat.chat';
 
@@ -156,6 +156,7 @@ test.describe('#sidepanel', () => {
 
   test.describe('#openingClosing', () => {
     const name = FILENAME.replace('.chat', '');
+    const NEW_DIR = 'chats_dir';
     let panel: Locator;
     let select: Locator;
 
@@ -165,12 +166,12 @@ test.describe('#sidepanel', () => {
 
     test.afterEach(async ({ page }) => {
       await page.filebrowser.contents.deleteFile(FILENAME);
+      if (await page.filebrowser.contents.directoryExists(NEW_DIR)) {
+        await page.filebrowser.contents.deleteDirectory(NEW_DIR);
+      }
     });
 
     test('should list existing chat', async ({ page }) => {
-      // reload to update the chat list
-      // FIX: add listener on file creation
-      await page.reload();
       panel = await openSidePanel(page);
       select = panel.locator(
         '.jp-SidePanel-toolbar .jp-Toolbar-item.jp-collab-chat-open select'
@@ -181,9 +182,6 @@ test.describe('#sidepanel', () => {
     });
 
     test('should open an existing chat and close it', async ({ page }) => {
-      // reload to update the chat list
-      // FIX: add listener on file creation
-      await page.reload();
       panel = await openSidePanel(page);
       select = panel.locator(
         '.jp-SidePanel-toolbar .jp-Toolbar-item.jp-collab-chat-open select'
@@ -201,6 +199,62 @@ test.describe('#sidepanel', () => {
 
       await chatTitle.getByTitle('Close the chat').click();
       await expect(chatTitle).toHaveCount(0);
+    });
+
+    test('should list existing chat in default directory', async ({ page }) => {
+      panel = await openSidePanel(page);
+      select = panel.locator(
+        '.jp-SidePanel-toolbar .jp-Toolbar-item.jp-collab-chat-open select'
+      );
+
+      // changing the default directory to an empty one should empty the list.
+      const settings = await openSettings(page);
+      const defaultDirectory = settings.locator(
+        'input[label="defaultDirectory"]'
+      );
+      await defaultDirectory.pressSequentially(NEW_DIR);
+
+      // wait for the settings to be saved
+      await expect(page.activity.getTabLocator('Settings')).toHaveAttribute(
+        'class',
+        /jp-mod-dirty/
+      );
+      await expect(page.activity.getTabLocator('Settings')).not.toHaveAttribute(
+        'class',
+        /jp-mod-dirty/
+      );
+
+      await expect(select.locator('option')).toHaveCount(1);
+      await expect(select.locator('option').last()).toHaveText('Open a chat');
+
+      // creating a chat should populate the list.
+      const addButton = panel.locator(
+        '.jp-SidePanel-toolbar .jp-Toolbar-item.jp-collab-chat-add'
+      );
+      await addButton.click();
+      const dialog = page.locator('.jp-Dialog');
+      await dialog.waitFor();
+      await dialog.locator('input[type="text"]').pressSequentially('new-chat');
+      await dialog.getByRole('button').getByText('Ok').click();
+
+      await expect(select.locator('option')).toHaveCount(2);
+      await expect(select.locator('option').last()).toHaveText('new-chat');
+
+      // Changing the default directory (to root) should update the chat list.
+      await defaultDirectory.clear();
+
+      // wait for the settings to be saved
+      await expect(page.activity.getTabLocator('Settings')).toHaveAttribute(
+        'class',
+        /jp-mod-dirty/
+      );
+      await expect(page.activity.getTabLocator('Settings')).not.toHaveAttribute(
+        'class',
+        /jp-mod-dirty/
+      );
+
+      await expect(select.locator('option')).toHaveCount(2);
+      await expect(select.locator('option').last()).toHaveText(name);
     });
   });
 

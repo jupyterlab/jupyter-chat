@@ -19,6 +19,17 @@ export const USER: User.IUser = {
   permissions: {}
 };
 
+export const createChat = async (
+  page: IJupyterLabPageFixture,
+  filename: string
+): Promise<void> => {
+  await page.evaluate(async name => {
+    await window.jupyterapp.commands.execute('collaborative-chat:create', {
+      name
+    });
+  }, filename);
+};
+
 export const openChat = async (
   page: IJupyterLabPageFixture,
   filename: string

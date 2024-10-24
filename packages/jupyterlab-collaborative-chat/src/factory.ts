@@ -7,7 +7,6 @@ import {
   ChatWidget,
   IActiveCellManager,
   IAutocompletionRegistry,
-  IConfig,
   ISelectionWatcher
 } from '@jupyter/chat';
 import { IThemeManager } from '@jupyterlab/apputils';
@@ -20,7 +19,7 @@ import { ISignal, Signal } from '@lumino/signaling';
 import { CollaborativeChatModel } from './model';
 import { CollaborativeChatPanel } from './widget';
 import { YChat } from './ychat';
-import { IWidgetConfig } from './token';
+import { ICollaborativeChatConfig, IWidgetConfig } from './token';
 
 /**
  * The object provided by the chatDocument extension.
@@ -31,17 +30,17 @@ export class WidgetConfig implements IWidgetConfig {
   /**
    * The constructor of the WidgetConfig.
    */
-  constructor(config: Partial<IConfig>) {
+  constructor(config: Partial<ICollaborativeChatConfig>) {
     this._config = config;
   }
 
   /**
    * Getter and setter for the config.
    */
-  get config(): Partial<IConfig> {
+  get config(): Partial<ICollaborativeChatConfig> {
     return this._config;
   }
-  set config(value: Partial<IConfig>) {
+  set config(value: Partial<ICollaborativeChatConfig>) {
     this._config = { ...this._config, ...value };
     this._configChanged.emit(value);
   }
@@ -49,12 +48,18 @@ export class WidgetConfig implements IWidgetConfig {
   /**
    * Getter for the configChanged signal
    */
-  get configChanged(): ISignal<WidgetConfig, Partial<IConfig>> {
+  get configChanged(): ISignal<
+    WidgetConfig,
+    Partial<ICollaborativeChatConfig>
+  > {
     return this._configChanged;
   }
 
-  private _config: Partial<IConfig>;
-  private _configChanged = new Signal<WidgetConfig, Partial<IConfig>>(this);
+  private _config: Partial<ICollaborativeChatConfig>;
+  private _configChanged = new Signal<
+    WidgetConfig,
+    Partial<ICollaborativeChatConfig>
+  >(this);
 }
 
 /**

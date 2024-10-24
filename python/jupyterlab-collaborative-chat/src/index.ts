@@ -75,7 +75,7 @@ const pluginIds = {
  */
 const autocompletionPlugin: JupyterFrontEndPlugin<IAutocompletionRegistry> = {
   id: pluginIds.autocompletionRegistry,
-  description: 'An autocompletion registry',
+  description: 'The autocompletion registry.',
   autoStart: true,
   provides: IAutocompletionRegistry,
   activate: (app: JupyterFrontEnd): IAutocompletionRegistry => {
@@ -88,7 +88,7 @@ const autocompletionPlugin: JupyterFrontEndPlugin<IAutocompletionRegistry> = {
  */
 const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
   id: pluginIds.docFactories,
-  description: 'A document factories for collaborative chat',
+  description: 'Document factories for collaborative chat.',
   autoStart: true,
   requires: [IRenderMimeRegistry],
   optional: [
@@ -136,18 +136,72 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
      * Load the settings for the chat widgets.
      */
     function loadSetting(setting: ISettingRegistry.ISettings): void {
-      // Read the settings and convert to the correct type
-      widgetConfig.config = {
-        sendWithShiftEnter: setting.get('sendWithShiftEnter')
-          .composite as boolean,
-        stackMessages: setting.get('stackMessages').composite as boolean,
-        unreadNotifications: setting.get('unreadNotifications')
-          .composite as boolean,
-        enableCodeToolbar: setting.get('enableCodeToolbar')
-          .composite as boolean,
-        sendTypingNotification: setting.get('sendTypingNotification')
-          .composite as boolean
-      };
+      // Remove the previous directory if it is empty and has changed.
+      const previousDirectory = widgetConfig.config.defaultDirectory;
+      const currentDirectory = setting.get('defaultDirectory')
+        .composite as string;
+
+      if (
+        drive &&
+        previousDirectory &&
+        previousDirectory !== currentDirectory
+      ) {
+        drive
+          .get(previousDirectory)
+          .then(contentModel => {
+            if (contentModel.content.length === 0) {
+              drive.delete(previousDirectory).catch(e => {
+                // no-op, the directory might not be empty
+              });
+            }
+          })
+          .catch(() => {
+            // no-op, the directory does not exists.
+          });
+      }
+
+      // Create the new directory if necessary.
+      let directoryCreation: Promise<Contents.IModel | null> =
+        Promise.resolve(null);
+
+      if (drive && currentDirectory && previousDirectory !== currentDirectory) {
+        directoryCreation = drive
+          .get(currentDirectory, { content: false })
+          .catch(async () => {
+            return drive
+              .newUntitled({
+                type: 'directory'
+              })
+              .then(async contentModel => {
+                return drive
+                  .rename(contentModel.path, currentDirectory)
+                  .catch(e => {
+                    drive.delete(contentModel.path);
+                    throw new Error(e);
+                  });
+              })
+              .catch(e => {
+                throw new Error(e);
+              });
+          });
+      }
+
+      // Wait for the new directory to be created to update the config, to avoid error
+      // trying to read that directory to update the chat list in the side panel.
+      directoryCreation.then(() => {
+        widgetConfig.config = {
+          sendWithShiftEnter: setting.get('sendWithShiftEnter')
+            .composite as boolean,
+          stackMessages: setting.get('stackMessages').composite as boolean,
+          unreadNotifications: setting.get('unreadNotifications')
+            .composite as boolean,
+          enableCodeToolbar: setting.get('enableCodeToolbar')
+            .composite as boolean,
+          sendTypingNotification: setting.get('sendTypingNotification')
+            .composite as boolean,
+          defaultDirectory: currentDirectory
+        };
+      });
     }
 
     if (settingRegistry) {
@@ -265,7 +319,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
  */
 const chatCommands: JupyterFrontEndPlugin<void> = {
   id: pluginIds.chatCommands,
-  description: 'The commands to create or open a chat',
+  description: 'The commands to create or open a chat.',
   autoStart: true,
   requires: [ICollaborativeDrive, IChatFactory],
   optional: [
@@ -326,6 +380,11 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           } else {
             filepath = `${name}${chatFileType.extensions[0]}`;
           }
+          // Add the default directory to the path.
+          filepath = PathExt.join(
+            widgetConfig.config.defaultDirectory || '',
+            filepath
+          );
         }
 
         let fileExist = true;
@@ -352,7 +411,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           if (!model) {
             showErrorMessage(
               'Error creating a chat',
-              'An error occured while creating the chat'
+              'An error occurred while creating the chat'
             );
             return '';
           }
@@ -472,9 +531,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
 
               const model = await drive.get(filepath);
 
-              /**
-               * Create a share model from the chat file
-               */
+              // Create a share model from the chat file
               const sharedModel = drive.sharedModelFactory.createNew({
                 path: model.path,
                 format: model.format,
@@ -482,9 +539,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
                 collaborative: true
               }) as YChat;
 
-              /**
-               * Initialize the chat model with the share model
-               */
+              // Initialize the chat model with the share model
               const chat = new CollaborativeChatModel({
                 user,
                 sharedModel,
@@ -494,17 +549,8 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
                 selectionWatcher
               });
 
-              /**
-               * Add a chat widget to the side panel.
-               */
-              chatPanel.addChat(
-                chat,
-                PathExt.join(
-                  PathExt.dirname(model.path),
-                  PathExt.basename(model.name, chatFileType.extensions[0])
-                ),
-                model.path
-              );
+              // Add a chat widget to the side panel.
+              chatPanel.addChat(chat, model.path);
             } else {
               // The chat is opened in the main area
               commands.execute('docmanager:open', {
@@ -553,26 +599,23 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
  */
 const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
   id: pluginIds.chatPanel,
-  description: 'A chat extension for Jupyter',
+  description: 'The chat panel widget.',
   autoStart: true,
   provides: IChatPanel,
-  requires: [ICollaborativeDrive, IRenderMimeRegistry],
-  optional: [
-    IAutocompletionRegistry,
-    ILayoutRestorer,
-    INotebookTracker,
-    IThemeManager
-  ],
+  requires: [IChatFactory, ICollaborativeDrive, IRenderMimeRegistry],
+  optional: [IAutocompletionRegistry, ILayoutRestorer, IThemeManager],
   activate: (
     app: JupyterFrontEnd,
+    factory: IChatFactory,
     drive: ICollaborativeDrive,
     rmRegistry: IRenderMimeRegistry,
     autocompletionRegistry: IAutocompletionRegistry,
     restorer: ILayoutRestorer | null,
-    notebookTracker: INotebookTracker,
     themeManager: IThemeManager | null
   ): ChatPanel => {
     const { commands } = app;
+
+    const defaultDirectory = factory.widgetConfig.config.defaultDirectory || '';
 
     /**
      * Add Chat widget to left sidebar
@@ -582,11 +625,18 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
       drive,
       rmRegistry,
       themeManager,
+      defaultDirectory,
       autocompletionRegistry
     });
     chatPanel.id = 'JupyterCollaborationChat:sidepanel';
     chatPanel.title.icon = chatIcon;
     chatPanel.title.caption = 'Jupyter Chat'; // TODO: i18n/
+
+    factory.widgetConfig.configChanged.connect((_, config) => {
+      if (config.defaultDirectory !== undefined) {
+        chatPanel.defaultDirectory = config.defaultDirectory;
+      }
+    });
 
     app.shell.add(chatPanel, 'left', {
       rank: 2000
@@ -596,22 +646,25 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
       restorer.add(chatPanel, 'jupyter-chat');
     }
 
-    // Use events system to watch changes on files.
+    // Use events system to watch changes on files, and update the chat list if a chat
+    // file has been created, deleted or renamed.
     const schemaID =
       'https://events.jupyter.org/jupyter_server/contents_service/v1';
     const actions = ['create', 'delete', 'rename'];
     app.serviceManager.events.stream.connect((_, emission) => {
       if (emission.schema_id === schemaID) {
         const action = emission.action as string;
-        if (actions.includes(action)) {
-          chatPanel.updateChatNames();
+        if (
+          actions.includes(action) &&
+          (emission.path as string).endsWith(chatFileType.extensions[0])
+        ) {
+          chatPanel.updateChatList();
         }
       }
     });
 
     /*
      * Command to move a chat from the main area to the side panel.
-     *
      */
     commands.addCommand(CommandIDs.moveToSide, {
       label: 'Move the chat to the side panel',
@@ -650,7 +703,7 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
  */
 const activeCellManager: JupyterFrontEndPlugin<IActiveCellManager> = {
   id: pluginIds.activeCellManager,
-  description: 'the active cell manager plugin',
+  description: 'The active cell manager plugin.',
   autoStart: true,
   requires: [INotebookTracker],
   provides: IActiveCellManagerToken,
@@ -670,7 +723,7 @@ const activeCellManager: JupyterFrontEndPlugin<IActiveCellManager> = {
  */
 const selectionWatcher: JupyterFrontEndPlugin<ISelectionWatcher> = {
   id: pluginIds.selectionWatcher,
-  description: 'the selection watcher plugin',
+  description: 'The selection watcher plugin.',
   autoStart: true,
   requires: [],
   provides: ISelectionWatcherToken,
