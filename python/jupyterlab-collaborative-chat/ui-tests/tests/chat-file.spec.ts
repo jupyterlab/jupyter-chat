@@ -52,9 +52,13 @@ test.describe('#chatCreation', () => {
     expect(await page.filebrowser.contents.fileExists(FILENAME)).toBeTruthy();
   });
 
-  test('should create a default directory and remove it as empty', async ({ page }) => {
+  test('should create a default directory and remove it as empty', async ({
+    page
+  }) => {
     const settings = await openSettings(page);
-    const defaultDirectory = settings.locator('input[label="defaultDirectory"]');
+    const defaultDirectory = settings.locator(
+      'input[label="defaultDirectory"]'
+    );
     await defaultDirectory.pressSequentially(CHAT_DIR);
 
     // wait for the settings to be saved
@@ -67,7 +71,9 @@ test.describe('#chatCreation', () => {
       /jp-mod-dirty/
     );
 
-    expect(await page.filebrowser.contents.directoryExists(CHAT_DIR)).toBeTruthy();
+    expect(
+      await page.filebrowser.contents.directoryExists(CHAT_DIR)
+    ).toBeTruthy();
 
     // Clearing the default directory settings should remove former empty default directory.
     await defaultDirectory.clear();
@@ -82,12 +88,18 @@ test.describe('#chatCreation', () => {
       /jp-mod-dirty/
     );
 
-    expect(await page.filebrowser.contents.directoryExists(CHAT_DIR)).toBeFalsy();
+    expect(
+      await page.filebrowser.contents.directoryExists(CHAT_DIR)
+    ).toBeFalsy();
   });
 
-  test('should create a chat in default directory and keep not empty directory', async ({ page }) => {
+  test('should create a chat in default directory and keep not empty directory', async ({
+    page
+  }) => {
     const settings = await openSettings(page);
-    const defaultDirectory = settings.locator('input[label="defaultDirectory"]');
+    const defaultDirectory = settings.locator(
+      'input[label="defaultDirectory"]'
+    );
     await defaultDirectory.pressSequentially(CHAT_DIR);
 
     // wait for the settings to be saved
@@ -101,7 +113,11 @@ test.describe('#chatCreation', () => {
     );
 
     await createChat(page, CHAT_NAME);
-    expect(await page.filebrowser.contents.fileExists(PathExt.join(CHAT_DIR, FILENAME))).toBeTruthy();
+    expect(
+      await page.filebrowser.contents.fileExists(
+        PathExt.join(CHAT_DIR, FILENAME)
+      )
+    ).toBeTruthy();
 
     // Reactivate settings panel
     await openSettings(page);
@@ -119,7 +135,9 @@ test.describe('#chatCreation', () => {
       /jp-mod-dirty/
     );
 
-    expect(await page.filebrowser.contents.directoryExists(CHAT_DIR)).toBeTruthy();
+    expect(
+      await page.filebrowser.contents.directoryExists(CHAT_DIR)
+    ).toBeTruthy();
   });
 });
 

@@ -209,7 +209,9 @@ test.describe('#sidepanel', () => {
 
       // changing the default directory to an empty one should empty the list.
       const settings = await openSettings(page);
-      const defaultDirectory = settings.locator('input[label="defaultDirectory"]');
+      const defaultDirectory = settings.locator(
+        'input[label="defaultDirectory"]'
+      );
       await defaultDirectory.pressSequentially(NEW_DIR);
 
       // wait for the settings to be saved

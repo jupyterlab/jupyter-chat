@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { expect, IJupyterLabPageFixture, test} from '@jupyterlab/galata';
+import { expect, IJupyterLabPageFixture, test } from '@jupyterlab/galata';
 
 const FILENAME = 'my-chat.chat';
 
