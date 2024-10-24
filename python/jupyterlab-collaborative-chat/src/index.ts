@@ -160,38 +160,47 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
           });
       }
 
-      // Read the settings and convert to the correct type
-      widgetConfig.config = {
-        sendWithShiftEnter: setting.get('sendWithShiftEnter')
-          .composite as boolean,
-        stackMessages: setting.get('stackMessages').composite as boolean,
-        unreadNotifications: setting.get('unreadNotifications')
-          .composite as boolean,
-        enableCodeToolbar: setting.get('enableCodeToolbar')
-          .composite as boolean,
-        sendTypingNotification: setting.get('sendTypingNotification')
-          .composite as boolean,
-        defaultDirectory: currentDirectory
-      };
-
       // Create the new directory if necessary.
+      let directoryCreation = new Promise<Contents.IModel | null>(r => r(null));
       if (drive && currentDirectory && previousDirectory !== currentDirectory) {
-        drive.get(currentDirectory, { content: false }).catch(() => {
-          drive
-            .newUntitled({
-              type: 'directory'
-            })
-            .then(contentModel => {
-              drive.rename(contentModel.path, currentDirectory).catch(e => {
-                drive.delete(contentModel.path);
+        directoryCreation = drive
+          .get(currentDirectory, { content: false })
+          .catch(async () => {
+            return drive
+              .newUntitled({
+                type: 'directory'
+              })
+              .then(async contentModel => {
+                console.log('Renaming the directory');
+                return drive
+                  .rename(contentModel.path, currentDirectory)
+                  .catch(e => {
+                    drive.delete(contentModel.path);
+                    throw e;
+                  });
+              })
+              .catch(e => {
                 throw e;
               });
-            })
-            .catch(e => {
-              throw e;
-            });
-        });
+          });
       }
+
+      // Wait for the new directory to be created to update the config, to avoid error
+      // trying to read that directory to update the chat list in the side panel.
+      directoryCreation.then(model => {
+        widgetConfig.config = {
+          sendWithShiftEnter: setting.get('sendWithShiftEnter')
+            .composite as boolean,
+          stackMessages: setting.get('stackMessages').composite as boolean,
+          unreadNotifications: setting.get('unreadNotifications')
+            .composite as boolean,
+          enableCodeToolbar: setting.get('enableCodeToolbar')
+            .composite as boolean,
+          sendTypingNotification: setting.get('sendTypingNotification')
+            .composite as boolean,
+          defaultDirectory: currentDirectory
+        };
+      });
     }
 
     if (settingRegistry) {
@@ -636,14 +645,18 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
       restorer.add(chatPanel, 'jupyter-chat');
     }
 
-    // Use events system to watch changes on files.
+    // Use events system to watch changes on files, and update the chat list if a chat
+    // file has been created, deleted or renamed.
     const schemaID =
       'https://events.jupyter.org/jupyter_server/contents_service/v1';
     const actions = ['create', 'delete', 'rename'];
     app.serviceManager.events.stream.connect((_, emission) => {
       if (emission.schema_id === schemaID) {
         const action = emission.action as string;
-        if (actions.includes(action)) {
+        if (
+          actions.includes(action) &&
+          (emission.path as string).endsWith(chatFileType.extensions[0])
+        ) {
           chatPanel.updateChatList();
         }
       }
