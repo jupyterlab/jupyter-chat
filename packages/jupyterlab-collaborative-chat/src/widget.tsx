@@ -7,7 +7,6 @@ import {
   ChatWidget,
   IAutocompletionRegistry,
   IChatModel,
-  IConfig,
   readIcon
 } from '@jupyter/chat';
 import { ICollaborativeDrive } from '@jupyter/docprovider';
@@ -107,6 +106,7 @@ export class ChatPanel extends SidePanel {
     this._drive = options.drive;
     this._rmRegistry = options.rmRegistry;
     this._themeManager = options.themeManager;
+    this._defaultDirectory = options.defaultDirectory;
     this._autocompletionRegistry = options.autocompletionRegistry;
 
     const addChat = new CommandToolbarButton({
@@ -133,15 +133,21 @@ export class ChatPanel extends SidePanel {
   }
 
   /**
-   * Getter and setter of the config, propagated to all the chat widgets.
+   * Getter and setter of the defaultDirectory.
    */
-  get config(): IConfig {
-    return this._config;
+  get defaultDirectory(): string {
+    return this._defaultDirectory;
   }
-  set config(value: Partial<IConfig>) {
-    this._config = { ...this._config, ...value };
+  set defaultDirectory(value: string) {
+    if (value === this._defaultDirectory) {
+      return;
+    }
+    this._defaultDirectory = value;
+    // Update the list of discoverable chat (in default directory)
+    this.updateChatList();
+    // Update the sections names.
     this.widgets.forEach(w => {
-      (w as ChatSection).model.config = value;
+      (w as ChatSection).defaultDirectory = value;
     });
   }
 
@@ -151,15 +157,15 @@ export class ChatPanel extends SidePanel {
    * @param model - the model of the chat widget
    * @param name - the name of the chat.
    */
-  addChat(model: IChatModel, name: string, path: string): void {
+  addChat(model: IChatModel, path: string): void {
     // Collapse all chats
     const content = this.content as AccordionPanel;
     for (let i = 0; i < this.widgets.length; i++) {
       content.collapse(i);
     }
 
-    // Set the id of the model.
-    model.name = name;
+    // Set the name of the model.
+    model.name = path;
 
     // Create a new widget.
     const widget = new ChatWidget({
@@ -168,25 +174,32 @@ export class ChatPanel extends SidePanel {
       themeManager: this._themeManager,
       autocompletionRegistry: this._autocompletionRegistry
     });
+
     this.addWidget(
-      new ChatSection({ name, widget, commands: this._commands, path })
+      new ChatSection({
+        widget,
+        commands: this._commands,
+        path,
+        defaultDirectory: this._defaultDirectory
+      })
     );
   }
 
   /**
-   * Update the list of available chats in the root directory of the drive.
+   * Update the list of available chats in the default directory.
    */
-  updateChatNames = async (): Promise<void> => {
+  updateChatList = async (): Promise<void> => {
     const extension = chatFileType.extensions[0];
+    const defaultDirectory = this._defaultDirectory || '';
     this._drive
-      .get('.')
+      .get(defaultDirectory)
       .then(contentModel => {
         const chatsNames: { [name: string]: string } = {};
         (contentModel.content as any[])
           .filter(f => f.type === 'file' && f.name.endsWith(extension))
-          .forEach(
-            f => (chatsNames[PathExt.basename(f.name, extension)] = f.name)
-          );
+          .forEach(f => {
+            chatsNames[PathExt.basename(f.name, extension)] = f.path;
+          });
 
         this._chatNamesChanged.emit(chatsNames);
       })
@@ -212,7 +225,7 @@ export class ChatPanel extends SidePanel {
    */
   protected onAfterShow(msg: Message): void {
     // Wait for the component to be rendered.
-    this._openChat.renderPromise?.then(() => this.updateChatNames());
+    this._openChat.renderPromise?.then(() => this.updateChatList());
   }
 
   /**
@@ -272,7 +285,7 @@ export class ChatPanel extends SidePanel {
     this
   );
   private _commands: CommandRegistry;
-  private _config: IConfig = {};
+  private _defaultDirectory: string;
   private _drive: ICollaborativeDrive;
   private _openChat: ReactWidget;
   private _rmRegistry: IRenderMimeRegistry;
@@ -292,6 +305,7 @@ export namespace ChatPanel {
     drive: ICollaborativeDrive;
     rmRegistry: IRenderMimeRegistry;
     themeManager: IThemeManager | null;
+    defaultDirectory: string;
     autocompletionRegistry?: IAutocompletionRegistry;
   }
 }
@@ -305,11 +319,13 @@ class ChatSection extends PanelWithToolbar {
    */
   constructor(options: ChatSection.IOptions) {
     super(options);
+
+    this.addWidget(options.widget);
+
     this.addClass(SECTION_CLASS);
-    this._name = options.name;
+    this._defaultDirectory = options.defaultDirectory;
     this._path = options.path;
-    this.title.label = this._name;
-    this.title.caption = this._path;
+    this._updateTitle();
     this.toolbar.addClass(TOOLBAR_CLASS);
 
     this._markAsRead = new ToolbarButton({
@@ -326,7 +342,7 @@ class ChatSection extends PanelWithToolbar {
       onClick: () => {
         this.model.dispose();
         options.commands.execute(CommandIDs.openChat, {
-          filepath: `${this._name}${chatFileType.extensions[0]}`
+          filepath: this._path
         });
         this.dispose();
       }
@@ -346,8 +362,6 @@ class ChatSection extends PanelWithToolbar {
     this.toolbar.addItem('collaborativeChat-moveMain', moveToMain);
     this.toolbar.addItem('collaborativeChat-close', closeButton);
 
-    this.addWidget(options.widget);
-
     this.model.unreadChanged?.connect(this._unreadChanged);
 
     this._markAsRead.enabled = this.model.unreadMessages.length > 0;
@@ -363,10 +377,11 @@ class ChatSection extends PanelWithToolbar {
   }
 
   /**
-   * The name of the chat.
+   * Set the default directory property.
    */
-  get name(): string {
-    return this._name;
+  set defaultDirectory(value: string) {
+    this._defaultDirectory = value;
+    this._updateTitle();
   }
 
   /**
@@ -385,6 +400,27 @@ class ChatSection extends PanelWithToolbar {
   }
 
   /**
+   * Update the section's title, depending on the default directory and chat file name.
+   * If the chat file is in the default directory, the section's name is its relative
+   * path to that default directory. Otherwise, it is it absolute path.
+   */
+  private _updateTitle(): void {
+    const inDefault = this._defaultDirectory
+      ? !PathExt.relative(this._defaultDirectory, this._path).startsWith('..')
+      : true;
+
+    const pattern = new RegExp(`${chatFileType.extensions[0]}$`, 'g');
+    this.title.label = (
+      inDefault
+        ? this._defaultDirectory
+          ? PathExt.relative(this._defaultDirectory, this._path)
+          : this._path
+        : '/' + this._path
+    ).replace(pattern, '');
+    this.title.caption = this._path;
+  }
+
+  /**
    * Change the title when messages are unread.
    *
    * TODO: fix it upstream in @jupyterlab/ui-components.
@@ -397,7 +433,7 @@ class ChatSection extends PanelWithToolbar {
     // this.title.label = `${unread.length ? '* ' : ''}${this._name}`;
   };
 
-  private _name: string;
+  private _defaultDirectory: string;
   private _markAsRead: ToolbarButton;
   private _path: string;
 }
@@ -411,7 +447,7 @@ export namespace ChatSection {
    */
   export interface IOptions extends Panel.IOptions {
     commands: CommandRegistry;
-    name: string;
+    defaultDirectory: string;
     widget: ChatWidget;
     path: string;
   }

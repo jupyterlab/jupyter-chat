@@ -40,7 +40,7 @@
     "defaultDirectory": {
       "description": "Default directory where to create and look for chat.",
       "type": "string",
-      "default": ".",
+      "default": "",
       "readOnly": false
     },
     "toolbar": {

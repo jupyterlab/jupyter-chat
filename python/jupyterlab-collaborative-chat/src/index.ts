@@ -144,8 +144,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
       if (
         drive &&
         previousDirectory &&
-        previousDirectory !== currentDirectory &&
-        previousDirectory !== '.'
+        previousDirectory !== currentDirectory
       ) {
         drive
           .get(previousDirectory)
@@ -176,12 +175,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
       };
 
       // Create the new directory if necessary.
-      if (
-        drive &&
-        currentDirectory &&
-        previousDirectory !== currentDirectory &&
-        currentDirectory !== '.'
-      ) {
+      if (drive && currentDirectory && previousDirectory !== currentDirectory) {
         drive.get(currentDirectory, { content: false }).catch(() => {
           drive
             .newUntitled({
@@ -378,7 +372,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           }
           // Add the default directory to the path.
           filepath = PathExt.join(
-            widgetConfig.config.defaultDirectory || '.',
+            widgetConfig.config.defaultDirectory || '',
             filepath
           );
         }
@@ -546,14 +540,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
               });
 
               // Add a chat widget to the side panel.
-              chatPanel.addChat(
-                chat,
-                PathExt.join(
-                  PathExt.dirname(model.path),
-                  PathExt.basename(model.name, chatFileType.extensions[0])
-                ),
-                model.path
-              );
+              chatPanel.addChat(chat, model.path);
             } else {
               // The chat is opened in the main area
               commands.execute('docmanager:open', {
@@ -605,23 +592,20 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
   description: 'The chat panel widget.',
   autoStart: true,
   provides: IChatPanel,
-  requires: [ICollaborativeDrive, IRenderMimeRegistry],
-  optional: [
-    IAutocompletionRegistry,
-    ILayoutRestorer,
-    INotebookTracker,
-    IThemeManager
-  ],
+  requires: [IChatFactory, ICollaborativeDrive, IRenderMimeRegistry],
+  optional: [IAutocompletionRegistry, ILayoutRestorer, IThemeManager],
   activate: (
     app: JupyterFrontEnd,
+    factory: IChatFactory,
     drive: ICollaborativeDrive,
     rmRegistry: IRenderMimeRegistry,
     autocompletionRegistry: IAutocompletionRegistry,
     restorer: ILayoutRestorer | null,
-    notebookTracker: INotebookTracker,
     themeManager: IThemeManager | null
   ): ChatPanel => {
     const { commands } = app;
+
+    const defaultDirectory = factory.widgetConfig.config.defaultDirectory || '';
 
     /**
      * Add Chat widget to left sidebar
@@ -631,11 +615,18 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
       drive,
       rmRegistry,
       themeManager,
+      defaultDirectory,
       autocompletionRegistry
     });
     chatPanel.id = 'JupyterCollaborationChat:sidepanel';
     chatPanel.title.icon = chatIcon;
     chatPanel.title.caption = 'Jupyter Chat'; // TODO: i18n/
+
+    factory.widgetConfig.configChanged.connect((_, config) => {
+      if (config.defaultDirectory) {
+        chatPanel.defaultDirectory = config.defaultDirectory;
+      }
+    });
 
     app.shell.add(chatPanel, 'left', {
       rank: 2000
@@ -653,7 +644,7 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
       if (emission.schema_id === schemaID) {
         const action = emission.action as string;
         if (actions.includes(action)) {
-          chatPanel.updateChatNames();
+          chatPanel.updateChatList();
         }
       }
     });

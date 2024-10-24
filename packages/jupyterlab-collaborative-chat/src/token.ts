@@ -42,7 +42,7 @@ export interface ICollaborativeChatConfig extends IConfig {
   /**
    * The default directory where to create and look for chat.
    */
-  defaultDirectory: string;
+  defaultDirectory?: string;
 }
 
 /**
@@ -78,7 +78,7 @@ export interface IWidgetConfig {
  * A signal emitting when the configuration for the chats has changed.
  */
 export interface IConfigChanged
-  extends ISignal<IWidgetConfig, Partial<IConfig>> {}
+  extends ISignal<IWidgetConfig, Partial<ICollaborativeChatConfig>> {}
 
 /**
  * Command ids.
