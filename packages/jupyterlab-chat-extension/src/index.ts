@@ -20,6 +20,7 @@ import {
   chatIcon,
   readIcon
 } from '@jupyter/chat';
+import { UsersItem } from '@jupyter/collaboration';
 import {
   ICollaborativeDrive,
   SharedDocumentFactory
@@ -239,6 +240,9 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
           FACTORY,
           pluginIds.docFactories,
           translator
+        );
+        toolbarRegistry.addFactory<LabChatPanel>(FACTORY, 'usersItem', panel =>
+          UsersItem.createWidget({ model: panel.model })
         );
       }
 
