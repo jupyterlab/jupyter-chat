@@ -137,6 +137,16 @@ export class YChat extends YDocument<IChatChanges> {
     });
   }
 
+  getMetadata(key: string): IMetadata | undefined {
+    return this._metadata.get(key);
+  }
+
+  setMetadata(key: string, value: PartialJSONValue) {
+    this.transact(() => {
+      this._metadata.set(key, value);
+    });
+  }
+
   private _usersObserver = (event: Y.YMapEvent<IUser>): void => {
     const userChange = new Array<UserChange>();
     event.keysChanged.forEach(key => {
