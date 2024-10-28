@@ -38,7 +38,7 @@
       "readOnly": false
     },
     "defaultDirectory": {
-      "description": "Default directory where to create and look for chat.",
+      "description": "Default directory where to create and look for chat, the jupyter root directory if empty.",
       "type": "string",
       "default": "",
       "readOnly": false
