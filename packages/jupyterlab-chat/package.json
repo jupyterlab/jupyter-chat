@@ -52,8 +52,8 @@
   },
   "dependencies": {
     "@jupyter/chat": "^0.6.2",
-    "@jupyter/docprovider": "^2.1.4",
-    "@jupyter/ydoc": "^1.1.1",
+    "@jupyter/collaborative-drive": "^3.0.0",
+    "@jupyter/ydoc": "^2.0.0 || ^3.0.0",
     "@jupyterlab/application": "^4.2.0",
     "@jupyterlab/apputils": "^4.3.0",
     "@jupyterlab/coreutils": "^6.2.0",
