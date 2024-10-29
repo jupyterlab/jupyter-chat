@@ -10,6 +10,11 @@ Many components of this chat project come from [jupyter-ai](https://github.com/j
 
 ![a screenshot showing the jupyter-chat extension used in two browser windows](https://github.com/jupyterlab/jupyter-chat/assets/591645/5dac0b00-43ed-4458-ab67-18207644b92b)
 
+> **Warning**
+>
+> This project is still in early development stage and its API may change often before
+a stable release.
+
 ## Composition
 
 ### Typescript package
