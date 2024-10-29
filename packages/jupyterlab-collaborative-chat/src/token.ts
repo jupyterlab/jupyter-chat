@@ -36,6 +36,16 @@ export const IChatFactory = new Token<IChatFactory>(
 );
 
 /**
+ * The collaborative chat configs.
+ */
+export interface ICollaborativeChatConfig extends IConfig {
+  /**
+   * The default directory where to create and look for chat.
+   */
+  defaultDirectory?: string;
+}
+
+/**
  * The interface for the chat factory objects.
  */
 export interface IChatFactory {
@@ -56,7 +66,7 @@ export interface IWidgetConfig {
   /**
    * The widget config
    */
-  config: Partial<IConfig>;
+  config: Partial<ICollaborativeChatConfig>;
 
   /**
    * A signal emitting when the configuration for the chats has changed.
@@ -68,7 +78,7 @@ export interface IWidgetConfig {
  * A signal emitting when the configuration for the chats has changed.
  */
 export interface IConfigChanged
-  extends ISignal<IWidgetConfig, Partial<IConfig>> {}
+  extends ISignal<IWidgetConfig, Partial<ICollaborativeChatConfig>> {}
 
 /**
  * Command ids.
