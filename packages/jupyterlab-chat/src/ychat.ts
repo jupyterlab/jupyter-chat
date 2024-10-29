@@ -96,6 +96,37 @@ export class YChat extends YDocument<IChatChanges> {
     return JSONExt.deepCopy(this._messages.toJSON());
   }
 
+  getSource(): JSONObject {
+    const users = this._users.toJSON();
+    const messages = this._messages.toJSON();
+    const metadata = this._metadata.toJSON();
+
+    return { users, messages, metadata };
+  }
+
+  setSource(value: JSONObject): void {
+    if (!value) {
+      return;
+    }
+
+    this.transact(() => {
+      const messages = (value['messages'] as unknown as Array<IYmessage>) ?? [];
+      messages.forEach(message => {
+        this._messages.push([message]);
+      });
+
+      const users = value['users'] ?? {};
+      Object.entries(users).forEach(([key, val]) =>
+        this._users.set(key, val as IUser)
+      );
+
+      const metadata = value['metadata'] ?? {};
+      Object.entries(metadata).forEach(([key, val]) =>
+        this._metadata.set(key, val as any)
+      );
+    });
+  }
+
   getUser(username: string | undefined): IUser | undefined {
     if (!username) {
       return undefined;
