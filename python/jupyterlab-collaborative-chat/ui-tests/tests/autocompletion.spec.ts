@@ -24,15 +24,15 @@ const exposeDepsJs = (deps: Record<string, (...args: any) => any>): string => {
 // The function running in browser context to get a plugin.
 const getPlugin = (pluginId: string): Promise<any> => {
   return new Promise((resolve, reject) => {
-    const app = window.jupyterapp;
+    const app = window.jupyterapp as any;
     const hasPlugin = app.hasPlugin(pluginId);
 
     if (hasPlugin) {
       try {
-        const appAny = app as any;
-        const plugin: any = appAny._plugins
-          ? appAny._plugins.get(pluginId)
-          : undefined;
+        // Compatibility with jupyterlab 4.3
+        const plugin: any = app._plugins
+          ? app._plugins.get(pluginId)
+          : app.pluginRegistry._plugins.get(pluginId);
         if (plugin.activated) {
           resolve(plugin.service);
         } else {
@@ -309,8 +309,10 @@ test('should use properties from autocompletion object', async ({ page }) => {
 });
 
 test('single autocompletion should be the default', async ({ page }) => {
+  await page.pause();
   await page.evaluate(
     async options => {
+      console.log('YAYAYAYA');
       const registry = await window.getPlugin(
         'jupyterlab-collaborative-chat-extension:autocompletionRegistry'
       );
