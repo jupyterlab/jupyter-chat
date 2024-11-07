@@ -21,7 +21,12 @@ const exposeDepsJs = (deps: Record<string, (...args: any) => any>): string => {
     .join('\n');
 };
 
-// The function running in browser context to get a plugin.
+/**
+ * The function running in browser context to get a plugin.
+ *
+ * This function does the same as the equivalent in InPage galata helper, without the
+ * constraint on the plugin id.
+ */
 const getPlugin = (pluginId: string): Promise<any> => {
   return new Promise((resolve, reject) => {
     const app = window.jupyterapp as any;
@@ -309,10 +314,8 @@ test('should use properties from autocompletion object', async ({ page }) => {
 });
 
 test('single autocompletion should be the default', async ({ page }) => {
-  await page.pause();
   await page.evaluate(
     async options => {
-      console.log('YAYAYAYA');
       const registry = await window.getPlugin(
         'jupyterlab-collaborative-chat-extension:autocompletionRegistry'
       );
