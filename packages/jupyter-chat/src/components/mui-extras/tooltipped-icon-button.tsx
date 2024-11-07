@@ -73,7 +73,11 @@ export function TooltippedIconButton(
           {...props.iconButtonProps}
           onClick={props.onClick}
           disabled={props.disabled}
-          sx={{ lineHeight: 0, ...(props.disabled && { opacity: 0.5 }) }}
+          sx={{
+            marginLeft: '8px',
+            lineHeight: 0,
+            ...(props.disabled && { opacity: 0.5 })
+          }}
           aria-label={props['aria-label']}
         >
           {props.children}
