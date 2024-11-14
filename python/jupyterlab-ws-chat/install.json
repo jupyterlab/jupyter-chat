@@ -1,5 +1,0 @@
-{
-  "packageManager": "python",
-  "packageName": "jupyterlab_ws_chat",
-  "uninstallInstructions": "Use your Python package manager (pip, conda, etc.) to uninstall jupyterlab_ws_chat"
-}

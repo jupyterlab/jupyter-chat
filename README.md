@@ -48,13 +48,9 @@ It is composed of:
   the `YChat` shared document in jupyter_ydoc
 - a NPM package named `jupyterlab-collaborative-chat-extension`.
 
-#### Chat extension based on websocket: *python/jupyterlab-ws-chat*
+#### REMOVED - Chat extension based on websocket
 
-This extension is an implementation of the `@jupyter/chat` package, relying on
-websocket for the communication between server and front end.
-
-It is composed of a Python package named `jupyterlab_ws_chat`
-for the server side and a NPM package named `jupyterlab-ws-chat`.
+This extension has been moved to its own [repository](https://github.com/brichet/jupyterlab-ws-chat)
 
 ## Contributing
 
