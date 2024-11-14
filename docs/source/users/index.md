@@ -62,34 +62,6 @@ area, like any other document.
 Opening a chat from the left panel will open it in the left panel.
 ```
 
-## Websocket chat
-
-The `jupyterlab-ws-chat` extension adds a chat panel using websocket for messages
-exchange.
-
-```{warning}
-This extension is currently under development, and users may encounter issues with it.
-```
-
-### Install websocket chat
-
-The websocket chat is available on [PyPI](https://pypi.org/project/jupyterlab-ws-chat/).
-
-```bash
-pip install jupyterlab-ws-chat
-```
-
-To uninstall the package:
-
-```bash
-pip uninstall jupyterlab-ws-chat
-```
-
-### Open the chat
-
-The chat can be opened from the left panel
-![chat icon](../../../packages/jupyter-chat/style/icons/chat.svg){w=24px}.
-
 ## Chat usage
 
 The chat UI is composed of a list of messages and an input to send new messages.
