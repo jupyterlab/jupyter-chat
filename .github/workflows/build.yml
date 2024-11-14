@@ -60,13 +60,10 @@ jobs:
         ./scripts/dev_install.sh
         pytest -vv -r ap --cov
 
-  build_extensions:
+  build_extension:
     runs-on: ubuntu-latest
     needs: build_jupyter-chat
-    strategy:
-      matrix:
-        extension: [collaborative, ws]
-    name: Build ${{ matrix.extension }} chat extension
+    name: Build chat extension
 
     steps:
     - name: Checkout
@@ -81,29 +78,26 @@ jobs:
     - name: Package the extensions
       run:  |
         jlpm install
-        jlpm build:${{ matrix.extension }}
+        jlpm build
 
     - name: Package extension
       run: |
         set -eux
-        pip install build python/jupyterlab-${{ matrix.extension }}-chat
-        python -m build python/jupyterlab-${{ matrix.extension }}-chat
-        pip uninstall -y "jupyterlab_${{ matrix.extension }}_chat" jupyterlab
+        pip install build python/jupyterlab-collaborative-chat
+        python -m build python/jupyterlab-collaborative-chat
+        pip uninstall -y "jupyterlab_collaborative_chat" jupyterlab
 
     - name: Upload package
       uses: actions/upload-artifact@v3
       with:
-        name: jupyterlab_${{ matrix.extension }}_chat-artifacts
-        path: python/jupyterlab-${{ matrix.extension }}-chat/dist/jupyterlab_${{ matrix.extension }}_chat*
+        name: jupyterlab_collaborative_chat-artifacts
+        path: python/jupyterlab-collaborative-chat/dist/jupyterlab_collaborative_chat*
         if-no-files-found: error
 
   integration-tests:
-    name: ${{ matrix.extension }} integration tests
-    needs: build_extensions
+    name: Integration tests
+    needs: build_extension
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        extension: [collaborative, ws]
 
     env:
       PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/pw-browsers
@@ -118,15 +112,15 @@ jobs:
     - name: Download extension package
       uses: actions/download-artifact@v3
       with:
-        name: jupyterlab_${{ matrix.extension }}_chat-artifacts
+        name: jupyterlab_collaborative_chat-artifacts
 
     - name: Install the extension
       run: |
         set -eux
-        python -m pip install "jupyterlab>=4.0.0,<5" jupyterlab_${{ matrix.extension }}_chat*.whl
+        python -m pip install "jupyterlab>=4.0.0,<5" jupyterlab_collaborative_chat*.whl
 
     - name: Install dependencies
-      working-directory: python/jupyterlab-${{ matrix.extension }}-chat/ui-tests
+      working-directory: python/jupyterlab-collaborative-chat/ui-tests
       env:
         YARN_ENABLE_IMMUTABLE_INSTALLS: 0
         PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
@@ -141,10 +135,10 @@ jobs:
 
     - name: Install browser
       run: jlpm playwright install chromium
-      working-directory: python/jupyterlab-${{ matrix.extension }}-chat/ui-tests
+      working-directory: python/jupyterlab-collaborative-chat/ui-tests
 
     - name: Execute integration tests
-      working-directory: python/jupyterlab-${{ matrix.extension }}-chat/ui-tests
+      working-directory: python/jupyterlab-collaborative-chat/ui-tests
       run: |
         jlpm playwright test --retries=2
 
@@ -152,10 +146,10 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v3
       with:
-        name: jupyterlab_${{ matrix.extension }}_chat-playwright-tests
+        name: jupyterlab_collaborative_chat-playwright-tests
         path: |
-          python/jupyterlab-${{ matrix.extension }}-chat/ui-tests/test-results
-          python/jupyterlab-${{ matrix.extension }}-chat/ui-tests/playwright-report
+          python/jupyterlab-collaborative-chat/ui-tests/test-results
+          python/jupyterlab-collaborative-chat/ui-tests/playwright-report
 
   check_links:
     name: Check Links
