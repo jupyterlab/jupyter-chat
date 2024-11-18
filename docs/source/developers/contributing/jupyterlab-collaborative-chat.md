@@ -35,7 +35,7 @@ Changes in typescript sources of `@jupyter/chat` or `jupyterlab-collaborative-ch
 be built again to be available in the jupyterlab.
 
 ```bash
-jlpm build:collaborative
+jlpm build
 ```
 
 ## Testing locally the extension

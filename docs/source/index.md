@@ -10,9 +10,6 @@ required to build a chat. This package is designed to be used in an extension.
 - `jupyterlab-collaborative-chat`, an extension built on top of `@jupyter/chat`, using
 the collaborative edition as messaging system.
 
-- `jupyterlab-ws-chat`, an other extension built on top of `@jupyter/chat`, using
-websocket as messaging system.
-
 ```{toctree}
 ---
 maxdepth: 3
