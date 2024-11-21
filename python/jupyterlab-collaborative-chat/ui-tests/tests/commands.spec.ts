@@ -34,9 +34,7 @@ test.describe('#commandPalette', () => {
 
   test('should have 2 commands in palette', async ({ page }) => {
     await expect(
-      page.locator(
-        '#modal-command-palette li[data-command^="jupyterlab-chat"]'
-      )
+      page.locator('#modal-command-palette li[data-command^="jupyterlab-chat"]')
     ).toHaveCount(2);
   });
 
@@ -87,9 +85,7 @@ test.describe('#commandPalette', () => {
 
     // open it from command palette
     await page
-      .locator(
-        '#modal-command-palette li[data-command="jupyterlab-chat:open"]'
-      )
+      .locator('#modal-command-palette li[data-command="jupyterlab-chat:open"]')
       .click();
     await fillModal(page, FILENAME);
     await expect(page.activity.getTabLocator(FILENAME)).toBeVisible();
