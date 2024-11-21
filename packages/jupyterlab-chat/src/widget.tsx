@@ -31,7 +31,7 @@ import { ISignal, Signal } from '@lumino/signaling';
 import { AccordionPanel, Panel } from '@lumino/widgets';
 import React, { useState } from 'react';
 
-import { CollaborativeChatModel } from './model';
+import { LabChatModel } from './model';
 import { CommandIDs, chatFileType } from './token';
 
 const MAIN_PANEL_CLASS = 'jp-collab-chat-main-panel';
@@ -45,13 +45,8 @@ const TOOLBAR_CLASS = 'jp-collab-chat-toolbar';
 /**
  * DocumentWidget: widget that represents the view or editor for a file type.
  */
-export class CollaborativeChatPanel extends DocumentWidget<
-  ChatWidget,
-  CollaborativeChatModel
-> {
-  constructor(
-    options: DocumentWidget.IOptions<ChatWidget, CollaborativeChatModel>
-  ) {
+export class LabChatPanel extends DocumentWidget<ChatWidget, LabChatModel> {
+  constructor(options: DocumentWidget.IOptions<ChatWidget, LabChatModel>) {
     super(options);
     this.addClass(MAIN_PANEL_CLASS);
     this.model.name = this.context.localPath;
@@ -71,7 +66,7 @@ export class CollaborativeChatPanel extends DocumentWidget<
   /**
    * The model for the widget.
    */
-  get model(): CollaborativeChatModel {
+  get model(): LabChatModel {
     return this.context.model;
   }
 

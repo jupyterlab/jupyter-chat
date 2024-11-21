@@ -46,9 +46,9 @@ import {
   chatFileType,
   ChatPanel,
   ChatWidgetFactory,
-  CollaborativeChatModel,
-  CollaborativeChatModelFactory,
-  CollaborativeChatPanel,
+  LabChatModel,
+  LabChatModelFactory,
+  LabChatPanel,
   CommandIDs,
   IChatFactory,
   IChatPanel,
@@ -119,7 +119,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     // Declare the toolbar factory.
     let toolbarFactory:
       | ((
-          widget: CollaborativeChatPanel
+          widget: LabChatPanel
         ) =>
           | DocumentRegistry.IToolbarItem[]
           | IObservableList<DocumentRegistry.IToolbarItem>)
@@ -235,7 +235,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     const namespace = 'chat';
 
     // Creating the tracker for the document
-    const tracker = new WidgetTracker<CollaborativeChatPanel>({ namespace });
+    const tracker = new WidgetTracker<LabChatPanel>({ namespace });
 
     app.docRegistry.addFileType(chatFileType);
 
@@ -250,7 +250,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
       .then(() => {
         const user = app.serviceManager.user.identity;
         // Creating and registering the model factory for our custom DocumentModel
-        const modelFactory = new CollaborativeChatModelFactory({
+        const modelFactory = new LabChatModelFactory({
           user,
           widgetConfig,
           commands: app.commands,
@@ -455,10 +455,10 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         tracker.currentWidget.model.unreadMessages.length > 0,
       execute: async args => {
         const widget = app.shell.currentWidget;
-        // Ensure widget is a CollaborativeChatPanel and is in main area
+        // Ensure widget is a LabChatPanel and is in main area
         if (
           !widget ||
-          !(widget instanceof CollaborativeChatPanel) ||
+          !(widget instanceof LabChatPanel) ||
           !Array.from(app.shell.widgets('main')).includes(widget)
         ) {
           console.error(
@@ -535,7 +535,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
               }) as YChat;
 
               // Initialize the chat model with the share model
-              const chat = new CollaborativeChatModel({
+              const chat = new LabChatModel({
                 user,
                 sharedModel,
                 widgetConfig,
@@ -574,10 +574,10 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
       isEnabled: () => tracker.currentWidget !== null,
       execute: async () => {
         const widget = tracker.currentWidget;
-        // Ensure widget is a CollaborativeChatPanel and is in main area
+        // Ensure widget is a LabChatPanel and is in main area
         if (
           !widget ||
-          !(widget instanceof CollaborativeChatPanel) ||
+          !(widget instanceof LabChatPanel) ||
           !Array.from(app.shell.widgets('main')).includes(widget)
         ) {
           return;
@@ -668,10 +668,10 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
       isEnabled: () => commands.hasCommand(CommandIDs.openChat),
       execute: async () => {
         const widget = app.shell.currentWidget;
-        // Ensure widget is a CollaborativeChatPanel and is in main area
+        // Ensure widget is a LabChatPanel and is in main area
         if (
           !widget ||
-          !(widget instanceof CollaborativeChatPanel) ||
+          !(widget instanceof LabChatPanel) ||
           !Array.from(app.shell.widgets('main')).includes(widget)
         ) {
           console.error(

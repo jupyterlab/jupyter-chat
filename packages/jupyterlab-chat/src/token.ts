@@ -13,7 +13,7 @@ import { IWidgetTracker } from '@jupyterlab/apputils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { Token } from '@lumino/coreutils';
 import { ISignal } from '@lumino/signaling';
-import { ChatPanel, CollaborativeChatPanel } from './widget';
+import { ChatPanel, LabChatPanel } from './widget';
 
 /**
  * The file type for a chat document.
@@ -38,7 +38,7 @@ export const IChatFactory = new Token<IChatFactory>(
 /**
  * The chat configs.
  */
-export interface ICollaborativeChatConfig extends IConfig {
+export interface ILabChatConfig extends IConfig {
   /**
    * The default directory where to create and look for chat.
    */
@@ -56,7 +56,7 @@ export interface IChatFactory {
   /**
    * The chat panel tracker.
    */
-  tracker: IWidgetTracker<CollaborativeChatPanel>;
+  tracker: IWidgetTracker<LabChatPanel>;
 }
 
 /**
@@ -66,7 +66,7 @@ export interface IWidgetConfig {
   /**
    * The widget config
    */
-  config: Partial<ICollaborativeChatConfig>;
+  config: Partial<ILabChatConfig>;
 
   /**
    * A signal emitting when the configuration for the chats has changed.
@@ -78,7 +78,7 @@ export interface IWidgetConfig {
  * A signal emitting when the configuration for the chats has changed.
  */
 export interface IConfigChanged
-  extends ISignal<IWidgetConfig, Partial<ICollaborativeChatConfig>> {}
+  extends ISignal<IWidgetConfig, Partial<ILabChatConfig>> {}
 
 /**
  * Command ids.

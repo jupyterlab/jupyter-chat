@@ -16,10 +16,10 @@ import { Contents, User } from '@jupyterlab/services';
 import { CommandRegistry } from '@lumino/commands';
 import { ISignal, Signal } from '@lumino/signaling';
 
-import { CollaborativeChatModel } from './model';
-import { CollaborativeChatPanel } from './widget';
+import { LabChatModel } from './model';
+import { LabChatPanel } from './widget';
 import { YChat } from './ychat';
-import { ICollaborativeChatConfig, IWidgetConfig } from './token';
+import { ILabChatConfig, IWidgetConfig } from './token';
 
 /**
  * The object provided by the chatDocument extension.
@@ -30,17 +30,17 @@ export class WidgetConfig implements IWidgetConfig {
   /**
    * The constructor of the WidgetConfig.
    */
-  constructor(config: Partial<ICollaborativeChatConfig>) {
+  constructor(config: Partial<ILabChatConfig>) {
     this._config = config;
   }
 
   /**
    * Getter and setter for the config.
    */
-  get config(): Partial<ICollaborativeChatConfig> {
+  get config(): Partial<ILabChatConfig> {
     return this._config;
   }
-  set config(value: Partial<ICollaborativeChatConfig>) {
+  set config(value: Partial<ILabChatConfig>) {
     this._config = { ...this._config, ...value };
     this._configChanged.emit(value);
   }
@@ -48,33 +48,29 @@ export class WidgetConfig implements IWidgetConfig {
   /**
    * Getter for the configChanged signal
    */
-  get configChanged(): ISignal<
-    WidgetConfig,
-    Partial<ICollaborativeChatConfig>
-  > {
+  get configChanged(): ISignal<WidgetConfig, Partial<ILabChatConfig>> {
     return this._configChanged;
   }
 
-  private _config: Partial<ICollaborativeChatConfig>;
-  private _configChanged = new Signal<
-    WidgetConfig,
-    Partial<ICollaborativeChatConfig>
-  >(this);
+  private _config: Partial<ILabChatConfig>;
+  private _configChanged = new Signal<WidgetConfig, Partial<ILabChatConfig>>(
+    this
+  );
 }
 
 /**
  * A widget factory to create new instances of CollaborativeChatWidget.
  */
 export class ChatWidgetFactory extends ABCWidgetFactory<
-  CollaborativeChatPanel,
-  CollaborativeChatModel
+  LabChatPanel,
+  LabChatModel
 > {
   /**
    * Constructor of ChatWidgetFactory.
    *
    * @param options Constructor options
    */
-  constructor(options: ChatWidgetFactory.IOptions<CollaborativeChatPanel>) {
+  constructor(options: ChatWidgetFactory.IOptions<LabChatPanel>) {
     super(options);
     this._themeManager = options.themeManager;
     this._rmRegistry = options.rmRegistry;
@@ -87,13 +83,11 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
    * @param context Contains the information of the file
    * @returns The widget
    */
-  protected createNewWidget(
-    context: ChatWidgetFactory.IContext
-  ): CollaborativeChatPanel {
+  protected createNewWidget(context: ChatWidgetFactory.IContext): LabChatPanel {
     context.rmRegistry = this._rmRegistry;
     context.themeManager = this._themeManager;
     context.autocompletionRegistry = this._autocompletionRegistry;
-    return new CollaborativeChatPanel({
+    return new LabChatPanel({
       context,
       content: new ChatWidget(context)
     });
@@ -105,14 +99,13 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
 }
 
 export namespace ChatWidgetFactory {
-  export interface IContext
-    extends DocumentRegistry.IContext<CollaborativeChatModel> {
+  export interface IContext extends DocumentRegistry.IContext<LabChatModel> {
     themeManager: IThemeManager | null;
     rmRegistry: IRenderMimeRegistry;
     autocompletionRegistry?: IAutocompletionRegistry;
   }
 
-  export interface IOptions<T extends CollaborativeChatPanel>
+  export interface IOptions<T extends LabChatPanel>
     extends DocumentRegistry.IWidgetFactoryOptions<T> {
     themeManager: IThemeManager | null;
     rmRegistry: IRenderMimeRegistry;
@@ -120,10 +113,10 @@ export namespace ChatWidgetFactory {
   }
 }
 
-export class CollaborativeChatModelFactory
-  implements DocumentRegistry.IModelFactory<CollaborativeChatModel>
+export class LabChatModelFactory
+  implements DocumentRegistry.IModelFactory<LabChatModel>
 {
-  constructor(options: CollaborativeChatModel.IOptions) {
+  constructor(options: LabChatModel.IOptions) {
     this._user = options.user;
     this._widgetConfig = options.widgetConfig;
     this._commands = options.commands;
@@ -187,17 +180,15 @@ export class CollaborativeChatModelFactory
   }
 
   /**
-   * Create a new instance of CollaborativeChatModel.
+   * Create a new instance of LabChatModel.
    *
    * @param languagePreference Language
    * @param modelDB Model database
    * @returns The model
    */
 
-  createNew(
-    options: DocumentRegistry.IModelOptions<YChat>
-  ): CollaborativeChatModel {
-    return new CollaborativeChatModel({
+  createNew(options: DocumentRegistry.IModelOptions<YChat>): LabChatModel {
+    return new LabChatModel({
       ...options,
       user: this._user,
       widgetConfig: this._widgetConfig,

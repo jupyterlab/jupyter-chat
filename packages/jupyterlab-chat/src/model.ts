@@ -18,7 +18,7 @@ const WRITING_DELAY = 1000;
 /**
  * Chat model namespace.
  */
-export namespace CollaborativeChatModel {
+export namespace LabChatModel {
   export interface IOptions extends ChatModel.IOptions {
     widgetConfig: IWidgetConfig;
     user: User.IIdentity | null;
@@ -30,11 +30,8 @@ export namespace CollaborativeChatModel {
 /**
  * The chat model.
  */
-export class CollaborativeChatModel
-  extends ChatModel
-  implements DocumentRegistry.IModel
-{
-  constructor(options: CollaborativeChatModel.IOptions) {
+export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
+  constructor(options: LabChatModel.IOptions) {
     super(options);
 
     this._user = options.user || { username: 'user undefined' };
@@ -92,7 +89,7 @@ export class CollaborativeChatModel
     this._readOnly = value;
   }
 
-  get disposed(): ISignal<CollaborativeChatModel, void> {
+  get disposed(): ISignal<LabChatModel, void> {
     return this._disposed;
   }
 
