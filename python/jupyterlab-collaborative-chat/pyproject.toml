@@ -6,7 +6,7 @@ requires = ["hatchling>=1.5.0", "jupyterlab>=4.0.0,<5", "hatch-nodejs-version>=0
 build-backend = "hatchling.build"
 
 [project]
-name = "jupyterlab_collaborative_chat"
+name = "jupyterlab_chat"
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.8"
@@ -50,25 +50,25 @@ source = "nodejs"
 fields = ["description", "authors", "urls"]
 
 [tool.hatch.build.targets.sdist]
-artifacts = ["jupyterlab_collaborative_chat/labextension"]
+artifacts = ["jupyterlab_chat/labextension"]
 exclude = [".github", "binder"]
 
 [tool.hatch.build.targets.wheel.shared-data]
-"jupyterlab_collaborative_chat/labextension" = "share/jupyter/labextensions/jupyterlab-collaborative-chat-extension"
-"install.json" = "share/jupyter/labextensions/jupyterlab-collaborative-chat-extension/install.json"
+"jupyterlab_chat/labextension" = "share/jupyter/labextensions/jupyterlab-chat-extension"
+"install.json" = "share/jupyter/labextensions/jupyterlab-chat-extension/install.json"
 "jupyter-config/server-config" = "etc/jupyter/jupyter_server_config.d"
 
 [tool.hatch.build.hooks.version]
-path = "jupyterlab_collaborative_chat/_version.py"
+path = "jupyterlab_chat/_version.py"
 
 [tool.hatch.build.hooks.jupyter-builder]
 dependencies = ["hatch-jupyter-builder>=0.5"]
 build-function = "hatch_jupyter_builder.npm_builder"
 ensured-targets = [
-    "jupyterlab_collaborative_chat/labextension/static/style.js",
-    "jupyterlab_collaborative_chat/labextension/package.json",
+    "jupyterlab_chat/labextension/static/style.js",
+    "jupyterlab_chat/labextension/package.json",
 ]
-skip-if-exists = ["jupyterlab_collaborative_chat/labextension/static/style.js"]
+skip-if-exists = ["jupyterlab_chat/labextension/static/style.js"]
 
 [tool.hatch.build.hooks.jupyter-builder.build-kwargs]
 build_cmd = "build:prod"
@@ -78,7 +78,7 @@ npm = ["jlpm"]
 build_cmd = "install:extension"
 npm = ["jlpm"]
 source_dir = "src"
-build_dir = "jupyterlab_collaborative_chat/labextension"
+build_dir = "jupyterlab_chat/labextension"
 
 [tool.jupyter-releaser.hooks]
 before-build-npm = [
@@ -92,4 +92,4 @@ before-build-python = ["jlpm clean:lib"]
 ignore = ["W002"]
 
 [project.entry-points.jupyter_ydoc]
-chat = "jupyterlab_collaborative_chat.ychat:YChat"
+chat = "jupyterlab_chat.ychat:YChat"

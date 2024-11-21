@@ -1,10 +1,10 @@
-# a mybinder.org-ready environment for demoing jupyterlab_collaborative_chat
+# a mybinder.org-ready environment for demoing jupyterlab_chat
 # this environment may also be used locally on Linux/MacOS/Windows, e.g.
 #
 #   conda env update --file binder/environment.yml
-#   conda activate jupyterlab-collaborative-chat-demo
+#   conda activate jupyterlab-chat-demo
 #
-name: jupyterlab-collaborative-chat-demo
+name: jupyterlab-chat-demo
 
 channels:
   - conda-forge

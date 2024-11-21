@@ -35,7 +35,7 @@ test.describe('#commandPalette', () => {
   test('should have 2 commands in palette', async ({ page }) => {
     await expect(
       page.locator(
-        '#modal-command-palette li[data-command^="collaborative-chat"]'
+        '#modal-command-palette li[data-command^="jupyterlab-chat"]'
       )
     ).toHaveCount(2);
   });
@@ -45,7 +45,7 @@ test.describe('#commandPalette', () => {
   }) => {
     await page
       .locator(
-        '#modal-command-palette li[data-command="collaborative-chat:create"]'
+        '#modal-command-palette li[data-command="jupyterlab-chat:create"]'
       )
       .click();
     await fillModal(page, name);
@@ -60,7 +60,7 @@ test.describe('#commandPalette', () => {
   }) => {
     await page
       .locator(
-        '#modal-command-palette li[data-command="collaborative-chat:create"]'
+        '#modal-command-palette li[data-command="jupyterlab-chat:create"]'
       )
       .click();
     await fillModal(page);
@@ -73,7 +73,7 @@ test.describe('#commandPalette', () => {
   test('should not create a chat if modal is cancelled', async ({ page }) => {
     await page
       .locator(
-        '#modal-command-palette li[data-command="collaborative-chat:create"]'
+        '#modal-command-palette li[data-command="jupyterlab-chat:create"]'
       )
       .click();
     await fillModal(page, '', 'Cancel');
@@ -88,7 +88,7 @@ test.describe('#commandPalette', () => {
     // open it from command palette
     await page
       .locator(
-        '#modal-command-palette li[data-command="collaborative-chat:open"]'
+        '#modal-command-palette li[data-command="jupyterlab-chat:open"]'
       )
       .click();
     await fillModal(page, FILENAME);

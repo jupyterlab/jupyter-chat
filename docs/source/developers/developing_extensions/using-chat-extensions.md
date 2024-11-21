@@ -1,8 +1,6 @@
 # Using a chat extension in another extension
 
-## Collaborative chat
-
-The collaborative chat depends on [jupyter collaboration](https://jupyterlab-realtime-collaboration.readthedocs.io/en/latest/index.html)
+The chat extension depends on [jupyter collaboration](https://jupyterlab-realtime-collaboration.readthedocs.io/en/latest/index.html)
 to exchange the messages.
 
 As a very brief summary, jupyter collaboration allows jupyterlab users to share a
@@ -13,18 +11,18 @@ frontend or from the backend. The shared document has an object representation i
 Typescript (for the frontend) and in Python (for the backend). These representations
 can be accessed and used by external extensions.
 
-### Exposed token
+## Exposed token
 
-`jupyterlab-collaborative-chat` expose several tokens that allow external extensions to
+`jupyterlab-chat` expose several tokens that allow external extensions to
 interact with.
 
-#### IChatFactory
+### IChatFactory
 
 This token is composed of:
 
 - `widgetConfig` object, to retrieve and change the current [settings](#chat-settings)
 of all the chats
-- `tracker`, a widget tracker that allows to track all the collaborative chats, and to
+- `tracker`, a widget tracker that allows to track all the opened chats, and to
 retrieve the current one.
 
 ```{caution}
@@ -32,20 +30,20 @@ Currently the widget tracker only tracks the main area widgets, not the ones ope
 the side panel.
 ```
 
-#### IChatPanel
+### IChatPanel
 
 This token is a pointer to the left panel containing chats.\
 It can be used to programmatically open chat in the panel for example, or to list the
 opened chats.
 
-#### IAutocompletionRegistry
+### IAutocompletionRegistry
 
 This is the [autocompletion registry](#autocompletion-registry) used by the chat
 widgets.
 
 Autocompletion commands can be added to it, and then be used from the chat input.
 
-### Interact with the chat from the backend
+## Interact with the chat from the backend
 
 `jupyter_collaboration` provides a websocket server to handle every shared document
 on the server side. This websocket server allows to retrieve a shared document.
@@ -54,7 +52,7 @@ In addition, when a shared document is created, an event is emitted. We can use 
 event to trigger a connection to the shared document.
 
 Here's an example of a server extension that responds to every message received in one
-of the collaborative chats:
+of the chats:
 
 ```python
 import jupyter_collaboration
@@ -85,7 +83,7 @@ class MyExtension(ExtensionApp):
     name = "my_extension"
     app_name = "My Extension"
     description = """
-    this extension interact with collaborative chats
+    this extension interact with chats
     """
 
     def initialize(self):
@@ -101,7 +99,7 @@ class MyExtension(ExtensionApp):
             and data["action"] == "initialize"\
             and data["msg"] == "Room initialized":
 
-            self.log.info(f"Collaborative chat server is listening for {data["room"]}")
+            self.log.info(f"Chat server is listening for {data["room"]}")
             chat = await self.get_chat(data["room"])
             callback = partial(self.on_change, chat)
             chat.ymessages.observe(callback)

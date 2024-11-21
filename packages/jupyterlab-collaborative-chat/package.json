@@ -1,5 +1,5 @@
 {
-  "name": "jupyterlab-collaborative-chat",
+  "name": "jupyterlab-chat",
   "version": "0.5.0",
   "description": "The library to build a chat based on shared document",
   "keywords": [

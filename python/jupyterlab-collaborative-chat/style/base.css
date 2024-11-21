@@ -9,4 +9,4 @@
   https://jupyterlab.readthedocs.io/en/stable/developer/css.html
 */
 
-@import url('~jupyterlab-collaborative-chat/style/index.css');
+@import url('~jupyterlab-chat/style/index.css');

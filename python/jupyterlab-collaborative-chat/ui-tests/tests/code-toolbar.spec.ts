@@ -11,7 +11,7 @@ test.use({
   mockUser: USER,
   mockSettings: {
     ...galata.DEFAULT_SETTINGS,
-    'jupyterlab-collaborative-chat-extension:factory': {
+    'jupyterlab-chat-extension:factory': {
       sendWithShiftEnter: true
     }
   }

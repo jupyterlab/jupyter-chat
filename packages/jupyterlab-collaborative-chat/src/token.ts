@@ -32,11 +32,11 @@ export const chatFileType: DocumentRegistry.IFileType = {
  * The token for the chat widget factory.
  */
 export const IChatFactory = new Token<IChatFactory>(
-  'jupyter-collaborative-chat:IChatFactory'
+  'jupyterlab-chat:IChatFactory'
 );
 
 /**
- * The collaborative chat configs.
+ * The chat configs.
  */
 export interface ICollaborativeChatConfig extends IConfig {
   /**
@@ -87,42 +87,40 @@ export const CommandIDs = {
   /**
    * Create a chat file.
    */
-  createChat: 'collaborative-chat:create',
+  createChat: 'jupyterlab-chat:create',
   /**
    * Open a chat file.
    */
-  openChat: 'collaborative-chat:open',
+  openChat: 'jupyterlab-chat:open',
   /**
    * Move a main widget to the side panel.
    */
-  moveToSide: 'collaborative-chat:moveToSide',
+  moveToSide: 'jupyterlab-chat:moveToSide',
   /**
    * Mark as read.
    */
-  markAsRead: 'collaborative-chat:markAsRead',
+  markAsRead: 'jupyterlab-chat:markAsRead',
   /**
    * Focus the input of the current chat.
    */
-  focusInput: 'collaborative-chat:focusInput'
+  focusInput: 'jupyterlab-chat:focusInput'
 };
 
 /**
  * The chat panel token.
  */
-export const IChatPanel = new Token<ChatPanel>(
-  'jupyter-collaborative-chat:IChatPanel'
-);
+export const IChatPanel = new Token<ChatPanel>('jupyterlab-chat:IChatPanel');
 
 /**
  * The active cell manager plugin.
  */
 export const IActiveCellManagerToken = new Token<IActiveCellManager>(
-  'jupyter-collaborative-chat:IActiveCellManager'
+  'jupyterlab-chat:IActiveCellManager'
 );
 
 /**
  * The selection watcher plugin.
  */
 export const ISelectionWatcherToken = new Token<ISelectionWatcher>(
-  'jupyter-collaborative-chat:ISelectionWatcher'
+  'jupyterlab-chat:ISelectionWatcher'
 );

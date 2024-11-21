@@ -1,16 +1,16 @@
 {
-  "title": "Jupyter collaborative chat",
+  "title": "Jupyterlab chat",
   "description": "Configuration for the chat commands",
   "type": "object",
   "jupyter.lab.toolbars": {
     "Chat": [
       {
         "name": "moveToSide",
-        "command": "collaborative-chat:moveToSide"
+        "command": "jupyterlab-chat:moveToSide"
       },
       {
         "name": "markAsRead",
-        "command": "collaborative-chat:markAsRead"
+        "command": "jupyterlab-chat:markAsRead"
       }
     ]
   },

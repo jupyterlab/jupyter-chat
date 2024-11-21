@@ -2810,9 +2810,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jupyterlab-collaborative-chat-ui-tests@workspace:.":
+"jupyterlab-chat-ui-tests@workspace:.":
   version: 0.0.0-use.local
-  resolution: "jupyterlab-collaborative-chat-ui-tests@workspace:."
+  resolution: "jupyterlab-chat-ui-tests@workspace:."
   dependencies:
     "@jupyterlab/galata": ^5.0.0
     "@playwright/test": ^1.43.0

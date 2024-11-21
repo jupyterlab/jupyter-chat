@@ -357,9 +357,9 @@ class ChatSection extends PanelWithToolbar {
       }
     });
 
-    this.toolbar.addItem('collaborativeChat-markRead', this._markAsRead);
-    this.toolbar.addItem('collaborativeChat-moveMain', moveToMain);
-    this.toolbar.addItem('collaborativeChat-close', closeButton);
+    this.toolbar.addItem('jupyterlabChat-markRead', this._markAsRead);
+    this.toolbar.addItem('jupyterlabChat-moveMain', moveToMain);
+    this.toolbar.addItem('jupyterlabChat-close', closeButton);
 
     this.model.unreadChanged?.connect(this._unreadChanged);
 

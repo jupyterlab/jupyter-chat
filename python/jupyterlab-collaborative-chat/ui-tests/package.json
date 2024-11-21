@@ -1,7 +1,7 @@
 {
-  "name": "jupyterlab-collaborative-chat-ui-tests",
+  "name": "jupyterlab-chat-ui-tests",
   "version": "1.0.0",
-  "description": "JupyterLab jupyterlab-collaborative-chat Integration Tests",
+  "description": "JupyterLab jupyterlab-chat Integration Tests",
   "private": true,
   "scripts": {
     "start": "jupyter lab --config jupyter_server_test_config.py",

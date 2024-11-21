@@ -24,7 +24,7 @@ export const createChat = async (
   filename: string
 ): Promise<void> => {
   await page.evaluate(async name => {
-    await window.jupyterapp.commands.execute('collaborative-chat:create', {
+    await window.jupyterapp.commands.execute('jupyterlab-chat:create', {
       name
     });
   }, filename);
@@ -40,7 +40,7 @@ export const openChat = async (
   }
 
   await page.evaluate(async filepath => {
-    await window.jupyterapp.commands.execute('collaborative-chat:open', {
+    await window.jupyterapp.commands.execute('jupyterlab-chat:open', {
       filepath
     });
   }, filename);
@@ -59,7 +59,7 @@ export const openChatToSide = async (
   const panel = page.locator('.jp-SidePanel.jp-collab-chat-sidepanel');
   await page.evaluate(async filepath => {
     const inSidePanel = true;
-    await window.jupyterapp.commands.execute('collaborative-chat:open', {
+    await window.jupyterapp.commands.execute('jupyterlab-chat:open', {
       filepath,
       inSidePanel
     });

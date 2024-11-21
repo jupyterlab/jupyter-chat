@@ -55,19 +55,17 @@ import {
   WidgetConfig,
   YChat,
   ISelectionWatcherToken
-} from 'jupyterlab-collaborative-chat';
+} from 'jupyterlab-chat';
 
 const FACTORY = 'Chat';
 
 const pluginIds = {
-  activeCellManager:
-    'jupyterlab-collaborative-chat-extension:activeCellManager',
-  autocompletionRegistry:
-    'jupyterlab-collaborative-chat-extension:autocompletionRegistry',
-  chatCommands: 'jupyterlab-collaborative-chat-extension:commands',
-  chatPanel: 'jupyterlab-collaborative-chat-extension:chat-panel',
-  docFactories: 'jupyterlab-collaborative-chat-extension:factory',
-  selectionWatcher: 'jupyterlab-collaborative-chat-extension:selectionWatcher'
+  activeCellManager: 'jupyterlab-chat-extension:activeCellManager',
+  autocompletionRegistry: 'jupyterlab-chat-extension:autocompletionRegistry',
+  chatCommands: 'jupyterlab-chat-extension:commands',
+  chatPanel: 'jupyterlab-chat-extension:chat-panel',
+  docFactories: 'jupyterlab-chat-extension:factory',
+  selectionWatcher: 'jupyterlab-chat-extension:selectionWatcher'
 };
 
 /**
@@ -88,7 +86,7 @@ const autocompletionPlugin: JupyterFrontEndPlugin<IAutocompletionRegistry> = {
  */
 const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
   id: pluginIds.docFactories,
-  description: 'Document factories for collaborative chat.',
+  description: 'Document factories for chat.',
   autoStart: true,
   requires: [IRenderMimeRegistry],
   optional: [
@@ -262,10 +260,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
         app.docRegistry.addModelFactory(modelFactory);
       })
       .catch(e =>
-        console.error(
-          'The collaborative chat model factory is not initialized',
-          e
-        )
+        console.error('The jupyterlab chat model factory is not initialized', e)
       );
 
     // Creating the widget factory to register it so the document manager knows about

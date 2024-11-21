@@ -85,13 +85,13 @@ jobs:
         set -eux
         pip install build python/jupyterlab-collaborative-chat
         python -m build python/jupyterlab-collaborative-chat
-        pip uninstall -y "jupyterlab_collaborative_chat" jupyterlab
+        pip uninstall -y "jupyterlab_chat" jupyterlab
 
     - name: Upload package
       uses: actions/upload-artifact@v3
       with:
-        name: jupyterlab_collaborative_chat-artifacts
-        path: python/jupyterlab-collaborative-chat/dist/jupyterlab_collaborative_chat*
+        name: jupyterlab_chat-artifacts
+        path: python/jupyterlab-collaborative-chat/dist/jupyterlab_chat*
         if-no-files-found: error
 
   integration-tests:
@@ -112,12 +112,12 @@ jobs:
     - name: Download extension package
       uses: actions/download-artifact@v3
       with:
-        name: jupyterlab_collaborative_chat-artifacts
+        name: jupyterlab_chat-artifacts
 
     - name: Install the extension
       run: |
         set -eux
-        python -m pip install "jupyterlab>=4.0.0,<5" jupyterlab_collaborative_chat*.whl
+        python -m pip install "jupyterlab>=4.0.0,<5" jupyterlab_chat*.whl
 
     - name: Install dependencies
       working-directory: python/jupyterlab-collaborative-chat/ui-tests
@@ -146,7 +146,7 @@ jobs:
       if: always()
       uses: actions/upload-artifact@v3
       with:
-        name: jupyterlab_collaborative_chat-playwright-tests
+        name: jupyterlab_chat-playwright-tests
         path: |
           python/jupyterlab-collaborative-chat/ui-tests/test-results
           python/jupyterlab-collaborative-chat/ui-tests/playwright-report

@@ -16,7 +16,7 @@ import { IChatChanges, IYmessage, YChat } from './ychat';
 const WRITING_DELAY = 1000;
 
 /**
- * Collaborative chat namespace.
+ * Chat model namespace.
  */
 export namespace CollaborativeChatModel {
   export interface IOptions extends ChatModel.IOptions {
@@ -28,7 +28,7 @@ export namespace CollaborativeChatModel {
 }
 
 /**
- * The collaborative chat model.
+ * The chat model.
  */
 export class CollaborativeChatModel
   extends ChatModel

@@ -1,6 +1,6 @@
 # Collaborative chat
 
-The `jupyterlab-collaborative-chat` extension adds collaborative chats to jupyterlab.
+The `jupyterlab-chat` extension adds chats to jupyterlab based on collaborative documents.
 
 ## Development installation
 
@@ -17,7 +17,7 @@ The following commands install the extension in development mode:
 
 ```bash
 # Install the extension
-./scripts/dev_install.sh collaborative
+./scripts/dev_install.sh
 
 # Symlink the assets
 jupyter labextension develop --overwrite python/jupyterlab-collaborative-chat
@@ -26,12 +26,12 @@ jupyter labextension develop --overwrite python/jupyterlab-collaborative-chat
 To uninstall it, run:
 
 ```bash
-pip uninstall jupyterlab-collaborative-chat
+pip uninstall jupyterlab-chat
 ```
 
 ## Building the assets
 
-Changes in typescript sources of `@jupyter/chat` or `jupyterlab-collaborative-chat` must
+Changes in typescript sources of `@jupyter/chat` or `jupyterlab-chat` must
 be built again to be available in the jupyterlab.
 
 ```bash
@@ -40,7 +40,7 @@ jlpm build
 
 ## Testing locally the extension
 
-`jupyterlab-collaborative-chat` package has unit tests and integration tests.
+`jupyterlab-chat` package has unit tests and integration tests.
 
 ### Unit tests
 

@@ -8,11 +8,11 @@ file_extension: ''
 has_binder: true
 has_settings: true
 kind: server
-labextension_name: jupyterlab-collaborative-chat-extension
+labextension_name: jupyterlab-chat-extension
 mimetype: ''
 mimetype_name: ''
 project_short_description: A chat extension based on shared documents
-python_name: jupyterlab_collaborative_chat
+python_name: jupyterlab_chat
 repository: https://github.com/jupyterlab/jupyter-chat
 test: true
 viewer_name: ''

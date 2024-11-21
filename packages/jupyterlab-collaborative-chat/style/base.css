@@ -12,7 +12,7 @@
 @import url('~@jupyter/chat/style/index.css');
 
 .jp-collab-chat-main-panel
-  .jp-ToolbarButtonComponent[data-command='collaborative-chat:moveToSide']
+  .jp-ToolbarButtonComponent[data-command='jupyterlab-chat:moveToSide']
   svg {
   transform: rotate(180deg);
 }

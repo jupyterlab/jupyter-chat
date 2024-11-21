@@ -1,5 +1,5 @@
 {
-  "title": "Jupyter collaborative chat",
+  "title": "Jupyterlab chat",
   "description": "Configuration for the chat commands",
   "type": "object",
   "jupyter.lab.menus": {
@@ -13,7 +13,7 @@
               "id": "jp-mainmenu-file-new",
               "items": [
                 {
-                  "command": "collaborative-chat:create",
+                  "command": "jupyterlab-chat:create",
                   "rank": 50
                 }
               ]
@@ -25,7 +25,7 @@
   },
   "jupyter.lab.shortcuts": [
     {
-      "command": "collaborative-chat:focusInput",
+      "command": "jupyterlab-chat:focusInput",
       "keys": ["Accel Shift 1"],
       "selector": "body",
       "preventDefault": false

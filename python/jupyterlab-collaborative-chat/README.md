@@ -1,17 +1,17 @@
-# jupyterlab_collaborative_chat
+# jupyterlab_chat
 
 [![Github Actions Status](https://github.com/jupyterlab/jupyter-chat/workflows/Build/badge.svg)](https://github.com/jupyterlab/jupyter-chat/actions/workflows/build.yml)[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jupyterlab/jupyter-chat/main?urlpath=lab)
 
 A chat extension based on shared documents.
 
-This extension is composed of a Python package named `jupyterlab_collaborative_chat`
-for the server extension and a NPM package named `jupyterlab-collaborative-chat-extension`
+This extension is composed of a Python package named `jupyterlab_chat`
+for the server extension and a NPM package named `jupyterlab-chat-extension`
 for the frontend extension.
 
 This extension registers a `YChat` shared document, and associate the document to a
 chat widget in the front end.
 
-![screenshot](screenshot.gif 'collaborative chat extension')
+![screenshot](screenshot.gif 'jupyterlab chat extension')
 
 ## Requirements
 
@@ -22,7 +22,7 @@ chat widget in the front end.
 To install the extension, execute:
 
 ```bash
-pip install jupyterlab_collaborative_chat
+pip install jupyterlab_chat
 ```
 
 ## Uninstall
@@ -30,7 +30,7 @@ pip install jupyterlab_collaborative_chat
 To remove the extension, execute:
 
 ```bash
-pip uninstall jupyterlab_collaborative_chat
+pip uninstall jupyterlab_chat
 ```
 
 ## Troubleshoot
@@ -61,7 +61,7 @@ The `jlpm` command is JupyterLab's pinned version of
 
 ```bash
 # Clone the repo to your local environment
-# Change directory to the jupyterlab_collaborative_chat directory
+# Change directory to the jupyterlab_chat directory
 # Install package in development mode
 pip install -e ".[test]"
 # Link your development version of the extension with JupyterLab
@@ -90,12 +90,12 @@ jupyter lab build --minimize=False
 ### Development uninstall
 
 ```bash
-pip uninstall jupyterlab_collaborative_chat
+pip uninstall jupyterlab_chat
 ```
 
 In development mode, you will also need to remove the symlink created by `jupyter labextension develop`
 command. To find its location, you can run `jupyter labextension list` to figure out where the `labextensions`
-folder is located. Then you can remove the symlink named `jupyterlab-collaborative-chat-extension` within that folder.
+folder is located. Then you can remove the symlink named `jupyterlab-chat-extension` within that folder.
 
 ### Testing the extension
 

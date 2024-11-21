@@ -52,11 +52,11 @@ export type UserChange = IMapChange<IUser>;
 export type MetadataChange = IMapChange<IMetadata>;
 
 /**
- * The collaborative chat shared document.
+ * The jupyterlab chat shared document.
  */
 export class YChat extends YDocument<IChatChanges> {
   /**
-   * Create a new collaborative chat model.
+   * Create a new jupyterlab chat model.
    */
   constructor(options?: YDocument.IOptions) {
     super(options);
