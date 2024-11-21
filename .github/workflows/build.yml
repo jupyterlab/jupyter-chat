@@ -83,15 +83,15 @@ jobs:
     - name: Package extension
       run: |
         set -eux
-        pip install build python/jupyterlab-collaborative-chat
-        python -m build python/jupyterlab-collaborative-chat
+        pip install build python/jupyterlab-chat
+        python -m build python/jupyterlab-chat
         pip uninstall -y "jupyterlab_chat" jupyterlab
 
     - name: Upload package
       uses: actions/upload-artifact@v3
       with:
         name: jupyterlab_chat-artifacts
-        path: python/jupyterlab-collaborative-chat/dist/jupyterlab_chat*
+        path: python/jupyterlab-chat/dist/jupyterlab_chat*
         if-no-files-found: error
 
   integration-tests:
@@ -120,7 +120,7 @@ jobs:
         python -m pip install "jupyterlab>=4.0.0,<5" jupyterlab_chat*.whl
 
     - name: Install dependencies
-      working-directory: python/jupyterlab-collaborative-chat/ui-tests
+      working-directory: python/jupyterlab-chat/ui-tests
       env:
         YARN_ENABLE_IMMUTABLE_INSTALLS: 0
         PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
@@ -135,10 +135,10 @@ jobs:
 
     - name: Install browser
       run: jlpm playwright install chromium
-      working-directory: python/jupyterlab-collaborative-chat/ui-tests
+      working-directory: python/jupyterlab-chat/ui-tests
 
     - name: Execute integration tests
-      working-directory: python/jupyterlab-collaborative-chat/ui-tests
+      working-directory: python/jupyterlab-chat/ui-tests
       run: |
         jlpm playwright test --retries=2
 
@@ -148,8 +148,8 @@ jobs:
       with:
         name: jupyterlab_chat-playwright-tests
         path: |
-          python/jupyterlab-collaborative-chat/ui-tests/test-results
-          python/jupyterlab-collaborative-chat/ui-tests/playwright-report
+          python/jupyterlab-chat/ui-tests/test-results
+          python/jupyterlab-chat/ui-tests/playwright-report
 
   check_links:
     name: Check Links

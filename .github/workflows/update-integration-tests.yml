@@ -79,4 +79,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           # Playwright knows how to start JupyterLab server
           start_server_script: 'null'
-          test_folder: python/jupyterlab-collaborative-chat/ui-tests
+          test_folder: python/jupyterlab-chat/ui-tests

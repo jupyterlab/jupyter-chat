@@ -29,7 +29,7 @@ used by a jupyterlab extension to create a chat.
 
 #### jupyterlab-chat
 
-The typescript package is located in *packages/jupyterlab-collaborative-chat* and
+The typescript package is located in *packages/jupyterlab-chat* and
 builds an NPM package named `jupyterlab-chat`.
 
 This package relies on `@jupyter/chat` and provides a typescript library.
@@ -37,7 +37,7 @@ It is intended to be used by a jupyterlab extension to create a chat.
 
 ### Jupyterlab extensions
 
-#### Chat extension based on shared document: *python/jupyterlab-collaborative-chat*
+#### Chat extension based on shared document: *python/jupyterlab-chat*
 
 This extension is an implementation of the `jupyter-chat` package, relying
 on shared document (see [jupyter_ydoc](https://github.com/jupyter-server/jupyter_ydoc)).

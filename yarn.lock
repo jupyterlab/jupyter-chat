@@ -10016,9 +10016,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"jupyterlab-chat-extension@workspace:python/jupyterlab-collaborative-chat":
+"jupyterlab-chat-extension@workspace:python/jupyterlab-chat":
   version: 0.0.0-use.local
-  resolution: "jupyterlab-chat-extension@workspace:python/jupyterlab-collaborative-chat"
+  resolution: "jupyterlab-chat-extension@workspace:python/jupyterlab-chat"
   dependencies:
     "@jupyter/docprovider": ^2.1.4
     "@jupyter/ydoc": ^1.1.1
@@ -10066,9 +10066,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"jupyterlab-chat@^0.5.0, jupyterlab-chat@workspace:packages/jupyterlab-collaborative-chat":
+"jupyterlab-chat@^0.5.0, jupyterlab-chat@workspace:packages/jupyterlab-chat":
   version: 0.0.0-use.local
-  resolution: "jupyterlab-chat@workspace:packages/jupyterlab-collaborative-chat"
+  resolution: "jupyterlab-chat@workspace:packages/jupyterlab-chat"
   dependencies:
     "@jupyter/chat": ^0.5.0
     "@jupyter/docprovider": ^2.1.4

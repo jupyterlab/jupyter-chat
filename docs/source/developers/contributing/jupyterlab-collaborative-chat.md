@@ -1,4 +1,4 @@
-# Collaborative chat
+# Jupyterlab chat
 
 The `jupyterlab-chat` extension adds chats to jupyterlab based on collaborative documents.
 
@@ -20,7 +20,7 @@ The following commands install the extension in development mode:
 ./scripts/dev_install.sh
 
 # Symlink the assets
-jupyter labextension develop --overwrite python/jupyterlab-collaborative-chat
+jupyter labextension develop --overwrite python/jupyterlab-chat
 ```
 
 To uninstall it, run:
@@ -44,27 +44,27 @@ jlpm build
 
 ### Unit tests
 
-There are a few unit tests in *python/jupyterlab-collaborative-chat/src/\_\_tests\_\_*.
+There are a few unit tests in *python/jupyterlab-chat/src/\_\_tests\_\_*.
 
 They make use of [jest](https://jestjs.io/).
 
 The following commands run them:
 
 ```bash
-cd ./python/jupyterlab-collaborative-chat
+cd ./python/jupyterlab-chat
 jlpm test
 ```
 
 ### Integration tests
 
-The integration tests are located in *python/jupyterlab-collaborative-chat/ui-tests*.
+The integration tests are located in *python/jupyterlab-chat/ui-tests*.
 
 They make use of [playwright](https://playwright.dev/).
 
 The following commands run them:
 
 ```bash
-cd ./python/jupyterlab-collaborative-chat/ui-tests
+cd ./python/jupyterlab-chat/ui-tests
 
 # Install the tests dependencies
 jlpm install
