@@ -11,5 +11,5 @@ maxdepth: 2
 ---
 
 ./extension-providing-chat
-./using-chat-extensions
+./using-chat-extension
 ```

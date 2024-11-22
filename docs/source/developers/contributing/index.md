@@ -11,5 +11,5 @@ maxdepth: 2
 ---
 
 ./jupyter-chat
-./jupyterlab-chat
+./jupyterlab-chat-extension
 ```
