@@ -1,26 +1,26 @@
 # Users
 
-## Collaborative chat
+## Chat extension
 
-The `jupyterlab-collaborative-chat` extension adds collaborative chats to jupyterlab.
+The `jupyterlab-chat` extension adds chats to jupyterlab.
 
-![collaborative chat](../_static/images/collaboarative-chat.png)
+![chat widgets](../_static/images/chat-widgets.png)
 
 These chats use [jupyter_collaboration](https://jupyterlab-realtime-collaboration.readthedocs.io/en/latest/),
 the collaborative edition of documents in jupyterlab.
 
-### Install collaborative chat
+### Install chat extension
 
-The collaborative chat is available on [PyPI](https://pypi.org/project/jupyterlab-collaborative-chat/).
+The chat extension is available on [PyPI](https://pypi.org/project/jupyterlab-chat/).
 
 ```bash
-pip install jupyterlab-collaborative-chat
+pip install jupyterlab-chat
 ```
 
 To uninstall the package:
 
 ```bash
-pip uninstall jupyterlab-collaborative-chat
+pip uninstall jupyterlab-chat
 ```
 
 ### Create a chat

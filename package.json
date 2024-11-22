@@ -23,7 +23,7 @@
   },
   "workspaces": [
     "packages/*",
-    "python/jupyterlab-collaborative-chat"
+    "python/jupyterlab-chat"
   ],
   "scripts": {
     "build": "lerna run build --stream",

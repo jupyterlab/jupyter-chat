@@ -1,0 +1,36 @@
+{
+  "title": "Jupyterlab chat",
+  "description": "Configuration for the chat commands",
+  "type": "object",
+  "jupyter.lab.menus": {
+    "main": [
+      {
+        "id": "jp-mainmenu-file",
+        "items": [
+          {
+            "type": "submenu",
+            "submenu": {
+              "id": "jp-mainmenu-file-new",
+              "items": [
+                {
+                  "command": "jupyterlab-chat:create",
+                  "rank": 50
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "jupyter.lab.shortcuts": [
+    {
+      "command": "jupyterlab-chat:focusInput",
+      "keys": ["Accel Shift 1"],
+      "selector": "body",
+      "preventDefault": false
+    }
+  ],
+  "properties": {},
+  "additionalProperties": false
+}

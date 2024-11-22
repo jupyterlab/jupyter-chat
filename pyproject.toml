@@ -37,7 +37,7 @@ fields = ["description", "authors", "urls"]
 [tool.jupyter-releaser.options]
 version-cmd = "cd ../.. && python scripts/bump_version.py --force --skip-if-dirty"
 python_packages = [
-    "python/jupyterlab-collaborative-chat"
+    "python/jupyterlab-chat"
 ]
 
 [tool.jupyter-releaser.hooks]

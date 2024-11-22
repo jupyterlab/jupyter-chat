@@ -1,0 +1,22 @@
+/*
+ * Copyright (c) Jupyter Development Team.
+ * Distributed under the terms of the Modified BSD License.
+ */
+
+/*
+  See the JupyterLab Developer Guide for useful CSS Patterns:
+
+  https://jupyterlab.readthedocs.io/en/stable/developer/css.html
+*/
+
+@import url('~@jupyter/chat/style/index.css');
+
+.jp-lab-chat-main-panel
+  .jp-ToolbarButtonComponent[data-command='jupyterlab-chat:moveToSide']
+  svg {
+  transform: rotate(180deg);
+}
+
+.jp-lab-chat-title-unread .lm-TabBar-tabLabel::before {
+  content: '* ';
+}
