@@ -3,17 +3,35 @@
 [![Github Actions Status](https://github.com/jupyterlab/jupyter-chat/workflows/Build/badge.svg)](https://github.com/jupyterlab/jupyter-chat/actions/workflows/build.yml)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jupyterlab/jupyter-chat/main?urlpath=lab)
 
-This project is a monorepo containing the frontend components and extensions to build
-a chat in Jupyter.
+This project is a monorepo containing:
+
+- an extension to add a chat in jupyterlab
+- the frontend components to build a chat extension for Jupyter application
 
 Many components of this chat project come from [jupyter-ai](https://github.com/jupyterlab/jupyter-ai).
 
 ![a screenshot showing the jupyter-chat extension used in two browser windows](https://github.com/jupyterlab/jupyter-chat/assets/591645/5dac0b00-43ed-4458-ab67-18207644b92b)
 
-> **Warning**
->
+> [!WARNING]
 > This project is still in early development stage and its API may change often before
 a stable release.
+
+## Install chat extension
+
+The chat extension is available on [PyPI](https://pypi.org/project/jupyterlab-chat/).
+
+```bash
+pip install jupyterlab-chat
+```
+
+To uninstall the package:
+
+```bash
+pip uninstall jupyterlab-chat
+```
+
+> [!NOTE]
+> The extension was released as [jupyterlab-collaborative-chat](https://pypi.org/project/jupyterlab-collaborative-chat/) until version 0.5.0.
 
 ## Composition
 
@@ -54,4 +72,4 @@ This extension has been moved to its own [repository](https://github.com/brichet
 
 ## Contributing
 
-See the contributing part of each package for details.
+See the contributing part of the [documentation](https://jupyter-chat.readthedocs.io/en/latest/developers/contributing/index.html).
