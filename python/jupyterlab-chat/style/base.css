@@ -10,3 +10,4 @@
 */
 
 @import url('~jupyterlab-chat/style/index.css');
+@import url('@jupyter/collaboration/style/index.css');

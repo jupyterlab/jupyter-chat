@@ -149,7 +149,7 @@ class YChat(YBaseDoc):
         """
         return self._ymetadata.to_py()
 
-    def set_metadata(self, name: str, metadata: dict):
+    def set_metadata(self, name: str, metadata: Any):
         """
         Adds or modifies a metadata of the document.
         """
