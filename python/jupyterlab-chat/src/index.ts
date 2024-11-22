@@ -623,7 +623,7 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
       defaultDirectory,
       autocompletionRegistry
     });
-    chatPanel.id = 'JupyterCollaborationChat:sidepanel';
+    chatPanel.id = 'JupyterlabChat:sidepanel';
     chatPanel.title.icon = chatIcon;
     chatPanel.title.caption = 'Jupyter Chat'; // TODO: i18n/
 

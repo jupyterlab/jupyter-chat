@@ -59,7 +59,7 @@ export class WidgetConfig implements IWidgetConfig {
 }
 
 /**
- * A widget factory to create new instances of CollaborativeChatWidget.
+ * A widget factory to create new instances of LabChatWidget.
  */
 export class ChatWidgetFactory extends ABCWidgetFactory<
   LabChatPanel,

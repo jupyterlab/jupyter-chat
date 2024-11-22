@@ -56,7 +56,7 @@ export const openChatToSide = async (
   page: IJupyterLabPageFixture,
   filename: string
 ): Promise<Locator> => {
-  const panel = page.locator('.jp-SidePanel.jp-collab-chat-sidepanel');
+  const panel = page.locator('.jp-SidePanel.jp-lab-chat-sidepanel');
   await page.evaluate(async filepath => {
     const inSidePanel = true;
     await window.jupyterapp.commands.execute('jupyterlab-chat:open', {

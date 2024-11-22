@@ -34,13 +34,13 @@ import React, { useState } from 'react';
 import { LabChatModel } from './model';
 import { CommandIDs, chatFileType } from './token';
 
-const MAIN_PANEL_CLASS = 'jp-collab-chat-main-panel';
-const TITLE_UNREAD_CLASS = 'jp-collab-chat-title-unread';
-const SIDEPANEL_CLASS = 'jp-collab-chat-sidepanel';
-const ADD_BUTTON_CLASS = 'jp-collab-chat-add';
-const OPEN_SELECT_CLASS = 'jp-collab-chat-open';
-const SECTION_CLASS = 'jp-collab-chat-section';
-const TOOLBAR_CLASS = 'jp-collab-chat-toolbar';
+const MAIN_PANEL_CLASS = 'jp-lab-chat-main-panel';
+const TITLE_UNREAD_CLASS = 'jp-lab-chat-title-unread';
+const SIDEPANEL_CLASS = 'jp-lab-chat-sidepanel';
+const ADD_BUTTON_CLASS = 'jp-lab-chat-add';
+const OPEN_SELECT_CLASS = 'jp-lab-chat-open';
+const SECTION_CLASS = 'jp-lab-chat-section';
+const TOOLBAR_CLASS = 'jp-lab-chat-toolbar';
 
 /**
  * DocumentWidget: widget that represents the view or editor for a file type.
