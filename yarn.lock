@@ -2430,7 +2430,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyter/chat@^0.5.0, @jupyter/chat@workspace:packages/jupyter-chat":
+"@jupyter/chat@^0.6.0, @jupyter/chat@workspace:packages/jupyter-chat":
   version: 0.0.0-use.local
   resolution: "@jupyter/chat@workspace:packages/jupyter-chat"
   dependencies:
@@ -10047,7 +10047,7 @@ __metadata:
     eslint: ^8.36.0
     eslint-config-prettier: ^8.8.0
     eslint-plugin-prettier: ^5.0.0
-    jupyterlab-chat: ^0.5.0
+    jupyterlab-chat: ^0.6.0
     mkdirp: ^1.0.3
     npm-run-all: ^4.1.5
     prettier: ^3.0.0
@@ -10066,11 +10066,11 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"jupyterlab-chat@^0.5.0, jupyterlab-chat@workspace:packages/jupyterlab-chat":
+"jupyterlab-chat@^0.6.0, jupyterlab-chat@workspace:packages/jupyterlab-chat":
   version: 0.0.0-use.local
   resolution: "jupyterlab-chat@workspace:packages/jupyterlab-chat"
   dependencies:
-    "@jupyter/chat": ^0.5.0
+    "@jupyter/chat": ^0.6.0
     "@jupyter/docprovider": ^2.1.4
     "@jupyter/ydoc": ^1.1.1
     "@jupyterlab/application": ^4.2.0

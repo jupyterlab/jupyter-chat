@@ -2,6 +2,57 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.6.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.5.0...7017ee16130fb28189fa699869e93fa9e59fd2a9))
+
+> [!IMPORTANT]
+>
+> - The extension based on collaborative documents has been renamed `jupyterlab-chat`.
+>   The PyPI package is now https://pypi.org/project/jupyterlab-chat/
+>   The npmjs packages are now:
+>
+>   - https://www.npmjs.com/package/jupyterlab-chat
+>   - https://www.npmjs.com/package/jupyterlab-chat-extension
+>
+> - The websocket chat extension has been removed from this repository.
+>   The repo for this extension is now https://github.com/brichet/jupyterlab-ws-chat
+
+### Enhancements made
+
+- Improve padding around code toolbar buttons [#96](https://github.com/jupyterlab/jupyter-chat/pull/96) ([@brichet](https://github.com/brichet))
+- Chats directory config [#91](https://github.com/jupyterlab/jupyter-chat/pull/91) ([@brichet](https://github.com/brichet))
+
+### Bugs fixed
+
+- Revert 'Allow `$` to literally denote quantities of USD in chat' (#95) [#99](https://github.com/jupyterlab/jupyter-chat/pull/99) ([@brichet](https://github.com/brichet))
+- Allow `$` to literally denote quantities of USD in chat [#95](https://github.com/jupyterlab/jupyter-chat/pull/95) ([@brichet](https://github.com/brichet))
+
+### Maintenance and upkeep improvements
+
+- Bump cross-spawn from 6.0.5 to 6.0.6 in the npm_and_yarn group across 1 directory [#103](https://github.com/jupyterlab/jupyter-chat/pull/103) ([@dependabot](https://github.com/dependabot))
+- Rename the extension to jupyterlab-chat [#102](https://github.com/jupyterlab/jupyter-chat/pull/102) ([@brichet](https://github.com/brichet))
+- Bump cross-spawn from 7.0.3 to 7.0.6 in /python/jupyterlab-collaborative-chat/ui-tests in the npm_and_yarn group across 1 directory [#101](https://github.com/jupyterlab/jupyter-chat/pull/101) ([@dependabot](https://github.com/dependabot))
+- Remove websocket chat extension [#100](https://github.com/jupyterlab/jupyter-chat/pull/100) ([@brichet](https://github.com/brichet))
+- Fix the ui tests for jupyterlab 4.3 [#97](https://github.com/jupyterlab/jupyter-chat/pull/97) ([@brichet](https://github.com/brichet))
+
+### Documentation improvements
+
+- Update README.md [#104](https://github.com/jupyterlab/jupyter-chat/pull/104) ([@brichet](https://github.com/brichet))
+- Add notes about current development status and breaking changes [#93](https://github.com/jupyterlab/jupyter-chat/pull/93) ([@brichet](https://github.com/brichet))
+
+### Other merged PRs
+
+- Remove leftover in ui test [#98](https://github.com/jupyterlab/jupyter-chat/pull/98) ([@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2024-10-21&to=2024-11-22&type=c))
+
+[@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2024-10-21..2024-11-22&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adependabot+updated%3A2024-10-21..2024-11-22&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2024-10-21..2024-11-22&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.5.0
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.4.0...52019670352c8011c5f22726bf87b5b1141b63ae))
@@ -28,8 +79,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2024-09-13&to=2024-10-21&type=c))
 
 [@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2024-09-13..2024-10-21&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2024-09-13..2024-10-21&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.4.0
 
