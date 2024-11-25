@@ -72,7 +72,7 @@ class YChat(YBaseDoc):
         Returns the users of the document.
         :return: Document's users.
         """
-        return self._yusers.to_py()
+        return self._yusers.to_py() or {}
 
     def set_user(self, user: dict[str, str]) -> None:
         """
@@ -95,7 +95,7 @@ class YChat(YBaseDoc):
         Returns the messages of the document.
         :return: Document's messages.
         """
-        return self._ymessages.to_py()
+        return self._ymessages.to_py() or []
 
     def add_message(self, message: dict) -> int:
         """
@@ -119,19 +119,20 @@ class YChat(YBaseDoc):
                 message["body"] = initial_message["body"] + message["body"]
             self._ymessages.insert(index, message)
 
-    def set_message(self, message: dict, index: int | None = None, append: bool = False):
+    def set_message(self, message: dict, index: int | None = None, append: bool = False) -> int:
         """
         Update or append a message.
         """
 
+        initial_message: dict | None = None
         if index is not None and 0 <= index < len(self._ymessages):
-            initial_message = self._ymessages[index]
+            initial_message = self.get_messages()[index]
         else:
             return self.add_message(message)
 
         if not initial_message["id"] == message["id"]:
             initial_message, index = self.get_message(message["id"])
-            if initial_message is None:
+            if index is None:
                 return self.add_message(message)
 
         self.update_message(message, index, append)
@@ -147,7 +148,7 @@ class YChat(YBaseDoc):
         """
         Returns the metadata of the document.
         """
-        return self._ymetadata.to_py()
+        return self._ymetadata.to_py() or {}
 
     def set_metadata(self, name: str, metadata: dict):
         """
@@ -164,7 +165,7 @@ class YChat(YBaseDoc):
         self.set_id(id)
         return id
 
-    def get_id(self) -> str:
+    def get_id(self) -> str | None:
         """
         Returns the ID of the document.
         """
@@ -255,7 +256,7 @@ class YChat(YBaseDoc):
         index = 0
         inserted_count = -1
         deleted_count = -1
-        for value in event.delta:
+        for value in event.delta:  # type:ignore[attr-defined]
             if "retain" in value.keys():
                 index = value["retain"]
             elif "insert" in value.keys():
@@ -268,7 +269,7 @@ class YChat(YBaseDoc):
             return
 
         for idx in range(index, index + inserted_count):
-            message = self._ymessages[idx]
+            message = self.get_messages()[idx]
             if message and message.get("raw_time", True):
                 self.create_task(self._set_timestamp(idx, timestamp))
 
@@ -279,7 +280,7 @@ class YChat(YBaseDoc):
         with self._ydoc.transaction():
             # Remove the message from the list and modify the timestamp
             try:
-                message = self._ymessages[msg_idx]
+                message = self.get_messages()[msg_idx]
             except IndexError:
                 return
 

@@ -54,3 +54,6 @@ before-bump-version = [
 
 [tool.check-wheel-contents]
 ignore = ["W002"]
+
+[tool.mypy]
+check_untyped_defs = true

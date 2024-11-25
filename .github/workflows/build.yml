@@ -151,6 +151,25 @@ jobs:
           ui-tests/test-results
           ui-tests/playwright-report
 
+  typing-tests:
+    name: Typing test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Base Setup
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+
+      - name: Install extension dependencies and build the extension
+        run: ./scripts/dev-install.sh
+
+      - name: Run mypy
+        run: |
+          set -eux
+          mypy --version
+          mypy python/jupyterlab-chat
+
   check_links:
     name: Check Links
     runs-on: ubuntu-latest
