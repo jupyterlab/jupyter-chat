@@ -162,7 +162,7 @@ jobs:
         uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
 
       - name: Install extension dependencies and build the extension
-        run: ./scripts/dev-install.sh
+        run: ./scripts/dev_install.sh
 
       - name: Run mypy
         run: |
