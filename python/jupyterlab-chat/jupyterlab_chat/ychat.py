@@ -8,7 +8,7 @@ import time
 import asyncio
 from functools import partial
 from jupyter_ydoc.ybasedoc import YBaseDoc
-from typing import Any, Callable, Set
+from typing import Any, Callable, Optional, Set
 from uuid import uuid4
 from pycrdt import Array, ArrayEvent, Map, MapEvent
 
@@ -52,13 +52,13 @@ class YChat(YBaseDoc):
     def ymetadata(self) -> Map:
         return self._ymetadata
 
-    def get_user(self, username: str) -> dict[str, str] | None:
+    def get_user(self, username: str) -> Optional[dict[str, str]]:
         """
         Returns a message from its id, or None
         """
         return self.get_users().get(username, None)
 
-    def get_user_by_name(self, name: str) -> dict[str, str] | None:
+    def get_user_by_name(self, name: str) -> Optional[dict[str, str]]:
         """
         Returns a user from its name property, or None.
         """
@@ -81,7 +81,7 @@ class YChat(YBaseDoc):
         with self._ydoc.transaction():
             self._yusers.update({user["username"]: user})
 
-    def get_message(self, id: str) -> tuple[dict | None, int | None]:
+    def get_message(self, id: str) -> tuple[Optional[dict], Optional[int]]:
         """
         Returns a message and its index from its id, or None
         """
@@ -119,12 +119,12 @@ class YChat(YBaseDoc):
                 message["body"] = initial_message["body"] + message["body"]
             self._ymessages.insert(index, message)
 
-    def set_message(self, message: dict, index: int | None = None, append: bool = False) -> int:
+    def set_message(self, message: dict, index: Optional[int] = None, append: bool = False) -> int:
         """
         Update or append a message.
         """
 
-        initial_message: dict | None = None
+        initial_message: Optional[dict] = None
         if index is not None and 0 <= index < len(self._ymessages):
             initial_message = self.get_messages()[index]
         else:
@@ -165,7 +165,7 @@ class YChat(YBaseDoc):
         self.set_id(id)
         return id
 
-    def get_id(self) -> str | None:
+    def get_id(self) -> Optional[str]:
         """
         Returns the ID of the document.
         """
