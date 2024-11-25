@@ -57,14 +57,14 @@ jlpm test
 
 ### Integration tests
 
-The integration tests are located in *python/jupyterlab-chat/ui-tests*.
+The integration tests are located in *ui-tests*.
 
 They make use of [playwright](https://playwright.dev/).
 
 The following commands run them:
 
 ```bash
-cd ./python/jupyterlab-chat/ui-tests
+cd ./ui-tests
 
 # Install the tests dependencies
 jlpm install
