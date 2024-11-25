@@ -18,8 +18,8 @@ packages/jupyter-chat/junit.xml
 packages/jupyterlab-chat/junit.xml
 
 # Integration tests
-python/jupyterlab-chat/ui-tests/test-results/
-python/jupyterlab-chat/ui-tests/playwright-report/
+ui-tests/test-results/
+ui-tests/playwright-report/
 
 # Created by https://www.gitignore.io/api/python
 # Edit at https://www.gitignore.io/?templates=python
