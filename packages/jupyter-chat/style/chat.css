@@ -18,11 +18,19 @@
   position: relative;
 }
 
-.jp-chat-rendermime-markdown .jp-RenderedHTMLCommon {
+/*
+ *
+ * Selectors must be nested in `.jp-ThemedContainer` to have a higher
+ * specificity than selectors in rules provided by JupyterLab.
+ *
+ * See: https://jupyterlab.readthedocs.io/en/latest/extension/extension_migration.html#css-styling
+ * See also: https://github.com/jupyterlab/jupyter-ai/issues/1090
+ */
+ .jp-ThemedContainer .jp-chat-rendermime-markdown .jp-RenderedHTMLCommon {
   padding-right: 0;
 }
 
-.jp-chat-rendermime-markdown pre {
+.jp-ThemedContainer .jp-chat-rendermime-markdown pre {
   background-color: var(--jp-cell-editor-background);
   overflow-x: auto;
   white-space: pre;
@@ -31,13 +39,13 @@
   border: var(--jp-border-width) solid var(--jp-cell-editor-border-color);
 }
 
-.jp-chat-rendermime-markdown pre > code {
+.jp-ThemedContainer .jp-chat-rendermime-markdown pre > code {
   background-color: inherit;
   overflow-x: inherit;
   white-space: inherit;
 }
 
-.jp-chat-rendermime-markdown mjx-container {
+.jp-ThemedContainer .jp-chat-rendermime-markdown mjx-container {
   font-size: 119%;
 }
 
