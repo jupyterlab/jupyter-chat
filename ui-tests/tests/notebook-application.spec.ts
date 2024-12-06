@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) Jupyter Development Team.
+ * Distributed under the terms of the Modified BSD License.
+ */
+
 import { expect, test as base } from '@jupyterlab/galata';
 
 export const test = base.extend({
