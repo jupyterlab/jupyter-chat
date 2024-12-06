@@ -151,7 +151,7 @@ jobs:
           ui-tests/test-results
           ui-tests/playwright-report
 
-    integration-tests-notebook:
+  integration-tests-notebook:
     name: Integration tests notebook
     needs: build_extension
     runs-on: ubuntu-latest
