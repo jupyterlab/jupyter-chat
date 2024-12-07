@@ -140,7 +140,7 @@ jobs:
     - name: Execute integration tests
       working-directory: ui-tests
       run: |
-        jlpm test --retries=2
+        jlpm playwright test --project=jupyterlab --retries=2
 
     - name: Upload Playwright Test report
       if: always()
@@ -197,7 +197,7 @@ jobs:
     - name: Execute integration tests
       working-directory: ui-tests
       run: |
-        jlpm test:notebook --retries=2
+        jlpm playwright test --project=notebook --retries=2
 
     - name: Upload Playwright Test report
       if: always()

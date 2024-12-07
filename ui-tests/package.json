@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "start": "jupyter lab --config jupyter_server_test_config.py",
-    "start:notebook": "jupyter lab --config jupyter_server_test_config_notebook.py",
+    "start:notebook": "jupyter notebook --config jupyter_server_test_config_notebook.py",
     "test": "jlpm playwright test --project=jupyterlab",
     "test:notebook": "jlpm playwright test --project=notebook",
     "test:update": "jlpm playwright test --update-snapshots"
