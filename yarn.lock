@@ -2430,6 +2430,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@jupyter-notebook/application@npm:^7.2.0":
+  version: 7.2.1
+  resolution: "@jupyter-notebook/application@npm:7.2.1"
+  dependencies:
+    "@jupyterlab/application": ~4.2.0
+    "@jupyterlab/coreutils": ~6.2.0
+    "@jupyterlab/docregistry": ~4.2.0
+    "@jupyterlab/rendermime-interfaces": ~3.10.0
+    "@jupyterlab/ui-components": ~4.2.0
+    "@lumino/algorithm": ^2.0.1
+    "@lumino/coreutils": ^2.1.2
+    "@lumino/messaging": ^2.0.1
+    "@lumino/polling": ^2.1.2
+    "@lumino/signaling": ^2.1.2
+    "@lumino/widgets": ^2.3.2
+  checksum: 14114a2f7144e2a7bbf5e80476ef9f4b229bd9ca65d5620a97aba2e9d666cd4ae2a04cb4c96f6b0575e6383a930073945fae580eb441e3b3d48fc0ac61629376
+  languageName: node
+  linkType: hard
+
 "@jupyter/chat@^0.6.2, @jupyter/chat@workspace:packages/jupyter-chat":
   version: 0.0.0-use.local
   resolution: "@jupyter/chat@workspace:packages/jupyter-chat"
@@ -2546,7 +2565,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyterlab/application@npm:^4.2.0":
+"@jupyterlab/application@npm:^4.2.0, @jupyterlab/application@npm:~4.2.0":
   version: 4.2.3
   resolution: "@jupyterlab/application@npm:4.2.3"
   dependencies:
@@ -2788,6 +2807,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@jupyterlab/coreutils@npm:~6.2.0":
+  version: 6.2.6
+  resolution: "@jupyterlab/coreutils@npm:6.2.6"
+  dependencies:
+    "@lumino/coreutils": ^2.1.2
+    "@lumino/disposable": ^2.1.2
+    "@lumino/signaling": ^2.1.2
+    minimist: ~1.2.0
+    path-browserify: ^1.0.0
+    url-parse: ~1.5.4
+  checksum: edb955a1d96a96546dce96a04329fe3ee38be301805337b9fd6ae7f21227625aab76f77ce5adacb80675831aed9b869525af787cbbbd64acf415ed67256e693a
+  languageName: node
+  linkType: hard
+
 "@jupyterlab/docmanager@npm:^4.2.3":
   version: 4.2.3
   resolution: "@jupyterlab/docmanager@npm:4.2.3"
@@ -2813,7 +2846,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyterlab/docregistry@npm:^4.2.0, @jupyterlab/docregistry@npm:^4.2.3":
+"@jupyterlab/docregistry@npm:^4.2.0, @jupyterlab/docregistry@npm:^4.2.3, @jupyterlab/docregistry@npm:~4.2.0":
   version: 4.2.3
   resolution: "@jupyterlab/docregistry@npm:4.2.3"
   dependencies:
@@ -3045,6 +3078,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@jupyterlab/rendermime-interfaces@npm:~3.10.0":
+  version: 3.10.6
+  resolution: "@jupyterlab/rendermime-interfaces@npm:3.10.6"
+  dependencies:
+    "@lumino/coreutils": ^1.11.0 || ^2.1.2
+    "@lumino/widgets": ^1.37.2 || ^2.3.2
+  checksum: c3fed69c4df34ad203870522af9741662029b59aacfff07f19e4725750746d18195b4f41123fa1280c13aa8303e2a1a30697a50fc98bdba53bb4cbbbdda2d2b1
+  languageName: node
+  linkType: hard
+
 "@jupyterlab/rendermime@npm:^4.2.0, @jupyterlab/rendermime@npm:^4.2.3":
   version: 4.2.3
   resolution: "@jupyterlab/rendermime@npm:4.2.3"
@@ -3190,7 +3233,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyterlab/ui-components@npm:^4.2.0, @jupyterlab/ui-components@npm:^4.2.3":
+"@jupyterlab/ui-components@npm:^4.2.0, @jupyterlab/ui-components@npm:^4.2.3, @jupyterlab/ui-components@npm:~4.2.0":
   version: 4.2.3
   resolution: "@jupyterlab/ui-components@npm:4.2.3"
   dependencies:
@@ -10020,6 +10063,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "jupyterlab-chat-extension@workspace:python/jupyterlab-chat"
   dependencies:
+    "@jupyter-notebook/application": ^7.2.0
     "@jupyter/docprovider": ^2.1.4
     "@jupyter/ydoc": ^1.1.1
     "@jupyterlab/application": ^4.2.0
