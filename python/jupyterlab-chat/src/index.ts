@@ -3,6 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { NotebookShell } from '@jupyter-notebook/application';
 import {
   ActiveCellManager,
   AutocompletionRegistry,
@@ -517,8 +518,24 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
             }
 
             if (inSidePanel && chatPanel) {
-              // The chat is opened in the chat panel.
-              app.shell.activateById(chatPanel.id);
+              /**
+               * The chat is opened in the chat panel, ensure the chat panel is opened.
+               *
+               * NOTES: In Notebook application, the panel is collapsed when using the
+               * `activateById` when it is already opened.
+               * See https://github.com/jupyter/notebook/issues/7534
+               */
+              if (app.shell instanceof NotebookShell) {
+                const shell: NotebookShell = app.shell;
+                if (
+                  shell.leftHandler?.currentWidget?.id !== chatPanel.id ||
+                  !shell.leftHandler.isVisible
+                ) {
+                  shell.activateById(chatPanel.id);
+                }
+              } else {
+                app.shell.activateById(chatPanel.id);
+              }
 
               if (chatPanel.openIfExists(filepath)) {
                 return;
