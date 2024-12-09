@@ -54,6 +54,9 @@ export function Chat(props: Chat.IOptions): JSX.Element {
   return (
     <JlThemeProvider themeManager={props.themeManager ?? null}>
       <Box
+        // Add .jp-ThemedContainer for CSS compatibility in both JL <4.3.0 and >=4.3.0.
+        // See: https://jupyterlab.readthedocs.io/en/latest/extension/extension_migration.html#css-styling
+        className="jp-ThemedContainer"
         // root box should not include padding as it offsets the vertical
         // scrollbar to the left
         sx={{
