@@ -134,9 +134,9 @@ class YChat(YBaseDoc):
         If append is True, the content will be append to the previous content.
         """
         with self._ydoc.transaction():
-            initial_message: Message = self._ymessages.pop(index)
+            initial_message: dict = self._ymessages.pop(index)
             if append:
-                message.body = initial_message.body + message.body
+                message.body = initial_message["body"] + message.body
             self._ymessages.insert(
                 index,
                 asdict(message, dict_factory=message_asdict_factory)
