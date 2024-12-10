@@ -1,3 +1,6 @@
+# Copyright (c) Jupyter Development Team.
+# Distributed under the terms of the Modified BSD License.
+
 from dataclasses import dataclass
 from typing import Literal, Optional
 from jupyter_server.auth import User as JupyterUser
