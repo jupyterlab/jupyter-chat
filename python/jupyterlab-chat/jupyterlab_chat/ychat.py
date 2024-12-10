@@ -12,6 +12,8 @@ from typing import Any, Callable, Optional, Set
 from uuid import uuid4
 from pycrdt import Array, ArrayEvent, Map, MapEvent
 
+from .models import Message, User
+
 
 class YChat(YBaseDoc):
     def __init__(self, *args, **kwargs):
@@ -52,105 +54,105 @@ class YChat(YBaseDoc):
     def ymetadata(self) -> Map:
         return self._ymetadata
 
-    def get_user(self, username: str) -> Optional[dict[str, str]]:
+    def get_user(self, username: str) -> Optional[User]:
         """
-        Returns a message from its id, or None
+        Returns a user from its id, or None
         """
         return self.get_users().get(username, None)
 
-    def get_user_by_name(self, name: str) -> Optional[dict[str, str]]:
+    def get_user_by_name(self, name: str) -> Optional[User]:
         """
         Returns a user from its name property, or None.
         """
         return next(
-            (user for user in self.get_users().values() if user["name"] == name),
+            (user for user in self.get_users().values() if user.name == name),
             None
         )
 
-    def get_users(self) -> dict[str, dict[str, str]]:
+    def get_users(self) -> dict[str, User]:
         """
         Returns the users of the document.
         :return: Document's users.
         """
         return self._yusers.to_py() or {}
 
-    def set_user(self, user: dict[str, str]) -> None:
+    def set_user(self, user: User) -> None:
         """
         Adds or modifies a user.
         """
         with self._ydoc.transaction():
-            self._yusers.update({user["username"]: user})
+            self._yusers.update({user.username: user})
 
-    def get_message(self, id: str) -> tuple[Optional[dict], Optional[int]]:
+    def get_message(self, id: str) -> tuple[Optional[Message], Optional[int]]:
         """
         Returns a message and its index from its id, or None
         """
         return next(
-            ((msg, i) for i, msg in enumerate(self.get_messages()) if msg["id"] == id),
+            ((msg, i) for i, msg in enumerate(self.get_messages()) if msg.id == id),
             (None, None)
         )
 
-    def get_messages(self) -> list[dict]:
+    def get_messages(self) -> list[Message]:
         """
         Returns the messages of the document.
         :return: Document's messages.
         """
         return self._ymessages.to_py() or []
 
-    def add_message(self, message: dict) -> int:
+    def add_message(self, message: Message) -> int:
         """
         Append a message to the document.
         """
         timestamp: float = time.time()
-        message["time"] = timestamp
+        message.time = timestamp
         with self._ydoc.transaction():
-            index = len(self._ymessages) - next((i for i, v in enumerate(self.get_messages()[::-1]) if v["time"] < timestamp), len(self._ymessages))
+            index = len(self._ymessages) - next((i for i, v in enumerate(self.get_messages()[::-1]) if v.time < timestamp), len(self._ymessages))
             self._ymessages.insert(index, message)
             return index
 
-    def update_message(self, message: dict, index: int, append: bool = False):
+    def update_message(self, message: Message, index: int, append: bool = False):
         """
         Update a message of the document.
         If append is True, the content will be append to the previous content.
         """
         with self._ydoc.transaction():
-            initial_message = self._ymessages.pop(index)
+            initial_message: Message = self._ymessages.pop(index)
             if append:
-                message["body"] = initial_message["body"] + message["body"]
+                message.body = initial_message.body + message.body
             self._ymessages.insert(index, message)
 
-    def set_message(self, message: dict, index: Optional[int] = None, append: bool = False) -> int:
+    def set_message(self, message: Message, index: Optional[int] = None, append: bool = False) -> int:
         """
         Update or append a message.
         """
 
-        initial_message: Optional[dict] = None
+        initial_message: Optional[Message] = None
         if index is not None and 0 <= index < len(self._ymessages):
             initial_message = self.get_messages()[index]
         else:
             return self.add_message(message)
 
-        if not initial_message["id"] == message["id"]:
-            initial_message, index = self.get_message(message["id"])
+        if not initial_message.id == message.id:
+            initial_message, index = self.get_message(message.id)
             if index is None:
                 return self.add_message(message)
 
         self.update_message(message, index, append)
         return index
 
-    def get_single_metadata(self, name) -> dict:
+    def get_single_metadata(self, name: str) -> dict:
         """
         Return a single metadata.
         """
         return self.get_metadata().get(name, {})
 
-    def get_metadata(self) -> dict[str, dict]:
+    def get_metadata(self) -> dict[str, Any]:
         """
         Returns the metadata of the document.
         """
         return self._ymetadata.to_py() or {}
 
-    def set_metadata(self, name: str, metadata: dict):
+    def set_metadata(self, name: str, metadata: Any):
         """
         Adds or modifies a metadata of the document.
         """
@@ -270,7 +272,7 @@ class YChat(YBaseDoc):
 
         for idx in range(index, index + inserted_count):
             message = self.get_messages()[idx]
-            if message and message.get("raw_time", True):
+            if message and getattr(message, "raw_time", True):
                 self.create_task(self._set_timestamp(idx, timestamp))
 
     async def _set_timestamp(self, msg_idx: int, timestamp: float):
@@ -284,15 +286,15 @@ class YChat(YBaseDoc):
             except IndexError:
                 return
 
-            message["time"] = timestamp
-            message["raw_time"] = False
+            message.time = timestamp
+            message.raw_time = False
             self._ymessages[msg_idx] = message
 
             # Move the message at the correct position in the list, looking first at the end, since the message
             # should be the last one.
             # The next() function below return the index of the first message with a timestamp inferior of the
             # current one, starting from the end of the list.
-            new_idx = len(self._ymessages) - next((i for i, v in enumerate(self.get_messages()[::-1]) if v["time"] < timestamp), len(self._ymessages))
+            new_idx = len(self._ymessages) - next((i for i, v in enumerate(self.get_messages()[::-1]) if v.time < timestamp), len(self._ymessages))
             if msg_idx != new_idx:
                 message = self._ymessages.pop(msg_idx)
                 self._ymessages.insert(new_idx, message)
