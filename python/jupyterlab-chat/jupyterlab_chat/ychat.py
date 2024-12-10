@@ -13,7 +13,7 @@ from typing import Any, Callable, Optional, Set
 from uuid import uuid4
 from pycrdt import Array, ArrayEvent, Map, MapEvent
 
-from .models import Message, User
+from .models import message_asdict_factory, Message, User
 
 
 class YChat(YBaseDoc):
@@ -90,7 +90,9 @@ class YChat(YBaseDoc):
         Adds or modifies a user.
         """
         with self._ydoc.transaction():
-            self._yusers.update({user.username: asdict(user)})
+            self._yusers.update({
+                user.username: asdict(user, dict_factory=message_asdict_factory)
+            })
 
     def get_message(self, id: str) -> tuple[Optional[Message], Optional[int]]:
         """
@@ -120,7 +122,10 @@ class YChat(YBaseDoc):
         message.time = timestamp
         with self._ydoc.transaction():
             index = len(self._ymessages) - next((i for i, v in enumerate(self._get_messages()[::-1]) if v["time"] < timestamp), len(self._ymessages))
-            self._ymessages.insert(index, asdict(message))
+            self._ymessages.insert(
+                index,
+                asdict(message, dict_factory=message_asdict_factory)
+            )
             return index
 
     def update_message(self, message: Message, index: int, append: bool = False):
@@ -132,7 +137,10 @@ class YChat(YBaseDoc):
             initial_message: Message = self._ymessages.pop(index)
             if append:
                 message.body = initial_message.body + message.body
-            self._ymessages.insert(index, asdict(message))
+            self._ymessages.insert(
+                index,
+                asdict(message, dict_factory=message_asdict_factory)
+            )
 
     def set_message(self, message: Message, index: Optional[int] = None, append: bool = False) -> int:
         """
