@@ -185,11 +185,14 @@ class YChat(YBaseDoc):
         Returns the contents of the document.
         :return: Document's contents in JSON.
         """
-        return json.dumps({
-            "messages": self.get_messages(),
-            "users": self.get_users(),
-            "metadata": self.get_metadata()
-        })
+        return json.dumps(
+            {
+                "messages": self.get_messages(),
+                "users": self.get_users(),
+                "metadata": self.get_metadata()
+            },
+            indent=2
+        )
 
     def set(self, value: str) -> None:
         """
