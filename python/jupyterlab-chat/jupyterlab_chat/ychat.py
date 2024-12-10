@@ -91,7 +91,7 @@ class YChat(YBaseDoc):
         """
         with self._ydoc.transaction():
             self._yusers.update({
-                user.username: asdict(user, dict_factory=message_asdict_factory)
+                user.username: asdict(user)
             })
 
     def get_message(self, id: str) -> tuple[Optional[Message], Optional[int]]:

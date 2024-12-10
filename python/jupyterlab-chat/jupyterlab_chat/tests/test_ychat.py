@@ -7,9 +7,8 @@ import jupyter_ydoc
 from dataclasses import asdict
 import pytest
 import time
-from copy import deepcopy
 from uuid import uuid4
-from ..models import User, Message
+from ..models import message_asdict_factory, Message, User
 from ..ychat import YChat
 
 USER = User(
@@ -84,7 +83,7 @@ def test_add_message():
     msg = create_message()
     chat.add_message(msg)
     assert len(chat._get_messages()) == 1
-    assert chat._get_messages()[0] == asdict(msg)
+    assert chat._get_messages()[0] == asdict(msg, dict_factory=message_asdict_factory)
 
 
 def test_get_message_type():
@@ -106,7 +105,7 @@ def test_set_message_should_add():
     msg = create_message()
     chat.set_message(msg)
     assert len(chat._get_messages()) == 1
-    assert chat._get_messages()[0] == asdict(msg)
+    assert chat._get_messages()[0] == asdict(msg, dict_factory=message_asdict_factory)
 
 
 def test_set_message_should_update():
@@ -116,7 +115,7 @@ def test_set_message_should_update():
     msg.body = "Updated content"
     chat.set_message(msg, index)
     assert len(chat._get_messages()) == 1
-    assert chat._get_messages()[0] == asdict(msg)
+    assert chat._get_messages()[0] == asdict(msg, dict_factory=message_asdict_factory)
 
 
 def test_set_message_should_add_with_new_id():
@@ -128,8 +127,8 @@ def test_set_message_should_add_with_new_id():
     new_msg.body = "Updated content"
     chat.set_message(new_msg, index)
     assert len(chat._get_messages()) == 2
-    assert chat._get_messages()[0] == asdict(msg)
-    assert chat._get_messages()[1] == asdict(new_msg)
+    assert chat._get_messages()[0] == asdict(msg, dict_factory=message_asdict_factory)
+    assert chat._get_messages()[1] == asdict(new_msg, dict_factory=message_asdict_factory)
 
 
 def test_set_message_should_update_with_wrong_index():
@@ -143,6 +142,6 @@ def test_set_message_should_update_with_wrong_index():
     new_msg.body = "Updated content"
     chat.set_message(new_msg, 0)
     assert len(chat._get_messages()) == 2
-    assert chat._get_messages()[0] == asdict(msg)
-    assert chat._get_messages()[1] == asdict(new_msg)
+    assert chat._get_messages()[0] == asdict(msg, dict_factory=message_asdict_factory)
+    assert chat._get_messages()[1] == asdict(new_msg, dict_factory=message_asdict_factory)
 
