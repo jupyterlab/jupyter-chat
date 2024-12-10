@@ -161,12 +161,6 @@ class YChat(YBaseDoc):
         self.update_message(message, index, append)
         return index
 
-    def get_single_metadata(self, name: str) -> dict:
-        """
-        Return a single metadata.
-        """
-        return self.get_metadata().get(name, {})
-
     def get_metadata(self) -> dict[str, Any]:
         """
         Returns the metadata of the document.
