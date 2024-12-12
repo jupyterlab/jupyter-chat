@@ -109,11 +109,11 @@ class YChat(YBaseDoc):
         message_dicts = self._get_messages()
         return [Message(**message_dict) for message_dict in message_dicts]
 
-    def _get_message_by_index(self, index: int) -> dict:
+    def _get_message_by_index(self, index: int):
         """
         Return a message from its index.
         """
-        return self._ymessages[index].to_py()
+        return self._ymessages[index]
 
     def _get_messages(self) -> list[dict]:
         """
