@@ -29,13 +29,22 @@ class Message:
     """ The message sender unique id """
 
     raw_time: Optional[bool] = None
-    """ Whether the timestamp is raw (from client) or not (from server, unified) """
+    """
+    Whether the timestamp is raw (from client) or not (from server, unified)
+    Default to None
+    """
 
     deleted: Optional[bool] = None
-    """ Whether the message has been deleted or not (body should be empty if True) """
+    """
+    Whether the message has been deleted or not (body should be empty if True)
+    Default to None.
+    """
 
     edited: Optional[bool] = None
-    """ Whether the message has been edited or not """
+    """
+    Whether the message has been edited or not
+    Default to None.
+    """
 
 
 @dataclass(kw_only=True)
