@@ -59,29 +59,28 @@ class YChat(YBaseDoc):
         """
         Returns a user from its id, or None
         """
-        user = self._get_users().get(username, None)
-        if user is None:
-            return None
-        else:
-            return User(**user)
+        return self.get_users().get(username, None)
 
     def get_user_by_name(self, name: str) -> Optional[User]:
         """
         Returns a user from its name property, or None.
         """
-        user = next(
-            (user for user in self._get_users().values() if user["name"] == name),
+        return next(
+            (user for user in self.get_users().values() if user.name == name),
             None
         )
-        if user is None:
-            return None
-        else:
-            return User(**user)
 
-    def _get_users(self) -> dict[str, dict]:
+    def get_users(self) -> dict[str, User]:
         """
         Returns the users of the document.
         :return: Document's users.
+        """
+        user_dicts = self._get_users()
+        return {username: User(**user_dict) for username, user_dict in user_dicts.items()}
+
+    def _get_users(self) -> dict[str, dict]:
+        """
+        Returns the users of the document as dict.
         """
         return self._yusers.to_py() or {}
 
@@ -96,21 +95,29 @@ class YChat(YBaseDoc):
 
     def get_message(self, id: str) -> tuple[Optional[Message], Optional[int]]:
         """
-        Returns a message and its index from its id, or None
+        Returns a message and its index from its id, or None.
         """
-        message = next(
-            ((msg, i) for i, msg in enumerate(self._get_messages()) if msg["id"] == id),
+        return next(
+            ((msg, i) for i, msg in enumerate(self.get_messages()) if msg.id == id),
             (None, None)
         )
-        if message[0] is None:
-            return (None, None)
-        else:
-            return (Message(**message[0]), message[1])
+
+    def get_messages(self) -> list[Message]:
+        """
+        Returns the messages of the document.
+        """
+        message_dicts = self._get_messages()
+        return [Message(**message_dict) for message_dict in message_dicts]
+
+    def _get_message_by_index(self, index: int) -> dict:
+        """
+        Return a message from its index.
+        """
+        return self._ymessages[index].to_py()
 
     def _get_messages(self) -> list[dict]:
         """
-        Returns the messages of the document.
-        :return: Document's messages.
+        Returns the messages of the document as dict.
         """
         return self._ymessages.to_py() or []
 
@@ -146,14 +153,13 @@ class YChat(YBaseDoc):
         """
         Update or append a message.
         """
-
         initial_message: Optional[Message] = None
         if index is not None and 0 <= index < len(self._ymessages):
-            initial_message = Message(**self._get_messages()[index])
+            initial_message = Message(**self._get_message_by_index(index))
         else:
             return self.add_message(message)
 
-        if not initial_message.id == message.id:
+        if initial_message.id != message.id:
             initial_message, index = self.get_message(message.id)
             if index is None:
                 return self.add_message(message)
@@ -289,7 +295,7 @@ class YChat(YBaseDoc):
             return
 
         for idx in range(index, index + inserted_count):
-            message_dict = self._get_messages()[idx]
+            message_dict = self._get_message_by_index(idx)
             if message_dict and message_dict.get("raw_time", True):
                 self.create_task(self._set_timestamp(idx, timestamp))
 
@@ -300,7 +306,7 @@ class YChat(YBaseDoc):
         with self._ydoc.transaction():
             # Remove the message from the list and modify the timestamp
             try:
-                message_dict = self._get_messages()[msg_idx]
+                message_dict = self._get_message_by_index(msg_idx)
             except IndexError:
                 return
 

@@ -144,4 +144,3 @@ def test_set_message_should_update_with_wrong_index():
     assert len(chat._get_messages()) == 2
     assert chat._get_messages()[0] == asdict(msg, dict_factory=message_asdict_factory)
     assert chat._get_messages()[1] == asdict(new_msg, dict_factory=message_asdict_factory)
-
