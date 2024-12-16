@@ -467,8 +467,8 @@ export function Navigation(props: NavigationProps): JSX.Element {
   const [unreadBefore, setUnreadBefore] = useState<number | null>(null);
   const [unreadAfter, setUnreadAfter] = useState<number | null>(null);
 
-  const gotoMessage = (msgIdx: number) => {
-    props.refMsgBox.current?.children.item(msgIdx)?.scrollIntoView();
+  const gotoMessage = (msgIdx: number, alignToTop: boolean = true) => {
+    props.refMsgBox.current?.children.item(msgIdx)?.scrollIntoView(alignToTop);
   };
 
   // Listen for change in unread messages, and find the first unread message before or
@@ -529,7 +529,7 @@ export function Navigation(props: NavigationProps): JSX.Element {
     if (model.unreadMessages.length) {
       gotoMessage(Math.min(...model.unreadMessages));
     } else {
-      gotoMessage(model.messages.length - 1);
+      gotoMessage(model.messages.length - 1, false);
     }
 
     return () => {
@@ -571,10 +571,10 @@ export function Navigation(props: NavigationProps): JSX.Element {
       {(unreadAfter !== null || !lastInViewport) && (
         <Button
           className={`${NAVIGATION_BUTTON_CLASS} ${unreadAfter !== null ? NAVIGATION_UNREAD_CLASS : ''} ${NAVIGATION_BOTTOM_CLASS}`}
-          onClick={() =>
-            gotoMessage!(
-              unreadAfter !== null ? unreadAfter : model.messages.length - 1
-            )
+          onClick={
+            unreadAfter === null
+              ? () => gotoMessage(model.messages.length - 1, false)
+              : () => gotoMessage(unreadAfter)
           }
           title={
             unreadAfter !== null
