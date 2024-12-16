@@ -89,8 +89,11 @@ test.describe('#notifications', () => {
   test('should receive notification on unread message', async ({ page }) => {
     const chatPanel = await openChat(page, FILENAME);
     const messages = chatPanel.locator('.jp-chat-message');
-    await messages.first().scrollIntoViewIfNeeded();
 
+    // Navigate to the last to set all messages as read.
+    await messages.last().scrollIntoViewIfNeeded();
+
+    await messages.first().scrollIntoViewIfNeeded();
     await sendMessage(guestPage, FILENAME, MSG_CONTENT);
     await page.waitForCondition(
       async () => (await page.notifications).length > 0
@@ -110,6 +113,10 @@ test.describe('#notifications', () => {
   }) => {
     const chatPanel = await openChat(page, FILENAME);
     const messages = chatPanel.locator('.jp-chat-message');
+
+    // Navigate to the last to set all messages as read.
+    await messages.last().scrollIntoViewIfNeeded();
+
     await messages.first().scrollIntoViewIfNeeded();
 
     await sendMessage(guestPage, FILENAME, MSG_CONTENT);
@@ -130,6 +137,10 @@ test.describe('#notifications', () => {
   }) => {
     const chatPanel = await openChat(page, FILENAME);
     const messages = chatPanel.locator('.jp-chat-message');
+
+    // Navigate to the last to set all messages as read.
+    await messages.last().scrollIntoViewIfNeeded();
+
     await messages.first().scrollIntoViewIfNeeded();
 
     await sendMessage(guestPage, FILENAME, MSG_CONTENT);

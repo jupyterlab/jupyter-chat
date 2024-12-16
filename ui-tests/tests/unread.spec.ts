@@ -58,16 +58,14 @@ test.describe('#messagesNavigation', () => {
       const messages = chatPanel.locator('.jp-chat-message');
       const navigationBottom = chatPanel.locator('.jp-chat-navigation-bottom');
 
+      // Navigate to the last to set all messages as read.
+      await messages.last().scrollIntoViewIfNeeded();
+
       // Move to the first message.
       await messages.first().scrollIntoViewIfNeeded();
 
       await expect(navigationBottom).toBeAttached();
 
-      // FIXME: This test uses the fact that some messages are marked as read even if
-      // they are not displayed, because the unread state is computed before the full
-      // rendering of all messages.
-      // If the unread state wait for the rendermimeMarkdown, this test should fail
-      // because the last messages will be marked as unread.
       expect(navigationBottom).not.toHaveClass(/jp-chat-navigation-unread/);
       expect(await navigationBottom.screenshot()).toMatchSnapshot(
         'navigation-bottom.png'
@@ -179,9 +177,13 @@ test.describe('#messagesNavigation', () => {
 
     test('should have unread icon for new messages', async ({ page }) => {
       const chatPanel = await openChat(page, FILENAME);
-      const message = chatPanel.locator('.jp-chat-message').first();
+      const messages = chatPanel.locator('.jp-chat-message');
+
+      // Navigate to the last to set all messages as read.
+      await messages.last().scrollIntoViewIfNeeded();
+
       const navigationBottom = chatPanel.locator('.jp-chat-navigation-bottom');
-      await message.scrollIntoViewIfNeeded();
+      await messages.first().scrollIntoViewIfNeeded();
 
       await expect(navigationBottom).toBeAttached();
       expect(navigationBottom).not.toHaveClass(/jp-chat-navigation-unread/);
