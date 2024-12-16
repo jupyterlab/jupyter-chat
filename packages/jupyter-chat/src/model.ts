@@ -182,6 +182,10 @@ export class ChatModel implements IChatModel {
    * Create a new chat model.
    */
   constructor(options: ChatModel.IOptions = {}) {
+    if (options.id) {
+      this.id = options.id;
+    }
+
     const config = options.config ?? {};
 
     // Stack consecutive messages from the same user by default.
@@ -592,6 +596,11 @@ export namespace ChatModel {
    * The instantiation options for a ChatModel.
    */
   export interface IOptions {
+    /**
+     * The id of the chat.
+     */
+    id?: string;
+
     /**
      * Initial config for the chat widget.
      */
