@@ -130,16 +130,22 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
       return;
     }
 
-    // do not send the message if the user was selecting a suggested command from the
+    // Do not send the message if the user was selecting a suggested command from the
     // Autocomplete component.
     if (highlighted) {
       return;
     }
 
+    // Do not send empty messages, and avoid adding new line in empty message.
+    if (!input.trim()) {
+      event.stopPropagation();
+      event.preventDefault();
+      return;
+    }
+
     if (
-      event.key === 'Enter' &&
-      ((sendWithShiftEnter && event.shiftKey) ||
-        (!sendWithShiftEnter && !event.shiftKey))
+      (sendWithShiftEnter && event.shiftKey) ||
+      (!sendWithShiftEnter && !event.shiftKey)
     ) {
       onSend();
       event.stopPropagation();
