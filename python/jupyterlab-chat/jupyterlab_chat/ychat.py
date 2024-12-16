@@ -160,6 +160,7 @@ class YChat(YBaseDoc):
         with self._ydoc.transaction():
             index = self._indexes_by_id[message.id]
             initial_message = self._get_message_by_index(index)
+            message.time = initial_message["time"]
             if append:
                 message.body = initial_message["body"] + message.body
             self._ymessages[index] = asdict(message, dict_factory=message_asdict_factory)
