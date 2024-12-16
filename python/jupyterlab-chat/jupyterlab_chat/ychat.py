@@ -13,7 +13,7 @@ from typing import Any, Callable, Optional, Set
 from uuid import uuid4
 from pycrdt import Array, ArrayEvent, Map, MapEvent
 
-from .models import message_asdict_factory, Message, User
+from .models import message_asdict_factory, Message, NewMessage, User
 
 
 class YChat(YBaseDoc):
@@ -28,6 +28,9 @@ class YChat(YBaseDoc):
 
         # Observe the state to initialize the file as soon as the document is not dirty.
         self._ystate_subscription = self._ystate.observe(self._initialize)
+
+        # Lookup table to get message index from its ID.
+        self._indexes_by_id: dict[str, int] = {}
 
     @property
     def version(self) -> str:
@@ -93,14 +96,14 @@ class YChat(YBaseDoc):
                 user.username: asdict(user)
             })
 
-    def get_message(self, id: str) -> tuple[Optional[Message], Optional[int]]:
+    def get_message(self, id: str) -> Optional[Message]:
         """
         Returns a message and its index from its id, or None.
         """
-        return next(
-            ((msg, i) for i, msg in enumerate(self.get_messages()) if msg.id == id),
-            (None, None)
-        )
+        if not id in self._indexes_by_id:
+            return None
+        index = self._indexes_by_id[id]
+        return Message(**self._get_message_by_index(index))
 
     def get_messages(self) -> list[Message]:
         """
@@ -121,51 +124,45 @@ class YChat(YBaseDoc):
         """
         return self._ymessages.to_py() or []
 
-    def add_message(self, message: Message) -> int:
+    def add_message(self, new_message: NewMessage) -> str:
         """
         Append a message to the document.
         """
         timestamp: float = time.time()
-        message.time = timestamp
+        uid = str(uuid4())
+        message = Message(
+            **asdict(new_message),
+            time=timestamp,
+            id=uid
+        )
+
         with self._ydoc.transaction():
             index = len(self._ymessages) - next((i for i, v in enumerate(self._get_messages()[::-1]) if v["time"] < timestamp), len(self._ymessages))
+            appended = index == len(self._ymessages)
             self._ymessages.insert(
                 index,
                 asdict(message, dict_factory=message_asdict_factory)
             )
-            return index
 
-    def update_message(self, message: Message, index: int, append: bool = False):
+        if appended:
+            self._indexes_by_id[uid] = index
+        else:
+            # if the message has been inserted in the list,
+            self._indexes_by_id = {message["id"]: idx for idx, message in enumerate(self._get_messages())}
+
+        return uid
+
+    def update_message(self, message: Message, append: bool = False):
         """
         Update a message of the document.
         If append is True, the content will be append to the previous content.
         """
         with self._ydoc.transaction():
-            initial_message: dict = self._ymessages.pop(index)
+            index = self._indexes_by_id[message.id]
+            initial_message = self._get_message_by_index(index)
             if append:
                 message.body = initial_message["body"] + message.body
-            self._ymessages.insert(
-                index,
-                asdict(message, dict_factory=message_asdict_factory)
-            )
-
-    def set_message(self, message: Message, index: Optional[int] = None, append: bool = False) -> int:
-        """
-        Update or append a message.
-        """
-        initial_message: Optional[Message] = None
-        if index is not None and 0 <= index < len(self._ymessages):
-            initial_message = Message(**self._get_message_by_index(index))
-        else:
-            return self.add_message(message)
-
-        if initial_message.id != message.id:
-            initial_message, index = self.get_message(message.id)
-            if index is None:
-                return self.add_message(message)
-
-        self.update_message(message, index, append)
-        return index
+            self._ymessages[index] = asdict(message, dict_factory=message_asdict_factory)
 
     def get_metadata(self) -> dict[str, Any]:
         """
@@ -240,6 +237,7 @@ class YChat(YBaseDoc):
 
             if "messages" in contents.keys():
                 for message in contents["messages"]:
+                    self._indexes_by_id[message["id"]] = len(self._ymessages)
                     self._ymessages.append(message)
 
             if "metadata" in contents.keys():

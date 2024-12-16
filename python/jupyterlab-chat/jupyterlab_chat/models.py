@@ -48,5 +48,16 @@ class Message:
 
 
 @dataclass(kw_only=True)
+class NewMessage:
+    """ Object representing a new message """
+
+    body: str
+    """ The content of the message """
+
+    sender: str
+    """ The message sender unique id """
+
+
+@dataclass(kw_only=True)
 class User(JupyterUser):
     """ Object representing a user (same as Jupyter User ) """
