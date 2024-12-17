@@ -18,6 +18,7 @@ module.exports = {
   },
   testIgnore: 'tests/notebook-application.spec.ts',
   use: {
+    ...baseConfig.use,
     contextOptions: {
       permissions: ['clipboard-read', 'clipboard-write']
     }
