@@ -103,7 +103,7 @@ class YChat(YBaseDoc):
         if not id in self._indexes_by_id:
             return None
         index = self._indexes_by_id[id]
-        return Message(**self._get_message_by_index(index))
+        return Message(**self._ymessages[index])  # type:ignore[arg-type]
 
     def get_messages(self) -> list[Message]:
         """
@@ -111,12 +111,6 @@ class YChat(YBaseDoc):
         """
         message_dicts = self._get_messages()
         return [Message(**message_dict) for message_dict in message_dicts]
-
-    def _get_message_by_index(self, index: int):
-        """
-        Return a message from its index.
-        """
-        return self._ymessages[index]
 
     def _get_messages(self) -> list[dict]:
         """
@@ -159,10 +153,10 @@ class YChat(YBaseDoc):
         """
         with self._ydoc.transaction():
             index = self._indexes_by_id[message.id]
-            initial_message = self._get_message_by_index(index)
-            message.time = initial_message["time"]
+            initial_message = self._ymessages[index]
+            message.time = initial_message["time"]  # type:ignore[index]
             if append:
-                message.body = initial_message["body"] + message.body
+                message.body = initial_message["body"] + message.body  # type:ignore[index]
             self._ymessages[index] = asdict(message, dict_factory=message_asdict_factory)
 
     def get_metadata(self) -> dict[str, Any]:
@@ -294,8 +288,8 @@ class YChat(YBaseDoc):
             return
 
         for idx in range(index, index + inserted_count):
-            message_dict = self._get_message_by_index(idx)
-            if message_dict and message_dict.get("raw_time", True):
+            message_dict = self._ymessages[idx]
+            if message_dict and message_dict.get("raw_time", True):  # type:ignore[attr-defined]
                 self.create_task(self._set_timestamp(idx, timestamp))
 
     async def _set_timestamp(self, msg_idx: int, timestamp: float):
@@ -305,12 +299,12 @@ class YChat(YBaseDoc):
         with self._ydoc.transaction():
             # Remove the message from the list and modify the timestamp
             try:
-                message_dict = self._get_message_by_index(msg_idx)
+                message_dict = self._ymessages[msg_idx]
             except IndexError:
                 return
 
-            message_dict["time"] = timestamp
-            message_dict["raw_time"] = False
+            message_dict["time"] = timestamp  # type:ignore[index]
+            message_dict["raw_time"] = False  # type:ignore[index]
             self._ymessages[msg_idx] = message_dict
 
             # Move the message at the correct position in the list, looking first at the end, since the message
