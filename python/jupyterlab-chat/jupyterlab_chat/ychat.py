@@ -24,7 +24,7 @@ class YChat(YBaseDoc):
         self._ydoc["users"] = self._yusers = Map()
         self._ydoc["messages"] = self._ymessages = Array()
         self._ydoc["metadata"] = self._ymetadata = Map()
-        self._ymessages.observe(self._timestamp_new_messages)
+        self._ymessages.observe(self._on_messages_change)
 
         # Observe the state to initialize the file as soon as the document is not dirty.
         self._ystate_subscription = self._ystate.observe(self._initialize)
@@ -132,17 +132,10 @@ class YChat(YBaseDoc):
 
         with self._ydoc.transaction():
             index = len(self._ymessages) - next((i for i, v in enumerate(self._get_messages()[::-1]) if v["time"] < timestamp), len(self._ymessages))
-            appended = index == len(self._ymessages)
             self._ymessages.insert(
                 index,
                 asdict(message, dict_factory=message_asdict_factory)
             )
-
-        if appended:
-            self._indexes_by_id[uid] = index
-        else:
-            # if the message has been inserted in the list,
-            self._indexes_by_id = {message["id"]: idx for idx, message in enumerate(self._get_messages())}
 
         return uid
 
@@ -231,9 +224,7 @@ class YChat(YBaseDoc):
                     self._yusers.update({k: v})
 
             if "messages" in contents.keys():
-                for message in contents["messages"]:
-                    self._indexes_by_id[message["id"]] = len(self._ymessages)
-                    self._ymessages.append(message)
+                self._ymessages.extend(contents["messages"])
 
             if "metadata" in contents.keys():
                 for k, v in contents["metadata"].items():
@@ -261,16 +252,13 @@ class YChat(YBaseDoc):
             self.create_task(self.create_id())
         self._ystate.unobserve(self._ystate_subscription)
 
-    def _timestamp_new_messages(self, event: ArrayEvent) -> None:
+    def _on_messages_change(self, event: ArrayEvent) -> None:
         """
-        Called when a the ymessages changes to update the timestamp with the server one,
-        to synchronize all messages with a unique time server.
+        Called when a the ymessages changes.
+        It updates the lookup table, and updates the timestamp of new message with the
+        server one, to synchronize all messages with a unique time server.
         """
 
-        # Avoid updating the time while reading the document the first time, the dirty
-        # flag is set to False after first reading.
-        if self.dirty:
-            return
         timestamp: float = time.time()
         index = 0
         inserted_count = -1
@@ -283,8 +271,20 @@ class YChat(YBaseDoc):
             elif "delete" in value.keys():
                 deleted_count = value["delete"]
 
-        # There is no message inserted, nothing to do.
-        if inserted_count == -1 or deleted_count == inserted_count:
+        # Update the message indexes
+        if deleted_count <= 0 and index + inserted_count == len(self._ymessages):
+            # Messages are added to the end
+            for idx in range(index, index + inserted_count):
+                self._indexes_by_id[self._ymessages[idx]["id"]] = idx  # type:ignore[index]
+        elif deleted_count != inserted_count:
+            # Some messages may have been inserted or deleted, the indexes should be
+            # restored. When the count are equals, it should be a message update without
+            # changing the index.
+            self._indexes_by_id = {message["id"]: idx for idx, message in enumerate(self._get_messages())}
+
+        # Avoid updating the timestamp when reading the document the first time (dirty
+        # flag set to True)or when there is no new message.
+        if self.dirty or inserted_count == -1 or deleted_count == inserted_count:
             return
 
         for idx in range(index, index + inserted_count):
