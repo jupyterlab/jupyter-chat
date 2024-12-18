@@ -13,7 +13,6 @@ const CANCEL_BUTTON_CLASS = 'jp-chat-cancel-button';
  * The cancel button props.
  */
 export type CancelButtonProps = {
-  inputExists: boolean;
   onCancel: () => void;
 };
 
@@ -22,11 +21,9 @@ export type CancelButtonProps = {
  */
 export function CancelButton(props: CancelButtonProps): JSX.Element {
   const tooltip = 'Cancel edition';
-  const disabled = !props.inputExists;
   return (
     <TooltippedButton
       onClick={props.onCancel}
-      disabled={disabled}
       tooltip={tooltip}
       buttonProps={{
         size: 'small',
