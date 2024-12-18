@@ -10,10 +10,11 @@ import {
   caretDownEmptyIcon,
   classes
 } from '@jupyterlab/ui-components';
+import { PromiseDelegate } from '@lumino/coreutils';
 import { Avatar as MuiAvatar, Box, Typography } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
 import clsx from 'clsx';
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, forwardRef } from 'react';
 
 import { ChatInput } from './chat-input';
 import { RendermimeMarkdown } from './rendermime-markdown';
@@ -47,13 +48,12 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
   const { model } = props;
   const [messages, setMessages] = useState<IChatMessage[]>(model.messages);
   const refMsgBox = useRef<HTMLDivElement>(null);
-  const inViewport = useRef<number[]>([]);
   const [currentWriters, setCurrentWriters] = useState<IUser[]>([]);
+  const [allRendered, setAllRendered] = useState<boolean>(false);
 
-  // The intersection observer that listen to all the message visibility.
-  const observerRef = useRef<IntersectionObserver>(
-    new IntersectionObserver(viewportChange)
-  );
+  // The list of message DOM and their rendered promises.
+  const listRef = useRef<(HTMLDivElement | null)[]>([]);
+  const renderedPromise = useRef<PromiseDelegate<void>[]>([]);
 
   /**
    * Effect: fetch history and config on initial render
@@ -95,45 +95,73 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
   }, [model]);
 
   /**
-   * Function called when a message enter or leave the viewport.
+   * Observe the messages to update the current viewport and the unread messages.
    */
-  function viewportChange(entries: IntersectionObserverEntry[]) {
-    const unread = [...model.unreadMessages];
-    let unreadModified = false;
-    entries.forEach(entry => {
-      const index = parseInt(entry.target.getAttribute('data-index') ?? '');
-      if (!isNaN(index)) {
-        if (unread.length) {
-          const unreadIdx = unread.indexOf(index);
-          if (unreadIdx !== -1 && entry.isIntersecting) {
-            unread.splice(unreadIdx, 1);
-            unreadModified = true;
+  useEffect(() => {
+    const observer = new IntersectionObserver(entries => {
+      // Used on first rendering, to ensure all the message as been rendered once.
+      if (!allRendered) {
+        Promise.all(renderedPromise.current.map(p => p.promise)).then(() => {
+          setAllRendered(true);
+        });
+      }
+
+      const unread = [...model.unreadMessages];
+      let unreadModified = false;
+      const inViewport = [...(model.messagesInViewport ?? [])];
+      entries.forEach(entry => {
+        const index = parseInt(entry.target.getAttribute('data-index') ?? '');
+        if (!isNaN(index)) {
+          const viewportIdx = inViewport.indexOf(index);
+          if (!entry.isIntersecting && viewportIdx !== -1) {
+            inViewport.splice(viewportIdx, 1);
+          } else if (entry.isIntersecting && viewportIdx === -1) {
+            inViewport.push(index);
+          }
+          if (unread.length) {
+            const unreadIdx = unread.indexOf(index);
+            if (unreadIdx !== -1 && entry.isIntersecting) {
+              unread.splice(unreadIdx, 1);
+              unreadModified = true;
+            }
           }
         }
-        const viewportIdx = inViewport.current.indexOf(index);
-        if (!entry.isIntersecting && viewportIdx !== -1) {
-          inViewport.current.splice(viewportIdx, 1);
-        } else if (entry.isIntersecting && viewportIdx === -1) {
-          inViewport.current.push(index);
-        }
+      });
+
+      props.model.messagesInViewport = inViewport;
+
+      // Ensure that all messages are rendered before updating unread messages, otherwise
+      // it can lead to wrong assumption , because more message are in the viewport
+      // before they are rendered.
+      if (allRendered && unreadModified) {
+        model.unreadMessages = unread;
       }
     });
 
-    props.model.messagesInViewport = inViewport.current;
-    if (unreadModified) {
-      props.model.unreadMessages = unread;
-    }
+    /**
+     * Observe the messages.
+     */
+    listRef.current.forEach(item => {
+      if (item) {
+        observer.observe(item);
+      }
+    });
 
     return () => {
-      observerRef.current?.disconnect();
+      listRef.current.forEach(item => {
+        if (item) {
+          observer.unobserve(item);
+        }
+      });
     };
-  }
+  }, [messages, allRendered]);
 
   return (
     <>
       <ScrollContainer sx={{ flexGrow: 1 }}>
         <Box ref={refMsgBox} className={clsx(MESSAGES_BOX_CLASS)}>
           {messages.map((message, i) => {
+            renderedPromise.current[i] = new PromiseDelegate();
             return (
               // extra div needed to ensure each bubble is on a new line
               <Box
@@ -147,8 +175,9 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
                 <ChatMessage
                   {...props}
                   message={message}
-                  observer={observerRef.current}
                   index={i}
+                  renderedPromise={renderedPromise.current[i]}
+                  ref={el => (listRef.current[i] = el)}
                 />
               </Box>
             );
@@ -156,7 +185,7 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
         </Box>
         <Writers writers={currentWriters}></Writers>
       </ScrollContainer>
-      <Navigation {...props} refMsgBox={refMsgBox} />
+      <Navigation {...props} refMsgBox={refMsgBox} allRendered={allRendered} />
     </>
   );
 }
@@ -293,102 +322,88 @@ type ChatMessageProps = BaseMessageProps & {
    */
   index: number;
   /**
-   * The intersection observer for all the messages.
+   * The promise to resolve when the message is rendered.
    */
-  observer: IntersectionObserver | null;
+  renderedPromise: PromiseDelegate<void>;
 };
 
 /**
  * The message component body.
  */
-export function ChatMessage(props: ChatMessageProps): JSX.Element {
-  const { message, model, rmRegistry } = props;
-  const elementRef = useRef<HTMLDivElement>(null);
-  const [edit, setEdit] = useState<boolean>(false);
-  const [deleted, setDeleted] = useState<boolean>(false);
-  const [canEdit, setCanEdit] = useState<boolean>(false);
-  const [canDelete, setCanDelete] = useState<boolean>(false);
+export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
+  (props, ref): JSX.Element => {
+    const { message, model, rmRegistry } = props;
+    const [edit, setEdit] = useState<boolean>(false);
+    const [deleted, setDeleted] = useState<boolean>(false);
+    const [canEdit, setCanEdit] = useState<boolean>(false);
+    const [canDelete, setCanDelete] = useState<boolean>(false);
 
-  // Add the current message to the observer, to actualize viewport and unread messages.
-  useEffect(() => {
-    if (elementRef.current === null) {
-      return;
-    }
-
-    // If the observer is defined, let's observe the message.
-    props.observer?.observe(elementRef.current);
-
-    return () => {
-      if (elementRef.current !== null) {
-        props.observer?.unobserve(elementRef.current);
+    // Look if the message can be deleted or edited.
+    useEffect(() => {
+      setDeleted(message.deleted ?? false);
+      if (model.user !== undefined && !message.deleted) {
+        if (model.user.username === message.sender.username) {
+          setCanEdit(model.updateMessage !== undefined);
+          setCanDelete(model.deleteMessage !== undefined);
+        }
+      } else {
+        setCanEdit(false);
+        setCanDelete(false);
       }
+    }, [model, message]);
+
+    // Cancel the current edition of the message.
+    const cancelEdition = (): void => {
+      setEdit(false);
     };
-  }, [model]);
 
-  // Look if the message can be deleted or edited.
-  useEffect(() => {
-    setDeleted(message.deleted ?? false);
-    if (model.user !== undefined && !message.deleted) {
-      if (model.user.username === message.sender.username) {
-        setCanEdit(model.updateMessage !== undefined);
-        setCanDelete(model.deleteMessage !== undefined);
+    // Update the content of the message.
+    const updateMessage = (id: string, input: string): void => {
+      if (!canEdit) {
+        return;
       }
-    } else {
-      setCanEdit(false);
-      setCanDelete(false);
-    }
-  }, [model, message]);
+      // Update the message
+      const updatedMessage = { ...message };
+      updatedMessage.body = input;
+      model.updateMessage!(id, updatedMessage);
+      setEdit(false);
+    };
 
-  // Cancel the current edition of the message.
-  const cancelEdition = (): void => {
-    setEdit(false);
-  };
+    // Delete the message.
+    const deleteMessage = (id: string): void => {
+      if (!canDelete) {
+        return;
+      }
+      model.deleteMessage!(id);
+    };
 
-  // Update the content of the message.
-  const updateMessage = (id: string, input: string): void => {
-    if (!canEdit) {
-      return;
-    }
-    // Update the message
-    const updatedMessage = { ...message };
-    updatedMessage.body = input;
-    model.updateMessage!(id, updatedMessage);
-    setEdit(false);
-  };
-
-  // Delete the message.
-  const deleteMessage = (id: string): void => {
-    if (!canDelete) {
-      return;
-    }
-    model.deleteMessage!(id);
-  };
-
-  // Empty if the message has been deleted.
-  return deleted ? (
-    <div ref={elementRef} data-index={props.index}></div>
-  ) : (
-    <div ref={elementRef} data-index={props.index}>
-      {edit && canEdit ? (
-        <ChatInput
-          value={message.body}
-          onSend={(input: string) => updateMessage(message.id, input)}
-          onCancel={() => cancelEdition()}
-          model={model}
-          hideIncludeSelection={true}
-        />
-      ) : (
-        <RendermimeMarkdown
-          rmRegistry={rmRegistry}
-          markdownStr={message.body}
-          model={model}
-          edit={canEdit ? () => setEdit(true) : undefined}
-          delete={canDelete ? () => deleteMessage(message.id) : undefined}
-        />
-      )}
-    </div>
-  );
-}
+    // Empty if the message has been deleted.
+    return deleted ? (
+      <div ref={ref} data-index={props.index}></div>
+    ) : (
+      <div ref={ref} data-index={props.index}>
+        {edit && canEdit ? (
+          <ChatInput
+            value={message.body}
+            onSend={(input: string) => updateMessage(message.id, input)}
+            onCancel={() => cancelEdition()}
+            model={model}
+            hideIncludeSelection={true}
+          />
+        ) : (
+          <RendermimeMarkdown
+            rmRegistry={rmRegistry}
+            markdownStr={message.body}
+            model={model}
+            edit={canEdit ? () => setEdit(true) : undefined}
+            delete={canDelete ? () => deleteMessage(message.id) : undefined}
+            rendered={props.renderedPromise}
+          />
+        )}
+      </div>
+    );
+  }
+);
 
 /**
  * The writers component props.
@@ -437,6 +452,10 @@ type NavigationProps = BaseMessageProps & {
    * The reference to the messages container.
    */
   refMsgBox: React.RefObject<HTMLDivElement>;
+  /**
+   * Whether all the messages has been rendered once on first display.
+   */
+  allRendered: boolean;
 };
 
 /**
@@ -448,13 +467,20 @@ export function Navigation(props: NavigationProps): JSX.Element {
   const [unreadBefore, setUnreadBefore] = useState<number | null>(null);
   const [unreadAfter, setUnreadAfter] = useState<number | null>(null);
 
-  const gotoMessage = (msgIdx: number) => {
-    props.refMsgBox.current?.children.item(msgIdx)?.scrollIntoView();
+  const gotoMessage = (msgIdx: number, alignToTop: boolean = true) => {
+    props.refMsgBox.current?.children.item(msgIdx)?.scrollIntoView(alignToTop);
   };
 
   // Listen for change in unread messages, and find the first unread message before or
   // after the current viewport, to display navigation buttons.
   useEffect(() => {
+    // Do not attempt to display navigation until messages are rendered, it can lead to
+    // wrong assumption, because more messages are in the viewport before they are
+    // rendered.
+    if (!props.allRendered) {
+      return;
+    }
+
     const unreadChanged = (model: IChatModel, unreadIndexes: number[]) => {
       const viewport = model.messagesInViewport;
       if (!viewport) {
@@ -498,17 +524,13 @@ export function Navigation(props: NavigationProps): JSX.Element {
 
     unreadChanged(model, model.unreadMessages);
 
-    // Move to first the unread message or to last message on first rendering.
-    if (model.unreadMessages.length) {
-      gotoMessage(Math.min(...model.unreadMessages));
-    } else {
-      gotoMessage(model.messages.length - 1);
-    }
+    // Move to the last the message after all the messages have been first rendered.
+    gotoMessage(model.messages.length - 1, false);
 
     return () => {
       model.unreadChanged?.disconnect(unreadChanged);
     };
-  }, [model]);
+  }, [model, props.allRendered]);
 
   // Listen for change in the viewport, to add a navigation button if the last is not
   // in viewport.
@@ -544,10 +566,10 @@ export function Navigation(props: NavigationProps): JSX.Element {
       {(unreadAfter !== null || !lastInViewport) && (
         <Button
           className={`${NAVIGATION_BUTTON_CLASS} ${unreadAfter !== null ? NAVIGATION_UNREAD_CLASS : ''} ${NAVIGATION_BOTTOM_CLASS}`}
-          onClick={() =>
-            gotoMessage!(
-              unreadAfter !== null ? unreadAfter : model.messages.length - 1
-            )
+          onClick={
+            unreadAfter === null
+              ? () => gotoMessage(model.messages.length - 1, false)
+              : () => gotoMessage(unreadAfter)
           }
           title={
             unreadAfter !== null
