@@ -232,12 +232,7 @@ ${selection.source}
               ...params.InputProps,
               endAdornment: (
                 <InputAdornment position="end">
-                  {props.onCancel && (
-                    <CancelButton
-                      inputExists={inputExists}
-                      onCancel={onCancel}
-                    />
-                  )}
+                  {props.onCancel && <CancelButton onCancel={onCancel} />}
                   <SendButton
                     model={model}
                     sendWithShiftEnter={sendWithShiftEnter}
