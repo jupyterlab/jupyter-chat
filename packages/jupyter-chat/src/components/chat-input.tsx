@@ -78,6 +78,8 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   // controls whether the slash command autocomplete is open
   const [open, setOpen] = useState<boolean>(false);
 
+  const inputExists = !!input.trim();
+
   /**
    * Effect: fetch the list of available autocomplete commands.
    */
@@ -137,7 +139,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     }
 
     // Do not send empty messages, and avoid adding new line in empty message.
-    if (!input.trim()) {
+    if (!inputExists) {
       event.stopPropagation();
       event.preventDefault();
       return;
@@ -232,14 +234,14 @@ ${selection.source}
                 <InputAdornment position="end">
                   {props.onCancel && (
                     <CancelButton
-                      inputExists={input.length > 0}
+                      inputExists={inputExists}
                       onCancel={onCancel}
                     />
                   )}
                   <SendButton
                     model={model}
                     sendWithShiftEnter={sendWithShiftEnter}
-                    inputExists={input.length > 0}
+                    inputExists={inputExists}
                     onSend={onSend}
                     hideIncludeSelection={hideIncludeSelection}
                     hasButtonOnLeft={!!props.onCancel}
