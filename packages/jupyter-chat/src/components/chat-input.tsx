@@ -78,6 +78,8 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   // controls whether the slash command autocomplete is open
   const [open, setOpen] = useState<boolean>(false);
 
+  const inputExists = !!input.trim();
+
   /**
    * Effect: fetch the list of available autocomplete commands.
    */
@@ -130,16 +132,22 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
       return;
     }
 
-    // do not send the message if the user was selecting a suggested command from the
+    // Do not send the message if the user was selecting a suggested command from the
     // Autocomplete component.
     if (highlighted) {
       return;
     }
 
+    // Do not send empty messages, and avoid adding new line in empty message.
+    if (!inputExists) {
+      event.stopPropagation();
+      event.preventDefault();
+      return;
+    }
+
     if (
-      event.key === 'Enter' &&
-      ((sendWithShiftEnter && event.shiftKey) ||
-        (!sendWithShiftEnter && !event.shiftKey))
+      (sendWithShiftEnter && event.shiftKey) ||
+      (!sendWithShiftEnter && !event.shiftKey)
     ) {
       onSend();
       event.stopPropagation();
@@ -224,16 +232,11 @@ ${selection.source}
               ...params.InputProps,
               endAdornment: (
                 <InputAdornment position="end">
-                  {props.onCancel && (
-                    <CancelButton
-                      inputExists={input.length > 0}
-                      onCancel={onCancel}
-                    />
-                  )}
+                  {props.onCancel && <CancelButton onCancel={onCancel} />}
                   <SendButton
                     model={model}
                     sendWithShiftEnter={sendWithShiftEnter}
-                    inputExists={input.length > 0}
+                    inputExists={inputExists}
                     onSend={onSend}
                     hideIncludeSelection={hideIncludeSelection}
                     hasButtonOnLeft={!!props.onCancel}
