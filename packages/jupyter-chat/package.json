@@ -62,6 +62,7 @@
     "@jupyterlab/rendermime": "^4.2.0",
     "@jupyterlab/ui-components": "^4.2.0",
     "@lumino/commands": "^2.0.0",
+    "@lumino/coreutils": "^2.0.0",
     "@lumino/disposable": "^2.0.0",
     "@lumino/signaling": "^2.0.0",
     "@mui/icons-material": "^5.11.0",
