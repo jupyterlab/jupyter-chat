@@ -51,7 +51,7 @@ test.describe('#messageToolbar', () => {
   test('message should have a toolbar', async ({ page }) => {
     const chatPanel = await openChat(page, FILENAME);
     const message = chatPanel
-      .locator('.jp-chat-messages-container .jp-chat-rendermime-markdown')
+      .locator('.jp-chat-messages-container .jp-chat-rendered-markdown')
       .first();
 
     await expect(message.locator('.jp-chat-toolbar')).not.toBeVisible();
@@ -66,7 +66,7 @@ test.describe('#messageToolbar', () => {
     const message = chatPanel
       .locator('.jp-chat-messages-container .jp-chat-message')
       .first();
-    const messageContent = message.locator('.jp-chat-rendermime-markdown');
+    const messageContent = message.locator('.jp-chat-rendered-markdown');
 
     // Should display the message toolbar
     await messageContent.hover({ position: { x: 5, y: 5 } });
@@ -98,7 +98,7 @@ test.describe('#messageToolbar', () => {
     const message = chatPanel
       .locator('.jp-chat-messages-container .jp-chat-message')
       .first();
-    const messageContent = message.locator('.jp-chat-rendermime-markdown');
+    const messageContent = message.locator('.jp-chat-rendered-markdown');
 
     // Should display the message toolbar
     await messageContent.hover({ position: { x: 5, y: 5 } });
@@ -134,7 +134,7 @@ test.describe('#messageToolbar', () => {
     const message = chatPanel
       .locator('.jp-chat-messages-container .jp-chat-message')
       .first();
-    const messageContent = message.locator('.jp-chat-rendermime-markdown');
+    const messageContent = message.locator('.jp-chat-rendered-markdown');
 
     // Should display the message toolbar
     await messageContent.hover({ position: { x: 5, y: 5 } });

@@ -13,9 +13,9 @@ import { MessageToolbar } from './toolbar';
 import { IChatModel } from '../model';
 
 const MD_MIME_TYPE = 'text/markdown';
-const RENDERMIME_MD_CLASS = 'jp-chat-rendermime-markdown';
+const MD_RENDERED_CLASS = 'jp-chat-rendered-markdown';
 
-type RendermimeMarkdownProps = {
+type MarkdownRendererProps = {
   /**
    * The string to render.
    */
@@ -62,7 +62,7 @@ function escapeLatexDelimiters(text: string) {
     .replace(/\\\]/g, '\\\\]');
 }
 
-function RendermimeMarkdownBase(props: RendermimeMarkdownProps): JSX.Element {
+function MarkdownRendererBase(props: MarkdownRendererProps): JSX.Element {
   const appendContent = props.appendContent || false;
   const [renderedContent, setRenderedContent] = useState<HTMLElement | null>(
     null
@@ -122,7 +122,7 @@ function RendermimeMarkdownBase(props: RendermimeMarkdownProps): JSX.Element {
   }, [props.markdownStr, props.rmRegistry]);
 
   return (
-    <div className={RENDERMIME_MD_CLASS}>
+    <div className={MD_RENDERED_CLASS}>
       {renderedContent &&
         (appendContent ? (
           <div ref={node => node && node.appendChild(renderedContent)} />
@@ -146,4 +146,4 @@ function RendermimeMarkdownBase(props: RendermimeMarkdownProps): JSX.Element {
   );
 }
 
-export const RendermimeMarkdown = React.memo(RendermimeMarkdownBase);
+export const MarkdownRenderer = React.memo(MarkdownRendererBase);
