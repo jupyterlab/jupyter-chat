@@ -77,9 +77,7 @@ test.describe('#messagesNavigation', () => {
     });
   });
 
-  // These tests do not work anymore, since the chat do not scroll to the last message
-  // anymore
-  test.describe.skip('navigation with previous unread message', () => {
+  test.describe('navigation with previous unread message', () => {
     test.beforeEach(async ({ page }) => {
       const newMessagesList = [...messagesList];
       // Add new message to the document.
@@ -400,16 +398,14 @@ test.describe('#markUnread', () => {
     test('should mark as unread in main panel', async ({ page }) => {
       const chatPanel = await openChat(page, FILENAME);
       const button = chatPanel.getByTitle('Mark chat as read');
-      const navigationBottom = chatPanel.locator('.jp-chat-navigation-bottom');
+      const navigationTop = chatPanel.locator('.jp-chat-navigation-top');
 
       await expect(button).toBeAttached();
-      await expect(navigationBottom).toBeAttached();
-      await expect(navigationBottom).toHaveClass(/jp-chat-navigation-unread/);
+      await expect(navigationTop).toBeAttached();
+      await expect(navigationTop).toHaveClass(/jp-chat-navigation-unread/);
 
       await button.click();
-      await expect(navigationBottom).not.toHaveClass(
-        /jp-chat-navigation-unread/
-      );
+      await expect(navigationTop).not.toBeAttached();
     });
 
     test('button should be enabled in side panel', async ({ page }) => {
@@ -422,16 +418,14 @@ test.describe('#markUnread', () => {
     test('should mark as unread in side panel', async ({ page }) => {
       const chatPanel = await openChatToSide(page, FILENAME);
       const button = chatPanel.getByTitle('Mark chat as read');
-      const navigationBottom = chatPanel.locator('.jp-chat-navigation-bottom');
+      const navigationTop = chatPanel.locator('.jp-chat-navigation-top');
 
       await expect(button).toBeAttached();
-      await expect(navigationBottom).toBeAttached();
-      await expect(navigationBottom).toHaveClass(/jp-chat-navigation-unread/);
+      await expect(navigationTop).toBeAttached();
+      await expect(navigationTop).toHaveClass(/jp-chat-navigation-unread/);
 
       await button.click();
-      await expect(navigationBottom).not.toHaveClass(
-        /jp-chat-navigation-unread/
-      );
+      await expect(navigationTop).not.toBeAttached();
     });
   });
 });
