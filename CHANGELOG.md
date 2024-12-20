@@ -2,6 +2,40 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.7.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.6.2...9d524d6b7f23d43ac7c0b21a26d1b94d37e98685))
+
+### Enhancements made
+
+- Remove need for message index in YChat API methods [#125](https://github.com/jupyterlab/jupyter-chat/pull/125) ([@brichet](https://github.com/brichet))
+- Compatibility with notebook [#112](https://github.com/jupyterlab/jupyter-chat/pull/112) ([@brichet](https://github.com/brichet))
+
+### Bugs fixed
+
+- Fix math rendering using Latex delimiters [#129](https://github.com/jupyterlab/jupyter-chat/pull/129) ([@brichet](https://github.com/brichet))
+- Prevent sending empty message [#126](https://github.com/jupyterlab/jupyter-chat/pull/126) ([@brichet](https://github.com/brichet))
+- Improve (and fix) unread messages and navigation [#123](https://github.com/jupyterlab/jupyter-chat/pull/123) ([@brichet](https://github.com/brichet))
+- Fix rendering of code blocks in JupyterLab>= 4.3.0 [#111](https://github.com/jupyterlab/jupyter-chat/pull/111) ([@brichet](https://github.com/brichet))
+
+### Maintenance and upkeep improvements
+
+- Export components from @jupyter/chat [#132](https://github.com/jupyterlab/jupyter-chat/pull/132) ([@brichet](https://github.com/brichet))
+- Add the video of failing tests in playwright report [#127](https://github.com/jupyterlab/jupyter-chat/pull/127) ([@brichet](https://github.com/brichet))
+- Bump nanoid from 3.3.7 to 3.3.8 in /ui-tests in the npm_and_yarn group across 1 directory [#124](https://github.com/jupyterlab/jupyter-chat/pull/124) ([@dependabot](https://github.com/dependabot))
+- Bump nanoid from 3.3.7 to 3.3.8 in the npm_and_yarn group across 1 directory [#122](https://github.com/jupyterlab/jupyter-chat/pull/122) ([@dependabot](https://github.com/dependabot))
+- Use dataclass models in YChat [#119](https://github.com/jupyterlab/jupyter-chat/pull/119) ([@brichet](https://github.com/brichet))
+- Rename server config file after renaming the extension [#108](https://github.com/jupyterlab/jupyter-chat/pull/108) ([@brichet](https://github.com/brichet))
+- Upgrade to Jupyter Collaboration 3 [#94](https://github.com/jupyterlab/jupyter-chat/pull/94) ([@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2024-11-25&to=2024-12-20&type=c))
+
+[@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2024-11-25..2024-12-20&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adependabot+updated%3A2024-11-25..2024-12-20&type=Issues) | [@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2024-11-25..2024-12-20&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2024-11-25..2024-12-20&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.6.2
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.6.1...7248d2d7c4b6eaffeb4033a8776b36ede7ebf23f))
@@ -15,8 +49,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2024-11-25&to=2024-11-25&type=c))
 
 [@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2024-11-25..2024-11-25&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.6.1
 
