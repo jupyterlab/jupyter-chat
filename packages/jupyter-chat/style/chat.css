@@ -14,7 +14,7 @@
   padding: 0 1em;
 }
 
-.jp-chat-rendermime-markdown {
+.jp-chat-rendered-markdown {
   position: relative;
 }
 
@@ -26,11 +26,11 @@
  * See: https://jupyterlab.readthedocs.io/en/latest/extension/extension_migration.html#css-styling
  * See also: https://github.com/jupyterlab/jupyter-ai/issues/1090
  */
-.jp-ThemedContainer .jp-chat-rendermime-markdown .jp-RenderedHTMLCommon {
+.jp-ThemedContainer .jp-chat-rendered-markdown .jp-RenderedHTMLCommon {
   padding-right: 0;
 }
 
-.jp-ThemedContainer .jp-chat-rendermime-markdown pre {
+.jp-ThemedContainer .jp-chat-rendered-markdown pre {
   background-color: var(--jp-cell-editor-background);
   overflow-x: auto;
   white-space: pre;
@@ -39,13 +39,13 @@
   border: var(--jp-border-width) solid var(--jp-cell-editor-border-color);
 }
 
-.jp-ThemedContainer .jp-chat-rendermime-markdown pre > code {
+.jp-ThemedContainer .jp-chat-rendered-markdown pre > code {
   background-color: inherit;
   overflow-x: inherit;
   white-space: inherit;
 }
 
-.jp-ThemedContainer .jp-chat-rendermime-markdown mjx-container {
+.jp-ThemedContainer .jp-chat-rendered-markdown mjx-container {
   font-size: 119%;
 }
 
@@ -58,7 +58,7 @@
   color: var(--jp-ui-font-color3);
 }
 
-.jp-chat-rendermime-markdown:hover .jp-chat-toolbar {
+.jp-chat-rendered-markdown:hover .jp-chat-toolbar {
   display: inherit;
 }
 

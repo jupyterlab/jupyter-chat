@@ -56,8 +56,8 @@ export const openChat = async (
   if (content) {
     await page.waitForCondition(async () => {
       const expectedCount = content.messages.length;
-      const currentCount = await panel?.locator('.jp-chat-rendermime-markdown').count();
-      const currentBodies = await panel?.locator('.jp-chat-rendermime-markdown').allTextContents();
+      const currentCount = await panel?.locator('.jp-chat-rendered-markdown').count();
+      const currentBodies = await panel?.locator('.jp-chat-rendered-markdown').allTextContents();
       return expectedCount === currentCount && currentBodies!.every(value => value !== '');
     });
   }
@@ -83,8 +83,8 @@ export const openChatToSide = async (
   if (content) {
     await page.waitForCondition(async () => {
       const expectedCount = content.messages.length;
-      const currentCount = await panel?.locator('.jp-chat-rendermime-markdown').count();
-      const currentBodies = await panel?.locator('.jp-chat-rendermime-markdown').allTextContents();
+      const currentCount = await panel?.locator('.jp-chat-rendered-markdown').count();
+      const currentBodies = await panel?.locator('.jp-chat-rendered-markdown').allTextContents();
       return expectedCount === currentCount && currentBodies!.every(value => value !== '');
     });
   }

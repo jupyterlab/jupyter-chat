@@ -17,7 +17,7 @@ import clsx from 'clsx';
 import React, { useEffect, useState, useRef, forwardRef } from 'react';
 
 import { ChatInput } from './chat-input';
-import { RendermimeMarkdown } from './rendermime-markdown';
+import { MarkdownRenderer } from './markdown-renderer';
 import { ScrollContainer } from './scroll-container';
 import { IChatModel } from '../model';
 import { IChatMessage, IUser } from '../types';
@@ -391,7 +391,7 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
             hideIncludeSelection={true}
           />
         ) : (
-          <RendermimeMarkdown
+          <MarkdownRenderer
             rmRegistry={rmRegistry}
             markdownStr={message.body}
             model={model}
