@@ -4,6 +4,7 @@
  */
 
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
+import { PromiseDelegate } from '@lumino/coreutils';
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -15,11 +16,33 @@ const MD_MIME_TYPE = 'text/markdown';
 const RENDERMIME_MD_CLASS = 'jp-chat-rendermime-markdown';
 
 type RendermimeMarkdownProps = {
+  /**
+   * The string to render.
+   */
   markdownStr: string;
+  /**
+   * The rendermime registry.
+   */
   rmRegistry: IRenderMimeRegistry;
-  appendContent?: boolean;
+  /**
+   * The model of the chat.
+   */
   model: IChatModel;
+  /**
+   * The promise to resolve when the message is rendered.
+   */
+  rendered: PromiseDelegate<void>;
+  /**
+   * Whether to append the content to the existing content or not.
+   */
+  appendContent?: boolean;
+  /**
+   * The function to call to edit a message.
+   */
   edit?: () => void;
+  /**
+   * the function to call to delete a message.
+   */
   delete?: () => void;
 };
 
@@ -90,6 +113,9 @@ function RendermimeMarkdownBase(props: RendermimeMarkdownProps): JSX.Element {
 
       setCodeToolbarDefns(newCodeToolbarDefns);
       setRenderedContent(renderer.node);
+
+      // Resolve the rendered promise.
+      props.rendered.resolve();
     };
 
     renderContent();

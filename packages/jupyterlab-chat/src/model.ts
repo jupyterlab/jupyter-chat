@@ -7,7 +7,7 @@ import { ChatModel, IChatMessage, INewMessage, IUser } from '@jupyter/chat';
 import { IChangedArgs } from '@jupyterlab/coreutils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { User } from '@jupyterlab/services';
-import { PartialJSONObject, UUID } from '@lumino/coreutils';
+import { PartialJSONObject, PromiseDelegate, UUID } from '@lumino/coreutils';
 import { ISignal, Signal } from '@lumino/signaling';
 
 import { IWidgetConfig } from './token';
@@ -43,8 +43,6 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
     } else {
       this._sharedModel = YChat.create();
     }
-
-    this.id = this._sharedModel.id;
 
     this.sharedModel.changed.connect(this._onchange, this);
 
@@ -93,6 +91,13 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
     return this._disposed;
   }
 
+  set id(value: string | undefined) {
+    super.id = value;
+    if (value) {
+      this._ready.resolve();
+    }
+  }
+
   dispose(): void {
     if (this.isDisposed) {
       return;
@@ -117,6 +122,14 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
 
   fromJSON(data: PartialJSONObject): void {
     // nothing to do
+  }
+
+  messagesInserted(index: number, messages: IChatMessage[]): void {
+    // Ensure the chat has an ID before inserting the messages, to properly catch the
+    // unread messages (the last read message is saved using the chat ID).
+    this._ready.promise.then(() => {
+      super.messagesInserted(index, messages);
+    });
   }
 
   sendMessage(message: INewMessage): Promise<boolean | void> | boolean | void {
@@ -260,6 +273,7 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
   readonly defaultKernelName: string = '';
   readonly defaultKernelLanguage: string = '';
 
+  private _ready = new PromiseDelegate<void>();
   private _sharedModel: YChat;
 
   private _dirty = false;

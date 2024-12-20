@@ -54,7 +54,7 @@ test.describe('#messagesNavigation', () => {
 
   test.describe('navigation without unread message', () => {
     test('should navigate to last message', async ({ page }) => {
-      const chatPanel = await openChat(page, FILENAME);
+      const chatPanel = await openChat(page, FILENAME, chatContent);
       const messages = chatPanel.locator('.jp-chat-message');
       const navigationBottom = chatPanel.locator('.jp-chat-navigation-bottom');
 
@@ -63,11 +63,6 @@ test.describe('#messagesNavigation', () => {
 
       await expect(navigationBottom).toBeAttached();
 
-      // FIXME: This test uses the fact that some messages are marked as read even if
-      // they are not displayed, because the unread state is computed before the full
-      // rendering of all messages.
-      // If the unread state wait for the rendermimeMarkdown, this test should fail
-      // because the last messages will be marked as unread.
       expect(navigationBottom).not.toHaveClass(/jp-chat-navigation-unread/);
       expect(await navigationBottom.screenshot()).toMatchSnapshot(
         'navigation-bottom.png'
@@ -79,12 +74,11 @@ test.describe('#messagesNavigation', () => {
     });
   });
 
-  // These tests do not work anymore, since the chat do not scroll to the last message
-  // anymore
-  test.describe.skip('navigation with previous unread message', () => {
+  test.describe('navigation with previous unread message', () => {
+    let newChatContent = {};
     test.beforeEach(async ({ page }) => {
       const newMessagesList = [...messagesList];
-      // Add new message to the document.
+      // Add new messages to the document.
       for (let i = 20; i < 50; i++) {
         newMessagesList.push({
           type: 'msg',
@@ -94,7 +88,7 @@ test.describe('#messagesNavigation', () => {
           time: baseTime + i * 60
         });
       }
-      const newChatContent = {
+      newChatContent = {
         messages: newMessagesList,
         users: {}
       };
@@ -111,7 +105,7 @@ test.describe('#messagesNavigation', () => {
     test('should have unread icon for previous unread messages', async ({
       page
     }) => {
-      const chatPanel = await openChat(page, FILENAME);
+      const chatPanel = await openChat(page, FILENAME, newChatContent);
       const navigationTop = chatPanel.locator('.jp-chat-navigation-top');
 
       await expect(navigationTop).toBeAttached();
@@ -122,7 +116,7 @@ test.describe('#messagesNavigation', () => {
     });
 
     test('should navigate to previous unread messages', async ({ page }) => {
-      const chatPanel = await openChat(page, FILENAME);
+      const chatPanel = await openChat(page, FILENAME, newChatContent);
       const messages = chatPanel.locator('.jp-chat-message');
       const navigationTop = chatPanel.locator('.jp-chat-navigation-top');
       const navigationBottom = chatPanel.locator('.jp-chat-navigation-bottom');
@@ -178,10 +172,11 @@ test.describe('#messagesNavigation', () => {
     });
 
     test('should have unread icon for new messages', async ({ page }) => {
-      const chatPanel = await openChat(page, FILENAME);
-      const message = chatPanel.locator('.jp-chat-message').first();
+      const chatPanel = await openChat(page, FILENAME, chatContent);
+      const messages = chatPanel.locator('.jp-chat-message');
+
       const navigationBottom = chatPanel.locator('.jp-chat-navigation-bottom');
-      await message.scrollIntoViewIfNeeded();
+      await messages.first().scrollIntoViewIfNeeded();
 
       await expect(navigationBottom).toBeAttached();
       expect(navigationBottom).not.toHaveClass(/jp-chat-navigation-unread/);
@@ -195,7 +190,7 @@ test.describe('#messagesNavigation', () => {
     });
 
     test('should navigate to new unread message', async ({ page }) => {
-      const chatPanel = await openChat(page, FILENAME);
+      const chatPanel = await openChat(page, FILENAME, chatContent);
       const messages = chatPanel.locator('.jp-chat-message');
       const navigationBottom = chatPanel.locator('.jp-chat-navigation-bottom');
       await messages.first().scrollIntoViewIfNeeded();
@@ -278,7 +273,7 @@ test.describe('#localStorage', () => {
   });
 
   test('should save last read message in localStorage', async ({ page }) => {
-    await openChat(page, FILENAME);
+    await openChat(page, FILENAME, chatContent);
 
     const hasLocalStorage = async () => {
       const storage = await page.evaluate(() => window.localStorage);
@@ -337,7 +332,7 @@ test.describe('#markUnread', () => {
   });
   test.describe('without previous unread message', () => {
     test('button should be disabled in main panel', async ({ page }) => {
-      const chatPanel = await openChat(page, FILENAME);
+      const chatPanel = await openChat(page, FILENAME, chatContent);
       const button = chatPanel.getByTitle('Mark chat as read');
       await expect(button).toBeAttached();
 
@@ -346,7 +341,7 @@ test.describe('#markUnread', () => {
     });
 
     test('button should be disabled in side panel', async ({ page }) => {
-      const sidePanel = await openChatToSide(page, FILENAME);
+      const sidePanel = await openChatToSide(page, FILENAME, chatContent);
       const chatTitle = sidePanel
         .locator('.jp-SidePanel-content .jp-AccordionPanel-title')
         .first();
@@ -359,13 +354,11 @@ test.describe('#markUnread', () => {
   });
 
   test.describe('with previous unread message', () => {
+    let newChatContent = {};
     test.beforeEach(async ({ page }) => {
       const newMessagesList = [message];
       // Add new messages to the document.
-      // We need to add many messages because they are currently marked unread
-      // before being fully rendered by the markdownRenderer. Many messages are marked
-      // unread even if they are not in the viewport after render.
-      for (let i = 1; i < 50; i++) {
+      for (let i = 1; i < 20; i++) {
         newMessagesList.push({
           type: 'msg',
           id: UUID.uuid4(),
@@ -374,7 +367,7 @@ test.describe('#markUnread', () => {
           time: baseTime + i * 60
         });
       }
-      const newChatContent = {
+      newChatContent = {
         messages: newMessagesList,
         users: {}
       };
@@ -389,47 +382,43 @@ test.describe('#markUnread', () => {
     });
 
     test('button should be enabled in main panel', async ({ page }) => {
-      const chatPanel = await openChat(page, FILENAME);
+      const chatPanel = await openChat(page, FILENAME, newChatContent);
       const button = chatPanel.getByTitle('Mark chat as read');
       await expect(button).toBeAttached();
       await expect(button).not.toHaveAttribute('disabled');
     });
 
     test('should mark as unread in main panel', async ({ page }) => {
-      const chatPanel = await openChat(page, FILENAME);
+      const chatPanel = await openChat(page, FILENAME, newChatContent);
       const button = chatPanel.getByTitle('Mark chat as read');
-      const navigationBottom = chatPanel.locator('.jp-chat-navigation-bottom');
+      const navigationTop = chatPanel.locator('.jp-chat-navigation-top');
 
       await expect(button).toBeAttached();
-      await expect(navigationBottom).toBeAttached();
-      await expect(navigationBottom).toHaveClass(/jp-chat-navigation-unread/);
+      await expect(navigationTop).toBeAttached();
+      await expect(navigationTop).toHaveClass(/jp-chat-navigation-unread/);
 
       await button.click();
-      await expect(navigationBottom).not.toHaveClass(
-        /jp-chat-navigation-unread/
-      );
+      await expect(navigationTop).not.toBeAttached();
     });
 
     test('button should be enabled in side panel', async ({ page }) => {
-      const chatPanel = await openChatToSide(page, FILENAME);
+      const chatPanel = await openChatToSide(page, FILENAME, newChatContent);
       const button = chatPanel.getByTitle('Mark chat as read');
       await expect(button).toBeAttached();
       await expect(button).not.toHaveAttribute('disabled');
     });
 
     test('should mark as unread in side panel', async ({ page }) => {
-      const chatPanel = await openChatToSide(page, FILENAME);
+      const chatPanel = await openChatToSide(page, FILENAME, newChatContent);
       const button = chatPanel.getByTitle('Mark chat as read');
-      const navigationBottom = chatPanel.locator('.jp-chat-navigation-bottom');
+      const navigationTop = chatPanel.locator('.jp-chat-navigation-top');
 
       await expect(button).toBeAttached();
-      await expect(navigationBottom).toBeAttached();
-      await expect(navigationBottom).toHaveClass(/jp-chat-navigation-unread/);
+      await expect(navigationTop).toBeAttached();
+      await expect(navigationTop).toHaveClass(/jp-chat-navigation-unread/);
 
       await button.click();
-      await expect(navigationBottom).not.toHaveClass(
-        /jp-chat-navigation-unread/
-      );
+      await expect(navigationTop).not.toBeAttached();
     });
   });
 });

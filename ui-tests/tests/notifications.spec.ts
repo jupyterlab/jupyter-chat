@@ -87,10 +87,10 @@ test.describe('#notifications', () => {
   });
 
   test('should receive notification on unread message', async ({ page }) => {
-    const chatPanel = await openChat(page, FILENAME);
+    const chatPanel = await openChat(page, FILENAME, chatContent);
     const messages = chatPanel.locator('.jp-chat-message');
-    await messages.first().scrollIntoViewIfNeeded();
 
+    await messages.first().scrollIntoViewIfNeeded();
     await sendMessage(guestPage, FILENAME, MSG_CONTENT);
     await page.waitForCondition(
       async () => (await page.notifications).length > 0
@@ -108,8 +108,9 @@ test.describe('#notifications', () => {
   test('should remove notification when the message is read', async ({
     page
   }) => {
-    const chatPanel = await openChat(page, FILENAME);
+    const chatPanel = await openChat(page, FILENAME, chatContent);
     const messages = chatPanel.locator('.jp-chat-message');
+
     await messages.first().scrollIntoViewIfNeeded();
 
     await sendMessage(guestPage, FILENAME, MSG_CONTENT);
@@ -128,8 +129,9 @@ test.describe('#notifications', () => {
   test('should update existing notification on new message', async ({
     page
   }) => {
-    const chatPanel = await openChat(page, FILENAME);
+    const chatPanel = await openChat(page, FILENAME, chatContent);
     const messages = chatPanel.locator('.jp-chat-message');
+
     await messages.first().scrollIntoViewIfNeeded();
 
     await sendMessage(guestPage, FILENAME, MSG_CONTENT);
@@ -151,7 +153,7 @@ test.describe('#notifications', () => {
   });
 
   test('should remove notifications from settings', async ({ page }) => {
-    const chatPanel = await openChat(page, FILENAME);
+    const chatPanel = await openChat(page, FILENAME, chatContent);
     const messages = chatPanel.locator('.jp-chat-message');
     await messages.first().scrollIntoViewIfNeeded();
 
@@ -193,7 +195,7 @@ test.describe('#notifications', () => {
   });
 
   test('should add unread symbol in tab label', async ({ page }) => {
-    const chatPanel = await openChat(page, FILENAME);
+    const chatPanel = await openChat(page, FILENAME, chatContent);
     const messages = chatPanel.locator('.jp-chat-message');
     await messages.first().scrollIntoViewIfNeeded();
 

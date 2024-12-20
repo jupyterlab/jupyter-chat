@@ -24,10 +24,6 @@ export interface IConfig {
    */
   sendWithShiftEnter?: boolean;
   /**
-   * Last read message (no use yet).
-   */
-  lastRead?: number;
-  /**
    * Whether to stack consecutive messages from same user.
    */
   stackMessages?: boolean;
