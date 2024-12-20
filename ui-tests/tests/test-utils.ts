@@ -32,9 +32,10 @@ export const createChat = async (
 
 export const openChat = async (
   page: IJupyterLabPageFixture,
-  filename: string
+  filename: string,
+  content?: any
 ): Promise<Locator> => {
-  const panel = await page.activity.getPanelLocator(filename);
+  let panel = await page.activity.getPanelLocator(filename);
   if (panel !== null && (await panel.count())) {
     return panel;
   }
@@ -49,12 +50,24 @@ export const openChat = async (
   await page.waitForCondition(
     async () => await page.activity.isTabActive(tabName)
   );
-  return (await page.activity.getPanelLocator(tabName)) as Locator;
+  panel = await page.activity.getPanelLocator(tabName);
+
+  // If a content is provided, wait for all the messages to be rendered
+  if (content) {
+    await page.waitForCondition(async () => {
+      const expectedCount = content.messages.length;
+      const currentCount = await panel?.locator('.jp-chat-rendermime-markdown').count();
+      const currentBodies = await panel?.locator('.jp-chat-rendermime-markdown').allTextContents();
+      return expectedCount === currentCount && currentBodies!.every(value => value !== '');
+    });
+  }
+  return panel as Locator;
 };
 
 export const openChatToSide = async (
   page: IJupyterLabPageFixture,
-  filename: string
+  filename: string,
+  content?: any
 ): Promise<Locator> => {
   const panel = page.locator('.jp-SidePanel.jp-lab-chat-sidepanel');
   await page.evaluate(async filepath => {
@@ -65,6 +78,16 @@ export const openChatToSide = async (
     });
   }, filename);
   await page.waitForCondition(() => panel.isVisible());
+
+  // If a content is provided, wait for all the messages to be rendered
+  if (content) {
+    await page.waitForCondition(async () => {
+      const expectedCount = content.messages.length;
+      const currentCount = await panel?.locator('.jp-chat-rendermime-markdown').count();
+      const currentBodies = await panel?.locator('.jp-chat-rendermime-markdown').allTextContents();
+      return expectedCount === currentCount && currentBodies!.every(value => value !== '');
+    });
+  }
   return panel;
 };
 
