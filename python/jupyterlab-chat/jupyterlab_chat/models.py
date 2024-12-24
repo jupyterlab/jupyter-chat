@@ -11,7 +11,7 @@ def message_asdict_factory(data):
     return dict(x for x in data if x[1] is not None)
 
 
-@dataclass(kw_only=True)
+@dataclass
 class Message:
     """ Object representing a message """
 
@@ -47,7 +47,7 @@ class Message:
     """
 
 
-@dataclass(kw_only=True)
+@dataclass
 class NewMessage:
     """ Object representing a new message """
 
@@ -58,6 +58,6 @@ class NewMessage:
     """ The message sender unique id """
 
 
-@dataclass(kw_only=True)
+@dataclass
 class User(JupyterUser):
     """ Object representing a user (same as Jupyter User ) """
