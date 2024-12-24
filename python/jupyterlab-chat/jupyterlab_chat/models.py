@@ -15,7 +15,7 @@ def message_asdict_factory(data):
 class Message:
     """ Object representing a message """
 
-    type: Literal["msg"] = "msg"
+    # required arguments
     body: str
     """ The content of the message """
 
@@ -27,6 +27,13 @@ class Message:
 
     sender: str
     """ The message sender unique id """
+
+    # optional arguments, with defaults.
+    #
+    # These must be listed after all required arguments, unless `kw_only` is
+    # specified in the `@dataclass` decorator. This can only be done once Python
+    # 3.9 reaches EOL.
+    type: Literal["msg"] = "msg"
 
     raw_time: Optional[bool] = None
     """
