@@ -11,11 +11,11 @@ def message_asdict_factory(data):
     return dict(x for x in data if x[1] is not None)
 
 
-@dataclass(kw_only=True)
+@dataclass
 class Message:
     """ Object representing a message """
 
-    type: Literal["msg"] = "msg"
+    # required arguments
     body: str
     """ The content of the message """
 
@@ -27,6 +27,13 @@ class Message:
 
     sender: str
     """ The message sender unique id """
+
+    # optional arguments, with defaults.
+    #
+    # These must be listed after all required arguments, unless `kw_only` is
+    # specified in the `@dataclass` decorator. This can only be done once Python
+    # 3.9 reaches EOL.
+    type: Literal["msg"] = "msg"
 
     raw_time: Optional[bool] = None
     """
@@ -47,7 +54,7 @@ class Message:
     """
 
 
-@dataclass(kw_only=True)
+@dataclass
 class NewMessage:
     """ Object representing a new message """
 
@@ -58,6 +65,6 @@ class NewMessage:
     """ The message sender unique id """
 
 
-@dataclass(kw_only=True)
+@dataclass
 class User(JupyterUser):
     """ Object representing a user (same as Jupyter User ) """
