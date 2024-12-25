@@ -1,6 +1,6 @@
 {
   "name": "jupyterlab-chat",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "The library to build a chat based on shared document",
   "keywords": [
     "jupyter",
@@ -51,7 +51,7 @@
     "watch:src": "tsc -w --sourceMap"
   },
   "dependencies": {
-    "@jupyter/chat": "^0.7.0",
+    "@jupyter/chat": "^0.7.1",
     "@jupyter/collaborative-drive": "^3.0.0",
     "@jupyter/ydoc": "^2.0.0 || ^3.0.0",
     "@jupyterlab/application": "^4.2.0",
