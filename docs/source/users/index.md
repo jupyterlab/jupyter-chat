@@ -27,10 +27,10 @@ pip uninstall jupyterlab-chat
 
 There are several ways to create a chat:
 
-- using the menu : *file -> new -> chat*
-- using the commands palette (`Ctrl+Shift+C`) -> *Create a new chat*
+- using the menu : _file -> new -> chat_
+- using the commands palette (`Ctrl+Shift+C`) -> _Create a new chat_
 - from the left panel ![chat icon](../../../packages/jupyter-chat/style/icons/chat.svg){w=24px},
-click on the button ![left panel new chat](../_static/images/left-panel-new-chat.png){h=24px}
+  click on the button ![left panel new chat](../_static/images/left-panel-new-chat.png){h=24px}
 
 Validating the dialog will create the new chat.
 
@@ -50,10 +50,10 @@ the file in the current directory of the file browser.
 There are also several ways to open a chat:
 
 - opening the file from the file browser (double click on it)
-- using the commands palette (`Ctrl+Shift+C`) -> *Open a chat*. It opens a dialog to
-type the file path
+- using the commands palette (`Ctrl+Shift+C`) -> _Open a chat_. It opens a dialog to
+  type the file path
 - from the left panel ![chat icon](../../../packages/jupyter-chat/style/icons/chat.svg){w=24px},
-there is a dropdown listing the chat files, in the root directory only.
+  there is a dropdown listing the chat files, in the root directory only.
 
 ```{note}
 Opening the chat from the file browser or the command palette will open it in the main
@@ -90,18 +90,18 @@ If a notebook is opened and visible (and has an active cell), other actions are
 available:
 
 - copy the code to a new cell above the active one:
-![code toolbar cell above](../_static/images/code-toolbar-above.png){w=24px}
+  ![code toolbar cell above](../_static/images/code-toolbar-above.png){w=24px}
 - copy the the code to a new cell below the active one:
-![code toolbar cell below](../_static/images/code-toolbar-below.png){w=24px}
+  ![code toolbar cell below](../_static/images/code-toolbar-below.png){w=24px}
 - replace the content of the active cell with the code:
-![code toolbar cell replace](../_static/images/code-toolbar-replace.png){w=24px}
+  ![code toolbar cell replace](../_static/images/code-toolbar-replace.png){w=24px}
 
 (chat-settings)=
 
 ## Chat settings
 
 Some jupyterlab settings are available for the chats in the setting panel
-(menu `Settings->Settings Editor`), with the entry *Chat*.
+(menu `Settings->Settings Editor`), with the entry _Chat_.
 
 These settings includes:
 

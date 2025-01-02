@@ -21,9 +21,9 @@ interact with.
 This token is composed of:
 
 - `widgetConfig` object, to retrieve and change the current [settings](#chat-settings)
-of all the chats
+  of all the chats
 - `tracker`, a widget tracker that allows to track all the opened chats, and to
-retrieve the current one.
+  retrieve the current one.
 
 ```{caution}
 Currently the widget tracker only tracks the main area widgets, not the ones opened in

@@ -2,7 +2,7 @@
 
 We would be glad to review all incoming contributions.
 
-This project is included in *jupyterlab* organization, please read the
+This project is included in _jupyterlab_ organization, please read the
 [jupyter contributing guide](https://docs.jupyter.org/en/latest/contributing/content-contributor.html).
 
 ```{toctree}

@@ -16,4 +16,3 @@ python_name: jupyterlab_chat
 repository: https://github.com/jupyterlab/jupyter-chat
 test: true
 viewer_name: ''
-
