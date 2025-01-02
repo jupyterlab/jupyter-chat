@@ -38,7 +38,7 @@
     "prettier": "prettier --write \"**/*{.ts,.tsx,.js,.jsx,.css,.json,.md,.yml}\"",
     "prettier:check": "prettier --list-different \"**/*{.ts,.tsx,.js,.jsx,.css,.json,.md,.yml}\"",
     "lint:check": "jlpm run prettier:check && jlpm run eslint:check",
-    "lint": "jlpm run prettier && jlpm run eslint",
+    "lint": "jlpm run prettier && jlpm run eslint && jlpm stylelint",
     "stylelint": "jlpm stylelint:check --fix",
     "stylelint:check": "stylelint --cache \"**/style/**/*.css\"",
     "watch": "lerna run watch --parallel --stream",
