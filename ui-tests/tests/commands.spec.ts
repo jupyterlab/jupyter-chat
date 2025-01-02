@@ -111,14 +111,13 @@ test.describe('#menuNew', () => {
 });
 
 test.describe('#launcher', () => {
-  test('should have a launcher item in section', async ({ page }) => {
-    // Chat section
-    await expect(
-      page.locator('.jp-Launcher-sectionTitle:text("Chat")')
-    ).toHaveCount(1);
-
-    // Chat tile
-    const tile = page.locator('.jp-LauncherCard[data-category="Chat"]');
+  test('should have a launcher chat tile in other section', async ({
+    page
+  }) => {
+    const tile = page
+      .locator('.jp-LauncherCard[data-category="Other"]')
+      .filter({ hasText: 'Chat' });
+    await expect(tile).toHaveCount(1);
     expect(await tile.screenshot()).toMatchSnapshot('launcher-tile.png');
   });
 

@@ -441,8 +441,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     if (launcher) {
       launcher.add({
         command: CommandIDs.createChat,
-        category: 'Chat',
-        rank: 1
+        category: 'Other'
       });
     }
 
