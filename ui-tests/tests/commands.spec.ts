@@ -117,7 +117,6 @@ test.describe('#launcher', () => {
     const tile = page
       .locator('.jp-LauncherCard[data-category="Other"]')
       .filter({ hasText: 'Chat' });
-    await tile.scrollIntoViewIfNeeded();
     await expect(tile).toHaveCount(1);
     expect(await tile.screenshot()).toMatchSnapshot('launcher-tile.png');
   });
