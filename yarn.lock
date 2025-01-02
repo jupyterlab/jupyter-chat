@@ -9978,7 +9978,19 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "jupyter-chat-root@workspace:."
   dependencies:
+    "@typescript-eslint/eslint-plugin": ^6.1.0
+    "@typescript-eslint/parser": ^6.1.0
+    eslint: ^8.36.0
+    eslint-config-prettier: ^8.8.0
+    eslint-plugin-prettier: ^5.0.0
     lerna: ^6.4.1
+    prettier: ^3.0.0
+    style-loader: ^3.3.1
+    stylelint: ^15.10.1
+    stylelint-config-recommended: ^13.0.0
+    stylelint-config-standard: ^34.0.0
+    stylelint-csstree-validator: ^3.0.0
+    stylelint-prettier: ^4.0.0
   languageName: unknown
   linkType: soft
 
