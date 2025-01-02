@@ -56,9 +56,16 @@ export const openChat = async (
   if (content) {
     await page.waitForCondition(async () => {
       const expectedCount = content.messages.length;
-      const currentCount = await panel?.locator('.jp-chat-rendered-markdown').count();
-      const currentBodies = await panel?.locator('.jp-chat-rendered-markdown').allTextContents();
-      return expectedCount === currentCount && currentBodies!.every(value => value !== '');
+      const currentCount = await panel
+        ?.locator('.jp-chat-rendered-markdown')
+        .count();
+      const currentBodies = await panel
+        ?.locator('.jp-chat-rendered-markdown')
+        .allTextContents();
+      return (
+        expectedCount === currentCount &&
+        currentBodies!.every(value => value !== '')
+      );
     });
   }
   return panel as Locator;
@@ -83,9 +90,16 @@ export const openChatToSide = async (
   if (content) {
     await page.waitForCondition(async () => {
       const expectedCount = content.messages.length;
-      const currentCount = await panel?.locator('.jp-chat-rendered-markdown').count();
-      const currentBodies = await panel?.locator('.jp-chat-rendered-markdown').allTextContents();
-      return expectedCount === currentCount && currentBodies!.every(value => value !== '');
+      const currentCount = await panel
+        ?.locator('.jp-chat-rendered-markdown')
+        .count();
+      const currentBodies = await panel
+        ?.locator('.jp-chat-rendered-markdown')
+        .allTextContents();
+      return (
+        expectedCount === currentCount &&
+        currentBodies!.every(value => value !== '')
+      );
     });
   }
   return panel;

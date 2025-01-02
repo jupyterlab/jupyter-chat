@@ -11,13 +11,13 @@ export const test = base.extend({
       await page.waitForSelector('#main-panel');
     };
     await use(waitIsReady);
-  },
+  }
 });
 
 test.use({
   autoGoto: false,
   appPath: '',
-  viewport: { width: 1024, height: 900 },
+  viewport: { width: 1024, height: 900 }
 });
 
 const NAME = 'my_chat';
@@ -50,7 +50,10 @@ test.describe('#NotebookApp', () => {
     await expect(select.locator('option').last()).toHaveText(NAME);
   });
 
-  test('Should open main panel in a separate tab', async ({ page, context }) => {
+  test('Should open main panel in a separate tab', async ({
+    page,
+    context
+  }) => {
     await page.goto('tree');
 
     const pagePromise = context.waitForEvent('page');
@@ -60,6 +63,8 @@ test.describe('#NotebookApp', () => {
     //wait for Load
     // await newPage.waitForLoadState();
 
-    await expect(newPage.locator('.jp-MainAreaWidget')).toHaveClass(/jp-lab-chat-main-panel/);
+    await expect(newPage.locator('.jp-MainAreaWidget')).toHaveClass(
+      /jp-lab-chat-main-panel/
+    );
   });
 });

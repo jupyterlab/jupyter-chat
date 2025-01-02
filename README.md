@@ -14,7 +14,7 @@ Many components of this chat project come from [jupyter-ai](https://github.com/j
 
 > [!WARNING]
 > This project is still in early development stage and its API may change often before
-a stable release.
+> a stable release.
 
 ## Install chat extension
 
@@ -39,7 +39,7 @@ pip uninstall jupyterlab-chat
 
 #### @jupyter/chat
 
-The typescript package is located in *packages/jupyter-chat* and builds an NPM
+The typescript package is located in _packages/jupyter-chat_ and builds an NPM
 package named `@jupyter/chat`.
 
 This package provides a frontend library (using react), and is intended to be
@@ -47,7 +47,7 @@ used by a jupyterlab extension to create a chat.
 
 #### jupyterlab-chat
 
-The typescript package is located in *packages/jupyterlab-chat* and
+The typescript package is located in _packages/jupyterlab-chat_ and
 builds an NPM package named `jupyterlab-chat`.
 
 This package relies on `@jupyter/chat` and provides a typescript library.
@@ -55,7 +55,7 @@ It is intended to be used by a jupyterlab extension to create a chat.
 
 ### Jupyterlab extensions
 
-#### Chat extension based on shared document: *python/jupyterlab-chat*
+#### Chat extension based on shared document: _python/jupyterlab-chat_
 
 This extension is an implementation of the `jupyter-chat` package, relying
 on shared document (see [jupyter_ydoc](https://github.com/jupyter-server/jupyter_ydoc)).
