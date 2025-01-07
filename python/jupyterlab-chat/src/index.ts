@@ -7,6 +7,7 @@ import { NotebookShell } from '@jupyter-notebook/application';
 import {
   ActiveCellManager,
   AutocompletionRegistry,
+  ChatWidget,
   IActiveCellManager,
   IAutocompletionRegistry,
   ISelectionWatcher,
@@ -42,6 +43,7 @@ import { Contents } from '@jupyterlab/services';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { ITranslator, nullTranslator } from '@jupyterlab/translation';
 import { launchIcon } from '@jupyterlab/ui-components';
+import { PromiseDelegate } from '@lumino/coreutils';
 import {
   IActiveCellManagerToken,
   chatFileType,
@@ -236,8 +238,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     const namespace = 'chat';
 
     // Creating the tracker for the document
-    const tracker = new WidgetTracker<LabChatPanel>({ namespace });
-
+    const tracker = new WidgetTracker<LabChatPanel | ChatWidget>({ namespace });
     app.docRegistry.addFileType(chatFileType);
 
     if (drive) {
@@ -298,11 +299,24 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
 
     // Handle state restoration.
     if (restorer) {
+      // Promise that resolve when the openChat command is ready.
+      const openCommandReady = new PromiseDelegate<void>();
+      const commandChanged = () => {
+        if (app.commands.hasCommand(CommandIDs.openChat)) {
+          openCommandReady.resolve();
+          app.commands.commandChanged.disconnect(commandChanged);
+        }
+      };
+      app.commands.commandChanged.connect(commandChanged);
+
       void restorer.restore(tracker, {
-        command: 'docmanager:open',
-        args: panel => ({ path: panel.context.path, factory: FACTORY }),
-        name: panel => panel.context.path,
-        when: app.serviceManager.ready
+        command: CommandIDs.openChat,
+        args: widget => ({
+          filepath: widget.model.name ?? '',
+          inSidePanel: widget instanceof ChatWidget
+        }),
+        name: widget => widget.model.name,
+        when: openCommandReady.promise
       });
     }
 
@@ -551,7 +565,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
               }) as YChat;
 
               // Initialize the chat model with the share model
-              const chat = new LabChatModel({
+              const chatModel = new LabChatModel({
                 user,
                 sharedModel,
                 widgetConfig,
@@ -560,8 +574,12 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
                 selectionWatcher
               });
 
-              // Add a chat widget to the side panel.
-              chatPanel.addChat(chat, model.path);
+              // Set the name of the model.
+              chatModel.name = model.path;
+
+              // Add a chat widget to the side panel and to the tracker.
+              const widget = chatPanel.addChat(chatModel);
+              factory.tracker.add(widget);
             } else {
               // The chat is opened in the main area
               commands.execute('docmanager:open', {
@@ -590,16 +608,10 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
       isEnabled: () => tracker.currentWidget !== null,
       execute: async () => {
         const widget = tracker.currentWidget;
-        // Ensure widget is a LabChatPanel and is in main area
-        if (
-          !widget ||
-          !(widget instanceof LabChatPanel) ||
-          !Array.from(app.shell.widgets('main')).includes(widget)
-        ) {
-          return;
+        if (widget) {
+          app.shell.activateById(widget.id);
+          widget.model.focusInput();
         }
-        app.shell.activateById(widget.id);
-        widget.model.focusInput();
       }
     });
   }
