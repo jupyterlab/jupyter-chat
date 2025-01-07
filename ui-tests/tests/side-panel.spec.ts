@@ -4,29 +4,15 @@
  */
 
 import {
-  IJupyterLabPageFixture,
   expect,
   galata,
   test
 } from '@jupyterlab/galata';
 import { Locator } from '@playwright/test';
 
-import { openChat, openChatToSide, openSettings } from './test-utils';
+import { openChat, openChatToSide, openSettings, openSidePanel } from './test-utils';
 
 const FILENAME = 'my-chat.chat';
-
-const openSidePanel = async (
-  page: IJupyterLabPageFixture
-): Promise<Locator> => {
-  const panel = page.locator('.jp-SidePanel.jp-lab-chat-sidepanel');
-
-  if (!(await panel?.isVisible())) {
-    const chatIcon = page.getByTitle('Jupyter Chat');
-    await chatIcon.click();
-    await expect(panel).toBeVisible();
-  }
-  return panel.first();
-};
 
 test.describe('#sidepanel', () => {
   test.describe('#initialization', () => {

@@ -157,3 +157,16 @@ export const openSettings = async (
   );
   return (await page.activity.getPanelLocator('Settings')) as Locator;
 };
+
+export const openSidePanel = async (
+  page: IJupyterLabPageFixture
+): Promise<Locator> => {
+  const panel = page.locator('.jp-SidePanel.jp-lab-chat-sidepanel');
+
+  if (!(await panel?.isVisible())) {
+    const chatIcon = page.locator('.jp-SideBar').getByTitle('Jupyter Chat');
+    await chatIcon.click();
+    page.waitForCondition(async () => await panel.isVisible());
+  }
+  return panel.first();
+};
