@@ -606,10 +606,17 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     commands.addCommand(CommandIDs.focusInput, {
       caption: 'Focus the input of the current chat widget',
       isEnabled: () => tracker.currentWidget !== null,
-      execute: async () => {
+      execute: () => {
         const widget = tracker.currentWidget;
         if (widget) {
-          app.shell.activateById(widget.id);
+          if (widget instanceof ChatWidget && chatPanel) {
+            // The chat is the side panel.
+            app.shell.activateById(chatPanel.id);
+            chatPanel.openIfExists(widget.model.name);
+          } else {
+            // The chat is in the main area.
+            app.shell.activateById(widget.id);
+          }
           widget.model.focusInput();
         }
       }
