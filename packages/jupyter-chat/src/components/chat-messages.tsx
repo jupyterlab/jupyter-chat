@@ -21,6 +21,7 @@ import { MarkdownRenderer } from './markdown-renderer';
 import { ScrollContainer } from './scroll-container';
 import { IChatModel } from '../model';
 import { IChatMessage, IUser } from '../types';
+import { AttachmentsComponent } from './attachments';
 
 const MESSAGES_BOX_CLASS = 'jp-chat-messages-container';
 const MESSAGE_CLASS = 'jp-chat-message';
@@ -399,6 +400,9 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
             delete={canDelete ? () => deleteMessage(message.id) : undefined}
             rendered={props.renderedPromise}
           />
+        )}
+        {message.attachments && (
+          <AttachmentsComponent attachments={message.attachments} />
         )}
       </div>
     );

@@ -20,7 +20,7 @@ const REMOVE_BUTTON_CLASS = 'jp-chat-attachment-remove';
  */
 export type AttachmentsProps = {
   attachments: IAttachment[];
-  onRemove: (attachment: IAttachment) => void;
+  onRemove?: (attachment: IAttachment) => void;
 };
 
 /**
@@ -44,29 +44,35 @@ export function AttachmentsComponent(props: AttachmentsProps): JSX.Element {
  */
 export type AttachmentProps = {
   attachment: IAttachment;
-  onRemove: (attachment: IAttachment) => void;
+  onRemove?: (attachment: IAttachment) => void;
 };
+
+/**
+ * The Attachment component.
+ */
 export function AttachmentComponent(props: AttachmentProps): JSX.Element {
   const tooltip = 'Remove attachment';
   return (
     <Box className={ATTACHMENT_CLASS}>
       {props.attachment.value}
-      <TooltippedButton
-        onClick={() => props.onRemove(props.attachment)}
-        tooltip={tooltip}
-        buttonProps={{
-          size: 'small',
-          title: tooltip,
-          className: REMOVE_BUTTON_CLASS
-        }}
-        sx={{
-          minWidth: 'unset',
-          padding: '0',
-          color: 'inherit'
-        }}
-      >
-        <CloseIcon />
-      </TooltippedButton>
+      {props.onRemove && (
+        <TooltippedButton
+          onClick={() => props.onRemove!(props.attachment)}
+          tooltip={tooltip}
+          buttonProps={{
+            size: 'small',
+            title: tooltip,
+            className: REMOVE_BUTTON_CLASS
+          }}
+          sx={{
+            minWidth: 'unset',
+            padding: '0',
+            color: 'inherit'
+          }}
+        >
+          <CloseIcon />
+        </TooltippedButton>
+      )}
     </Box>
   );
 }
