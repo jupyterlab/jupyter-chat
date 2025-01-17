@@ -3,7 +3,13 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { ChatModel, IChatMessage, INewMessage, IUser } from '@jupyter/chat';
+import {
+  ChatModel,
+  IAttachment,
+  IChatMessage,
+  INewMessage,
+  IUser
+} from '@jupyter/chat';
 import { IChangedArgs } from '@jupyterlab/coreutils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { User } from '@jupyterlab/services';
@@ -137,6 +143,7 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
     if (this._timeoutWriting !== null) {
       window.clearTimeout(this._timeoutWriting);
     }
+
     const msg: IYmessage = {
       type: 'msg',
       id: UUID.uuid4(),
@@ -150,6 +157,16 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
     if (!(this.sharedModel.getUser(this._user.username) === this._user)) {
       this.sharedModel.setUser(this._user);
     }
+
+    // Add the attachments to the message.
+    if (this.inputAttachments.length) {
+      const attachmentIds = this.inputAttachments.map(attachment =>
+        this.sharedModel.setAttachment(attachment)
+      );
+      msg.attachments = attachmentIds;
+      this.updateAttachments([]);
+    }
+
     this.sharedModel.addMessage(msg);
   }
 
@@ -242,12 +259,33 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
           index += delta.retain;
         } else if (delta.insert) {
           const messages = delta.insert.map(ymessage => {
+            const {
+              sender,
+              attachments: attachmentIds,
+              ...baseMessage
+            } = ymessage;
+
+            // Build the base message with sender.
             const msg: IChatMessage = {
-              ...ymessage,
-              sender: this.sharedModel.getUser(ymessage.sender) || {
+              ...baseMessage,
+              sender: this.sharedModel.getUser(sender) || {
                 username: 'User undefined'
               }
             };
+
+            // Add attachments.
+            if (attachmentIds) {
+              const attachments: IAttachment[] = [];
+              attachmentIds.forEach(attachmentId => {
+                const attachment = this.sharedModel.getAttachment(attachmentId);
+                if (attachment) {
+                  attachments.push(attachment);
+                }
+              });
+              if (attachments.length) {
+                msg.attachments = attachments;
+              }
+            }
 
             return msg;
           });

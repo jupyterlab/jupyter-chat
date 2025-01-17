@@ -13,7 +13,7 @@ from typing import Any, Callable, Optional, Set
 from uuid import uuid4
 from pycrdt import Array, ArrayEvent, Map, MapEvent
 
-from .models import message_asdict_factory, Message, NewMessage, User
+from .models import message_asdict_factory, Attachment, Message, NewMessage, User
 
 
 class YChat(YBaseDoc):
@@ -23,6 +23,7 @@ class YChat(YBaseDoc):
         self.dirty = True
         self._ydoc["users"] = self._yusers = Map()  # type:ignore[var-annotated]
         self._ydoc["messages"] = self._ymessages = Array()  # type:ignore[var-annotated]
+        self._ydoc["attachments"] = self._yattachments = Map()  # type:ignore[var-annotated]
         self._ydoc["metadata"] = self._ymetadata = Map()  # type:ignore[var-annotated]
         self._ymessages.observe(self._on_messages_change)
 
@@ -53,6 +54,10 @@ class YChat(YBaseDoc):
     @property
     def yusers(self) -> Map:
         return self._yusers
+
+    @property
+    def yattachments(self) -> Map:
+        return self._yattachments
 
     @property
     def ymetadata(self) -> Map:
@@ -152,6 +157,25 @@ class YChat(YBaseDoc):
                 message.body = initial_message["body"] + message.body  # type:ignore[index]
             self._ymessages[index] = asdict(message, dict_factory=message_asdict_factory)
 
+    def get_attachments(self) -> dict[str, Attachment]:
+        """
+        Returns the attachments of the document.
+        """
+        return self._yattachments.to_py() or {}
+
+    def set_attachment(self, attachment: Attachment):
+        """
+        Add or modify an attachments of the document.
+        """
+        attachment_id = str(uuid4())
+        with self._ydoc.transaction():
+            # Search if the attachment already exist to update it, otherwise add it.
+            for id, att in self.get_attachments().items():
+                if att.type == attachment.type and att.value == attachment.value:
+                    attachment_id = id
+                    break
+            self._yattachments.update({attachment_id: asdict(attachment)})
+
     def get_metadata(self) -> dict[str, Any]:
         """
         Returns the metadata of the document.
@@ -195,6 +219,7 @@ class YChat(YBaseDoc):
             {
                 "messages": self._get_messages(),
                 "users": self._get_users(),
+                "attachments": self.get_attachments(),
                 "metadata": self.get_metadata()
             },
             indent=2
@@ -215,6 +240,7 @@ class YChat(YBaseDoc):
         with self._ydoc.transaction():
             self._yusers.clear()
             self._ymessages.clear()
+            self._yattachments.clear()
             self._ymetadata.clear()
             for key in [k for k in self._ystate.keys() if k not in ("dirty", "path")]:
                 del self._ystate[key]
@@ -222,6 +248,10 @@ class YChat(YBaseDoc):
             if "users" in contents.keys():
                 for k, v in contents["users"].items():
                     self._yusers.update({k: v})
+
+            if "attachments" in contents.keys():
+                for k, v in contents["attachments"].items():
+                    self._yattachments.update({k: v})
 
             if "messages" in contents.keys():
                 self._ymessages.extend(contents["messages"])
@@ -240,6 +270,9 @@ class YChat(YBaseDoc):
             partial(callback, "messages")
         )
         self._subscriptions[self._yusers] = self._yusers.observe(partial(callback, "users"))
+        self._subscriptions[self._yattachments] = self._yattachments.observe(
+            partial(callback, "attachments")
+        )
 
     def _initialize(self, event: MapEvent) -> None:
         """

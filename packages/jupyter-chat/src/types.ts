@@ -44,12 +44,13 @@ export interface IConfig {
 /**
  * The chat message description.
  */
-export interface IChatMessage<T = IUser> {
+export interface IChatMessage<T = IUser, U = IAttachment> {
   type: 'msg';
   body: string;
   id: string;
   time: number;
   sender: T;
+  attachments?: U[];
   raw_time?: boolean;
   deleted?: boolean;
   edited?: boolean;
@@ -69,6 +70,24 @@ export interface IChatHistory {
 export interface INewMessage {
   body: string;
   id?: string;
+}
+
+/**
+ * The attachment interface.
+ */
+export interface IAttachment {
+  /**
+   * The type of the attachment (basically 'file', 'variable', 'image')
+   */
+  type: string;
+  /**
+   * The value, i.e. the file path, the variable name or image content.
+   */
+  value: string;
+  /**
+   * The mimetype of the attachment, optional.
+   */
+  mimetype?: string;
 }
 
 /**

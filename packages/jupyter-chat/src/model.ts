@@ -12,7 +12,8 @@ import {
   INewMessage,
   IChatMessage,
   IConfig,
-  IUser
+  IUser,
+  IAttachment
 } from './types';
 import { IActiveCellManager } from './active-cell-manager';
 import { ISelectionWatcher } from './selection-watcher';
@@ -92,6 +93,11 @@ export interface IChatModel extends IDisposable {
   readonly focusInputSignal?: ISignal<IChatModel, void>;
 
   /**
+   * A signal emitting when the input attachments changed.
+   */
+  readonly inputAttachmentsChanges?: ISignal<IChatModel, IAttachment[]>;
+
+  /**
    * Send a message, to be defined depending on the chosen technology.
    * Default to no-op.
    *
@@ -165,6 +171,21 @@ export interface IChatModel extends IDisposable {
    * Function to request the focus on the input of the chat.
    */
   focusInput(): void;
+
+  /**
+   * Add attachment to the next message to send.
+   */
+  addAttachment?(attachment: IAttachment): void;
+
+  /**
+   * Remove attachment to the next message to send.
+   */
+  removeAttachment(attachment: IAttachment): void;
+
+  /**
+   * Update attachments.
+   */
+  updateAttachments(attachments: IAttachment[]): void;
 
   /**
    * Function called by the input on key pressed.
@@ -394,6 +415,13 @@ export class ChatModel implements IChatModel {
   }
 
   /**
+   * A signal emitting when the input attachments changed.
+   */
+  get inputAttachmentsChanges(): ISignal<IChatModel, IAttachment[]> {
+    return this._inputAttachmentsChanges;
+  }
+
+  /**
    * Send a message, to be defined depending on the chosen technology.
    * Default to no-op.
    *
@@ -521,6 +549,44 @@ export class ChatModel implements IChatModel {
   inputChanged?(input?: string): void {}
 
   /**
+   * Add attachment to send with next message.
+   */
+  addAttachment = (attachment: IAttachment, emit: boolean = true): void => {
+    const index = this.inputAttachments.findIndex(
+      att => att.type === attachment.type && att.value === attachment.value
+    );
+    if (index > -1) {
+      this.inputAttachments.splice(index, 1, attachment);
+    } else {
+      this.inputAttachments.push(attachment);
+    }
+    if (emit) {
+      this._inputAttachmentsChanges.emit([...this.inputAttachments]);
+    }
+  };
+
+  /**
+   * Remove attachment to be sent.
+   */
+  removeAttachment = (attachment: IAttachment): void => {
+    const index = this.inputAttachments.findIndex(
+      att => att.type === attachment.type && att.value === attachment.value
+    );
+    if (index > -1) {
+      this.inputAttachments.splice(index, 1);
+    }
+    this._inputAttachmentsChanges.emit([...this.inputAttachments]);
+  };
+
+  /**
+   * Update attachments.
+   */
+  updateAttachments = (attachments: IAttachment[]): void => {
+    this.inputAttachments = [...attachments];
+    this._inputAttachmentsChanges.emit([...this.inputAttachments]);
+  };
+
+  /**
    * Add unread messages to the list.
    * @param indexes - list of new indexes.
    */
@@ -569,6 +635,7 @@ export class ChatModel implements IChatModel {
     }
   }
 
+  protected inputAttachments: IAttachment[] = [];
   private _messages: IChatMessage[] = [];
   private _unreadMessages: number[] = [];
   private _messagesInViewport: number[] = [];
@@ -586,6 +653,7 @@ export class ChatModel implements IChatModel {
   private _viewportChanged = new Signal<IChatModel, number[]>(this);
   private _writersChanged = new Signal<IChatModel, IUser[]>(this);
   private _focusInputSignal = new Signal<ChatModel, void>(this);
+  private _inputAttachmentsChanges = new Signal<ChatModel, IAttachment[]>(this);
 }
 
 /**
