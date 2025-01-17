@@ -36,6 +36,7 @@ import {
 } from '@jupyterlab/apputils';
 import { PathExt } from '@jupyterlab/coreutils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
+import { IDefaultFileBrowser } from '@jupyterlab/filebrowser';
 import { ILauncher } from '@jupyterlab/launcher';
 import { INotebookTracker } from '@jupyterlab/notebook';
 import { IObservableList } from '@jupyterlab/observables';
@@ -100,6 +101,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     IAutocompletionRegistry,
     IChatCommandRegistry,
     ICollaborativeDrive,
+    IDefaultFileBrowser,
     ILayoutRestorer,
     ISelectionWatcherToken,
     ISettingRegistry,
@@ -115,6 +117,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     autocompletionRegistry: IAutocompletionRegistry,
     chatCommandRegistry: IChatCommandRegistry,
     drive: ICollaborativeDrive | null,
+    filebrowser: IDefaultFileBrowser | null,
     restorer: ILayoutRestorer | null,
     selectionWatcher: ISelectionWatcher | null,
     settingRegistry: ISettingRegistry | null,
@@ -282,6 +285,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
       rmRegistry,
       toolbarFactory,
       translator,
+      documentManager: filebrowser?.model.manager,
       autocompletionRegistry,
       chatCommandRegistry
     });
@@ -575,7 +579,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
                 user,
                 sharedModel,
                 widgetConfig,
-                commands: app.commands,
+                commands,
                 activeCellManager,
                 selectionWatcher
               });
@@ -642,6 +646,7 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
   optional: [
     IAutocompletionRegistry,
     IChatCommandRegistry,
+    IDefaultFileBrowser,
     ILayoutRestorer,
     IThemeManager
   ],
@@ -652,6 +657,7 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
     rmRegistry: IRenderMimeRegistry,
     autocompletionRegistry: IAutocompletionRegistry,
     chatCommandRegistry: IChatCommandRegistry,
+    filebrowser: IDefaultFileBrowser | null,
     restorer: ILayoutRestorer | null,
     themeManager: IThemeManager | null
   ): ChatPanel => {
@@ -668,6 +674,7 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
       rmRegistry,
       themeManager,
       defaultDirectory,
+      documentManager: filebrowser?.model.manager,
       autocompletionRegistry,
       chatCommandRegistry
     });

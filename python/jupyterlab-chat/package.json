@@ -55,6 +55,7 @@
     "@jupyterlab/apputils": "^4.3.0",
     "@jupyterlab/coreutils": "^6.2.0",
     "@jupyterlab/docregistry": "^4.2.0",
+    "@jupyterlab/filebrowser": "^4.2.0",
     "@jupyterlab/launcher": "^4.2.0",
     "@jupyterlab/notebook": "^4.2.0",
     "@jupyterlab/rendermime": "^4.2.0",

@@ -34,6 +34,7 @@ import React, { useState } from 'react';
 
 import { LabChatModel } from './model';
 import { CommandIDs, chatFileType } from './token';
+import { IDocumentManager } from '@jupyterlab/docmanager';
 
 const MAIN_PANEL_CLASS = 'jp-lab-chat-main-panel';
 const TITLE_UNREAD_CLASS = 'jp-lab-chat-title-unread';
@@ -103,6 +104,7 @@ export class ChatPanel extends SidePanel {
     this._rmRegistry = options.rmRegistry;
     this._themeManager = options.themeManager;
     this._defaultDirectory = options.defaultDirectory;
+    this._documentManager = options.documentManager;
     this._autocompletionRegistry = options.autocompletionRegistry;
     this._chatCommandRegistry = options.chatCommandRegistry;
 
@@ -166,6 +168,7 @@ export class ChatPanel extends SidePanel {
       model: model,
       rmRegistry: this._rmRegistry,
       themeManager: this._themeManager,
+      documentManager: this._documentManager,
       autocompletionRegistry: this._autocompletionRegistry,
       chatCommandRegistry: this._chatCommandRegistry
     });
@@ -286,6 +289,7 @@ export class ChatPanel extends SidePanel {
   private _openChat: ReactWidget;
   private _rmRegistry: IRenderMimeRegistry;
   private _themeManager: IThemeManager | null;
+  private _documentManager?: IDocumentManager;
   private _autocompletionRegistry?: IAutocompletionRegistry;
   private _chatCommandRegistry?: IChatCommandRegistry;
 }
@@ -303,6 +307,7 @@ export namespace ChatPanel {
     rmRegistry: IRenderMimeRegistry;
     themeManager: IThemeManager | null;
     defaultDirectory: string;
+    documentManager?: IDocumentManager;
     autocompletionRegistry?: IAutocompletionRegistry;
     chatCommandRegistry?: IChatCommandRegistry;
   }
