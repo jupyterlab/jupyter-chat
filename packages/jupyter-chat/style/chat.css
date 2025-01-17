@@ -112,3 +112,15 @@
 .jp-chat-navigation-bottom {
   bottom: 100px;
 }
+
+.jp-chat-attachments {
+  display: flex;
+  min-height: 1.5em;
+}
+
+.jp-chat-attachment {
+  border: solid 1px;
+  border-radius: 2px;
+  margin: 0 0.2em;
+  padding: 0 0.3em;
+}

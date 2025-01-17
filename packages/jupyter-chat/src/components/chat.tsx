@@ -4,6 +4,7 @@
  */
 
 import { IThemeManager } from '@jupyterlab/apputils';
+import { IDocumentManager } from '@jupyterlab/docmanager';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -19,13 +20,7 @@ import { IAutocompletionRegistry } from '../registry';
 import { IChatCommandRegistry } from '../chat-commands';
 
 export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
-  const {
-    model,
-    rmRegistry: renderMimeRegistry,
-    autocompletionRegistry
-  } = props;
-  // no need to append to messageGroups imperatively here. all of that is
-  // handled by the listeners registered in the effect hooks above.
+  const { model } = props;
   const onSend = async (input: string) => {
     // send message to backend
     model.sendMessage({ body: input });
@@ -33,18 +28,19 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
 
   return (
     <>
-      <ChatMessages rmRegistry={renderMimeRegistry} model={model} />
+      <ChatMessages rmRegistry={props.rmRegistry} model={model} />
       <ChatInput
         onSend={onSend}
         sx={{
           paddingLeft: 4,
           paddingRight: 4,
-          paddingTop: 3.5,
+          paddingTop: 1,
           paddingBottom: 0,
           borderTop: '1px solid var(--jp-border-color1)'
         }}
         model={model}
-        autocompletionRegistry={autocompletionRegistry}
+        documentManager={props.documentManager}
+        autocompletionRegistry={props.autocompletionRegistry}
         chatCommandRegistry={props.chatCommandRegistry}
       />
     </>
@@ -92,6 +88,7 @@ export function Chat(props: Chat.IOptions): JSX.Element {
           <ChatBody
             model={props.model}
             rmRegistry={props.rmRegistry}
+            documentManager={props.documentManager}
             autocompletionRegistry={props.autocompletionRegistry}
             chatCommandRegistry={props.chatCommandRegistry}
           />
@@ -120,6 +117,10 @@ export namespace Chat {
      * The rendermime registry.
      */
     rmRegistry: IRenderMimeRegistry;
+    /**
+     * The document manager.
+     */
+    documentManager?: IDocumentManager;
     /**
      * Autocompletion registry.
      */
