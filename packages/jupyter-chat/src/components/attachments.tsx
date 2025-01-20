@@ -13,6 +13,7 @@ import { IAttachment } from '../types';
 
 const ATTACHMENTS_CLASS = 'jp-chat-attachments';
 const ATTACHMENT_CLASS = 'jp-chat-attachment';
+const ATTACHMENT_CLICKABLE_CLASS = 'jp-chat-attachment-clickable';
 const REMOVE_BUTTON_CLASS = 'jp-chat-attachment-remove';
 
 /**
@@ -20,6 +21,7 @@ const REMOVE_BUTTON_CLASS = 'jp-chat-attachment-remove';
  */
 export type AttachmentsProps = {
   attachments: IAttachment[];
+  onClick?: (attachment: IAttachment) => void;
   onRemove?: (attachment: IAttachment) => void;
 };
 
@@ -30,10 +32,7 @@ export function AttachmentsComponent(props: AttachmentsProps): JSX.Element {
   return (
     <Box className={ATTACHMENTS_CLASS}>
       {props.attachments.map(attachment => (
-        <AttachmentComponent
-          attachment={attachment}
-          onRemove={props.onRemove}
-        />
+        <AttachmentComponent {...props} attachment={attachment} />
       ))}
     </Box>
   );
@@ -42,26 +41,37 @@ export function AttachmentsComponent(props: AttachmentsProps): JSX.Element {
 /**
  * The attachment props.
  */
-export type AttachmentProps = {
+export type AttachmentProps = AttachmentsProps & {
   attachment: IAttachment;
-  onRemove?: (attachment: IAttachment) => void;
 };
 
 /**
  * The Attachment component.
  */
 export function AttachmentComponent(props: AttachmentProps): JSX.Element {
-  const tooltip = 'Remove attachment';
+  const remove_tooltip = 'Remove attachment';
+
+  const onclick = () => {
+    if (props.onClick) {
+      props.onClick(props.attachment);
+    }
+  };
+
   return (
     <Box className={ATTACHMENT_CLASS}>
-      {props.attachment.value}
+      <span
+        className={props.onClick ? ATTACHMENT_CLICKABLE_CLASS : ''}
+        onClick={onclick}
+      >
+        {props.attachment.value}
+      </span>
       {props.onRemove && (
         <TooltippedButton
           onClick={() => props.onRemove!(props.attachment)}
-          tooltip={tooltip}
+          tooltip={remove_tooltip}
           buttonProps={{
             size: 'small',
-            title: tooltip,
+            title: remove_tooltip,
             className: REMOVE_BUTTON_CLASS
           }}
           sx={{

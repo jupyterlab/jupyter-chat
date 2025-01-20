@@ -186,6 +186,7 @@ ${selection.source}
     <Box sx={props.sx} className={clsx(INPUT_BOX_CLASS)}>
       <AttachmentsComponent
         attachments={attachments}
+        onClick={model.clickAttachment}
         onRemove={model.removeAttachment}
       />
       <Autocomplete
@@ -232,7 +233,7 @@ ${selection.source}
                   <SendButton
                     model={model}
                     sendWithShiftEnter={sendWithShiftEnter}
-                    inputExists={inputExists}
+                    inputExists={inputExists || attachments.length > 0}
                     onSend={onSend}
                     hideIncludeSelection={hideIncludeSelection}
                     hasButtonOnLeft={!!props.onCancel}
