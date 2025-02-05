@@ -300,7 +300,7 @@ A lot of the UI components of this project come from [jupyter-ai](https://github
 - Integration tests [#13](https://github.com/jupyterlab/jupyter-chat/pull/13) ([@brichet](https://github.com/brichet))
 - Monorepo improvements [#10](https://github.com/jupyterlab/jupyter-chat/pull/10) ([@brichet](https://github.com/brichet))
 - Rename extension package [#8](https://github.com/jupyterlab/jupyter-chat/pull/8) ([@brichet](https://github.com/brichet))
-- Remove @jupyter namespace from the package name  [#6](https://github.com/jupyterlab/jupyter-chat/pull/6) ([@brichet](https://github.com/brichet))
+- Remove @jupyter namespace from the package name [#6](https://github.com/jupyterlab/jupyter-chat/pull/6) ([@brichet](https://github.com/brichet))
 - Update the github repo from QuantStack to jupyterlab-contrib [#5](https://github.com/jupyterlab/jupyter-chat/pull/5) ([@brichet](https://github.com/brichet))
 - Add license-header action [#4](https://github.com/jupyterlab/jupyter-chat/pull/4) ([@brichet](https://github.com/brichet))
 - Remove non relevant tests [#2](https://github.com/jupyterlab/jupyter-chat/pull/2) ([@brichet](https://github.com/brichet))
