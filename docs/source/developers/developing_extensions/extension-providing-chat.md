@@ -14,7 +14,7 @@ It's up to the extension to choose which messaging technology to use.
 
 ## Adding the dependency
 
-In the extension *package.json* file, the dependency must be added to the `dependencies`
+In the extension _package.json_ file, the dependency must be added to the `dependencies`
 section.
 
 ```json
@@ -135,7 +135,6 @@ const myChatExtension: JupyterFrontEndPlugin<void> = {
 };
 
 export default [myChatExtension];
-
 ```
 
 ## Optional parameters of the model
@@ -204,7 +203,7 @@ set config(value: Partial<IConfig>)
 
 ### commands
 
-The *commands* option is mandatory to handle the notifications in the chat.
+The _commands_ option is mandatory to handle the notifications in the chat.
 
 It is the `CommandRegistry` provided by the jupyterlab application. In the previous
 example, the modification would be:
@@ -228,14 +227,14 @@ const myChatExtension: JupyterFrontEndPlugin<void> = {
 
 ### activeCellManager
 
-The *activeCellManager* is mandatory to include the [code toolbar](#code-toolbar) to the
+The _activeCellManager_ is mandatory to include the [code toolbar](#code-toolbar) to the
 chat.
 
 The active cell manager ensures that a Notebook is visible and has an active cell, to
 enable the buttons in the code toolbar.
 
 This active cell manager must be instantiated in the extension, to be propagated to the
-model. It requires the `INotebookTracker` token, provided by the *notebook-extension* of
+model. It requires the `INotebookTracker` token, provided by the _notebook-extension_ of
 jupyterlab. In the previous example, the modification would be:
 
 {emphasize-lines="2,14,17,20,21,22,23,24"}
@@ -280,7 +279,7 @@ The `themeManager` allows to get the themes from jupyterlab. It is not mandatory
 some components would not be visible with some themes if it is not provided.
 
 This Theme manager can come from the `IThemeManager` token, provided by the
-*apputils-extension* of jupyterlab.
+_apputils-extension_ of jupyterlab.
 
 {emphasize-lines="1,7,11,14"}
 
@@ -317,7 +316,7 @@ It uses the `Autocomplete` from
 [Material UI](https://mui.com/material-ui/react-autocomplete/),
 and can be customized using its [API](https://mui.com/material-ui/api/autocomplete/).
 
-Several *Autocompletion properties* objects (implementing
+Several _Autocompletion properties_ objects (implementing
 `IAutocompletionCommandsProps`) can be added to the registry.
 
 ```{warning}
@@ -327,10 +326,10 @@ The used one will be designed by the widget's option `autocompletionName`, other
 default will be used.
 ```
 
-An *autocompletion properties* object needs at least two properties:
+An _autocompletion properties_ object needs at least two properties:
 
 - **opener**, a character string that triggers the opening of the popup if entered at
-the beginning of the input.\
+  the beginning of the input.\
   For example typing `/` could open propositions like (`/ask`, `/help`, ...).
 - **commands**, a list of commands or a functions returning a list commands.
 
@@ -345,7 +344,7 @@ to customize the rendering of the entries. Some documentation about it can be fo
 the [Material UI API](https://mui.com/material-ui/api/autocomplete/).
 ```
 
-Here is a simple example using a commands list (commands list copied from *jupyter-ai*):
+Here is a simple example using a commands list (commands list copied from _jupyter-ai_):
 
 ```typescript
 import {

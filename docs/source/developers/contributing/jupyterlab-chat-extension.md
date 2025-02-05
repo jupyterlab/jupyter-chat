@@ -4,8 +4,8 @@ The `jupyterlab-chat` extension adds chats to jupyterlab based on collaborative 
 
 ## Development installation
 
-Installing this extension in development mode requires an environment with *python* and
-*nodejs*.
+Installing this extension in development mode requires an environment with _python_ and
+_nodejs_.
 
 ```bash
 # In the following commands, 'mamba' can be replaced with 'conda'
@@ -44,7 +44,7 @@ jlpm build
 
 ### Unit tests
 
-There are a few unit tests in *python/jupyterlab-chat/src/\_\_tests\_\_*.
+There are a few unit tests in `python/jupyterlab-chat/src/\_\_tests\_\_`.
 
 They make use of [jest](https://jestjs.io/).
 
@@ -57,7 +57,7 @@ jlpm test
 
 ### Integration tests
 
-The integration tests are located in *ui-tests*.
+The integration tests are located in _ui-tests_.
 
 They make use of [playwright](https://playwright.dev/).
 
