@@ -96,7 +96,7 @@ jobs:
           pip uninstall -y "jupyterlab_chat" jupyterlab
 
       - name: Upload package
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: jupyterlab_chat-artifacts
           path: python/jupyterlab-chat/dist/jupyterlab_chat*
@@ -152,7 +152,7 @@ jobs:
 
       - name: Upload Playwright Test report
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: jupyterlab_chat-playwright-tests
           path: |
@@ -209,7 +209,7 @@ jobs:
 
       - name: Upload Playwright Test report
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: jupyterlab_chat-notebook-playwright-tests
           path: |
