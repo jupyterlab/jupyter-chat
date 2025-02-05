@@ -21,9 +21,9 @@ class YChat(YBaseDoc):
         super().__init__(*args, **kwargs)
         self._background_tasks: Set[asyncio.Task] = set()
         self.dirty = True
-        self._ydoc["users"] = self._yusers = Map()
-        self._ydoc["messages"] = self._ymessages = Array()
-        self._ydoc["metadata"] = self._ymetadata = Map()
+        self._ydoc["users"] = self._yusers = Map()  # type:ignore[var-annotated]
+        self._ydoc["messages"] = self._ymessages = Array()  # type:ignore[var-annotated]
+        self._ydoc["metadata"] = self._ymetadata = Map()  # type:ignore[var-annotated]
         self._ymessages.observe(self._on_messages_change)
 
         # Observe the state to initialize the file as soon as the document is not dirty.
