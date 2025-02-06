@@ -28,22 +28,21 @@ export function AttachButton(props: AttachButtonProps): JSX.Element {
   const tooltip = 'Add attachment';
 
   const onclick = async () => {
-    FileDialog.getOpenFiles({
-      title: 'Select files to attach',
-      manager: props.documentManager
-    })
-      .then(result => {
-        if (result.value) {
-          result.value.forEach(file => {
-            if (file.type !== 'directory') {
-              props.onAttach({ type: 'file', value: file.path });
-            }
-          });
-        }
-      })
-      .catch(e => {
-        console.warn('Error selecting files to attach', e);
+    try {
+      const files = await FileDialog.getOpenFiles({
+        title: 'Select files to attach',
+        manager: props.documentManager
       });
+      if (files.value) {
+        files.value.forEach(file => {
+          if (file.type !== 'directory') {
+            props.onAttach({ type: 'file', value: file.path });
+          }
+        });
+      }
+    } catch (e) {
+      console.warn('Error selecting files to attach', e);
+    }
   };
 
   return (

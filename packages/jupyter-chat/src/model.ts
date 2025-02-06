@@ -563,7 +563,7 @@ export class ChatModel implements IChatModel {
     if (duplicateAttachment) {
       return;
     }
-    
+
     this.inputAttachments.push(attachment);
     this._inputAttachmentsChanges.emit([...this.inputAttachments]);
   };
@@ -578,7 +578,7 @@ export class ChatModel implements IChatModel {
     if (attachmentIndex === -1) {
       return;
     }
-    
+
     this.inputAttachments.splice(attachmentIndex, 1);
     this._inputAttachmentsChanges.emit([...this.inputAttachments]);
   };
