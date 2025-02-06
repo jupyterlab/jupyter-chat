@@ -556,30 +556,30 @@ export class ChatModel implements IChatModel {
   /**
    * Add attachment to send with next message.
    */
-  addAttachment = (attachment: IAttachment, emit: boolean = true): void => {
-    const index = this.inputAttachments.findIndex(
+  addAttachment = (attachment: IAttachment): void => {
+    const duplicateAttachment = this.inputAttachments.find(
       att => att.type === attachment.type && att.value === attachment.value
     );
-    if (index > -1) {
-      this.inputAttachments.splice(index, 1, attachment);
-    } else {
-      this.inputAttachments.push(attachment);
+    if (duplicateAttachment) {
+      return;
     }
-    if (emit) {
-      this._inputAttachmentsChanges.emit([...this.inputAttachments]);
-    }
+    
+    this.inputAttachments.push(attachment);
+    this._inputAttachmentsChanges.emit([...this.inputAttachments]);
   };
 
   /**
    * Remove attachment to be sent.
    */
   removeAttachment = (attachment: IAttachment): void => {
-    const index = this.inputAttachments.findIndex(
+    const attachmentIndex = this.inputAttachments.findIndex(
       att => att.type === attachment.type && att.value === attachment.value
     );
-    if (index > -1) {
-      this.inputAttachments.splice(index, 1);
+    if (attachmentIndex === -1) {
+      return;
     }
+    
+    this.inputAttachments.splice(attachmentIndex, 1);
     this._inputAttachmentsChanges.emit([...this.inputAttachments]);
   };
 
