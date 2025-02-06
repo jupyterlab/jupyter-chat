@@ -129,3 +129,9 @@ dmypy.json
 
 # Yarn cache
 .yarn/
+
+# Jupyter Notebooks
+Untitled*.ipynb
+
+# Chat files
+*.chat
