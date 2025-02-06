@@ -28,11 +28,11 @@ export type AttachmentsProps = {
 /**
  * The Attachments component.
  */
-export function AttachmentsComponent(props: AttachmentsProps): JSX.Element {
+export function AttachmentPreviewList(props: AttachmentsProps): JSX.Element {
   return (
     <Box className={ATTACHMENTS_CLASS}>
       {props.attachments.map(attachment => (
-        <AttachmentComponent {...props} attachment={attachment} />
+        <AttachmentPreview {...props} attachment={attachment} />
       ))}
     </Box>
   );
@@ -48,7 +48,7 @@ export type AttachmentProps = AttachmentsProps & {
 /**
  * The Attachment component.
  */
-export function AttachmentComponent(props: AttachmentProps): JSX.Element {
+export function AttachmentPreview(props: AttachmentProps): JSX.Element {
   const remove_tooltip = 'Remove attachment';
 
   const onclick = () => {

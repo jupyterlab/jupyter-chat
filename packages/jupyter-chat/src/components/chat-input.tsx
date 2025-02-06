@@ -15,7 +15,7 @@ import {
 import clsx from 'clsx';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { AttachmentsComponent } from './attachments';
+import { AttachmentPreviewList } from './attachments';
 import { AttachButton, CancelButton, SendButton } from './input';
 import { IChatModel } from '../model';
 import { IAutocompletionRegistry } from '../registry';
@@ -184,7 +184,7 @@ ${selection.source}
 
   return (
     <Box sx={props.sx} className={clsx(INPUT_BOX_CLASS)}>
-      <AttachmentsComponent
+      <AttachmentPreviewList
         attachments={attachments}
         onClick={model.clickAttachment}
         onRemove={model.removeAttachment}
