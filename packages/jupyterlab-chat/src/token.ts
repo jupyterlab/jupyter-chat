@@ -7,9 +7,10 @@ import {
   IConfig,
   chatIcon,
   IActiveCellManager,
-  ISelectionWatcher
+  ISelectionWatcher,
+  ChatWidget
 } from '@jupyter/chat';
-import { IWidgetTracker } from '@jupyterlab/apputils';
+import { WidgetTracker } from '@jupyterlab/apputils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { Token } from '@lumino/coreutils';
 import { ISignal } from '@lumino/signaling';
@@ -56,7 +57,7 @@ export interface IChatFactory {
   /**
    * The chat panel tracker.
    */
-  tracker: IWidgetTracker<LabChatPanel>;
+  tracker: WidgetTracker<LabChatPanel | ChatWidget>;
 }
 
 /**

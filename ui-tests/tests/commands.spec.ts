@@ -4,6 +4,7 @@
  */
 
 import { expect, IJupyterLabPageFixture, test } from '@jupyterlab/galata';
+import { openChat, openChatToSide } from './test-utils';
 
 const FILENAME = 'my-chat.chat';
 
@@ -126,5 +127,54 @@ test.describe('#launcher', () => {
     await expect(page.locator('dialog .jp-Dialog-header')).toHaveText(
       'Create a new chat'
     );
+  });
+});
+
+test.describe('#focusInput', () => {
+  test.beforeEach(async ({ page }) => {
+    // Create a chat file
+    await page.filebrowser.contents.uploadContent('{}', 'text', FILENAME);
+  });
+
+  test.afterEach(async ({ page }) => {
+    if (await page.filebrowser.contents.fileExists(FILENAME)) {
+      await page.filebrowser.contents.deleteFile(FILENAME);
+    }
+  });
+
+  test('should focus on the main area chat input', async ({ page }) => {
+    const chatPanel = await openChat(page, FILENAME);
+    const input = chatPanel
+      .locator('.jp-chat-input-container')
+      .getByRole('combobox');
+
+    // hide the chat
+    await page.activity.activateTab('Launcher');
+
+    // focus input
+    await page.keyboard.press('Control+Shift+1');
+
+    // expect the chat to be visible and the input to be focussed
+    await expect(chatPanel).toBeVisible();
+    await expect(input).toBeFocused();
+  });
+
+  test('should focus on the side panel chat input', async ({ page }) => {
+    const chatPanel = await openChatToSide(page, FILENAME);
+    const input = chatPanel
+      .locator('.jp-chat-input-container')
+      .getByRole('combobox');
+
+    // hide the chat
+    const chatIcon = page.getByTitle('Jupyter Chat');
+    await chatIcon.click();
+    await expect(chatPanel).not.toBeVisible();
+
+    // focus input
+    await page.keyboard.press('Control+Shift+1');
+
+    // expect the chat to be visible and the input to be focussed
+    await expect(chatPanel).toBeVisible();
+    await expect(input).toBeFocused();
   });
 });

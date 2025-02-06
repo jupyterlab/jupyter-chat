@@ -152,15 +152,12 @@ export class ChatPanel extends SidePanel {
    * @param model - the model of the chat widget
    * @param name - the name of the chat.
    */
-  addChat(model: IChatModel, path: string): void {
+  addChat(model: IChatModel): ChatWidget {
     // Collapse all chats
     const content = this.content as AccordionPanel;
     for (let i = 0; i < this.widgets.length; i++) {
       content.collapse(i);
     }
-
-    // Set the name of the model.
-    model.name = path;
 
     // Create a new widget.
     const widget = new ChatWidget({
@@ -174,10 +171,12 @@ export class ChatPanel extends SidePanel {
       new ChatSection({
         widget,
         commands: this._commands,
-        path,
+        path: model.name,
         defaultDirectory: this._defaultDirectory
       })
     );
+
+    return widget;
   }
 
   /**
