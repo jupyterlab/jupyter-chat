@@ -164,7 +164,7 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
         this.sharedModel.setAttachment(attachment)
       );
       msg.attachments = attachmentIds;
-      this.updateAttachments([]);
+      this.clearAttachments();
     }
 
     this.sharedModel.addMessage(msg);

@@ -183,9 +183,9 @@ export interface IChatModel extends IDisposable {
   removeAttachment?(attachment: IAttachment): void;
 
   /**
-   * Update attachments.
+   * Clear the attachment list.
    */
-  updateAttachments?(attachments: IAttachment[]): void;
+  clearAttachments?(): void;
 
   /**
    * Open attachments.
@@ -586,9 +586,9 @@ export class ChatModel implements IChatModel {
   /**
    * Update attachments.
    */
-  updateAttachments = (attachments: IAttachment[]): void => {
-    this.inputAttachments = [...attachments];
-    this._inputAttachmentsChanges.emit([...this.inputAttachments]);
+  clearAttachments = (): void => {
+    this.inputAttachments = [];
+    this._inputAttachmentsChanges.emit([]);
   };
 
   /**
