@@ -3,14 +3,15 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import {
-  expect,
-  galata,
-  test
-} from '@jupyterlab/galata';
+import { expect, galata, test } from '@jupyterlab/galata';
 import { Locator } from '@playwright/test';
 
-import { openChat, openChatToSide, openSettings, openSidePanel } from './test-utils';
+import {
+  openChat,
+  openChatToSide,
+  openSettings,
+  openSidePanel
+} from './test-utils';
 
 const FILENAME = 'my-chat.chat';
 

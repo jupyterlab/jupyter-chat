@@ -17,7 +17,7 @@ test.describe('#restorer', () => {
   });
 
   test.afterEach(async ({ page }) => {
-    [CHAT1, CHAT2].forEach(async (file) => {
+    [CHAT1, CHAT2].forEach(async file => {
       if (await page.filebrowser.contents.fileExists(file)) {
         await page.filebrowser.contents.deleteFile(file);
       }
