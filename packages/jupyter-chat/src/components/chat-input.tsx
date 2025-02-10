@@ -128,6 +128,11 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   }, [input]);
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (['ArrowDown', 'ArrowUp'].includes(event.key) && !open) {
+      event.stopPropagation();
+      return;
+    }
+
     if (event.key !== 'Enter') {
       return;
     }
