@@ -45,9 +45,10 @@
     "test": "lerna run test"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^6.1.0",
-    "@typescript-eslint/parser": "^6.1.0",
-    "eslint": "^8.36.0",
+    "@stylistic/eslint-plugin": "^3.0.1",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^8.56.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-prettier": "^5.0.0",
     "lerna": "^6.4.1",
@@ -81,6 +82,7 @@
       "sourceType": "module"
     },
     "plugins": [
+      "@stylistic",
       "@typescript-eslint"
     ],
     "rules": {
@@ -106,7 +108,7 @@
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-namespace": "off",
       "@typescript-eslint/no-use-before-define": "off",
-      "@typescript-eslint/quotes": [
+      "@stylistic/quotes": [
         "error",
         "single",
         {
@@ -119,6 +121,25 @@
         "all"
       ],
       "eqeqeq": "error",
+      "no-restricted-imports": [
+        "error",
+        {
+          "paths": [
+            {
+              "name": "@mui/icons-material",
+              "message": "Please import icons using path imports, e.g. `import AddIcon from '@mui/icons-material/Add'`"
+            }
+          ],
+          "patterns": [
+            {
+              "group": [
+                "@mui/*/*/*"
+              ],
+              "message": "3rd level imports in mui are considered private"
+            }
+          ]
+        }
+      ],
       "prefer-arrow-callback": "error"
     }
   },

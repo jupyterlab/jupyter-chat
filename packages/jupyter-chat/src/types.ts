@@ -74,7 +74,7 @@ export interface INewMessage {
 /**
  * An empty interface to describe optional settings that could be fetched from server.
  */
-export interface ISettings {}
+export interface ISettings {} /* eslint-disable-line @typescript-eslint/no-empty-object-type */
 
 /**
  * The autocomplete command type.
