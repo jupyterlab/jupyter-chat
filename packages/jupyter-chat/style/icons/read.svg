@@ -1,11 +1,13 @@
 <svg height="24px" viewBox="0 0 24 24" width="24px" xmlns="http://www.w3.org/2000/svg">
-  <g>
+  <g class="jp-icon3">
     <path
-       style="display:inline;fill:none;fill-opacity:1;stroke:#545454;stroke-width:1.54693;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:1.5;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
-       d="M 2.2734634,9 V 20.226537 H 21.726536 V 9" />
+      style="display:inline;fill:none;fill-opacity:1;stroke:#616161;stroke-width:1.54693;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:1.5;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
+      d="M 2.2734634,9 V 20.226537 H 21.726536 V 9"
+    />
     <path
-       style="display:inline;fill:none;stroke:#545454;stroke-width:1.54528;stroke-linecap:square;stroke-miterlimit:10"
-       transform="matrix(0.81805878,0.57513462,-0.81805878,0.57513462,0,0)"
-       d="M 9.5141659,-5.1535239 H 20.802967 V 6.1352773 H 9.5141659 Z" />
+      style="display:inline;fill:none;stroke:#616161;stroke-width:1.54528;stroke-linecap:square;stroke-miterlimit:10"
+      transform="matrix(0.81805878,0.57513462,-0.81805878,0.57513462,0,0)"
+      d="M 9.5141659,-5.1535239 H 20.802967 V 6.1352773 H 9.5141659 Z"
+    />
   </g>
 </svg>
