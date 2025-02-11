@@ -7,6 +7,7 @@ import {
   ChatWidget,
   IActiveCellManager,
   IAutocompletionRegistry,
+  IChatCommandRegistry,
   ISelectionWatcher
 } from '@jupyter/chat';
 import { IThemeManager } from '@jupyterlab/apputils';
@@ -75,6 +76,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
     this._themeManager = options.themeManager;
     this._rmRegistry = options.rmRegistry;
     this._autocompletionRegistry = options.autocompletionRegistry;
+    this._chatCommandRegistry = options.chatCommandRegistry;
   }
 
   /**
@@ -87,6 +89,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
     context.rmRegistry = this._rmRegistry;
     context.themeManager = this._themeManager;
     context.autocompletionRegistry = this._autocompletionRegistry;
+    context.chatCommandRegistry = this._chatCommandRegistry;
     return new LabChatPanel({
       context,
       content: new ChatWidget(context)
@@ -96,6 +99,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
   private _themeManager: IThemeManager | null;
   private _rmRegistry: IRenderMimeRegistry;
   private _autocompletionRegistry?: IAutocompletionRegistry;
+  private _chatCommandRegistry?: IChatCommandRegistry;
 }
 
 export namespace ChatWidgetFactory {
@@ -103,6 +107,7 @@ export namespace ChatWidgetFactory {
     themeManager: IThemeManager | null;
     rmRegistry: IRenderMimeRegistry;
     autocompletionRegistry?: IAutocompletionRegistry;
+    chatCommandRegistry?: IChatCommandRegistry;
   }
 
   export interface IOptions<T extends LabChatPanel>
@@ -110,6 +115,7 @@ export namespace ChatWidgetFactory {
     themeManager: IThemeManager | null;
     rmRegistry: IRenderMimeRegistry;
     autocompletionRegistry?: IAutocompletionRegistry;
+    chatCommandRegistry?: IChatCommandRegistry;
   }
 }
 

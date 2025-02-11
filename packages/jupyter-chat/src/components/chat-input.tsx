@@ -19,19 +19,24 @@ import { CancelButton } from './input/cancel-button';
 import { SendButton } from './input/send-button';
 import { IChatModel } from '../model';
 import { IAutocompletionRegistry } from '../registry';
-import {
-  AutocompleteCommand,
-  IAutocompletionCommandsProps,
-  IConfig,
-  Selection
-} from '../types';
+import { IConfig, Selection } from '../types';
+import { useChatCommands } from './hooks/use-chat-commands';
+import { IChatCommandRegistry } from '../chat-commands';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
 
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
-  const { autocompletionName, autocompletionRegistry, model } = props;
-  const autocompletion = useRef<IAutocompletionCommandsProps>();
+  const { model } = props;
   const [input, setInput] = useState<string>(props.value || '');
+  const inputRef = useRef<HTMLInputElement>();
+
+  const chatCommands = useChatCommands(
+    input,
+    setInput,
+    inputRef,
+    props.chatCommandRegistry
+  );
+
   const [sendWithShiftEnter, setSendWithShiftEnter] = useState<boolean>(
     model.config.sendWithShiftEnter ?? false
   );
@@ -45,9 +50,6 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   if (model.activeCellManager === null && model.selectionWatcher === null) {
     hideIncludeSelection = true;
   }
-
-  // store reference to the input element to enable focusing it easily
-  const inputRef = useRef<HTMLInputElement>();
 
   useEffect(() => {
     const configChanged = (_: IChatModel, config: IConfig) => {
@@ -69,66 +71,13 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     };
   }, [model]);
 
-  // The autocomplete commands options.
-  const [commandOptions, setCommandOptions] = useState<AutocompleteCommand[]>(
-    []
-  );
-  // whether any option is highlighted in the slash command autocomplete
-  const [highlighted, setHighlighted] = useState<boolean>(false);
-  // controls whether the slash command autocomplete is open
-  const [open, setOpen] = useState<boolean>(false);
-
   const inputExists = !!input.trim();
 
-  /**
-   * Effect: fetch the list of available autocomplete commands.
-   */
-  useEffect(() => {
-    if (autocompletionRegistry === undefined) {
-      return;
-    }
-    autocompletion.current = autocompletionName
-      ? autocompletionRegistry.get(autocompletionName)
-      : autocompletionRegistry.getDefaultCompletion();
-
-    if (autocompletion.current === undefined) {
-      return;
-    }
-
-    if (Array.isArray(autocompletion.current.commands)) {
-      setCommandOptions(autocompletion.current.commands);
-    } else if (typeof autocompletion.current.commands === 'function') {
-      autocompletion.current
-        .commands()
-        .then((commands: AutocompleteCommand[]) => {
-          setCommandOptions(commands);
-        });
-    }
-  }, []);
-
-  /**
-   * Effect: Open the autocomplete when the user types the 'opener' string into an
-   * empty chat input. Close the autocomplete and reset the last selected value when
-   * the user clears the chat input.
-   */
-  useEffect(() => {
-    if (!autocompletion.current?.opener) {
-      return;
-    }
-
-    if (input === autocompletion.current?.opener) {
-      setOpen(true);
-      return;
-    }
-
-    if (input === '') {
-      setOpen(false);
-      return;
-    }
-  }, [input]);
-
   function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
-    if (['ArrowDown', 'ArrowUp'].includes(event.key) && !open) {
+    if (
+      ['ArrowDown', 'ArrowUp'].includes(event.key) &&
+      !chatCommands.menu.open
+    ) {
       event.stopPropagation();
       return;
     }
@@ -139,7 +88,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
 
     // Do not send the message if the user was selecting a suggested command from the
     // Autocomplete component.
-    if (highlighted) {
+    if (chatCommands.menu.highlighted) {
       return;
     }
 
@@ -201,11 +150,7 @@ ${selection.source}
   return (
     <Box sx={props.sx} className={clsx(INPUT_BOX_CLASS)}>
       <Autocomplete
-        options={commandOptions}
-        value={props.value}
-        open={open}
-        autoHighlight
-        freeSolo
+        {...chatCommands.autocompleteProps}
         // ensure the autocomplete popup always renders on top
         componentsProps={{
           popper: {
@@ -255,7 +200,6 @@ ${selection.source}
             helperText={input.length > 2 ? helperText : ' '}
           />
         )}
-        {...autocompletion.current?.props}
         inputValue={input}
         onInputChange={(_, newValue: string) => {
           setInput(newValue);
@@ -263,30 +207,6 @@ ${selection.source}
             model.inputChanged(newValue);
           }
         }}
-        onHighlightChange={
-          /**
-           * On highlight change: set `highlighted` to whether an option is
-           * highlighted by the user.
-           *
-           * This isn't called when an option is selected for some reason, so we
-           * need to call `setHighlighted(false)` in `onClose()`.
-           */
-          (_, highlightedOption) => {
-            setHighlighted(!!highlightedOption);
-          }
-        }
-        onClose={
-          /**
-           * On close: set `highlighted` to `false` and close the popup by
-           * setting `open` to `false`.
-           */
-          () => {
-            setHighlighted(false);
-            setOpen(false);
-          }
-        }
-        // hide default extra right padding in the text field
-        disableClearable
       />
     </Box>
   );
@@ -332,5 +252,9 @@ export namespace ChatInput {
      * Autocompletion name.
      */
     autocompletionName?: string;
+    /**
+     * Chat command registry.
+     */
+    chatCommandRegistry?: IChatCommandRegistry;
   }
 }

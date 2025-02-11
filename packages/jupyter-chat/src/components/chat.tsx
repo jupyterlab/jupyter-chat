@@ -16,6 +16,7 @@ import { ChatMessages } from './chat-messages';
 import { ChatInput } from './chat-input';
 import { IChatModel } from '../model';
 import { IAutocompletionRegistry } from '../registry';
+import { IChatCommandRegistry } from '../chat-commands';
 
 export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
   const {
@@ -44,6 +45,7 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
         }}
         model={model}
         autocompletionRegistry={autocompletionRegistry}
+        chatCommandRegistry={props.chatCommandRegistry}
       />
     </>
   );
@@ -91,6 +93,7 @@ export function Chat(props: Chat.IOptions): JSX.Element {
             model={props.model}
             rmRegistry={props.rmRegistry}
             autocompletionRegistry={props.autocompletionRegistry}
+            chatCommandRegistry={props.chatCommandRegistry}
           />
         )}
         {view === Chat.View.settings && props.settingsPanel && (
@@ -125,6 +128,10 @@ export namespace Chat {
      * Autocompletion name.
      */
     autocompletionName?: string;
+    /**
+     * Chat command registry.
+     */
+    chatCommandRegistry?: IChatCommandRegistry;
   }
 
   /**

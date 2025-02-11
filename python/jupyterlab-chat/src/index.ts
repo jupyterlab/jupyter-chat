@@ -10,6 +10,7 @@ import {
   ChatWidget,
   IActiveCellManager,
   IAutocompletionRegistry,
+  IChatCommandRegistry,
   ISelectionWatcher,
   SelectionWatcher,
   chatIcon,
@@ -59,6 +60,9 @@ import {
   YChat,
   ISelectionWatcherToken
 } from 'jupyterlab-chat';
+import { chatCommandRegistryPlugin } from './chat-commands/plugins';
+import { slashCommandDemoPlugin } from './chat-commands/slash-command-demo';
+import { emojiCommandsPlugin } from './chat-commands/providers/emoji';
 
 const FACTORY = 'Chat';
 
@@ -95,6 +99,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
   optional: [
     IActiveCellManagerToken,
     IAutocompletionRegistry,
+    IChatCommandRegistry,
     ICollaborativeDrive,
     ILayoutRestorer,
     ISelectionWatcherToken,
@@ -109,6 +114,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     rmRegistry: IRenderMimeRegistry,
     activeCellManager: IActiveCellManager | null,
     autocompletionRegistry: IAutocompletionRegistry,
+    chatCommandRegistry: IChatCommandRegistry,
     drive: ICollaborativeDrive | null,
     restorer: ILayoutRestorer | null,
     selectionWatcher: ISelectionWatcher | null,
@@ -277,7 +283,8 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
       rmRegistry,
       toolbarFactory,
       translator,
-      autocompletionRegistry
+      autocompletionRegistry,
+      chatCommandRegistry
     });
 
     // Add the widget to the tracker when it's created
@@ -633,13 +640,19 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
   autoStart: true,
   provides: IChatPanel,
   requires: [IChatFactory, ICollaborativeDrive, IRenderMimeRegistry],
-  optional: [IAutocompletionRegistry, ILayoutRestorer, IThemeManager],
+  optional: [
+    IAutocompletionRegistry,
+    IChatCommandRegistry,
+    ILayoutRestorer,
+    IThemeManager
+  ],
   activate: (
     app: JupyterFrontEnd,
     factory: IChatFactory,
     drive: ICollaborativeDrive,
     rmRegistry: IRenderMimeRegistry,
     autocompletionRegistry: IAutocompletionRegistry,
+    chatCommandRegistry: IChatCommandRegistry,
     restorer: ILayoutRestorer | null,
     themeManager: IThemeManager | null
   ): ChatPanel => {
@@ -656,7 +669,8 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
       rmRegistry,
       themeManager,
       defaultDirectory,
-      autocompletionRegistry
+      autocompletionRegistry,
+      chatCommandRegistry
     });
     chatPanel.id = 'JupyterlabChat:sidepanel';
     chatPanel.title.icon = chatIcon;
@@ -770,5 +784,8 @@ export default [
   chatCommands,
   chatPanel,
   docFactories,
-  selectionWatcher
+  selectionWatcher,
+  chatCommandRegistryPlugin,
+  slashCommandDemoPlugin,
+  emojiCommandsPlugin
 ];
