@@ -22,5 +22,5 @@ developers/index
 ```{eval-rst}
 .. cssclass:: try-in-jupyterlite-button
 
-  `Try it with JupyterLite! <lite/lab/index.html?README.html>`_
+  `Try it with JupyterLite! <lite/lab/index.html?path=README.ipynb>`_
 ```
