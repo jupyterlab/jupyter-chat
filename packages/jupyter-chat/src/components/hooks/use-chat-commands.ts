@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) Jupyter Development Team.
+ * Distributed under the terms of the Modified BSD License.
+ */
+
 import { useEffect, useState } from 'react';
 import { ChatCommand, IChatCommandRegistry } from '../../chat-commands';
 import { AutocompleteChangeReason, AutocompleteProps } from '@mui/material';
