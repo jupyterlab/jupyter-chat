@@ -12,6 +12,7 @@ labextension
 
 # Version file is handled by hatchling
 python/**/_version.py
+docs/**/_version.py
 
 # jest test reports
 packages/jupyter-chat/junit.xml
