@@ -4,16 +4,19 @@
  */
 
 import {
+  ActiveCellManager,
   buildChatSidebar,
   ChatModel,
   IChatMessage,
-  INewMessage
+  INewMessage,
+  SelectionWatcher
 } from '@jupyter/chat';
 import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 import { IThemeManager } from '@jupyterlab/apputils';
+import { INotebookTracker } from '@jupyterlab/notebook';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { UUID } from '@lumino/coreutils';
 
@@ -41,14 +44,29 @@ const plugin: JupyterFrontEndPlugin<void> = {
   description: 'The chat panel widget.',
   autoStart: true,
   requires: [IRenderMimeRegistry],
-  optional: [IThemeManager],
+  optional: [INotebookTracker, IThemeManager],
   activate: (
     app: JupyterFrontEnd,
     rmRegistry: IRenderMimeRegistry,
+    notebookTracker: INotebookTracker | null,
     themeManager: IThemeManager | null
   ): void => {
-    const model = new MyChatModel({});
-    const panel = buildChatSidebar({ model, rmRegistry });
+    // Track the current active cell.
+    let activeCellManager: ActiveCellManager | null = null;
+    if (notebookTracker) {
+      activeCellManager = new ActiveCellManager({
+        tracker: notebookTracker,
+        shell: app.shell
+      });
+    }
+
+    // Track the current selection.
+    const selectionWatcher = new SelectionWatcher({
+      shell: app.shell
+    });
+
+    const model = new MyChatModel({ activeCellManager, selectionWatcher });
+    const panel = buildChatSidebar({ model, rmRegistry, themeManager });
     app.shell.add(panel, 'left');
   }
 };

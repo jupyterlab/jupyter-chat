@@ -29,8 +29,8 @@
   "scripts": {
     "build": "lerna run build --stream",
     "build:core": "lerna run build --stream --scope \"@jupyter/chat\"",
+    "build:lite-docs": "lerna run build --stream --scope jupyter-chat-example  --include-filtered-dependencies",
     "build:prod": "lerna run build:prod --stream",
-    "build:docs": "lerna run build --stream --scope jupyter-chat-example  --include-filtered-dependencies",
     "clean": "lerna run clean",
     "clean:all": "lerna run clean:all",
     "dev": "jupyter lab --config playground/config.py",

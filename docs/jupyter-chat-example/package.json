@@ -51,6 +51,7 @@
     "@jupyter/chat": "^0.7.1",
     "@jupyterlab/application": "^4.2.0",
     "@jupyterlab/apputils": "^4.3.0",
+    "@jupyterlab/notebook": "^4.2.0",
     "@jupyterlab/rendermime": "^4.2.0",
     "@lumino/coreutils": "^2.0.0"
   },

@@ -10022,6 +10022,7 @@ __metadata:
     "@jupyterlab/application": ^4.2.0
     "@jupyterlab/apputils": ^4.3.0
     "@jupyterlab/builder": ^4.2.0
+    "@jupyterlab/notebook": ^4.2.0
     "@jupyterlab/rendermime": ^4.2.0
     "@lumino/coreutils": ^2.0.0
     "@types/json-schema": ^7.0.11

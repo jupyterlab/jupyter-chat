@@ -20,7 +20,7 @@ developers/index
 ```
 
 ```{eval-rst}
-.. jupyterlite::
+.. jupyterlite:: README.ipynb
    :new_tab: True
    :new_tab_button_text: Try Jupyter chat
 ```
