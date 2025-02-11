@@ -21,8 +21,6 @@ developers/index
 
 ```{eval-rst}
 .. jupyterlite::
-   :width: 100%
-   :height: 600px
-   :prompt: Try JupyterLite!
-   :prompt_color: #00aa42
+   :new_tab: True
+   :new_tab_button_text: Try Jupyter chat
 ```
