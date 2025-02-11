@@ -17,6 +17,7 @@ author = 'Jupyter Development Team'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
+  'jupyterlite_sphinx',
   'myst_parser',
   'sphinx_copybutton'
 ]
