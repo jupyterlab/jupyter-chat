@@ -33,4 +33,4 @@ myst_enable_extensions = ["attrs_block", "attrs_inline"]
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
 
-# jupyterlite_contents = ["./notebooks/README.ipynb"]
+jupyterlite_contents = "README.ipynb"
