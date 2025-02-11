@@ -18,3 +18,11 @@ maxdepth: 3
 users/index
 developers/index
 ```
+
+```{eval-rst}
+.. jupyterlite::
+   :width: 100%
+   :height: 600px
+   :prompt: Try JupyterLite!
+   :prompt_color: #00aa42
+```
