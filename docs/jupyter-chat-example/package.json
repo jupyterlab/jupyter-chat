@@ -41,11 +41,7 @@
     "clean:lintcache": "rimraf .eslintcache .stylelintcache",
     "clean:labextension": "rimraf jupyterlab_chat/labextension jupyterlab_chat/_version.py",
     "clean:all": "jlpm clean:lib && jlpm clean:labextension && jlpm clean:lintcache",
-    "dev-install": "pip install -e \".[test]\" && jupyter labextension develop . --overwrite",
-    "install:extension": "jlpm build",
-    "watch": "run-p watch:src watch:labextension",
-    "watch:src": "tsc -w --sourceMap",
-    "watch:labextension": "jupyter labextension watch ."
+    "install:extension": "jlpm build"
   },
   "dependencies": {
     "@jupyter/chat": "^0.7.1",
