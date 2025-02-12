@@ -78,7 +78,7 @@ export interface IWidgetConfig {
 /**
  * A signal emitting when the configuration for the chats has changed.
  */
-export interface IConfigChanged
+export interface IConfigChanged /* eslint-disable-line @typescript-eslint/no-empty-object-type */
   extends ISignal<IWidgetConfig, Partial<ILabChatConfig>> {}
 
 /**
