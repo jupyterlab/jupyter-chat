@@ -1,0 +1,97 @@
+{
+  "name": "jupyter-chat-example",
+  "version": "1.0.0",
+  "description": "A chat extension providing a chat as example",
+  "keywords": [
+    "jupyter",
+    "jupyterlab",
+    "jupyterlab-extension"
+  ],
+  "homepage": "https://github.com/jupyterlab/jupyter-chat",
+  "bugs": {
+    "url": "https://github.com/jupyterlab/jupyter-chat/issues"
+  },
+  "license": "BSD-3-Clause",
+  "author": {
+    "name": "Jupyter Development Team",
+    "email": "jupyter@googlegroups.com"
+  },
+  "files": [
+    "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}",
+    "style/**/*.{css,js,eot,gif,html,jpg,json,png,svg,woff2,ttf}",
+    "src/**/*.{ts,tsx}",
+    "schema/*.json"
+  ],
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "style": "style/index.css",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jupyterlab/jupyter-chat.git"
+  },
+  "scripts": {
+    "build": "jlpm build:lib && jlpm build:labextension:dev",
+    "build:prod": "jlpm clean && jlpm build:lib:prod && jlpm build:labextension",
+    "build:labextension": "jupyter labextension build .",
+    "build:labextension:dev": "jupyter labextension build --development True .",
+    "build:lib": "tsc --sourceMap",
+    "build:lib:prod": "tsc",
+    "clean": "jlpm clean:lib",
+    "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
+    "clean:lintcache": "rimraf .eslintcache .stylelintcache",
+    "clean:labextension": "rimraf jupyterlab_chat/labextension jupyterlab_chat/_version.py",
+    "clean:all": "jlpm clean:lib && jlpm clean:labextension && jlpm clean:lintcache",
+    "install:extension": "jlpm build"
+  },
+  "dependencies": {
+    "@jupyter/chat": "^0.7.1",
+    "@jupyterlab/application": "^4.2.0",
+    "@jupyterlab/apputils": "^4.3.0",
+    "@jupyterlab/notebook": "^4.2.0",
+    "@jupyterlab/rendermime": "^4.2.0",
+    "@jupyterlab/settingregistry": "^4.2.0",
+    "@lumino/coreutils": "^2.0.0"
+  },
+  "devDependencies": {
+    "@jupyterlab/builder": "^4.2.0",
+    "@types/json-schema": "^7.0.11",
+    "@types/react": "^18.2.0",
+    "@types/react-addons-linked-state-mixin": "^0.14.22",
+    "css-loader": "^6.7.1",
+    "mkdirp": "^1.0.3",
+    "npm-run-all": "^4.1.5",
+    "rimraf": "^5.0.1",
+    "source-map-loader": "^1.0.2",
+    "style-loader": "^3.3.1",
+    "typescript": "~5.0.2"
+  },
+  "sideEffects": [
+    "style/*.css",
+    "style/index.js"
+  ],
+  "styleModule": "style/index.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "jupyterlab": {
+    "discovery": {
+      "server": {
+        "managers": [
+          "pip"
+        ],
+        "base": {
+          "name": "jupyter_chat_example"
+        }
+      }
+    },
+    "extension": true,
+    "outputDir": "jupyter_chat_example/labextension",
+    "schemaDir": "schema",
+    "sharedPackages": {
+      "@jupyter/chat": {
+        "bundled": true,
+        "singleton": true
+      }
+    }
+  }
+}

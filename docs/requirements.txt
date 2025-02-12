@@ -1,4 +1,7 @@
-jupyterlab>=4.0.0
+jupyterlab>=4
+jupyterlite-core
+jupyterlite-pyodide-kernel
+jupyterlite-sphinx
 myst-parser
 pydata-sphinx-theme
 sphinx

@@ -18,3 +18,9 @@ maxdepth: 3
 users/index
 developers/index
 ```
+
+```{eval-rst}
+.. cssclass:: try-in-jupyterlite-button
+
+  `Try it with JupyterLite! <lite/lab/index.html?path=README.ipynb>`_
+```

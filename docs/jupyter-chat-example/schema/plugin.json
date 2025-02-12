@@ -1,0 +1,32 @@
+{
+  "title": "Chat",
+  "description": "Configuration for the chat widgets",
+  "type": "object",
+  "properties": {
+    "sendWithShiftEnter": {
+      "description": "Whether to send a message via Shift-Enter instead of Enter.",
+      "type": "boolean",
+      "default": false,
+      "readOnly": false
+    },
+    "stackMessages": {
+      "description": "Whether to stack consecutive messages from same user.",
+      "type": "boolean",
+      "default": true,
+      "readOnly": false
+    },
+    "unreadNotifications": {
+      "description": "Whether to enable or not the notifications on unread messages.",
+      "type": "boolean",
+      "default": true,
+      "readOnly": false
+    },
+    "enableCodeToolbar": {
+      "description": "Whether to enable or not the code toolbar.",
+      "type": "boolean",
+      "default": true,
+      "readOnly": false
+    }
+  },
+  "additionalProperties": false
+}
