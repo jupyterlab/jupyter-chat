@@ -186,7 +186,6 @@ ${selection.source}
     <Box sx={props.sx} className={clsx(INPUT_BOX_CLASS)}>
       <AttachmentPreviewList
         attachments={attachments}
-        onClick={model.clickAttachment}
         onRemove={model.removeAttachment}
       />
       <Autocomplete

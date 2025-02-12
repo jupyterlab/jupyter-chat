@@ -6,6 +6,7 @@
 import {
   ChatWidget,
   IActiveCellManager,
+  IAttachmentOpenerRegistry,
   IAutocompletionRegistry,
   IChatCommandRegistry,
   ISelectionWatcher
@@ -79,6 +80,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
     this._documentManager = options.documentManager;
     this._autocompletionRegistry = options.autocompletionRegistry;
     this._chatCommandRegistry = options.chatCommandRegistry;
+    this._attachmentOpenerRegistry = options.attachmentOpenerRegistry;
   }
 
   /**
@@ -93,6 +95,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
     context.documentManager = this._documentManager;
     context.autocompletionRegistry = this._autocompletionRegistry;
     context.chatCommandRegistry = this._chatCommandRegistry;
+    context.attachmentOpenerRegistry = this._attachmentOpenerRegistry;
     return new LabChatPanel({
       context,
       content: new ChatWidget(context)
@@ -104,6 +107,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
   private _documentManager?: IDocumentManager;
   private _autocompletionRegistry?: IAutocompletionRegistry;
   private _chatCommandRegistry?: IChatCommandRegistry;
+  private _attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
 }
 
 export namespace ChatWidgetFactory {
@@ -113,6 +117,7 @@ export namespace ChatWidgetFactory {
     documentManager?: IDocumentManager;
     autocompletionRegistry?: IAutocompletionRegistry;
     chatCommandRegistry?: IChatCommandRegistry;
+    attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
   }
 
   export interface IOptions<T extends LabChatPanel>
@@ -122,6 +127,7 @@ export namespace ChatWidgetFactory {
     documentManager?: IDocumentManager;
     autocompletionRegistry?: IAutocompletionRegistry;
     chatCommandRegistry?: IChatCommandRegistry;
+    attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
   }
 }
 

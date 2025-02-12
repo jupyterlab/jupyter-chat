@@ -5,6 +5,7 @@
 
 import {
   ChatWidget,
+  IAttachmentOpenerRegistry,
   IAutocompletionRegistry,
   IChatCommandRegistry,
   IChatModel,
@@ -107,6 +108,7 @@ export class ChatPanel extends SidePanel {
     this._documentManager = options.documentManager;
     this._autocompletionRegistry = options.autocompletionRegistry;
     this._chatCommandRegistry = options.chatCommandRegistry;
+    this._attachmentOpenerRegistry = options.attachmentOpenerRegistry;
 
     const addChat = new CommandToolbarButton({
       commands: this._commands,
@@ -170,7 +172,8 @@ export class ChatPanel extends SidePanel {
       themeManager: this._themeManager,
       documentManager: this._documentManager,
       autocompletionRegistry: this._autocompletionRegistry,
-      chatCommandRegistry: this._chatCommandRegistry
+      chatCommandRegistry: this._chatCommandRegistry,
+      attachmentOpenerRegistry: this._attachmentOpenerRegistry
     });
 
     this.addWidget(
@@ -292,6 +295,7 @@ export class ChatPanel extends SidePanel {
   private _documentManager?: IDocumentManager;
   private _autocompletionRegistry?: IAutocompletionRegistry;
   private _chatCommandRegistry?: IChatCommandRegistry;
+  private _attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
 }
 
 /**
@@ -310,6 +314,7 @@ export namespace ChatPanel {
     documentManager?: IDocumentManager;
     autocompletionRegistry?: IAutocompletionRegistry;
     chatCommandRegistry?: IChatCommandRegistry;
+    attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
   }
 }
 

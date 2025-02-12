@@ -402,10 +402,7 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
           />
         )}
         {message.attachments && (
-          <AttachmentPreviewList
-            attachments={message.attachments}
-            onClick={model.clickAttachment}
-          />
+          <AttachmentPreviewList attachments={message.attachments} />
         )}
       </div>
     );

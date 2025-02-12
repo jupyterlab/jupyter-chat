@@ -6,9 +6,12 @@
 import { NotebookShell } from '@jupyter-notebook/application';
 import {
   ActiveCellManager,
+  AttachmentOpenerRegistry,
   AutocompletionRegistry,
   ChatWidget,
   IActiveCellManager,
+  IAttachment,
+  IAttachmentOpenerRegistry,
   IAutocompletionRegistry,
   IChatCommandRegistry,
   ISelectionWatcher,
@@ -68,6 +71,7 @@ const FACTORY = 'Chat';
 
 const pluginIds = {
   activeCellManager: 'jupyterlab-chat-extension:activeCellManager',
+  attachmentOpenerRegistry: 'jupyterlab-chat-extension:attachmentOpener',
   autocompletionRegistry: 'jupyterlab-chat-extension:autocompletionRegistry',
   chatCommands: 'jupyterlab-chat-extension:commands',
   chatPanel: 'jupyterlab-chat-extension:chat-panel',
@@ -89,6 +93,25 @@ const autocompletionPlugin: JupyterFrontEndPlugin<IAutocompletionRegistry> = {
 };
 
 /**
+ * Extension providing the attachment opener registry.
+ */
+const attachmentOpeners: JupyterFrontEndPlugin<IAttachmentOpenerRegistry> = {
+  id: pluginIds.attachmentOpenerRegistry,
+  description: 'The attachment opener registry.',
+  autoStart: true,
+  provides: IAttachmentOpenerRegistry,
+  activate: (app: JupyterFrontEnd): IAttachmentOpenerRegistry => {
+    const attachmentOpenerRegistry = new AttachmentOpenerRegistry();
+
+    attachmentOpenerRegistry.set('file', (attachment: IAttachment) => {
+      app.commands.execute('docmanager:open', { path: attachment.value });
+    });
+
+    return attachmentOpenerRegistry;
+  }
+};
+
+/**
  * Extension registering the chat file type.
  */
 const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
@@ -98,6 +121,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
   requires: [IRenderMimeRegistry],
   optional: [
     IActiveCellManagerToken,
+    IAttachmentOpenerRegistry,
     IAutocompletionRegistry,
     IChatCommandRegistry,
     ICollaborativeDrive,
@@ -114,6 +138,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     app: JupyterFrontEnd,
     rmRegistry: IRenderMimeRegistry,
     activeCellManager: IActiveCellManager | null,
+    attachmentOpenerRegistry: IAttachmentOpenerRegistry,
     autocompletionRegistry: IAutocompletionRegistry,
     chatCommandRegistry: IChatCommandRegistry,
     drive: ICollaborativeDrive | null,
@@ -287,7 +312,8 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
       translator,
       documentManager: filebrowser?.model.manager,
       autocompletionRegistry,
-      chatCommandRegistry
+      chatCommandRegistry,
+      attachmentOpenerRegistry
     });
 
     // Add the widget to the tracker when it's created
@@ -644,6 +670,7 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
   provides: IChatPanel,
   requires: [IChatFactory, ICollaborativeDrive, IRenderMimeRegistry],
   optional: [
+    IAttachmentOpenerRegistry,
     IAutocompletionRegistry,
     IChatCommandRegistry,
     IDefaultFileBrowser,
@@ -655,6 +682,7 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
     factory: IChatFactory,
     drive: ICollaborativeDrive,
     rmRegistry: IRenderMimeRegistry,
+    attachmentOpenerRegistry: IAttachmentOpenerRegistry,
     autocompletionRegistry: IAutocompletionRegistry,
     chatCommandRegistry: IChatCommandRegistry,
     filebrowser: IDefaultFileBrowser | null,
@@ -676,7 +704,8 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
       defaultDirectory,
       documentManager: filebrowser?.model.manager,
       autocompletionRegistry,
-      chatCommandRegistry
+      chatCommandRegistry,
+      attachmentOpenerRegistry
     });
     chatPanel.id = 'JupyterlabChat:sidepanel';
     chatPanel.title.icon = chatIcon;
@@ -786,6 +815,7 @@ const selectionWatcher: JupyterFrontEndPlugin<ISelectionWatcher> = {
 
 export default [
   activeCellManager,
+  attachmentOpeners,
   autocompletionPlugin,
   chatCommands,
   chatPanel,

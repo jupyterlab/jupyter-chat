@@ -6,10 +6,11 @@
 // import { IDocumentManager } from '@jupyterlab/docmanager';
 import CloseIcon from '@mui/icons-material/Close';
 import { Box } from '@mui/material';
-import React from 'react';
+import React, { useContext } from 'react';
 
 import { TooltippedButton } from './mui-extras/tooltipped-button';
 import { IAttachment } from '../types';
+import { AttachmentOpenerContext } from '../context';
 
 const ATTACHMENTS_CLASS = 'jp-chat-attachments';
 const ATTACHMENT_CLASS = 'jp-chat-attachment';
@@ -21,7 +22,6 @@ const REMOVE_BUTTON_CLASS = 'jp-chat-attachment-remove';
  */
 export type AttachmentsProps = {
   attachments: IAttachment[];
-  onClick?: (attachment: IAttachment) => void;
   onRemove?: (attachment: IAttachment) => void;
 };
 
@@ -50,18 +50,21 @@ export type AttachmentProps = AttachmentsProps & {
  */
 export function AttachmentPreview(props: AttachmentProps): JSX.Element {
   const remove_tooltip = 'Remove attachment';
-
-  const onclick = () => {
-    if (props.onClick) {
-      props.onClick(props.attachment);
-    }
-  };
+  const attachmentOpenerRegistry = useContext(AttachmentOpenerContext);
 
   return (
     <Box className={ATTACHMENT_CLASS}>
       <span
-        className={props.onClick ? ATTACHMENT_CLICKABLE_CLASS : ''}
-        onClick={onclick}
+        className={
+          attachmentOpenerRegistry?.get(props.attachment.type)
+            ? ATTACHMENT_CLICKABLE_CLASS
+            : ''
+        }
+        onClick={() =>
+          attachmentOpenerRegistry?.get(props.attachment.type)?.(
+            props.attachment
+          )
+        }
       >
         {props.attachment.value}
       </span>
