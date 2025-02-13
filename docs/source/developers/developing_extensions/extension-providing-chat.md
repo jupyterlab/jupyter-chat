@@ -346,6 +346,8 @@ the [Material UI API](https://mui.com/material-ui/api/autocomplete/).
 
 Here is a simple example using a commands list (commands list copied from _jupyter-ai_):
 
+{emphasize-lines="2,6,12,13,14,15,16,17,18,25,26,32"}
+
 ```typescript
 import {
   AutocompletionRegistry,
@@ -401,6 +403,8 @@ By default the `IDefaultFileBrowser.model.manager` can be used.
 
 The default registry is not much than a `Map<string, () => void>`, allowing setting a
 specific function for an attachment type.
+
+{emphasize-lines="2,5,9,23,26,34,38,40,41,42,43,49,50"}
 
 ```typescript
 import {
