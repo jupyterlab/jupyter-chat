@@ -188,11 +188,6 @@ export interface IChatModel extends IDisposable {
   clearAttachments?(): void;
 
   /**
-   * Open attachments.
-   */
-  clickAttachment?(attachments: IAttachment): void;
-
-  /**
    * Function called by the input on key pressed.
    */
   inputChanged?(input?: string): void;
@@ -589,15 +584,6 @@ export class ChatModel implements IChatModel {
   clearAttachments = (): void => {
     this.inputAttachments = [];
     this._inputAttachmentsChanges.emit([]);
-  };
-
-  /**
-   * Open an attachments.
-   */
-  clickAttachment = (attachment: IAttachment): void => {
-    if (attachment.type === 'file') {
-      this._commands?.execute('docmanager:open', { path: attachment.value });
-    }
   };
 
   /**
