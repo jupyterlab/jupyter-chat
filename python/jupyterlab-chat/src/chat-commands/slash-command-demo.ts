@@ -15,26 +15,10 @@ export class SlashCommandProvider implements IChatCommandProvider {
   private _slash_commands: ChatCommand[] = [
     { name: '/ask', providerId: this.id, replaceWith: '/ask ' },
     { name: '/learn', providerId: this.id, replaceWith: '/learn ' },
-    { name: '/help', providerId: this.id, replaceWith: '/help ' },
-    {
-      name: '/test',
-      providerId: this.id,
-      replaceWith: 'asdfasdf adf sdf    asdf'
-    }
+    { name: '/help', providerId: this.id, replaceWith: '/help ' }
   ];
 
-  /**
-   * matches when:
-     - any partial slash command appears at start of input
-      - the partial slash command is immediately followed by end of input
-      
-      Examples:
-      - "/" => matched
-      - "/le" => matched
-      - "/learn" => matched
-      - "/learn " (note the space) => not matched
-      - "what does /help do?" => not matched
-    */
+  // regex used to test the current word
   private _regex: RegExp = /^\s*\/\w*$/;
 
   async getChatCommands(currentWord: string) {

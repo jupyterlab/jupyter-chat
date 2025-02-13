@@ -10,7 +10,6 @@ import {
   ChatCommand
 } from '@jupyter/chat';
 
-// TODO: rename cmd label to cmd name
 export class EmojiCommandProvider implements IChatCommandProvider {
   public id: string = 'jupyter-chat:emoji-commands';
   private _slash_commands: ChatCommand[] = [
@@ -19,14 +18,12 @@ export class EmojiCommandProvider implements IChatCommandProvider {
     { name: ':thinking:', replaceWith: '🤔', providerId: this.id },
     { name: ':cool:', replaceWith: '😎', providerId: this.id }
   ];
-  private _regex: RegExp = /(^|\s+):\w*$/;
 
-  /**
-   * @param partialInput The **partial input**, i.e. the substring of input up
-   * to the user's cursor position.
-   */
-  async getChatCommands(partialInput: string) {
-    const match = partialInput.match(this._regex)?.[0];
+  // regex used to test the current word
+  private _regex: RegExp = /:\w*:?/;
+
+  async getChatCommands(currentWord: string) {
+    const match = currentWord.match(this._regex)?.[0];
     if (!match) {
       return [];
     }
