@@ -95,7 +95,7 @@ export interface IChatModel extends IDisposable {
   /**
    * A signal emitting when the input attachments changed.
    */
-  readonly inputAttachmentsChanges?: ISignal<IChatModel, IAttachment[]>;
+  readonly inputAttachmentsChanged?: ISignal<IChatModel, IAttachment[]>;
 
   /**
    * Send a message, to be defined depending on the chosen technology.
@@ -417,8 +417,8 @@ export class ChatModel implements IChatModel {
   /**
    * A signal emitting when the input attachments changed.
    */
-  get inputAttachmentsChanges(): ISignal<IChatModel, IAttachment[]> {
-    return this._inputAttachmentsChanges;
+  get inputAttachmentsChanged(): ISignal<IChatModel, IAttachment[]> {
+    return this._inputAttachmentsChanged;
   }
 
   /**
@@ -560,7 +560,7 @@ export class ChatModel implements IChatModel {
     }
 
     this.inputAttachments.push(attachment);
-    this._inputAttachmentsChanges.emit([...this.inputAttachments]);
+    this._inputAttachmentsChanged.emit([...this.inputAttachments]);
   };
 
   /**
@@ -575,7 +575,7 @@ export class ChatModel implements IChatModel {
     }
 
     this.inputAttachments.splice(attachmentIndex, 1);
-    this._inputAttachmentsChanges.emit([...this.inputAttachments]);
+    this._inputAttachmentsChanged.emit([...this.inputAttachments]);
   };
 
   /**
@@ -583,7 +583,7 @@ export class ChatModel implements IChatModel {
    */
   clearAttachments = (): void => {
     this.inputAttachments = [];
-    this._inputAttachmentsChanges.emit([]);
+    this._inputAttachmentsChanged.emit([]);
   };
 
   /**
@@ -653,7 +653,7 @@ export class ChatModel implements IChatModel {
   private _viewportChanged = new Signal<IChatModel, number[]>(this);
   private _writersChanged = new Signal<IChatModel, IUser[]>(this);
   private _focusInputSignal = new Signal<ChatModel, void>(this);
-  private _inputAttachmentsChanges = new Signal<ChatModel, IAttachment[]>(this);
+  private _inputAttachmentsChanged = new Signal<ChatModel, IAttachment[]>(this);
 }
 
 /**

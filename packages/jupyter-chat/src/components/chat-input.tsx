@@ -69,12 +69,12 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     const attachmentChanged = (_: IChatModel, attachments: IAttachment[]) => {
       setAttachments([...attachments]);
     };
-    model.inputAttachmentsChanges?.connect(attachmentChanged);
+    model.inputAttachmentsChanged?.connect(attachmentChanged);
 
     return () => {
       model.configChanged?.disconnect(configChanged);
       model.focusInputSignal?.disconnect(focusInputElement);
-      model.inputAttachmentsChanges?.disconnect(attachmentChanged);
+      model.inputAttachmentsChanged?.disconnect(attachmentChanged);
     };
   }, [model]);
 
