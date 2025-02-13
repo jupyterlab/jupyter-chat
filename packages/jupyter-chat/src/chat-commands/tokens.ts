@@ -21,8 +21,8 @@ export interface IChatCommandRegistry {
    */
   handleChatCommand(
     command: ChatCommand,
-    partialInput: string,
-    replacePartialInput: (newPartialInput: string) => void
+    currentWord: string,
+    replaceCurrentWord: (newWord: string) => void
   ): void;
 }
 

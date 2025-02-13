@@ -12,7 +12,7 @@ import type {
 import { Box } from '@mui/material';
 
 import { ChatCommand, IChatCommandRegistry } from '../../chat-commands';
-import { getCurrentWord } from './utils';
+import { getCurrentWord, replaceCurrentWord } from './utils';
 
 type UseChatCommandsReturn = {
   autocompleteProps: Omit<AutocompleteProps<any, any, any, any>, 'renderInput'>;
@@ -47,11 +47,12 @@ export function useChatCommands(
   useEffect(() => {
     async function getCommands() {
       const providers = chatCommandRegistry?.getProviders();
-      if (!providers) {
+      const cursorIndex = inputRef.current?.selectionStart;
+      if (!providers || cursorIndex === null || cursorIndex === undefined) {
         return;
       }
 
-      const currentWord = getCurrentWord(inputRef);
+      const currentWord = getCurrentWord(input, cursorIndex);
       if (!currentWord?.length) {
         return;
       }
@@ -108,25 +109,34 @@ export function useChatCommands(
         reason: AutocompleteChangeReason
       ) => {
         if (reason !== 'selectOption') {
-          return;
-        }
-        if (!inputRef.current || !inputRef.current.selectionStart) {
-          return;
-        }
-        if (!chatCommandRegistry) {
+          // only call this callback when a command is selected by the user. the
+          // other reasons provided by MUI should never occur, so this check is
+          // mainly for type safety.
           return;
         }
 
-        const cursorIndex = inputRef.current.selectionStart;
-        const partialInput = input.slice(0, cursorIndex);
-        const setPartialInput = (newPartialInput: string) => {
-          setInput(newPartialInput + input.slice(cursorIndex));
+        const cursorIndex = inputRef.current?.selectionStart;
+        if (
+          !chatCommandRegistry ||
+          cursorIndex === null ||
+          cursorIndex === undefined
+        ) {
+          return;
+        }
+
+        const currentWord = getCurrentWord(input, cursorIndex);
+        if (!currentWord) {
+          return;
+        }
+
+        const replaceCurrentWordClosure = (newWord: string) => {
+          replaceCurrentWord(input, cursorIndex, newWord, setInput);
         };
 
         chatCommandRegistry.handleChatCommand(
           command,
-          partialInput,
-          setPartialInput
+          currentWord,
+          replaceCurrentWordClosure
         );
       },
       onHighlightChange:

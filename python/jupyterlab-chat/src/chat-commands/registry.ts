@@ -24,8 +24,8 @@ export class ChatCommandRegistry implements IChatCommandRegistry {
 
   handleChatCommand(
     command: ChatCommand,
-    partialInput: string,
-    setPartialInput: (newPartialInput: string) => void
+    currentWord: string,
+    replaceCurrentWord: (newWord: string) => void
   ) {
     const provider = this._providers.get(command.providerId);
     if (!provider) {
@@ -36,7 +36,7 @@ export class ChatCommandRegistry implements IChatCommandRegistry {
       return;
     }
 
-    provider.handleChatCommand(command, partialInput, setPartialInput);
+    provider.handleChatCommand(command, currentWord, replaceCurrentWord);
   }
 
   private _providers: Map<string, IChatCommandProvider>;
