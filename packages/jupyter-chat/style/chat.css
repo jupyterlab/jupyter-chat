@@ -120,9 +120,11 @@
 
 .jp-chat-attachment {
   border: solid 1px;
-  border-radius: 2px;
+  border-radius: 10px;
   margin: 0 0.2em;
   padding: 0 0.3em;
+  align-content: center;
+  background-color: var(--jp-border-color3);
 }
 
 .jp-chat-attachment .jp-chat-attachment-clickable:hover {
