@@ -14,10 +14,10 @@ import {
 export class EmojiCommandProvider implements IChatCommandProvider {
   public id: string = 'jupyter-chat:emoji-commands';
   private _slash_commands: ChatCommand[] = [
-    { label: ':heart:', value: '❤️', providerId: this.id },
-    { label: ':smile:', value: '🙂', providerId: this.id },
-    { label: ':thinking:', value: '🤔', providerId: this.id },
-    { label: ':cool:', value: '😎', providerId: this.id }
+    { name: ':heart:', replaceWith: '❤️', providerId: this.id },
+    { name: ':smile:', replaceWith: '🙂', providerId: this.id },
+    { name: ':thinking:', replaceWith: '🤔', providerId: this.id },
+    { name: ':cool:', replaceWith: '😎', providerId: this.id }
   ];
   private _regex: RegExp = /(^|\s+):\w*$/;
 
@@ -31,20 +31,22 @@ export class EmojiCommandProvider implements IChatCommandProvider {
       return [];
     }
 
-    const commands = this._slash_commands.filter(
-      // TODO: fix this
-      cmd => (cmd.label ?? cmd.value).startsWith(match) && cmd.value !== match
+    const commands = this._slash_commands.filter(cmd =>
+      cmd.name.startsWith(match)
     );
     return commands;
   }
 
   async handleChatCommand(
     command: ChatCommand,
-    partialInput: string,
-    replacePartialInput: (newPartialInput: string) => void
+    currentWord: string,
+    replaceCurrentWord: (newWord: string) => void
   ): Promise<void> {
-    const newPartialInput = partialInput.replace(this._regex, command.value);
-    replacePartialInput(newPartialInput);
+    if (!command.replaceWith) {
+      return;
+    }
+
+    replaceCurrentWord(command.replaceWith);
   }
 }
 

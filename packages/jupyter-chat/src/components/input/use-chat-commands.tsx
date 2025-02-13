@@ -3,9 +3,16 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import React from 'react';
 import { useEffect, useState } from 'react';
+import type {
+  AutocompleteChangeReason,
+  AutocompleteProps
+} from '@mui/material';
+import { Box } from '@mui/material';
+
 import { ChatCommand, IChatCommandRegistry } from '../../chat-commands';
-import { AutocompleteChangeReason, AutocompleteProps } from '@mui/material';
+import { getCurrentWord } from './utils';
 
 type UseChatCommandsReturn = {
   autocompleteProps: Omit<AutocompleteProps<any, any, any, any>, 'renderInput'>;
@@ -44,9 +51,24 @@ export function useChatCommands(
         return;
       }
 
+      const currentWord = getCurrentWord(inputRef);
+      if (!currentWord?.length) {
+        return;
+      }
+
       let newCommands: ChatCommand[] = [];
       for (const provider of providers) {
-        newCommands = newCommands.concat(await provider.getChatCommands(input));
+        // TODO: optimize performance when this method is truly async
+        try {
+          newCommands = newCommands.concat(
+            await provider.getChatCommands(currentWord)
+          );
+        } catch (e) {
+          console.error(
+            `Error when getting chat commands from command provider '${provider.id}': `,
+            e
+          );
+        }
       }
 
       if (newCommands) {
@@ -56,12 +78,26 @@ export function useChatCommands(
     }
 
     getCommands();
-  }, [input]);
+  }, [input, inputRef]);
 
   return {
     autocompleteProps: {
       open,
       options: commands,
+      getOptionLabel: (command: ChatCommand) => command.name,
+      renderOption: (
+        defaultProps,
+        command: ChatCommand,
+        __: unknown,
+        ___: unknown
+      ) => {
+        const { key, ...listItemProps } = defaultProps;
+        return (
+          <Box key={key} component="li" {...listItemProps}>
+            {command.name}
+          </Box>
+        );
+      },
       value: null,
       autoHighlight: true,
       freeSolo: true,

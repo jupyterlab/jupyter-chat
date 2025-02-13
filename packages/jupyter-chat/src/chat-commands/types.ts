@@ -6,46 +6,65 @@
 import { LabIcon } from '@jupyterlab/ui-components';
 
 export type ChatCommand = {
-  // the full command, e.g. "/help".
-  value: string;
+  /**
+   * The name of the command. This defines what the user should type in the
+   * input to have the command appear in the chat commands menu.
+   */
+  name: string;
 
-  // ID of the provider this chat command originated from
+  /**
+   * ID of the provider the command originated from.
+   */
   providerId: string;
 
-  // if set, use this as the primary label shown in the chat commands menu.
-  // otherwise use `value`.
-  label?: string;
+  /**
+   * If set, this will be rendered as the icon for the command in the chat
+   * commands menu. Jupyter Chat will choose a default if this is unset.
+   */
+  icon?: LabIcon;
 
-  // if set, show this as a secondary subtitle in the chat commands menu.
+  /**
+   * If set, this will be rendered as the description for the command in the
+   * chat commands menu. Jupyter Chat will choose a default if this is unset.
+   */
   description?: string;
 
-  // identifies which icon should be used, if any.
-  // Jupyter Chat should choose a default if one is not provided.
-  icon?: LabIcon;
+  /**
+   * If set, `handleChatCommand()` should replace the current word with this
+   * string after the command is run from the chat commands menu.
+   */
+  replaceWith?: string;
 };
 
+/**
+ * Interface of a command provider.
+ */
 export interface IChatCommandProvider {
   /**
    * ID of this command provider.
    */
   id: string;
 
-  ready?: Promise<void>;
-
   /**
-   * Async function which accepts a partial command input and returns a list of
-   * valid chat commands. Partial command inputs are matched by the `regex`
-   * defined by an implementation.
+   * Async function which accepts the current word and returns a list of
+   * valid chat commands that match the current word. The current word is
+   * space-separated word at the user's cursor.
+   *
+   * TODO: Pass a ChatModel/InputModel instance here to give the command access
+   * to more than the current word.
    */
-  getChatCommands(partialInput: string): Promise<ChatCommand[]>;
+  getChatCommands(currentWord: string): Promise<ChatCommand[]>;
 
   /**
-   * Function called when a chat command is typed by the user, either via
-   * accepting a completion or via keyboard.
+   * Function called when a chat command is run by the user through the chat
+   * commands menu.
+   *
+   * TODO: Pass a ChatModel/InputModel instance here to provide a function to
+   * replace the current word.
    */
   handleChatCommand(
     command: ChatCommand,
-    partialInput: string,
-    replacePartialInput: (newPartialInput: string) => void
+    currentWord: string,
+    replaceCurrentWord: (newWord: string) => void
   ): Promise<void>;
 }

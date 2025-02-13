@@ -10,13 +10,17 @@ import {
   ChatCommand
 } from '@jupyter/chat';
 
-// TODO: rename cmd label to cmd name
 export class SlashCommandProvider implements IChatCommandProvider {
   public id: string = 'jai-slash-commands';
   private _slash_commands: ChatCommand[] = [
-    { label: '/ask', value: '/ask ', providerId: this.id },
-    { label: '/learn', value: '/learn ', providerId: this.id },
-    { label: '/help', value: '/help ', providerId: this.id }
+    { name: '/ask', providerId: this.id, replaceWith: '/ask ' },
+    { name: '/learn', providerId: this.id, replaceWith: '/learn ' },
+    { name: '/help', providerId: this.id, replaceWith: '/help ' },
+    {
+      name: '/test',
+      providerId: this.id,
+      replaceWith: 'asdfasdf adf sdf    asdf'
+    }
   ];
 
   /**
@@ -33,30 +37,28 @@ export class SlashCommandProvider implements IChatCommandProvider {
     */
   private _regex: RegExp = /^\s*\/\w*$/;
 
-  /**
-   * @param partialInput The **partial input**, i.e. the substring of input up
-   * to the user's cursor position.
-   */
-  async getChatCommands(partialInput: string) {
-    const match = partialInput.match(this._regex)?.[0];
+  async getChatCommands(currentWord: string) {
+    const match = currentWord.match(this._regex)?.[0];
     if (!match) {
       return [];
     }
 
-    const commands = this._slash_commands.filter(
-      // TODO: fix this
-      cmd => (cmd.label ?? cmd.value).startsWith(match) && cmd.value !== match
+    const commands = this._slash_commands.filter(cmd =>
+      cmd.name.startsWith(match)
     );
     return commands;
   }
 
   async handleChatCommand(
     command: ChatCommand,
-    partialInput: string,
-    replacePartialInput: (newPartialInput: string) => void
+    currentWord: string,
+    replaceCurrentWord: (newWord: string) => void
   ): Promise<void> {
-    const newPartialInput = partialInput.replace(this._regex, command.value);
-    replacePartialInput(newPartialInput);
+    if (!command.replaceWith) {
+      return;
+    }
+
+    replaceCurrentWord(command.replaceWith);
   }
 }
 
