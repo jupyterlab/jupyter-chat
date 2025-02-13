@@ -20,7 +20,7 @@ import { SendButton } from './input/send-button';
 import { IChatModel } from '../model';
 import { IAutocompletionRegistry } from '../registry';
 import { IConfig, Selection } from '../types';
-import { useChatCommands } from './hooks/use-chat-commands';
+import { useChatCommands } from './input/use-chat-commands';
 import { IChatCommandRegistry } from '../chat-commands';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';

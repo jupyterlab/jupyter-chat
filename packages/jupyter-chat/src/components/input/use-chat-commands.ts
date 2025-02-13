@@ -20,8 +20,6 @@ type UseChatCommandsReturn = {
  * current input and chat command registry.
  *
  * Intended usage: `const chatCommands = useChatCommands(...)`.
- *
- * TODO: explore if open state var is necessary
  */
 export function useChatCommands(
   input: string,
@@ -31,8 +29,12 @@ export function useChatCommands(
 ): UseChatCommandsReturn {
   // whether an option is highlighted in the chat commands menu
   const [highlighted, setHighlighted] = useState(false);
+
   // whether the chat commands menu is open
   const [open, setOpen] = useState(true);
+
+  // current list of chat commands matched by the current word.
+  // the current word is the space-separated word at the user's cursor.
   const [commands, setCommands] = useState<ChatCommand[]>([]);
 
   useEffect(() => {
@@ -56,7 +58,6 @@ export function useChatCommands(
     getCommands();
   }, [input]);
 
-  console.log({ input });
   return {
     autocompleteProps: {
       open,
@@ -76,15 +77,17 @@ export function useChatCommands(
         if (!inputRef.current || !inputRef.current.selectionStart) {
           return;
         }
+        if (!chatCommandRegistry) {
+          return;
+        }
 
         const cursorIndex = inputRef.current.selectionStart;
         const partialInput = input.slice(0, cursorIndex);
         const setPartialInput = (newPartialInput: string) => {
-          console.log('CALLED');
           setInput(newPartialInput + input.slice(cursorIndex));
         };
 
-        chatCommandRegistry?.handleChatCommand(
+        chatCommandRegistry.handleChatCommand(
           command,
           partialInput,
           setPartialInput
