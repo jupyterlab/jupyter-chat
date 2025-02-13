@@ -79,7 +79,7 @@ The rendermime registry is required to display the messages using markdown synta
 This registry is provided by jupyterlab with a token, and must be required by the
 extension.
 
-### A full example
+### A minimal full extension
 
 The example below adds a new chat to the right panel.
 
@@ -379,6 +379,80 @@ const myChatExtension: JupyterFrontEndPlugin<void> = {
       model,
       rmRegistry,
       autocompletionRegistry
+    });
+
+    app.shell.add(widget, 'right');
+  }
+};
+```
+
+(attachment-opener-registry)=
+
+### attachmentOpenerRegistry
+
+The `attachmentOpenerRegistry` provides a way to open attachments for a given type.
+A simple example is to handle the attached files, by opening them using a command.
+
+```{tip}
+To be able to attach files from the chat, you must provide a `IDocumentManager` that will
+be used to select the files to attach.
+By default the `IDefaultFileBrowser.model.manager` can be used.
+```
+
+The default registry is not much than a `Map<string, () => void>`, allowing setting a
+specific function for an attachment type.
+
+```typescript
+import {
+  AttachmentOpenerRegistry,
+  ChatModel,
+  ChatWidget,
+  IAttachment,
+  IChatMessage,
+  INewMessage
+} from '@jupyter/chat';
+import { IDefaultFileBrowser } from '@jupyterlab/filebrowser';
+
+...
+
+class MyModel extends ChatModel {
+  sendMessage(
+    newMessage: INewMessage
+  ): Promise<boolean | void> | boolean | void {
+    const message: IChatMessage = {
+      body: newMessage.body,
+      id: newMessage.id ?? UUID.uuid4(),
+      type: 'msg',
+      time: Date.now() / 1000,
+      sender: { username: 'me' },
+      attachments: this.inputAttachments
+    };
+    this.messageAdded(message);
+    this.clearAttachments();
+  }
+}
+
+const myChatExtension: JupyterFrontEndPlugin<void> = {
+  id: 'myExtension:plugin',
+  autoStart: true,
+  requires: [IRenderMimeRegistry],
+  optional: [IDefaultFileBrowser],
+  activate: (
+    app: JupyterFrontEnd,
+    rmRegistry: IRenderMimeRegistry,
+    filebrowser: IDefaultFileBrowser | null
+  ): void => {
+    const attachmentOpenerRegistry = new AttachmentOpenerRegistry();
+    attachmentOpenerRegistry.set('file', (attachment: IAttachment) => {
+      app.commands.execute('docmanager:open', { path: attachment.value });
+    });
+
+    const model = new MyModel();
+    const widget = new ChatWidget({
+      model,
+      rmRegistry,
+      documentManager: filebrowser?.model.manager,
+      attachmentOpenerRegistry
     });
 
     app.shell.add(widget, 'right');

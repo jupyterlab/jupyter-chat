@@ -98,6 +98,13 @@ available:
 
 (chat-settings)=
 
+### Attachments
+
+Files can be attached to the messages using the clip icon next to the send icon in the input.
+It opens a Dialog allowing to select and atach files.
+
+Attachments can then be opened by clicking on the preview icon.
+
 ## Chat settings
 
 Some jupyterlab settings are available for the chats in the setting panel
