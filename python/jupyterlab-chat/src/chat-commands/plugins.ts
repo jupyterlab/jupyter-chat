@@ -5,8 +5,7 @@
 
 import { JupyterFrontEndPlugin } from '@jupyterlab/application';
 
-import { IChatCommandRegistry } from '@jupyter/chat';
-import { ChatCommandRegistry } from './registry';
+import { IChatCommandRegistry, ChatCommandRegistry } from '@jupyter/chat';
 
 export const chatCommandRegistryPlugin: JupyterFrontEndPlugin<IChatCommandRegistry> =
   {
