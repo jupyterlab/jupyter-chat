@@ -56,6 +56,9 @@ export function useChatCommands(
 
       const currentWord = getCurrentWord(input, cursorIndex);
       if (!currentWord?.length) {
+        setCommands([]);
+        setOpen(false);
+        setHighlighted(false);
         return;
       }
 
