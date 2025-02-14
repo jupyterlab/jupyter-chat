@@ -19,7 +19,7 @@ export class SlashCommandProvider implements IChatCommandProvider {
   ];
 
   // regex used to test the current word
-  private _regex: RegExp = /^\s*\/\w*$/;
+  private _regex: RegExp = /^\/\w*/;
 
   async getChatCommands(currentWord: string) {
     const match = currentWord.match(this._regex)?.[0];

@@ -13,14 +13,14 @@ import {
 export class EmojiCommandProvider implements IChatCommandProvider {
   public id: string = 'jupyter-chat:emoji-commands';
   private _slash_commands: ChatCommand[] = [
-    { name: ':heart:', replaceWith: '❤️', providerId: this.id },
-    { name: ':smile:', replaceWith: '🙂', providerId: this.id },
-    { name: ':thinking:', replaceWith: '🤔', providerId: this.id },
-    { name: ':cool:', replaceWith: '😎', providerId: this.id }
+    { name: ':heart:', replaceWith: '❤ ', providerId: this.id },
+    { name: ':smile:', replaceWith: '🙂 ', providerId: this.id },
+    { name: ':thinking:', replaceWith: '🤔 ', providerId: this.id },
+    { name: ':cool:', replaceWith: '😎 ', providerId: this.id }
   ];
 
   // regex used to test the current word
-  private _regex: RegExp = /:\w*:?/;
+  private _regex: RegExp = /^:\w*:?/;
 
   async getChatCommands(currentWord: string) {
     const match = currentWord.match(this._regex)?.[0];
