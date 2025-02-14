@@ -73,7 +73,17 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
 
   const inputExists = !!input.trim();
 
+  /**
+   * `handleKeyDown()`: callback invoked when the user presses any key in the
+   * `TextField` component. This is used to send the message when a user presses
+   * "Enter". This also handles many of the edge cases in the MUI Autocomplete
+   * component.
+   */
   function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    /**
+     * IMPORTANT: This statement ensures that arrow keys can be used to navigate
+     * the multiline input when the chat commands menu is closed.
+     */
     if (
       ['ArrowDown', 'ArrowUp'].includes(event.key) &&
       !chatCommands.menu.open
@@ -82,15 +92,32 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
       return;
     }
 
+    // remainder of this function only handles the "Enter" key.
     if (event.key !== 'Enter') {
       return;
     }
 
-    // Do not send the message if the user was selecting a suggested command from the
-    // Autocomplete component.
+    /**
+     * IMPORTANT: This statement ensures that when the chat commands menu is
+     * open with a highlighted command, the "Enter" key should run that command
+     * instead of sending the message.
+     *
+     * This is done by returning early and letting the event propagate to the
+     * `Autocomplete` component.
+     */
     if (chatCommands.menu.highlighted) {
       return;
     }
+
+    // remainder of this function only handles the "Enter" key pressed while the
+    // commands menu is closed.
+    /**
+     * IMPORTANT: This ensures that when the "Enter" key is pressed with the
+     * commands menu closed, the event is not propagated up to the
+     * `Autocomplete` component. Without this, `Autocomplete.onChange()` gets
+     * called with an invalid `string` instead of a `ChatCommand`.
+     */
+    event.stopPropagation();
 
     // Do not send empty messages, and avoid adding new line in empty message.
     if (!inputExists) {
@@ -99,6 +126,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
       return;
     }
 
+    // Finally, send the message when all other conditions are met.
     if (
       (sendWithShiftEnter && event.shiftKey) ||
       (!sendWithShiftEnter && !event.shiftKey)

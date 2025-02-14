@@ -7,15 +7,17 @@ import React from 'react';
 import { useEffect, useState } from 'react';
 import type {
   AutocompleteChangeReason,
-  AutocompleteProps
+  AutocompleteProps as GenericAutocompleteProps
 } from '@mui/material';
 import { Box } from '@mui/material';
 
 import { ChatCommand, IChatCommandRegistry } from '../../chat-commands';
 import { getCurrentWord, replaceCurrentWord } from './utils';
 
+type AutocompleteProps = GenericAutocompleteProps<any, any, any, any>;
+
 type UseChatCommandsReturn = {
-  autocompleteProps: Omit<AutocompleteProps<any, any, any, any>, 'renderInput'>;
+  autocompleteProps: Omit<AutocompleteProps, 'renderInput'>;
   menu: {
     open: boolean;
     highlighted: boolean;
@@ -38,7 +40,7 @@ export function useChatCommands(
   const [highlighted, setHighlighted] = useState(false);
 
   // whether the chat commands menu is open
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
 
   // current list of chat commands matched by the current word.
   // the current word is the space-separated word at the user's cursor.
@@ -81,6 +83,51 @@ export function useChatCommands(
     getCommands();
   }, [input, inputRef]);
 
+  /**
+   * onChange(): the callback invoked when a command is selected from the chat
+   * commands menu by the user.
+   */
+  const onChange: AutocompleteProps['onChange'] = (
+    e: unknown,
+    command: ChatCommand,
+    reason: AutocompleteChangeReason
+  ) => {
+    if (reason !== 'selectOption') {
+      // only call this callback when a command is selected by the user. this
+      // requires `reason === 'selectOption'`.
+      return;
+    }
+
+    const cursorIndex = inputRef.current?.selectionStart;
+    if (
+      !chatCommandRegistry ||
+      cursorIndex === null ||
+      cursorIndex === undefined
+    ) {
+      return;
+    }
+
+    const currentWord = getCurrentWord(input, cursorIndex);
+    if (!currentWord) {
+      return;
+    }
+
+    if (command.replaceWith) {
+      replaceCurrentWord(input, cursorIndex, command.replaceWith, setInput);
+      return;
+    }
+
+    const replaceCurrentWordClosure = (newWord: string) => {
+      replaceCurrentWord(input, cursorIndex, newWord, setInput);
+    };
+
+    chatCommandRegistry.handleChatCommand(
+      command,
+      currentWord,
+      replaceCurrentWordClosure
+    );
+  };
+
   return {
     autocompleteProps: {
       open,
@@ -99,51 +146,14 @@ export function useChatCommands(
           </Box>
         );
       },
+      // always show all options, since command providers should exclusively
+      // define what commands are added to the menu.
+      filterOptions: (commands: ChatCommand[]) => commands,
       value: null,
       autoHighlight: true,
       freeSolo: true,
       disableClearable: true,
-      onChange: (
-        _: unknown,
-        command: ChatCommand,
-        reason: AutocompleteChangeReason
-      ) => {
-        if (reason !== 'selectOption') {
-          // only call this callback when a command is selected by the user. the
-          // other reasons provided by MUI should never occur, so this check is
-          // mainly for type safety.
-          return;
-        }
-
-        const cursorIndex = inputRef.current?.selectionStart;
-        if (
-          !chatCommandRegistry ||
-          cursorIndex === null ||
-          cursorIndex === undefined
-        ) {
-          return;
-        }
-
-        const currentWord = getCurrentWord(input, cursorIndex);
-        if (!currentWord) {
-          return;
-        }
-
-        if (command.replaceWith) {
-          replaceCurrentWord(input, cursorIndex, command.replaceWith, setInput);
-          return;
-        }
-
-        const replaceCurrentWordClosure = (newWord: string) => {
-          replaceCurrentWord(input, cursorIndex, newWord, setInput);
-        };
-
-        chatCommandRegistry.handleChatCommand(
-          command,
-          currentWord,
-          replaceCurrentWordClosure
-        );
-      },
+      onChange,
       onHighlightChange:
         /**
          * On highlight change: set `highlighted` to whether an option is
