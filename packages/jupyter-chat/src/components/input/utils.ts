@@ -3,6 +3,8 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+const WHITESPACE = new Set([' ', '\n', '\t']);
+
 function getCurrentWordBoundaries(
   input: string,
   cursorIndex: number
@@ -11,11 +13,11 @@ function getCurrentWordBoundaries(
   let end = cursorIndex;
   const n = input.length;
 
-  while (start > 0 && input[start - 1] !== ' ') {
+  while (start > 0 && !WHITESPACE.has(input[start - 1])) {
     start--;
   }
 
-  while (end < n && input[end] !== ' ') {
+  while (end < n && !WHITESPACE.has(input[end])) {
     end++;
   }
 
