@@ -30,8 +30,11 @@ export type ChatCommand = {
   description?: string;
 
   /**
-   * If set, `handleChatCommand()` should replace the current word with this
-   * string after the command is run from the chat commands menu.
+   * If set, Jupyter Chat will replace the current word with this string after
+   * the command is run from the chat commands menu.
+   *
+   * If all commands from a provider have this property set, then
+   * `handleChatCommands()` can just return on the first line.
    */
   replaceWith?: string;
 };

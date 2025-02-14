@@ -38,11 +38,8 @@ export class SlashCommandProvider implements IChatCommandProvider {
     currentWord: string,
     replaceCurrentWord: (newWord: string) => void
   ): Promise<void> {
-    if (!command.replaceWith) {
-      return;
-    }
-
-    replaceCurrentWord(command.replaceWith);
+    // no handling needed because `replaceWith` is set in each command.
+    return;
   }
 }
 

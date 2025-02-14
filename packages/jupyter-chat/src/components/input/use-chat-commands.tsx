@@ -129,6 +129,11 @@ export function useChatCommands(
           return;
         }
 
+        if (command.replaceWith) {
+          replaceCurrentWord(input, cursorIndex, command.replaceWith, setInput);
+          return;
+        }
+
         const replaceCurrentWordClosure = (newWord: string) => {
           replaceCurrentWord(input, cursorIndex, newWord, setInput);
         };
