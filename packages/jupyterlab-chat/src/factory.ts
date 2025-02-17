@@ -6,11 +6,13 @@
 import {
   ChatWidget,
   IActiveCellManager,
+  IAttachmentOpenerRegistry,
   IAutocompletionRegistry,
   IChatCommandRegistry,
   ISelectionWatcher
 } from '@jupyter/chat';
 import { IThemeManager } from '@jupyterlab/apputils';
+import { IDocumentManager } from '@jupyterlab/docmanager';
 import { ABCWidgetFactory, DocumentRegistry } from '@jupyterlab/docregistry';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { Contents, User } from '@jupyterlab/services';
@@ -75,8 +77,10 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
     super(options);
     this._themeManager = options.themeManager;
     this._rmRegistry = options.rmRegistry;
+    this._documentManager = options.documentManager;
     this._autocompletionRegistry = options.autocompletionRegistry;
     this._chatCommandRegistry = options.chatCommandRegistry;
+    this._attachmentOpenerRegistry = options.attachmentOpenerRegistry;
   }
 
   /**
@@ -88,8 +92,10 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
   protected createNewWidget(context: ChatWidgetFactory.IContext): LabChatPanel {
     context.rmRegistry = this._rmRegistry;
     context.themeManager = this._themeManager;
+    context.documentManager = this._documentManager;
     context.autocompletionRegistry = this._autocompletionRegistry;
     context.chatCommandRegistry = this._chatCommandRegistry;
+    context.attachmentOpenerRegistry = this._attachmentOpenerRegistry;
     return new LabChatPanel({
       context,
       content: new ChatWidget(context)
@@ -98,24 +104,30 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
 
   private _themeManager: IThemeManager | null;
   private _rmRegistry: IRenderMimeRegistry;
+  private _documentManager?: IDocumentManager;
   private _autocompletionRegistry?: IAutocompletionRegistry;
   private _chatCommandRegistry?: IChatCommandRegistry;
+  private _attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
 }
 
 export namespace ChatWidgetFactory {
   export interface IContext extends DocumentRegistry.IContext<LabChatModel> {
     themeManager: IThemeManager | null;
     rmRegistry: IRenderMimeRegistry;
+    documentManager?: IDocumentManager;
     autocompletionRegistry?: IAutocompletionRegistry;
     chatCommandRegistry?: IChatCommandRegistry;
+    attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
   }
 
   export interface IOptions<T extends LabChatPanel>
     extends DocumentRegistry.IWidgetFactoryOptions<T> {
     themeManager: IThemeManager | null;
     rmRegistry: IRenderMimeRegistry;
+    documentManager?: IDocumentManager;
     autocompletionRegistry?: IAutocompletionRegistry;
     chatCommandRegistry?: IChatCommandRegistry;
+    attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
   }
 }
 

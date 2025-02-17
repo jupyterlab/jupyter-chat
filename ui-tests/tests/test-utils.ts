@@ -170,3 +170,46 @@ export const openSidePanel = async (
   }
   return panel.first();
 };
+
+// Workaround to expose a function using 'window' in the browser context.
+// Copied from https://github.com/puppeteer/puppeteer/issues/724#issuecomment-896755822
+export const exposeDepsJs = (
+  deps: Record<string, (...args: any) => any>
+): string => {
+  return Object.keys(deps)
+    .map(key => {
+      return `window["${key}"] = ${deps[key]};`;
+    })
+    .join('\n');
+};
+
+/**
+ * The function running in browser context to get a plugin.
+ *
+ * This function does the same as the equivalent in InPage galata helper, without the
+ * constraint on the plugin id.
+ */
+export const getPlugin = (pluginId: string): Promise<any> => {
+  return new Promise((resolve, reject) => {
+    const app = window.jupyterapp as any;
+    const hasPlugin = app.hasPlugin(pluginId);
+
+    if (hasPlugin) {
+      try {
+        // Compatibility with jupyterlab 4.3
+        const plugin: any = app._plugins
+          ? app._plugins.get(pluginId)
+          : app.pluginRegistry._plugins.get(pluginId);
+        if (plugin.activated) {
+          resolve(plugin.service);
+        } else {
+          void app.activatePlugin(pluginId).then(response => {
+            resolve(plugin.service);
+          });
+        }
+      } catch (error) {
+        console.error('Failed to get plugin', error);
+      }
+    }
+  });
+};

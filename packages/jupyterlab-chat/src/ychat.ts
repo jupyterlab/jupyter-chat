@@ -3,15 +3,15 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { IChatMessage, IUser } from '@jupyter/chat';
+import { IAttachment, IChatMessage, IUser } from '@jupyter/chat';
 import { Delta, DocumentChange, IMapChange, YDocument } from '@jupyter/ydoc';
-import { JSONExt, JSONObject, PartialJSONValue } from '@lumino/coreutils';
+import { JSONExt, JSONObject, PartialJSONValue, UUID } from '@lumino/coreutils';
 import * as Y from 'yjs';
 
 /**
  * The type for a YMessage.
  */
-export type IYmessage = IChatMessage<string>;
+export type IYmessage = IChatMessage<string, string>;
 
 /**
  * The type for a YMessage.
@@ -31,6 +31,10 @@ export interface IChatChanges extends DocumentChange {
    */
   userChanges?: UserChange[];
   /**
+   * Changes in attachments.
+   */
+  attachmentChanges?: AttachmentChange[];
+  /**
    * Changes in metadata.
    */
   metadataChanges?: MetadataChange[];
@@ -45,6 +49,11 @@ export type MessageChange = Delta<IYmessage[]>;
  * The user change type.
  */
 export type UserChange = IMapChange<IUser>;
+
+/**
+ * The attachment change type.
+ */
+export type AttachmentChange = IMapChange<IAttachment>;
 
 /**
  * The metadata change type.
@@ -65,6 +74,9 @@ export class YChat extends YDocument<IChatChanges> {
 
     this._messages = this.ydoc.getArray<IYmessage>('messages');
     this._messages.observe(this._messagesObserver);
+
+    this._attachments = this.ydoc.getMap<IAttachment>('attachments');
+    this._attachments.observe(this._attachmentsObserver);
 
     this._metadata = this.ydoc.getMap<IMetadata>('metadata');
     this._metadata.observe(this._metadataObserver);
@@ -94,6 +106,10 @@ export class YChat extends YDocument<IChatChanges> {
 
   get messages(): string[] {
     return JSONExt.deepCopy(this._messages.toJSON());
+  }
+
+  get attachments(): JSONObject {
+    return JSONExt.deepCopy(this._attachments.toJSON());
   }
 
   getSource(): JSONObject {
@@ -168,28 +184,46 @@ export class YChat extends YDocument<IChatChanges> {
     });
   }
 
+  getAttachment(id: string): IAttachment | undefined {
+    return this._attachments.get(id);
+  }
+
+  setAttachment(attachment: IAttachment): string {
+    // Search if the attachment already exist to update it, otherwise add it.
+    const id =
+      Array.from(this._attachments.entries()).find(
+        ([_, att]) =>
+          att.type === attachment.type && att.value === attachment.value
+      )?.[0] || UUID.uuid4();
+
+    this.transact(() => {
+      this._attachments.set(id, attachment);
+    });
+    return id;
+  }
+
   private _usersObserver = (event: Y.YMapEvent<IUser>): void => {
-    const userChange = new Array<UserChange>();
+    const userChanges = new Array<UserChange>();
     event.keysChanged.forEach(key => {
       const change = event.changes.keys.get(key);
       if (change) {
         switch (change.action) {
           case 'add':
-            userChange.push({
+            userChanges.push({
               key,
               newValue: this._users.get(key),
               type: 'add'
             });
             break;
           case 'delete':
-            userChange.push({
+            userChanges.push({
               key,
               oldValue: change.oldValue,
               type: 'remove'
             });
             break;
           case 'update':
-            userChange.push({
+            userChanges.push({
               key: key,
               oldValue: change.oldValue,
               newValue: this._users.get(key),
@@ -200,7 +234,7 @@ export class YChat extends YDocument<IChatChanges> {
       }
     });
 
-    this._changed.emit({ userChange: userChange } as Partial<IChatChanges>);
+    this._changed.emit({ userChanges } as Partial<IChatChanges>);
   };
 
   private _messagesObserver = (event: Y.YArrayEvent<IYmessage>): void => {
@@ -210,26 +244,61 @@ export class YChat extends YDocument<IChatChanges> {
     } as Partial<IChatChanges>);
   };
 
+  private _attachmentsObserver = (event: Y.YMapEvent<IAttachment>): void => {
+    const attachmentChanges = new Array<AttachmentChange>();
+    event.keysChanged.forEach(key => {
+      const change = event.changes.keys.get(key);
+      if (change) {
+        switch (change.action) {
+          case 'add':
+            attachmentChanges.push({
+              key,
+              newValue: this._attachments.get(key),
+              type: 'add'
+            });
+            break;
+          case 'delete':
+            attachmentChanges.push({
+              key,
+              oldValue: change.oldValue,
+              type: 'remove'
+            });
+            break;
+          case 'update':
+            attachmentChanges.push({
+              key: key,
+              oldValue: change.oldValue,
+              newValue: this._attachments.get(key),
+              type: 'change'
+            });
+            break;
+        }
+      }
+    });
+
+    this._changed.emit({ attachmentChanges } as Partial<IChatChanges>);
+  };
+
   private _metadataObserver = (event: Y.YMapEvent<IMetadata>): void => {
-    const metadataChange = new Array<MetadataChange>();
+    const metadataChanges = new Array<MetadataChange>();
     event.changes.keys.forEach((change, key) => {
       switch (change.action) {
         case 'add':
-          metadataChange.push({
+          metadataChanges.push({
             key,
             newValue: this._metadata.get(key),
             type: 'add'
           });
           break;
         case 'delete':
-          metadataChange.push({
+          metadataChanges.push({
             key,
             oldValue: change.oldValue,
             type: 'remove'
           });
           break;
         case 'update':
-          metadataChange.push({
+          metadataChanges.push({
             key: key,
             oldValue: change.oldValue,
             newValue: this._metadata.get(key),
@@ -239,12 +308,11 @@ export class YChat extends YDocument<IChatChanges> {
       }
     });
 
-    this._changed.emit({
-      metadataChanges: metadataChange
-    } as Partial<IChatChanges>);
+    this._changed.emit({ metadataChanges } as Partial<IChatChanges>);
   };
 
   private _users: Y.Map<IUser>;
   private _messages: Y.Array<IYmessage>;
+  private _attachments: Y.Map<IAttachment>;
   private _metadata: Y.Map<IMetadata>;
 }

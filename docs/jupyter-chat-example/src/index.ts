@@ -5,8 +5,10 @@
 
 import {
   ActiveCellManager,
+  AttachmentOpenerRegistry,
   buildChatSidebar,
   ChatModel,
+  IAttachment,
   IChatMessage,
   INewMessage,
   SelectionWatcher
@@ -16,6 +18,7 @@ import {
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 import { IThemeManager } from '@jupyterlab/apputils';
+import { IDefaultFileBrowser } from '@jupyterlab/filebrowser';
 import { INotebookTracker } from '@jupyterlab/notebook';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
@@ -25,15 +28,16 @@ class MyChatModel extends ChatModel {
   sendMessage(
     newMessage: INewMessage
   ): Promise<boolean | void> | boolean | void {
-    console.log(`New Message:\n${newMessage.body}`);
     const message: IChatMessage = {
       body: newMessage.body,
       id: newMessage.id ?? UUID.uuid4(),
       type: 'msg',
       time: Date.now() / 1000,
-      sender: { username: 'me' }
+      sender: { username: 'me' },
+      attachments: this.inputAttachments
     };
     this.messageAdded(message);
+    this.clearAttachments();
   }
 }
 
@@ -45,10 +49,16 @@ const plugin: JupyterFrontEndPlugin<void> = {
   description: 'The chat panel widget.',
   autoStart: true,
   requires: [IRenderMimeRegistry],
-  optional: [INotebookTracker, ISettingRegistry, IThemeManager],
+  optional: [
+    IDefaultFileBrowser,
+    INotebookTracker,
+    ISettingRegistry,
+    IThemeManager
+  ],
   activate: (
     app: JupyterFrontEnd,
     rmRegistry: IRenderMimeRegistry,
+    filebrowser: IDefaultFileBrowser | null,
     notebookTracker: INotebookTracker | null,
     settingRegistry: ISettingRegistry | null,
     themeManager: IThemeManager | null
@@ -102,7 +112,19 @@ const plugin: JupyterFrontEndPlugin<void> = {
         });
     }
 
-    const panel = buildChatSidebar({ model, rmRegistry, themeManager });
+    // Create the attachment opener registry.
+    const attachmentOpenerRegistry = new AttachmentOpenerRegistry();
+    attachmentOpenerRegistry.set('file', (attachment: IAttachment) => {
+      app.commands.execute('docmanager:open', { path: attachment.value });
+    });
+
+    const panel = buildChatSidebar({
+      model,
+      rmRegistry,
+      themeManager,
+      documentManager: filebrowser?.model.manager,
+      attachmentOpenerRegistry
+    });
     app.shell.add(panel, 'left');
   }
 };

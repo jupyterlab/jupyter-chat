@@ -5,6 +5,7 @@
 
 import CancelIcon from '@mui/icons-material/Cancel';
 import React from 'react';
+
 import { TooltippedButton } from '../mui-extras/tooltipped-button';
 
 const CANCEL_BUTTON_CLASS = 'jp-chat-cancel-button';

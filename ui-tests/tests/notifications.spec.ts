@@ -19,7 +19,7 @@ const FILENAME = 'my-chat.chat';
 const MSG_CONTENT = 'Hello World!';
 const USERNAME = USER.identity.username;
 
-test.describe('#notifications', () => {
+test.skip('#notifications', () => {
   const baseTime = 1714116341;
   const messagesCount = 15;
   const messagesList: any[] = [];

@@ -4,6 +4,7 @@
  */
 
 import { IThemeManager } from '@jupyterlab/apputils';
+import { IDocumentManager } from '@jupyterlab/docmanager';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -12,42 +13,41 @@ import { Box } from '@mui/system';
 import React, { useState } from 'react';
 
 import { JlThemeProvider } from './jl-theme-provider';
+import { IChatCommandRegistry } from '../chat-commands';
 import { ChatMessages } from './chat-messages';
 import { ChatInput } from './chat-input';
+import { AttachmentOpenerContext } from '../context';
 import { IChatModel } from '../model';
-import { IAutocompletionRegistry } from '../registry';
-import { IChatCommandRegistry } from '../chat-commands';
+import {
+  IAttachmentOpenerRegistry,
+  IAutocompletionRegistry
+} from '../registry';
 
 export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
-  const {
-    model,
-    rmRegistry: renderMimeRegistry,
-    autocompletionRegistry
-  } = props;
-  // no need to append to messageGroups imperatively here. all of that is
-  // handled by the listeners registered in the effect hooks above.
+  const { model } = props;
   const onSend = async (input: string) => {
     // send message to backend
     model.sendMessage({ body: input });
   };
 
   return (
-    <>
-      <ChatMessages rmRegistry={renderMimeRegistry} model={model} />
+    <AttachmentOpenerContext.Provider value={props.attachmentOpenerRegistry}>
+      <ChatMessages rmRegistry={props.rmRegistry} model={model} />
       <ChatInput
         onSend={onSend}
         sx={{
           paddingLeft: 4,
           paddingRight: 4,
-          paddingTop: 3.5,
+          paddingTop: 1,
           paddingBottom: 0,
           borderTop: '1px solid var(--jp-border-color1)'
         }}
         model={model}
-        autocompletionRegistry={autocompletionRegistry}
+        documentManager={props.documentManager}
+        autocompletionRegistry={props.autocompletionRegistry}
         chatCommandRegistry={props.chatCommandRegistry}
       />
-    </>
+    </AttachmentOpenerContext.Provider>
   );
 }
 
@@ -92,8 +92,10 @@ export function Chat(props: Chat.IOptions): JSX.Element {
           <ChatBody
             model={props.model}
             rmRegistry={props.rmRegistry}
+            documentManager={props.documentManager}
             autocompletionRegistry={props.autocompletionRegistry}
             chatCommandRegistry={props.chatCommandRegistry}
+            attachmentOpenerRegistry={props.attachmentOpenerRegistry}
           />
         )}
         {view === Chat.View.settings && props.settingsPanel && (
@@ -121,6 +123,10 @@ export namespace Chat {
      */
     rmRegistry: IRenderMimeRegistry;
     /**
+     * The document manager.
+     */
+    documentManager?: IDocumentManager;
+    /**
      * Autocompletion registry.
      */
     autocompletionRegistry?: IAutocompletionRegistry;
@@ -132,6 +138,10 @@ export namespace Chat {
      * Chat command registry.
      */
     chatCommandRegistry?: IChatCommandRegistry;
+    /**
+     * Attachment opener registry.
+     */
+    attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
   }
 
   /**

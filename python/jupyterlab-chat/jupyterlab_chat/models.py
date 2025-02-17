@@ -68,3 +68,20 @@ class NewMessage:
 @dataclass
 class User(JupyterUser):
     """ Object representing a user (same as Jupyter User ) """
+
+
+@dataclass
+class Attachment:
+    """ Object representing an attachment """
+
+    type: str
+    """ The type of attachment (i.e. "file", "variable", "image") """
+
+    value: str
+    """ The value (i.e. a path, a variable name, an image content) """
+
+    mimetype: Optional[str] = None
+    """
+    The mime type of the attachment
+    Default to None.
+    """
