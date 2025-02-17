@@ -50,6 +50,11 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   }
 
   useEffect(() => {
+    const inputChanged = (_: IInputModel, value: string) => {
+      setInput(value);
+    };
+    model.valueChanged.connect(inputChanged);
+
     const configChanged = (_: IInputModel, config: InputModel.IConfig) => {
       setSendWithShiftEnter(config.sendWithShiftEnter ?? false);
     };
@@ -156,14 +161,14 @@ ${selection.source}
 `;
     }
     props.onSend(content);
-    setInput('');
+    model.value = '';
   }
 
   /**
    * Triggered when cancelling edition.
    */
   function onCancel() {
-    setInput(props.value || '');
+    model.value = props.value || '';
     props.onCancel!();
   }
 
@@ -247,7 +252,6 @@ ${selection.source}
         )}
         inputValue={input}
         onInputChange={(_, newValue: string) => {
-          setInput(newValue);
           model.value = newValue;
         }}
       />
