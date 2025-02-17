@@ -161,11 +161,6 @@ export interface IChatModel extends IDisposable {
    * Update the current writers list.
    */
   updateWriters(writers: IUser[]): void;
-
-  /**
-   * Function called by the input on key pressed.
-   */
-  inputChanged?(input?: string): void;
 }
 
 /**
@@ -513,11 +508,6 @@ export class ChatModel implements IChatModel {
   updateWriters(writers: IUser[]): void {
     this._writersChanged.emit(writers);
   }
-
-  /**
-   * Function called by the input on key pressed.
-   */
-  inputChanged?(input?: string): void {}
 
   /**
    * Add unread messages to the list.
