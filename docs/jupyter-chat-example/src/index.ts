@@ -34,10 +34,10 @@ class MyChatModel extends ChatModel {
       type: 'msg',
       time: Date.now() / 1000,
       sender: { username: 'me' },
-      attachments: this.inputAttachments
+      attachments: this.input.attachments
     };
     this.messageAdded(message);
-    this.clearAttachments();
+    this.input.clearAttachments();
   }
 }
 
