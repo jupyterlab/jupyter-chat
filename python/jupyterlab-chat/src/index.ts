@@ -61,7 +61,6 @@ import {
   ISelectionWatcherToken
 } from 'jupyterlab-chat';
 import { chatCommandRegistryPlugin } from './chat-commands/plugins';
-import { slashCommandDemoPlugin } from './chat-commands/slash-command-demo';
 import { emojiCommandsPlugin } from './chat-commands/providers/emoji';
 
 const FACTORY = 'Chat';
@@ -786,6 +785,5 @@ export default [
   docFactories,
   selectionWatcher,
   chatCommandRegistryPlugin,
-  slashCommandDemoPlugin,
   emojiCommandsPlugin
 ];
