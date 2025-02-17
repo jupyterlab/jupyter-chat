@@ -312,6 +312,9 @@ export class InputModel implements IInputModel {
 
 export namespace InputModel {
   export interface IOptions {
+    /**
+     * The initial value of the input.
+     */
     value?: string;
     /**
      * The current cursor index.

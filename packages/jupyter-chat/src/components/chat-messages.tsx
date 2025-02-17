@@ -19,6 +19,7 @@ import React, { useEffect, useState, useRef, forwardRef } from 'react';
 import { ChatInput } from './chat-input';
 import { MarkdownRenderer } from './markdown-renderer';
 import { ScrollContainer } from './scroll-container';
+import { InputModel } from '../input-model';
 import { IChatModel } from '../model';
 import { IChatMessage, IUser } from '../types';
 import { AttachmentPreviewList } from './attachments';
@@ -385,10 +386,18 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
       <div ref={ref} data-index={props.index}>
         {edit && canEdit ? (
           <ChatInput
-            value={message.body}
             onSend={(input: string) => updateMessage(message.id, input)}
             onCancel={() => cancelEdition()}
-            model={model.input}
+            model={
+              new InputModel({
+                value: message.body,
+                activeCellManager: model.activeCellManager,
+                selectionWatcher: model.selectionWatcher,
+                config: {
+                  sendWithShiftEnter: model.config.sendWithShiftEnter
+                }
+              })
+            }
             hideIncludeSelection={true}
           />
         ) : (
