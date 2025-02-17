@@ -6,6 +6,7 @@
 import {
   ChatWidget,
   IAutocompletionRegistry,
+  IChatCommandRegistry,
   IChatModel,
   readIcon
 } from '@jupyter/chat';
@@ -103,6 +104,7 @@ export class ChatPanel extends SidePanel {
     this._themeManager = options.themeManager;
     this._defaultDirectory = options.defaultDirectory;
     this._autocompletionRegistry = options.autocompletionRegistry;
+    this._chatCommandRegistry = options.chatCommandRegistry;
 
     const addChat = new CommandToolbarButton({
       commands: this._commands,
@@ -164,7 +166,8 @@ export class ChatPanel extends SidePanel {
       model: model,
       rmRegistry: this._rmRegistry,
       themeManager: this._themeManager,
-      autocompletionRegistry: this._autocompletionRegistry
+      autocompletionRegistry: this._autocompletionRegistry,
+      chatCommandRegistry: this._chatCommandRegistry
     });
 
     this.addWidget(
@@ -284,6 +287,7 @@ export class ChatPanel extends SidePanel {
   private _rmRegistry: IRenderMimeRegistry;
   private _themeManager: IThemeManager | null;
   private _autocompletionRegistry?: IAutocompletionRegistry;
+  private _chatCommandRegistry?: IChatCommandRegistry;
 }
 
 /**
@@ -300,6 +304,7 @@ export namespace ChatPanel {
     themeManager: IThemeManager | null;
     defaultDirectory: string;
     autocompletionRegistry?: IAutocompletionRegistry;
+    chatCommandRegistry?: IChatCommandRegistry;
   }
 }
 
