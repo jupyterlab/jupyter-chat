@@ -8,9 +8,9 @@ import SendIcon from '@mui/icons-material/Send';
 import { Box, Menu, MenuItem, Typography } from '@mui/material';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { IChatModel } from '../../model';
 import { TooltippedButton } from '../mui-extras/tooltipped-button';
 import { includeSelectionIcon } from '../../icons';
+import { IInputModel } from '../../input-model';
 import { Selection } from '../../types';
 
 const SEND_BUTTON_CLASS = 'jp-chat-send-button';
@@ -21,7 +21,7 @@ const SEND_INCLUDE_LI_CLASS = 'jp-chat-send-include';
  * The send button props.
  */
 export type SendButtonProps = {
-  model: IChatModel;
+  model: IInputModel;
   sendWithShiftEnter: boolean;
   inputExists: boolean;
   onSend: (selection?: Selection) => unknown;

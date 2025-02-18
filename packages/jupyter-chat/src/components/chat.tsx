@@ -32,7 +32,12 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
 
   return (
     <AttachmentOpenerContext.Provider value={props.attachmentOpenerRegistry}>
-      <ChatMessages rmRegistry={props.rmRegistry} model={model} />
+      <ChatMessages
+        rmRegistry={props.rmRegistry}
+        model={model}
+        chatCommandRegistry={props.chatCommandRegistry}
+        documentManager={props.documentManager}
+      />
       <ChatInput
         onSend={onSend}
         sx={{
@@ -42,7 +47,7 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
           paddingBottom: 0,
           borderTop: '1px solid var(--jp-border-color1)'
         }}
-        model={model}
+        model={model.input}
         documentManager={props.documentManager}
         autocompletionRegistry={props.autocompletionRegistry}
         chatCommandRegistry={props.chatCommandRegistry}

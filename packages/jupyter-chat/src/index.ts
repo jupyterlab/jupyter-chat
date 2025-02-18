@@ -6,6 +6,7 @@
 export * from './active-cell-manager';
 export * from './components';
 export * from './icons';
+export * from './input-model';
 export * from './model';
 export * from './registry';
 export * from './selection-watcher';

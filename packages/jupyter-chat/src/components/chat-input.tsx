@@ -6,6 +6,7 @@
 import { IDocumentManager } from '@jupyterlab/docmanager';
 import {
   Autocomplete,
+  AutocompleteInputChangeReason,
   Box,
   InputAdornment,
   SxProps,
@@ -17,9 +18,9 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { AttachmentPreviewList } from './attachments';
 import { AttachButton, CancelButton, SendButton } from './input';
-import { IChatModel } from '../model';
+import { IInputModel, InputModel } from '../input-model';
 import { IAutocompletionRegistry } from '../registry';
-import { IAttachment, IConfig, Selection } from '../types';
+import { IAttachment, Selection } from '../types';
 import { useChatCommands } from './input/use-chat-commands';
 import { IChatCommandRegistry } from '../chat-commands';
 
@@ -27,23 +28,17 @@ const INPUT_BOX_CLASS = 'jp-chat-input-container';
 
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
   const { documentManager, model } = props;
-  const [input, setInput] = useState<string>(props.value || '');
+  const [input, setInput] = useState<string>(model.value);
   const inputRef = useRef<HTMLInputElement>();
 
-  const chatCommands = useChatCommands(
-    input,
-    setInput,
-    inputRef,
-    props.chatCommandRegistry
-  );
+  const chatCommands = useChatCommands(model, props.chatCommandRegistry);
 
   const [sendWithShiftEnter, setSendWithShiftEnter] = useState<boolean>(
     model.config.sendWithShiftEnter ?? false
   );
-  const [typingNotification, setTypingNotification] = useState<boolean>(
-    model.config.sendTypingNotification ?? false
+  const [attachments, setAttachments] = useState<IAttachment[]>(
+    model.attachments
   );
-  const [attachments, setAttachments] = useState<IAttachment[]>([]);
 
   // Display the include selection menu if it is not explicitly hidden, and if at least
   // one of the tool to check for text or cell selection is enabled.
@@ -53,9 +48,13 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   }
 
   useEffect(() => {
-    const configChanged = (_: IChatModel, config: IConfig) => {
+    const inputChanged = (_: IInputModel, value: string) => {
+      setInput(value);
+    };
+    model.valueChanged.connect(inputChanged);
+
+    const configChanged = (_: IInputModel, config: InputModel.IConfig) => {
       setSendWithShiftEnter(config.sendWithShiftEnter ?? false);
-      setTypingNotification(config.sendTypingNotification ?? false);
     };
     model.configChanged.connect(configChanged);
 
@@ -66,15 +65,15 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     };
     model.focusInputSignal?.connect(focusInputElement);
 
-    const attachmentChanged = (_: IChatModel, attachments: IAttachment[]) => {
+    const attachmentChanged = (_: IInputModel, attachments: IAttachment[]) => {
       setAttachments([...attachments]);
     };
-    model.inputAttachmentsChanged?.connect(attachmentChanged);
+    model.attachmentsChanged?.connect(attachmentChanged);
 
     return () => {
       model.configChanged?.disconnect(configChanged);
       model.focusInputSignal?.disconnect(focusInputElement);
-      model.inputAttachmentsChanged?.disconnect(attachmentChanged);
+      model.attachmentsChanged?.disconnect(attachmentChanged);
     };
   }, [model]);
 
@@ -160,15 +159,14 @@ ${selection.source}
 `;
     }
     props.onSend(content);
-    setInput('');
+    model.value = '';
   }
 
   /**
    * Triggered when cancelling edition.
    */
   function onCancel() {
-    setInput(props.value || '');
-    props.onCancel!();
+    props.onCancel?.();
   }
 
   // Set the helper text based on whether Shift+Enter is used for sending.
@@ -218,6 +216,9 @@ ${selection.source}
             placeholder="Start chatting"
             inputRef={inputRef}
             sx={{ marginTop: '1px' }}
+            onSelect={() =>
+              (model.cursorIndex = inputRef.current?.selectionStart ?? null)
+            }
             InputProps={{
               ...params.InputProps,
               endAdornment: (
@@ -247,10 +248,16 @@ ${selection.source}
           />
         )}
         inputValue={input}
-        onInputChange={(_, newValue: string) => {
-          setInput(newValue);
-          if (typingNotification && model.inputChanged) {
-            model.inputChanged(newValue);
+        onInputChange={(
+          _,
+          newValue: string,
+          reason: AutocompleteInputChangeReason
+        ) => {
+          // Do not update the value if the reason is 'reset', which should occur only
+          // if an autocompletion command has been selected. In this case, the value is
+          // set in the 'onChange()' callback of the autocompletion (to avoid conflicts).
+          if (reason !== 'reset') {
+            model.value = newValue;
           }
         }}
       />
@@ -269,11 +276,7 @@ export namespace ChatInput {
     /**
      * The chat model.
      */
-    model: IChatModel;
-    /**
-     * The initial value of the input (default to '')
-     */
-    value?: string;
+    model: IInputModel;
     /**
      * The function to be called to send the message.
      */
