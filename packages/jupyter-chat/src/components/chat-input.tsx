@@ -28,7 +28,7 @@ const INPUT_BOX_CLASS = 'jp-chat-input-container';
 
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
   const { documentManager, model } = props;
-  const [input, setInput] = useState<string>(model.value || '');
+  const [input, setInput] = useState<string>(model.value);
   const inputRef = useRef<HTMLInputElement>();
 
   const chatCommands = useChatCommands(model, props.chatCommandRegistry);
@@ -36,7 +36,9 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   const [sendWithShiftEnter, setSendWithShiftEnter] = useState<boolean>(
     model.config.sendWithShiftEnter ?? false
   );
-  const [attachments, setAttachments] = useState<IAttachment[]>([]);
+  const [attachments, setAttachments] = useState<IAttachment[]>(
+    model.attachments
+  );
 
   // Display the include selection menu if it is not explicitly hidden, and if at least
   // one of the tool to check for text or cell selection is enabled.
