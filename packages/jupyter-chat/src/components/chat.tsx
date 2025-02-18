@@ -32,7 +32,11 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
 
   return (
     <AttachmentOpenerContext.Provider value={props.attachmentOpenerRegistry}>
-      <ChatMessages rmRegistry={props.rmRegistry} model={model} />
+      <ChatMessages
+        rmRegistry={props.rmRegistry}
+        model={model}
+        chatCommandRegistry={props.chatCommandRegistry}
+      />
       <ChatInput
         onSend={onSend}
         sx={{

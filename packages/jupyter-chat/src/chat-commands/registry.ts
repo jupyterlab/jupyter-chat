@@ -5,6 +5,7 @@
 
 import { Token } from '@lumino/coreutils';
 import { ChatCommand, IChatCommandProvider } from './types';
+import { IInputModel } from '../input-model';
 
 /**
  * Interface of a chat command registry, which tracks a list of chat command
@@ -19,11 +20,7 @@ export interface IChatCommandRegistry {
    * Handles a chat command by calling `handleChatCommand()` on the provider
    * corresponding to this chat command.
    */
-  handleChatCommand(
-    command: ChatCommand,
-    currentWord: string,
-    replaceCurrentWord: (newWord: string) => void
-  ): void;
+  handleChatCommand(command: ChatCommand, inputModel: IInputModel): void;
 }
 
 /**
@@ -42,11 +39,7 @@ export class ChatCommandRegistry implements IChatCommandRegistry {
     return Array.from(this._providers.values());
   }
 
-  handleChatCommand(
-    command: ChatCommand,
-    currentWord: string,
-    replaceCurrentWord: (newWord: string) => void
-  ) {
+  handleChatCommand(command: ChatCommand, inputModel: IInputModel) {
     const provider = this._providers.get(command.providerId);
     if (!provider) {
       console.error(
@@ -56,7 +49,7 @@ export class ChatCommandRegistry implements IChatCommandRegistry {
       return;
     }
 
-    provider.handleChatCommand(command, currentWord, replaceCurrentWord);
+    provider.handleChatCommand(command, inputModel);
   }
 
   private _providers: Map<string, IChatCommandProvider>;

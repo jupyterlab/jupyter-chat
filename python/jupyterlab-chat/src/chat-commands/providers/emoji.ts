@@ -7,7 +7,8 @@ import { JupyterFrontEndPlugin } from '@jupyterlab/application';
 import {
   IChatCommandProvider,
   IChatCommandRegistry,
-  ChatCommand
+  ChatCommand,
+  IInputModel
 } from '@jupyter/chat';
 
 export class EmojiCommandProvider implements IChatCommandProvider {
@@ -60,8 +61,7 @@ export class EmojiCommandProvider implements IChatCommandProvider {
 
   async handleChatCommand(
     command: ChatCommand,
-    currentWord: string,
-    replaceCurrentWord: (newWord: string) => void
+    inputModel: IInputModel
   ): Promise<void> {
     // no handling needed because `replaceWith` is set in each command.
     return;
