@@ -6,6 +6,7 @@
 import { IDocumentManager } from '@jupyterlab/docmanager';
 import {
   Autocomplete,
+  AutocompleteInputChangeReason,
   Box,
   InputAdornment,
   SxProps,
@@ -30,12 +31,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   const [input, setInput] = useState<string>(model.value || '');
   const inputRef = useRef<HTMLInputElement>();
 
-  const chatCommands = useChatCommands(
-    input,
-    setInput,
-    inputRef,
-    props.chatCommandRegistry
-  );
+  const chatCommands = useChatCommands(model, props.chatCommandRegistry);
 
   const [sendWithShiftEnter, setSendWithShiftEnter] = useState<boolean>(
     model.config.sendWithShiftEnter ?? false
@@ -250,8 +246,17 @@ ${selection.source}
           />
         )}
         inputValue={input}
-        onInputChange={(_, newValue: string) => {
-          model.value = newValue;
+        onInputChange={(
+          _,
+          newValue: string,
+          reason: AutocompleteInputChangeReason
+        ) => {
+          // Do not update the value if the reason is 'reset', which should occur only
+          // if an autocompletion command has been selected. In this case, the value is
+          // set in the 'onChange()' callback of the autocompletion (to avoid conflicts).
+          if (reason !== 'reset') {
+            model.value = newValue;
+          }
         }}
       />
     </Box>

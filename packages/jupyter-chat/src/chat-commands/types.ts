@@ -4,6 +4,7 @@
  */
 
 import { LabIcon } from '@jupyterlab/ui-components';
+import { IInputModel } from '../input-model';
 
 export type ChatCommand = {
   /**
@@ -67,7 +68,6 @@ export interface IChatCommandProvider {
    */
   handleChatCommand(
     command: ChatCommand,
-    currentWord: string,
-    replaceCurrentWord: (newWord: string) => void
+    inputModel: IInputModel
   ): Promise<void>;
 }

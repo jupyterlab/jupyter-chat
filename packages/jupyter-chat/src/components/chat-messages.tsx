@@ -16,13 +16,14 @@ import type { SxProps, Theme } from '@mui/material';
 import clsx from 'clsx';
 import React, { useEffect, useState, useRef, forwardRef } from 'react';
 
+import { AttachmentPreviewList } from './attachments';
 import { ChatInput } from './chat-input';
 import { MarkdownRenderer } from './markdown-renderer';
 import { ScrollContainer } from './scroll-container';
+import { IChatCommandRegistry } from '../chat-commands';
 import { InputModel } from '../input-model';
 import { IChatModel } from '../model';
 import { IChatMessage, IUser } from '../types';
-import { AttachmentPreviewList } from './attachments';
 
 const MESSAGES_BOX_CLASS = 'jp-chat-messages-container';
 const MESSAGE_CLASS = 'jp-chat-message';
@@ -41,6 +42,7 @@ const NAVIGATION_BOTTOM_CLASS = 'jp-chat-navigation-bottom';
 type BaseMessageProps = {
   rmRegistry: IRenderMimeRegistry;
   model: IChatModel;
+  chatCommandRegistry?: IChatCommandRegistry;
 };
 
 /**
@@ -399,6 +401,7 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
               })
             }
             hideIncludeSelection={true}
+            chatCommandRegistry={props.chatCommandRegistry}
           />
         ) : (
           <MarkdownRenderer

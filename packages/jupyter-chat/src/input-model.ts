@@ -100,6 +100,11 @@ export interface IInputModel extends IDisposable {
    * A signal emitting when the attachment list has changed.
    */
   readonly attachmentsChanged?: ISignal<IInputModel, IAttachment[]>;
+
+  /**
+   * Replace the current word in the input with a new one.
+   */
+  replaceCurrentWord(newWord: string): void;
 }
 
 /**
@@ -151,7 +156,7 @@ export class InputModel implements IInputModel {
     if (this._cursorIndex === null) {
       return;
     }
-    const currentWord = getCurrentWord(this._value, this._cursorIndex);
+    const currentWord = Private.getCurrentWord(this._value, this._cursorIndex);
     if (currentWord !== this._currentWord) {
       this._currentWord = currentWord;
       this._currentWordChanged.emit(this._currentWord);
@@ -278,6 +283,20 @@ export class InputModel implements IInputModel {
   }
 
   /**
+   * Replace the current word in the input with a new one.
+   */
+  replaceCurrentWord(newWord: string): void {
+    if (this.cursorIndex === null) {
+      return;
+    }
+    const [start, end] = Private.getCurrentWordBoundaries(
+      this.value,
+      this.cursorIndex
+    );
+    this.value = this.value.slice(0, start) + newWord + this.value.slice(end);
+  }
+
+  /**
    * Dispose the input model.
    */
   dispose(): void {
@@ -346,33 +365,35 @@ export namespace InputModel {
   }
 }
 
-function getCurrentWordBoundaries(
-  input: string,
-  cursorIndex: number
-): [number, number] {
-  let start = cursorIndex;
-  let end = cursorIndex;
-  const n = input.length;
+namespace Private {
+  export function getCurrentWordBoundaries(
+    input: string,
+    cursorIndex: number
+  ): [number, number] {
+    let start = cursorIndex;
+    let end = cursorIndex;
+    const n = input.length;
 
-  while (start > 0 && !WHITESPACE.has(input[start - 1])) {
-    start--;
+    while (start > 0 && !WHITESPACE.has(input[start - 1])) {
+      start--;
+    }
+
+    while (end < n && !WHITESPACE.has(input[end])) {
+      end++;
+    }
+
+    return [start, end];
   }
 
-  while (end < n && !WHITESPACE.has(input[end])) {
-    end++;
+  /**
+   * Gets the current (space-separated) word around the user's cursor. The current
+   * word is used to generate a list of matching chat commands.
+   */
+  export function getCurrentWord(
+    input: string,
+    cursorIndex: number
+  ): string | null {
+    const [start, end] = getCurrentWordBoundaries(input, cursorIndex);
+    return input.slice(start, end);
   }
-
-  return [start, end];
-}
-
-/**
- * Gets the current (space-separated) word around the user's cursor. The current
- * word is used to generate a list of matching chat commands.
- */
-export function getCurrentWord(
-  input: string,
-  cursorIndex: number
-): string | null {
-  const [start, end] = getCurrentWordBoundaries(input, cursorIndex);
-  return input.slice(start, end);
 }
