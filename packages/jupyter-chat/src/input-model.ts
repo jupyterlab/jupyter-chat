@@ -113,6 +113,7 @@ export interface IInputModel extends IDisposable {
 export class InputModel implements IInputModel {
   constructor(options: InputModel.IOptions) {
     this._value = options.value || '';
+    this._attachments = options.attachments || [];
     this.cursorIndex = options.cursorIndex || this.value.length;
     this._activeCellManager = options.activeCellManager ?? null;
     this._selectionWatcher = options.selectionWatcher ?? null;
@@ -316,7 +317,7 @@ export class InputModel implements IInputModel {
   private _value: string;
   private _cursorIndex: number | null = null;
   private _currentWord: string | null = null;
-  private _attachments: IAttachment[] = [];
+  private _attachments: IAttachment[];
   private _activeCellManager: IActiveCellManager | null;
   private _selectionWatcher: ISelectionWatcher | null;
   private _config: InputModel.IConfig;
@@ -335,6 +336,12 @@ export namespace InputModel {
      * The initial value of the input.
      */
     value?: string;
+
+    /**
+     * The initial attachments.
+     */
+    attachments?: IAttachment[];
+
     /**
      * The current cursor index.
      * This refers to the index of the character in front of the cursor.

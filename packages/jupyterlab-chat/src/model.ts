@@ -194,6 +194,12 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
         edited: true
       };
     }
+    const attachmentIds = updatedMessage.attachments?.map(attachment =>
+      this.sharedModel.setAttachment(attachment)
+    );
+    if (attachmentIds) {
+      message.attachments = attachmentIds;
+    }
     this.sharedModel.updateMessage(index, message as IYmessage);
   }
 

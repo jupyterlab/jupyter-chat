@@ -36,6 +36,7 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
         rmRegistry={props.rmRegistry}
         model={model}
         chatCommandRegistry={props.chatCommandRegistry}
+        documentManager={props.documentManager}
       />
       <ChatInput
         onSend={onSend}
