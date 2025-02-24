@@ -21,7 +21,7 @@ export type ChatCommand = {
    * If set, this will be rendered as the icon for the command in the chat
    * commands menu. Jupyter Chat will choose a default if this is unset.
    */
-  icon?: LabIcon;
+  icon?: LabIcon | string;
 
   /**
    * If set, this will be rendered as the description for the command in the
