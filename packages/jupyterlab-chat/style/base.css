@@ -20,3 +20,13 @@
 .jp-lab-chat-title-unread .lm-TabBar-tabLabel::before {
   content: '* ';
 }
+
+.jp-chat-command-name {
+  font-weight: normal;
+  margin: 5px;
+}
+
+.jp-chat-command-description {
+  color: gray;
+  margin: 5px;
+}
