@@ -21,12 +21,12 @@
   content: '* ';
 }
 
-.jp-chat-emoji-command-name {
+.jp-chat-command-name {
   font-weight: normal;
   margin: 5px;
 }
 
-.jp-chat-emoji-command-description {
+.jp-chat-command-description {
   color: gray;
   margin: 5px;
 }
