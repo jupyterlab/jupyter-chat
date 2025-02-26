@@ -143,9 +143,21 @@ export function useChatCommands(
         ___: unknown
       ) => {
         const { key, ...listItemProps } = defaultProps;
+        const commandIcon: JSX.Element = (
+          <span>
+            {typeof command.icon === 'object' ? (
+              <command.icon.react />
+            ) : (
+              command.icon
+            )}
+          </span>
+        );
         return (
           <Box key={key} component="li" {...listItemProps}>
-            {command.name}
+            {commandIcon}
+            <p className="jp-chat-command-name">{command.name}</p>
+            <span> - </span>
+            <p className="jp-chat-command-description">{command.description}</p>
           </Box>
         );
       },
