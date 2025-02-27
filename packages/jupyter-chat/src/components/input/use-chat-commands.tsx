@@ -109,10 +109,13 @@ export function useChatCommands(
       return;
     }
 
-    // When a command is selected, the input value is not updated to avoid conflict
-    // changes. It must be updated here, even if there is no replacement string.
-    inputModel.replaceCurrentWord(command.replaceWith ?? command.name);
+    // if replaceWith is set, handle the command immediately
+    if (command.replaceWith) {
+      inputModel.replaceCurrentWord(command.replaceWith);
+      return;
+    }
 
+    // otherwise, defer handling to the command provider
     chatCommandRegistry.handleChatCommand(command, inputModel);
   };
 
