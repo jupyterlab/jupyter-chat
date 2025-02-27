@@ -63,7 +63,7 @@ export function useChatCommands(
         // TODO: optimize performance when this method is truly async
         try {
           newCommands = newCommands.concat(
-            await provider.getChatCommands(currentWord)
+            await provider.getChatCommands(inputModel)
           );
         } catch (e) {
           console.error(

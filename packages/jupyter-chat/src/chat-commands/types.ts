@@ -50,21 +50,15 @@ export interface IChatCommandProvider {
   id: string;
 
   /**
-   * Async function which accepts the current word and returns a list of
+   * Async function which accepts the input model and returns a list of
    * valid chat commands that match the current word. The current word is
    * space-separated word at the user's cursor.
-   *
-   * TODO: Pass a ChatModel/InputModel instance here to give the command access
-   * to more than the current word.
    */
-  getChatCommands(currentWord: string): Promise<ChatCommand[]>;
+  getChatCommands(inputModel: IInputModel): Promise<ChatCommand[]>;
 
   /**
    * Function called when a chat command is run by the user through the chat
    * commands menu.
-   *
-   * TODO: Pass a ChatModel/InputModel instance here to provide a function to
-   * replace the current word.
    */
   handleChatCommand(
     command: ChatCommand,

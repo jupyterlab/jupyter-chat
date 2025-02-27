@@ -47,8 +47,8 @@ export class EmojiCommandProvider implements IChatCommandProvider {
   // regex used to test the current word
   private _regex: RegExp = /^:\w*:?/;
 
-  async getChatCommands(currentWord: string) {
-    const match = currentWord.match(this._regex)?.[0];
+  async getChatCommands(inputModel: IInputModel) {
+    const match = inputModel.currentWord?.match(this._regex)?.[0];
     if (!match) {
       return [];
     }
