@@ -148,7 +148,7 @@ export class InputModel implements IInputModel {
     return this._cursorIndex;
   }
   set cursorIndex(newIndex: number | null) {
-    if (!newIndex || newIndex > this._value.length) {
+    if (newIndex === null || newIndex > this._value.length) {
       return;
     }
     this._cursorIndex = newIndex;
