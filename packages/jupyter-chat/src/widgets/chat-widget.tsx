@@ -19,7 +19,7 @@ export class ChatWidget extends ReactWidget {
 
     this._chatOptions = options;
     this.id = `jupyter-chat::widget::${options.model.name}`;
-    this.node.onclick = () => this.model.focusInput();
+    this.node.onclick = () => this.model.input.focus();
   }
 
   /**

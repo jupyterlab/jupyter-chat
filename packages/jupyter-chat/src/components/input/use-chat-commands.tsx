@@ -12,7 +12,7 @@ import type {
 import { Box } from '@mui/material';
 
 import { ChatCommand, IChatCommandRegistry } from '../../chat-commands';
-import { getCurrentWord, replaceCurrentWord } from './utils';
+import { IInputModel } from '../../input-model';
 
 type AutocompleteProps = GenericAutocompleteProps<any, any, any, any>;
 
@@ -31,9 +31,7 @@ type UseChatCommandsReturn = {
  * Intended usage: `const chatCommands = useChatCommands(...)`.
  */
 export function useChatCommands(
-  input: string,
-  setInput: (newInput: string) => void,
-  inputRef: React.MutableRefObject<HTMLInputElement | undefined>,
+  inputModel: IInputModel,
   chatCommandRegistry?: IChatCommandRegistry
 ): UseChatCommandsReturn {
   // whether an option is highlighted in the chat commands menu
@@ -47,14 +45,12 @@ export function useChatCommands(
   const [commands, setCommands] = useState<ChatCommand[]>([]);
 
   useEffect(() => {
-    async function getCommands() {
+    async function getCommands(_: IInputModel, currentWord: string | null) {
       const providers = chatCommandRegistry?.getProviders();
-      const cursorIndex = inputRef.current?.selectionStart;
-      if (!providers || cursorIndex === null || cursorIndex === undefined) {
+      if (!providers) {
         return;
       }
 
-      const currentWord = getCurrentWord(input, cursorIndex);
       if (!currentWord?.length) {
         setCommands([]);
         setOpen(false);
@@ -67,7 +63,7 @@ export function useChatCommands(
         // TODO: optimize performance when this method is truly async
         try {
           newCommands = newCommands.concat(
-            await provider.getChatCommands(currentWord)
+            await provider.getChatCommands(inputModel)
           );
         } catch (e) {
           console.error(
@@ -76,15 +72,18 @@ export function useChatCommands(
           );
         }
       }
-
       if (newCommands) {
         setOpen(true);
       }
       setCommands(newCommands);
     }
 
-    getCommands();
-  }, [input, inputRef]);
+    inputModel.currentWordChanged.connect(getCommands);
+
+    return () => {
+      inputModel.currentWordChanged.disconnect(getCommands);
+    };
+  }, [inputModel]);
 
   /**
    * onChange(): the callback invoked when a command is selected from the chat
@@ -101,34 +100,23 @@ export function useChatCommands(
       return;
     }
 
-    const cursorIndex = inputRef.current?.selectionStart;
-    if (
-      !chatCommandRegistry ||
-      cursorIndex === null ||
-      cursorIndex === undefined
-    ) {
+    if (!chatCommandRegistry) {
       return;
     }
 
-    const currentWord = getCurrentWord(input, cursorIndex);
+    const currentWord = inputModel.currentWord;
     if (!currentWord) {
       return;
     }
 
+    // if replaceWith is set, handle the command immediately
     if (command.replaceWith) {
-      replaceCurrentWord(input, cursorIndex, command.replaceWith, setInput);
+      inputModel.replaceCurrentWord(command.replaceWith);
       return;
     }
 
-    const replaceCurrentWordClosure = (newWord: string) => {
-      replaceCurrentWord(input, cursorIndex, newWord, setInput);
-    };
-
-    chatCommandRegistry.handleChatCommand(
-      command,
-      currentWord,
-      replaceCurrentWordClosure
-    );
+    // otherwise, defer handling to the command provider
+    chatCommandRegistry.handleChatCommand(command, inputModel);
   };
 
   return {
