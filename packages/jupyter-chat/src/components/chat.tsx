@@ -18,10 +18,7 @@ import { ChatMessages } from './chat-messages';
 import { ChatInput } from './chat-input';
 import { AttachmentOpenerContext } from '../context';
 import { IChatModel } from '../model';
-import {
-  IAttachmentOpenerRegistry,
-  IAutocompletionRegistry
-} from '../registry';
+import { IAttachmentOpenerRegistry } from '../registry';
 
 export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
   const { model } = props;
@@ -49,7 +46,6 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
         }}
         model={model.input}
         documentManager={props.documentManager}
-        autocompletionRegistry={props.autocompletionRegistry}
         chatCommandRegistry={props.chatCommandRegistry}
       />
     </AttachmentOpenerContext.Provider>
@@ -98,7 +94,6 @@ export function Chat(props: Chat.IOptions): JSX.Element {
             model={props.model}
             rmRegistry={props.rmRegistry}
             documentManager={props.documentManager}
-            autocompletionRegistry={props.autocompletionRegistry}
             chatCommandRegistry={props.chatCommandRegistry}
             attachmentOpenerRegistry={props.attachmentOpenerRegistry}
           />
@@ -131,14 +126,6 @@ export namespace Chat {
      * The document manager.
      */
     documentManager?: IDocumentManager;
-    /**
-     * Autocompletion registry.
-     */
-    autocompletionRegistry?: IAutocompletionRegistry;
-    /**
-     * Autocompletion name.
-     */
-    autocompletionName?: string;
     /**
      * Chat command registry.
      */

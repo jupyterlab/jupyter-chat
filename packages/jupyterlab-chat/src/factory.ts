@@ -7,7 +7,6 @@ import {
   ChatWidget,
   IActiveCellManager,
   IAttachmentOpenerRegistry,
-  IAutocompletionRegistry,
   IChatCommandRegistry,
   ISelectionWatcher
 } from '@jupyter/chat';
@@ -78,7 +77,6 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
     this._themeManager = options.themeManager;
     this._rmRegistry = options.rmRegistry;
     this._documentManager = options.documentManager;
-    this._autocompletionRegistry = options.autocompletionRegistry;
     this._chatCommandRegistry = options.chatCommandRegistry;
     this._attachmentOpenerRegistry = options.attachmentOpenerRegistry;
   }
@@ -93,7 +91,6 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
     context.rmRegistry = this._rmRegistry;
     context.themeManager = this._themeManager;
     context.documentManager = this._documentManager;
-    context.autocompletionRegistry = this._autocompletionRegistry;
     context.chatCommandRegistry = this._chatCommandRegistry;
     context.attachmentOpenerRegistry = this._attachmentOpenerRegistry;
     return new LabChatPanel({
@@ -105,7 +102,6 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
   private _themeManager: IThemeManager | null;
   private _rmRegistry: IRenderMimeRegistry;
   private _documentManager?: IDocumentManager;
-  private _autocompletionRegistry?: IAutocompletionRegistry;
   private _chatCommandRegistry?: IChatCommandRegistry;
   private _attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
 }
@@ -115,7 +111,6 @@ export namespace ChatWidgetFactory {
     themeManager: IThemeManager | null;
     rmRegistry: IRenderMimeRegistry;
     documentManager?: IDocumentManager;
-    autocompletionRegistry?: IAutocompletionRegistry;
     chatCommandRegistry?: IChatCommandRegistry;
     attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
   }
@@ -125,7 +120,6 @@ export namespace ChatWidgetFactory {
     themeManager: IThemeManager | null;
     rmRegistry: IRenderMimeRegistry;
     documentManager?: IDocumentManager;
-    autocompletionRegistry?: IAutocompletionRegistry;
     chatCommandRegistry?: IChatCommandRegistry;
     attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
   }

@@ -36,13 +36,6 @@ This token is a pointer to the left panel containing chats.\
 It can be used to programmatically open chat in the panel for example, or to list the
 opened chats.
 
-### IAutocompletionRegistry
-
-This is the [autocompletion registry](#autocompletion-registry) used by the chat
-widgets.
-
-Autocompletion commands can be added to it, and then be used from the chat input.
-
 ## Interact with the chat from the backend
 
 `jupyter_collaboration` provides a websocket server to handle every shared document
