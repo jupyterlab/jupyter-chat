@@ -12,11 +12,11 @@ import {
   INewMessage,
   IChatMessage,
   IConfig,
-  IUser,
-  IAttachment
+  IUser
 } from './types';
 import { IActiveCellManager } from './active-cell-manager';
 import { ISelectionWatcher } from './selection-watcher';
+import { IInputModel, InputModel } from './input-model';
 
 /**
  * The chat model interface.
@@ -53,6 +53,11 @@ export interface IChatModel extends IDisposable {
   readonly messages: IChatMessage[];
 
   /**
+   * The input model.
+   */
+  readonly input: IInputModel;
+
+  /**
    * Get the active cell manager.
    */
   readonly activeCellManager: IActiveCellManager | null;
@@ -86,16 +91,6 @@ export interface IChatModel extends IDisposable {
    * A signal emitting when the writers change.
    */
   readonly writersChanged?: ISignal<IChatModel, IUser[]>;
-
-  /**
-   * A signal emitting when the focus is requested on the input.
-   */
-  readonly focusInputSignal?: ISignal<IChatModel, void>;
-
-  /**
-   * A signal emitting when the input attachments changed.
-   */
-  readonly inputAttachmentsChanged?: ISignal<IChatModel, IAttachment[]>;
 
   /**
    * Send a message, to be defined depending on the chosen technology.
@@ -166,31 +161,6 @@ export interface IChatModel extends IDisposable {
    * Update the current writers list.
    */
   updateWriters(writers: IUser[]): void;
-
-  /**
-   * Function to request the focus on the input of the chat.
-   */
-  focusInput(): void;
-
-  /**
-   * Add attachment to the next message to send.
-   */
-  addAttachment?(attachment: IAttachment): void;
-
-  /**
-   * Remove attachment to the next message to send.
-   */
-  removeAttachment?(attachment: IAttachment): void;
-
-  /**
-   * Clear the attachment list.
-   */
-  clearAttachments?(): void;
-
-  /**
-   * Function called by the input on key pressed.
-   */
-  inputChanged?(input?: string): void;
 }
 
 /**
@@ -215,6 +185,14 @@ export class ChatModel implements IChatModel {
       sendTypingNotification: true,
       ...config
     };
+
+    this._inputModel = new InputModel({
+      activeCellManager: options.activeCellManager,
+      selectionWatcher: options.selectionWatcher,
+      config: {
+        sendWithShiftEnter: config.sendWithShiftEnter
+      }
+    });
 
     this._commands = options.commands;
 
@@ -249,6 +227,14 @@ export class ChatModel implements IChatModel {
   get messages(): IChatMessage[] {
     return this._messages;
   }
+
+  /**
+   * The input model.
+   */
+  get input(): IInputModel {
+    return this._inputModel;
+  }
+
   /**
    * Get the active cell manager.
    */
@@ -305,6 +291,7 @@ export class ChatModel implements IChatModel {
 
     this._configChanged.emit(this._config);
 
+    this.input.config = value;
     // Update the stacked status of the messages and the view.
     if (stackMessagesChanged) {
       if (this._config.stackMessages) {
@@ -405,20 +392,6 @@ export class ChatModel implements IChatModel {
    */
   get writersChanged(): ISignal<IChatModel, IUser[]> {
     return this._writersChanged;
-  }
-
-  /**
-   * A signal emitting when the focus is requested on the input.
-   */
-  get focusInputSignal(): ISignal<IChatModel, void> {
-    return this._focusInputSignal;
-  }
-
-  /**
-   * A signal emitting when the input attachments changed.
-   */
-  get inputAttachmentsChanged(): ISignal<IChatModel, IAttachment[]> {
-    return this._inputAttachmentsChanged;
   }
 
   /**
@@ -537,56 +510,6 @@ export class ChatModel implements IChatModel {
   }
 
   /**
-   * Function to request the focus on the input of the chat.
-   */
-  focusInput(): void {
-    this._focusInputSignal.emit();
-  }
-
-  /**
-   * Function called by the input on key pressed.
-   */
-  inputChanged?(input?: string): void {}
-
-  /**
-   * Add attachment to send with next message.
-   */
-  addAttachment = (attachment: IAttachment): void => {
-    const duplicateAttachment = this.inputAttachments.find(
-      att => att.type === attachment.type && att.value === attachment.value
-    );
-    if (duplicateAttachment) {
-      return;
-    }
-
-    this.inputAttachments.push(attachment);
-    this._inputAttachmentsChanged.emit([...this.inputAttachments]);
-  };
-
-  /**
-   * Remove attachment to be sent.
-   */
-  removeAttachment = (attachment: IAttachment): void => {
-    const attachmentIndex = this.inputAttachments.findIndex(
-      att => att.type === attachment.type && att.value === attachment.value
-    );
-    if (attachmentIndex === -1) {
-      return;
-    }
-
-    this.inputAttachments.splice(attachmentIndex, 1);
-    this._inputAttachmentsChanged.emit([...this.inputAttachments]);
-  };
-
-  /**
-   * Update attachments.
-   */
-  clearAttachments = (): void => {
-    this.inputAttachments = [];
-    this._inputAttachmentsChanged.emit([]);
-  };
-
-  /**
    * Add unread messages to the list.
    * @param indexes - list of new indexes.
    */
@@ -635,13 +558,13 @@ export class ChatModel implements IChatModel {
     }
   }
 
-  protected inputAttachments: IAttachment[] = [];
   private _messages: IChatMessage[] = [];
   private _unreadMessages: number[] = [];
   private _messagesInViewport: number[] = [];
   private _id: string | undefined;
   private _name: string = '';
   private _config: IConfig;
+  private _inputModel: IInputModel;
   private _isDisposed = false;
   private _commands?: CommandRegistry;
   private _activeCellManager: IActiveCellManager | null;
@@ -652,8 +575,6 @@ export class ChatModel implements IChatModel {
   private _unreadChanged = new Signal<IChatModel, number[]>(this);
   private _viewportChanged = new Signal<IChatModel, number[]>(this);
   private _writersChanged = new Signal<IChatModel, IUser[]>(this);
-  private _focusInputSignal = new Signal<ChatModel, void>(this);
-  private _inputAttachmentsChanged = new Signal<ChatModel, IAttachment[]>(this);
 }
 
 /**

@@ -7,6 +7,7 @@ import {
   ChatModel,
   IAttachment,
   IChatMessage,
+  IInputModel,
   INewMessage,
   IUser
 } from '@jupyter/chat';
@@ -59,6 +60,8 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
     });
 
     this.sharedModel.awareness.on('change', this.onAwarenessChange);
+
+    this.input.valueChanged.connect(this.onInputChanged);
   }
 
   readonly collaborative = true;
@@ -159,12 +162,12 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
     }
 
     // Add the attachments to the message.
-    if (this.inputAttachments.length) {
-      const attachmentIds = this.inputAttachments.map(attachment =>
+    if (this.input.attachments.length) {
+      const attachmentIds = this.input.attachments.map(attachment =>
         this.sharedModel.setAttachment(attachment)
       );
       msg.attachments = attachmentIds;
-      this.clearAttachments();
+      this.input.clearAttachments();
     }
 
     this.sharedModel.addMessage(msg);
@@ -191,6 +194,12 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
         edited: true
       };
     }
+    const attachmentIds = updatedMessage.attachments?.map(attachment =>
+      this.sharedModel.setAttachment(attachment)
+    );
+    if (attachmentIds) {
+      message.attachments = attachmentIds;
+    }
     this.sharedModel.updateMessage(index, message as IYmessage);
   }
 
@@ -209,8 +218,8 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
   /**
    * Function called by the input on key pressed.
    */
-  inputChanged(input?: string): void {
-    if (!input || !this.config.sendTypingNotification) {
+  onInputChanged = (_: IInputModel, value: string): void => {
+    if (!value || !this.config.sendTypingNotification) {
       return;
     }
     const awareness = this.sharedModel.awareness;
@@ -221,7 +230,7 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
     this._timeoutWriting = window.setTimeout(() => {
       this._resetWritingStatus();
     }, WRITING_DELAY);
-  }
+  };
 
   /**
    * Triggered when an awareness state changes.

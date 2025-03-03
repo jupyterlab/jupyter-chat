@@ -4,6 +4,7 @@
  */
 
 import { Button } from '@jupyter/react-components';
+import { IDocumentManager } from '@jupyterlab/docmanager';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import {
   LabIcon,
@@ -16,12 +17,14 @@ import type { SxProps, Theme } from '@mui/material';
 import clsx from 'clsx';
 import React, { useEffect, useState, useRef, forwardRef } from 'react';
 
+import { AttachmentPreviewList } from './attachments';
 import { ChatInput } from './chat-input';
 import { MarkdownRenderer } from './markdown-renderer';
 import { ScrollContainer } from './scroll-container';
+import { IChatCommandRegistry } from '../chat-commands';
+import { IInputModel, InputModel } from '../input-model';
 import { IChatModel } from '../model';
 import { IChatMessage, IUser } from '../types';
-import { AttachmentPreviewList } from './attachments';
 
 const MESSAGES_BOX_CLASS = 'jp-chat-messages-container';
 const MESSAGE_CLASS = 'jp-chat-message';
@@ -40,6 +43,8 @@ const NAVIGATION_BOTTOM_CLASS = 'jp-chat-navigation-bottom';
 type BaseMessageProps = {
   rmRegistry: IRenderMimeRegistry;
   model: IChatModel;
+  chatCommandRegistry?: IChatCommandRegistry;
+  documentManager?: IDocumentManager;
 };
 
 /**
@@ -338,6 +343,7 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
     const [deleted, setDeleted] = useState<boolean>(false);
     const [canEdit, setCanEdit] = useState<boolean>(false);
     const [canDelete, setCanDelete] = useState<boolean>(false);
+    const [inputModel, setInputModel] = useState<IInputModel | null>(null);
 
     // Look if the message can be deleted or edited.
     useEffect(() => {
@@ -353,6 +359,25 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
       }
     }, [model, message]);
 
+    // Create an input model only if the message is edited.
+    useEffect(() => {
+      if (edit && canEdit) {
+        setInputModel(
+          new InputModel({
+            value: message.body,
+            activeCellManager: model.activeCellManager,
+            selectionWatcher: model.selectionWatcher,
+            config: {
+              sendWithShiftEnter: model.config.sendWithShiftEnter
+            },
+            attachments: message.attachments
+          })
+        );
+      } else {
+        setInputModel(null);
+      }
+    }, [edit]);
+
     // Cancel the current edition of the message.
     const cancelEdition = (): void => {
       setEdit(false);
@@ -366,6 +391,7 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
       // Update the message
       const updatedMessage = { ...message };
       updatedMessage.body = input;
+      updatedMessage.attachments = inputModel?.attachments;
       model.updateMessage!(id, updatedMessage);
       setEdit(false);
     };
@@ -383,13 +409,14 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
       <div ref={ref} data-index={props.index}></div>
     ) : (
       <div ref={ref} data-index={props.index}>
-        {edit && canEdit ? (
+        {edit && canEdit && inputModel ? (
           <ChatInput
-            value={message.body}
             onSend={(input: string) => updateMessage(message.id, input)}
             onCancel={() => cancelEdition()}
-            model={model}
+            model={inputModel}
             hideIncludeSelection={true}
+            chatCommandRegistry={props.chatCommandRegistry}
+            documentManager={props.documentManager}
           />
         ) : (
           <MarkdownRenderer
@@ -401,7 +428,9 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
             rendered={props.renderedPromise}
           />
         )}
-        {message.attachments && (
+        {message.attachments && !edit && (
+          // Display the attachments only if message is not edited, otherwise the
+          // input component display them.
           <AttachmentPreviewList attachments={message.attachments} />
         )}
       </div>
