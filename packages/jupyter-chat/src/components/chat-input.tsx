@@ -19,7 +19,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { AttachmentPreviewList } from './attachments';
 import { AttachButton, CancelButton, SendButton } from './input';
 import { IInputModel, InputModel } from '../input-model';
-import { IAutocompletionRegistry } from '../registry';
 import { IAttachment, Selection } from '../types';
 import { useChatCommands } from './input/use-chat-commands';
 import { IChatCommandRegistry } from '../chat-commands';
@@ -297,14 +296,6 @@ export namespace ChatInput {
      * The document manager.
      */
     documentManager?: IDocumentManager;
-    /**
-     * Autocompletion properties.
-     */
-    autocompletionRegistry?: IAutocompletionRegistry;
-    /**
-     * Autocompletion name.
-     */
-    autocompletionName?: string;
     /**
      * Chat command registry.
      */

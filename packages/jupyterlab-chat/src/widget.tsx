@@ -6,7 +6,6 @@
 import {
   ChatWidget,
   IAttachmentOpenerRegistry,
-  IAutocompletionRegistry,
   IChatCommandRegistry,
   IChatModel,
   readIcon
@@ -106,7 +105,6 @@ export class ChatPanel extends SidePanel {
     this._themeManager = options.themeManager;
     this._defaultDirectory = options.defaultDirectory;
     this._documentManager = options.documentManager;
-    this._autocompletionRegistry = options.autocompletionRegistry;
     this._chatCommandRegistry = options.chatCommandRegistry;
     this._attachmentOpenerRegistry = options.attachmentOpenerRegistry;
 
@@ -171,7 +169,6 @@ export class ChatPanel extends SidePanel {
       rmRegistry: this._rmRegistry,
       themeManager: this._themeManager,
       documentManager: this._documentManager,
-      autocompletionRegistry: this._autocompletionRegistry,
       chatCommandRegistry: this._chatCommandRegistry,
       attachmentOpenerRegistry: this._attachmentOpenerRegistry
     });
@@ -293,7 +290,6 @@ export class ChatPanel extends SidePanel {
   private _rmRegistry: IRenderMimeRegistry;
   private _themeManager: IThemeManager | null;
   private _documentManager?: IDocumentManager;
-  private _autocompletionRegistry?: IAutocompletionRegistry;
   private _chatCommandRegistry?: IChatCommandRegistry;
   private _attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
 }
@@ -312,7 +308,6 @@ export namespace ChatPanel {
     themeManager: IThemeManager | null;
     defaultDirectory: string;
     documentManager?: IDocumentManager;
-    autocompletionRegistry?: IAutocompletionRegistry;
     chatCommandRegistry?: IChatCommandRegistry;
     attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
   }
