@@ -1,6 +1,6 @@
 {
   "name": "jupyter-chat-example",
-  "version": "1.0.0",
+  "version": "0.8.0",
   "description": "A chat extension providing a chat as example",
   "keywords": [
     "jupyter",
@@ -44,7 +44,7 @@
     "install:extension": "jlpm build"
   },
   "dependencies": {
-    "@jupyter/chat": "^0.7.1",
+    "@jupyter/chat": "^0.8.0",
     "@jupyterlab/application": "^4.2.0",
     "@jupyterlab/apputils": "^4.3.0",
     "@jupyterlab/notebook": "^4.2.0",

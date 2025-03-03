@@ -2,6 +2,45 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.8.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.7.1...9a4aebf3df7f29640ddbe5dcf4b66f3fc3e63625))
+
+### Enhancements made
+
+- Add icons & descriptions to chat commands menu [#185](https://github.com/jupyterlab/jupyter-chat/pull/185) ([@keerthi-swarna](https://github.com/keerthi-swarna))
+- Add new `InputModel` class for managing input state [#171](https://github.com/jupyterlab/jupyter-chat/pull/171) ([@brichet](https://github.com/brichet))
+- Define a new framework for chat commands [#161](https://github.com/jupyterlab/jupyter-chat/pull/161) ([@dlqqq](https://github.com/dlqqq))
+- Implement message attachments [#148](https://github.com/jupyterlab/jupyter-chat/pull/148) ([@brichet](https://github.com/brichet))
+- Adds side panel widgets to the tracker [#146](https://github.com/jupyterlab/jupyter-chat/pull/146) ([@brichet](https://github.com/brichet))
+- Move the Chat card in the 'Other' section of the launcher [#141](https://github.com/jupyterlab/jupyter-chat/pull/141) ([@brichet](https://github.com/brichet))
+
+### Bugs fixed
+
+- Fix disabled code toolbar buttons [#160](https://github.com/jupyterlab/jupyter-chat/pull/160) ([@brichet](https://github.com/brichet))
+- Allow use of up and down arrow in chat input [#158](https://github.com/jupyterlab/jupyter-chat/pull/158) ([@brichet](https://github.com/brichet))
+
+### Maintenance and upkeep improvements
+
+- Remove old autocomplete registry [#187](https://github.com/jupyterlab/jupyter-chat/pull/187) ([@brichet](https://github.com/brichet))
+- Update eslint rules to avoid importing MUI icons [#159](https://github.com/jupyterlab/jupyter-chat/pull/159) ([@brichet](https://github.com/brichet))
+- Update to `actions/upload-artifact@v4` and `actions/download-artifact@v4` [#152](https://github.com/jupyterlab/jupyter-chat/pull/152) ([@jtpio](https://github.com/jtpio))
+- Add `Untitled*.ipynb` and `*.chat` to the `.gitignore` [#151](https://github.com/jupyterlab/jupyter-chat/pull/151) ([@jtpio](https://github.com/jtpio))
+- Improve the test execution [#150](https://github.com/jupyterlab/jupyter-chat/pull/150) ([@brichet](https://github.com/brichet))
+- Lint the whole project instead of individual packages [#142](https://github.com/jupyterlab/jupyter-chat/pull/142) ([@brichet](https://github.com/brichet))
+
+### Documentation improvements
+
+- Lite deployment in doc [#162](https://github.com/jupyterlab/jupyter-chat/pull/162) ([@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2024-12-25&to=2025-03-03&type=c))
+
+[@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2024-12-25..2025-03-03&type=Issues) | [@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2024-12-25..2025-03-03&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2024-12-25..2025-03-03&type=Issues) | [@jtpio](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2024-12-25..2025-03-03&type=Issues) | [@keerthi-swarna](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Akeerthi-swarna+updated%3A2024-12-25..2025-03-03&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.7.1
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.7.0...b9373cfc7304a3fd3f8cccfe0d74782120b2ec76))
@@ -19,8 +58,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2024-12-20&to=2024-12-24&type=c))
 
 [@dependabot](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adependabot+updated%3A2024-12-20..2024-12-24&type=Issues) | [@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2024-12-20..2024-12-24&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2024-12-20..2024-12-24&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.7.0
 
