@@ -417,6 +417,7 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
             hideIncludeSelection={true}
             chatCommandRegistry={props.chatCommandRegistry}
             documentManager={props.documentManager}
+            chatModel={model}
           />
         ) : (
           <MarkdownRenderer
