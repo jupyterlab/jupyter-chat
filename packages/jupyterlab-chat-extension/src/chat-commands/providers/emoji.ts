@@ -8,7 +8,8 @@ import {
   IChatCommandProvider,
   IChatCommandRegistry,
   ChatCommand,
-  IInputModel
+  IInputModel,
+  IChatModel
 } from '@jupyter/chat';
 
 export class EmojiCommandProvider implements IChatCommandProvider {
@@ -47,7 +48,7 @@ export class EmojiCommandProvider implements IChatCommandProvider {
   // regex used to test the current word
   private _regex: RegExp = /^:\w*:?/;
 
-  async getChatCommands(inputModel: IInputModel) {
+  async getChatCommands(inputModel: IInputModel, chatModel: IChatModel) {
     const match = inputModel.currentWord?.match(this._regex)?.[0];
     if (!match) {
       return [];
@@ -61,7 +62,8 @@ export class EmojiCommandProvider implements IChatCommandProvider {
 
   async handleChatCommand(
     command: ChatCommand,
-    inputModel: IInputModel
+    inputModel: IInputModel,
+    chatModel: IChatModel
   ): Promise<void> {
     // no handling needed because `replaceWith` is set in each command.
     return;

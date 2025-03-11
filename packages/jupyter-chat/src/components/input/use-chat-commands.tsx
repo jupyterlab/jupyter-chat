@@ -13,6 +13,7 @@ import { Box } from '@mui/material';
 
 import { ChatCommand, IChatCommandRegistry } from '../../chat-commands';
 import { IInputModel } from '../../input-model';
+import { IChatModel } from '../../model';
 
 type AutocompleteProps = GenericAutocompleteProps<any, any, any, any>;
 
@@ -32,6 +33,7 @@ type UseChatCommandsReturn = {
  */
 export function useChatCommands(
   inputModel: IInputModel,
+  chatModel: IChatModel,
   chatCommandRegistry?: IChatCommandRegistry
 ): UseChatCommandsReturn {
   // whether an option is highlighted in the chat commands menu
@@ -63,7 +65,7 @@ export function useChatCommands(
         // TODO: optimize performance when this method is truly async
         try {
           newCommands = newCommands.concat(
-            await provider.getChatCommands(inputModel)
+            await provider.getChatCommands(inputModel, chatModel)
           );
         } catch (e) {
           console.error(
@@ -116,7 +118,7 @@ export function useChatCommands(
     }
 
     // otherwise, defer handling to the command provider
-    chatCommandRegistry.handleChatCommand(command, inputModel);
+    chatCommandRegistry.handleChatCommand(command, inputModel, chatModel);
   };
 
   return {

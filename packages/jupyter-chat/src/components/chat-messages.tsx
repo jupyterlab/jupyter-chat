@@ -434,6 +434,7 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
             model={inputModel}
             chatCommandRegistry={props.chatCommandRegistry}
             toolbarRegistry={props.inputToolbarRegistry}
+            chatModel={model}
           />
         ) : (
           <MarkdownRenderer

@@ -22,18 +22,23 @@ import {
   useChatCommands
 } from './input';
 import { IInputModel, InputModel } from '../input-model';
-import { IAttachment } from '../types';
 import { IChatCommandRegistry } from '../chat-commands';
+import { IChatModel } from '../model';
+import { IAttachment } from '../types';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
 const INPUT_TOOLBAR_CLASS = 'jp-chat-input-toolbar';
 
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
-  const { model, toolbarRegistry } = props;
+  const { chatModel, model, toolbarRegistry } = props;
   const [input, setInput] = useState<string>(model.value);
   const inputRef = useRef<HTMLInputElement>();
 
-  const chatCommands = useChatCommands(model, props.chatCommandRegistry);
+  const chatCommands = useChatCommands(
+    model,
+    chatModel,
+    props.chatCommandRegistry
+  );
 
   const [sendWithShiftEnter, setSendWithShiftEnter] = useState<boolean>(
     model.config.sendWithShiftEnter ?? false
@@ -256,9 +261,13 @@ export namespace ChatInput {
    */
   export interface IProps {
     /**
-     * The chat model.
+     * The input model.
      */
     model: IInputModel;
+    /**
+     * The chat model.
+     */
+    chatModel: IChatModel;
     /**
      * The toolbar registry.
      */

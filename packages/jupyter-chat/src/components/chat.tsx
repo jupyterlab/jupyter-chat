@@ -46,6 +46,7 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
         model={model.input}
         chatCommandRegistry={props.chatCommandRegistry}
         toolbarRegistry={inputToolbarRegistry}
+        chatModel={model}
       />
     </AttachmentOpenerContext.Provider>
   );
