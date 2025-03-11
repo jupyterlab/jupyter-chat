@@ -1,6 +1,6 @@
 {
   "name": "@jupyter/chat",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "A package that provides UI components that can be used to create a chat in a Jupyterlab extension.",
   "keywords": [
     "jupyter",
