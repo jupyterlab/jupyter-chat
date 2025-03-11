@@ -130,3 +130,13 @@
 .jp-chat-attachment .jp-chat-attachment-clickable:hover {
   cursor: pointer;
 }
+
+.jp-chat-command-name {
+  font-weight: normal;
+  margin: 5px;
+}
+
+.jp-chat-command-description {
+  color: gray;
+  margin: 5px;
+}
