@@ -3,13 +3,15 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { JupyterFrontEndPlugin } from '@jupyterlab/application';
 import {
   IChatCommandProvider,
   IChatCommandRegistry,
   ChatCommand,
-  IInputModel
+  IInputModel,
+  Avatar
 } from '@jupyter/chat';
+import { JupyterFrontEndPlugin } from '@jupyterlab/application';
+import { User } from '@jupyterlab/services';
 import { LabChatModel } from 'jupyterlab-chat';
 import { JSONObject } from '@lumino/coreutils';
 
@@ -25,10 +27,15 @@ export class MentionCommandProvider implements IChatCommandProvider {
       return [];
     }
 
+    const icons: { [user: string]: JSX.Element | undefined } = {};
     // Get the user list from the chat file.
     const users = Object.values(chatModel.sharedModel.users).map(user => {
       user = user as JSONObject;
-      return (user.display_name ?? user.name ?? user.username) as string;
+      const username = (user.display_name ??
+        user.name ??
+        user.username) as string;
+      icons[username] = Avatar({ user: user as User.IIdentity }) ?? undefined;
+      return username;
     });
 
     // Add the users connected to the chat (even if they never sent a message).
@@ -41,19 +48,21 @@ export class MentionCommandProvider implements IChatCommandProvider {
         user.name ??
         user.username) as string;
       if (username && !users.includes(username)) {
+        icons[username] = Avatar({ user: user as User.IIdentity }) ?? undefined;
         users.push(username);
       }
     });
 
     // Build the commands for each user.
-    const commands = users
+    const commands: ChatCommand[] = users
       .sort()
       .filter(user => `@${user.replace(/ /g, '-')}`.startsWith(match))
       .map(user => {
         return {
           name: `@${user.replace(/ /g, '-')}`,
           replaceWith: `@${user}`,
-          providerId: this.id
+          providerId: this.id,
+          icon: icons[user]
         };
       });
     return commands;
