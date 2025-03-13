@@ -144,8 +144,14 @@ export function useChatCommands(
           <Box key={key} component="li" {...listItemProps}>
             {commandIcon}
             <p className="jp-chat-command-name">{command.name}</p>
-            <span> - </span>
-            <p className="jp-chat-command-description">{command.description}</p>
+            {command.description && (
+              <>
+                <span> - </span>
+                <p className="jp-chat-command-description">
+                  {command.description}
+                </p>
+              </>
+            )}
           </Box>
         );
       },
