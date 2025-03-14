@@ -12,13 +12,15 @@ import { TooltippedIconButton } from '../mui-extras/tooltipped-icon-button';
 enum CopyStatus {
   None,
   Copying,
-  Copied
+  Copied,
+  Disabled
 }
 
 const COPYBTN_TEXT_BY_STATUS: Record<CopyStatus, string> = {
   [CopyStatus.None]: 'Copy to clipboard',
   [CopyStatus.Copying]: 'Copying…',
-  [CopyStatus.Copied]: 'Copied!'
+  [CopyStatus.Copied]: 'Copied!',
+  [CopyStatus.Disabled]: 'Copy to clipboard disabled in insecure context'
 };
 
 type CopyButtonProps = {
@@ -27,7 +29,10 @@ type CopyButtonProps = {
 };
 
 export function CopyButton(props: CopyButtonProps): JSX.Element {
-  const [copyStatus, setCopyStatus] = useState<CopyStatus>(CopyStatus.None);
+  const isCopyDisabled = navigator.clipboard === undefined;
+  const [copyStatus, setCopyStatus] = useState<CopyStatus>(
+    isCopyDisabled ? CopyStatus.Disabled : CopyStatus.None
+  );
   const timeoutId = useRef<number | null>(null);
 
   const copy = useCallback(async () => {
@@ -56,6 +61,7 @@ export function CopyButton(props: CopyButtonProps): JSX.Element {
 
   return (
     <TooltippedIconButton
+      disabled={isCopyDisabled}
       className={props.className}
       tooltip={COPYBTN_TEXT_BY_STATUS[copyStatus]}
       placement="top"
