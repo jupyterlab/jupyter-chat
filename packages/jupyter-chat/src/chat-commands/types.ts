@@ -5,6 +5,7 @@
 
 import { LabIcon } from '@jupyterlab/ui-components';
 import { IInputModel } from '../input-model';
+import { IChatModel } from '../model';
 
 export type ChatCommand = {
   /**
@@ -22,7 +23,7 @@ export type ChatCommand = {
    * If set, this will be rendered as the icon for the command in the chat
    * commands menu. Jupyter Chat will choose a default if this is unset.
    */
-  icon?: LabIcon | string;
+  icon?: LabIcon | JSX.Element | string;
 
   /**
    * If set, this will be rendered as the description for the command in the
@@ -54,7 +55,10 @@ export interface IChatCommandProvider {
    * valid chat commands that match the current word. The current word is
    * space-separated word at the user's cursor.
    */
-  getChatCommands(inputModel: IInputModel): Promise<ChatCommand[]>;
+  getChatCommands(
+    inputModel: IInputModel,
+    chatModel: IChatModel
+  ): Promise<ChatCommand[]>;
 
   /**
    * Function called when a chat command is run by the user through the chat
@@ -62,6 +66,7 @@ export interface IChatCommandProvider {
    */
   handleChatCommand(
     command: ChatCommand,
-    inputModel: IInputModel
+    inputModel: IInputModel,
+    chatModel: IChatModel
   ): Promise<void>;
 }

@@ -18,19 +18,24 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { AttachmentPreviewList } from './attachments';
 import { AttachButton, CancelButton, SendButton } from './input';
-import { IInputModel, InputModel } from '../input-model';
-import { IAttachment, Selection } from '../types';
 import { useChatCommands } from './input/use-chat-commands';
+import { IInputModel, InputModel } from '../input-model';
 import { IChatCommandRegistry } from '../chat-commands';
+import { IChatModel } from '../model';
+import { IAttachment, Selection } from '../types';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
 
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
-  const { documentManager, model } = props;
+  const { chatModel, documentManager, model } = props;
   const [input, setInput] = useState<string>(model.value);
   const inputRef = useRef<HTMLInputElement>();
 
-  const chatCommands = useChatCommands(model, props.chatCommandRegistry);
+  const chatCommands = useChatCommands(
+    model,
+    chatModel,
+    props.chatCommandRegistry
+  );
 
   const [sendWithShiftEnter, setSendWithShiftEnter] = useState<boolean>(
     model.config.sendWithShiftEnter ?? false
@@ -273,9 +278,13 @@ export namespace ChatInput {
    */
   export interface IProps {
     /**
-     * The chat model.
+     * The input model.
      */
     model: IInputModel;
+    /**
+     * The chat model.
+     */
+    chatModel: IChatModel;
     /**
      * The function to be called to send the message.
      */
