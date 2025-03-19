@@ -140,3 +140,9 @@
   color: gray;
   margin: 5px;
 }
+
+.jp-chat-mention {
+  border-radius: 10px;
+  padding: 0 0.2em;
+  background-color: var(--jp-brand-color4);
+}

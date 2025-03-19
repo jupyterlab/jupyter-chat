@@ -19,6 +19,8 @@ import { IActiveCellManager } from './active-cell-manager';
 import { ISelectionWatcher } from './selection-watcher';
 import { IInputModel, InputModel } from './input-model';
 
+const MENTION_CLASS = 'jp-chat-mention';
+
 /**
  * The chat model interface.
  */
@@ -456,6 +458,18 @@ export abstract class AbstractChatModel implements IChatModel {
    * Can be useful if some actions are required on the message.
    */
   protected formatChatMessage(message: IChatMessage): IChatMessage {
+    if (message.mentions?.length) {
+      message.mentions.forEach(user => {
+        const username = (
+          user.display_name ??
+          user.name ??
+          user.username
+        ).replace(/ /g, '-');
+        const regex = new RegExp(`@${username}`);
+        const mention = `<span class="${MENTION_CLASS}">@${username}</span>`;
+        message.body = message.body.replace(regex, mention);
+      });
+    }
     return message;
   }
 
