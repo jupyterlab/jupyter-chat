@@ -51,6 +51,7 @@ export interface IChatMessage<T = IUser, U = IAttachment> {
   time: number;
   sender: T;
   attachments?: U[];
+  mentions?: T[];
   raw_time?: boolean;
   deleted?: boolean;
   edited?: boolean;
