@@ -10,6 +10,10 @@ import { FileEditor } from '@jupyterlab/fileeditor';
 import { Notebook } from '@jupyterlab/notebook';
 import { Widget } from '@lumino/widgets';
 
+import { IUser } from './types';
+
+const MENTION_CLASS = 'jp-chat-mention';
+
 /**
  * Gets the editor instance used by a document widget. Returns `null` if unable.
  */
@@ -44,4 +48,34 @@ export function getCellIndex(notebook: Notebook, cellId: string): number {
     cell => cell.getId() === cellId
   );
   return idx === undefined ? -1 : idx;
+}
+
+/**
+ * Replace a mention to user (@someone) to a span, for markdown renderer.
+ *
+ * @param content - the content to update.
+ * @param user - the user mentioned.
+ */
+export function replaceMentionToSpan(content: string, user: IUser): string {
+  if (!user.mention_name) {
+    return content;
+  }
+  const regex = new RegExp(user.mention_name, 'g');
+  const mention = `<span class="${MENTION_CLASS}">${user.mention_name}</span>`;
+  return content.replace(regex, mention);
+}
+
+/**
+ * Replace a span to a mentioned to user string (@someone).
+ *
+ * @param content - the content to update.
+ * @param user - the user mentioned.
+ */
+export function replaceSpanToMention(content: string, user: IUser): string {
+  if (!user.mention_name) {
+    return content;
+  }
+  const span = `<span class="${MENTION_CLASS}">${user.mention_name}</span>`;
+  const regex = new RegExp(span, 'g');
+  return content.replace(regex, user.mention_name);
 }

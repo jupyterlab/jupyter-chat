@@ -162,25 +162,21 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
     }
 
     // Add the attachments to the message.
-    if (this.input.attachments.length) {
-      const attachmentIds = this.input.attachments.map(attachment =>
-        this.sharedModel.setAttachment(attachment)
-      );
+    const attachmentIds = this.input.attachments?.map(attachment =>
+      this.sharedModel.setAttachment(attachment)
+    );
+    if (attachmentIds?.length) {
       msg.attachments = attachmentIds;
-      this.input.clearAttachments();
     }
+    this.input.clearAttachments();
 
-    if (this.input.mentions.length) {
-      const mentions = this.input.mentions.map(user => {
-        // Save the mention name if necessary.
-        if (!(this.sharedModel.getUser(user.username) === user)) {
-          this.sharedModel.setUser(user);
-        }
-        return user.username;
-      });
+    // Add the mentioned users.
+    const mentions = this._buildMentionList(this.input.mentions, message.body);
+    if (mentions.length) {
       msg.mentions = mentions;
-      this.input.clearMentions();
     }
+    this.input.clearMentions();
+
     this.sharedModel.addMessage(msg);
   }
 
@@ -205,11 +201,26 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
         edited: true
       };
     }
+
+    // Update the attachments.
     const attachmentIds = updatedMessage.attachments?.map(attachment =>
       this.sharedModel.setAttachment(attachment)
     );
-    if (attachmentIds) {
+    if (attachmentIds?.length) {
       message.attachments = attachmentIds;
+    } else {
+      delete message.attachments;
+    }
+
+    // Update the mentioned users.
+    const mentions = this._buildMentionList(
+      updatedMessage.mentions,
+      updatedMessage.body
+    );
+    if (mentions.length) {
+      message.mentions = mentions;
+    } else {
+      delete message.mentions;
     }
     this.sharedModel.updateMessage(index, message as IYmessage);
   }
@@ -261,6 +272,33 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
     }
     this.updateWriters(writers);
   };
+
+  private _buildMentionList(
+    userMentions: IUser[] | undefined,
+    body: string
+  ): string[] {
+    if (!userMentions) {
+      return [];
+    }
+    const mentions: string[] = [];
+    userMentions.forEach(user => {
+      // Make sure the user is still mentioned.
+      if (!user.mention_name) {
+        return;
+      }
+      const regex = new RegExp(user.mention_name);
+      if (!regex.exec(body)) {
+        return;
+      }
+
+      // Save the mention name if necessary.
+      if (!(this.sharedModel.getUser(user.username) === user)) {
+        this.sharedModel.setUser(user);
+      }
+      mentions.push(user.username);
+    });
+    return mentions;
+  }
 
   private _resetWritingStatus() {
     const awareness = this.sharedModel.awareness;
