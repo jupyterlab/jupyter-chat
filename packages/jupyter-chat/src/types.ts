@@ -13,6 +13,10 @@ export interface IUser {
   initials?: string;
   color?: string;
   avatar_url?: string;
+  /**
+   * The string to use to mention a user in the chat.
+   */
+  mention_name?: string;
 }
 
 /**

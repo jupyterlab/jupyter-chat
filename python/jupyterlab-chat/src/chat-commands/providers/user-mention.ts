@@ -46,12 +46,13 @@ class MentionCommandProvider implements IChatCommandProvider {
         return;
       }
       const user = userObject as unknown as IUser;
-      const username = (
-        user.display_name ??
-        user.name ??
-        user.username
-      ).replace(/ /g, '-');
-      this._users.set(`@${username}`, {
+      let mentionName = user.mention_name;
+      if (!mentionName) {
+        mentionName = Private.getMentionName(user);
+        user.mention_name = mentionName;
+      }
+
+      this._users.set(mentionName, {
         user,
         icon: Avatar({ user: user as User.IIdentity }) ?? undefined
       });
@@ -63,13 +64,13 @@ class MentionCommandProvider implements IChatCommandProvider {
       if (!user) {
         return;
       }
-      const username = (
-        user.display_name ??
-        user.name ??
-        user.username
-      ).replace(/ /g, '-');
+      let mentionName = user.mention_name;
+      if (!mentionName) {
+        mentionName = Private.getMentionName(user);
+        user.mention_name = mentionName;
+      }
 
-      this._users.set(`@${username}`, {
+      this._users.set(mentionName, {
         user,
         icon: Avatar({ user: user as User.IIdentity }) ?? undefined
       });
@@ -108,4 +109,15 @@ namespace Private {
     user: IUser;
     icon?: JSX.Element;
   };
+
+  /**
+   * Build the mention name from a User object.
+   */
+  export function getMentionName(user: IUser): string {
+    const username = (user.display_name ?? user.name ?? user.username).replace(
+      / /g,
+      '-'
+    );
+    return `@${username}`;
+  }
 }
