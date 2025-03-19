@@ -179,6 +179,7 @@ export class LabChatModel
 
     if (this.input.mentions.length) {
       const mentions = this.input.mentions.map(user => {
+        // Save the mention name if necessary.
         if (!(this.sharedModel.getUser(user.username) === user)) {
           this.sharedModel.setUser(user);
         }
@@ -350,6 +351,15 @@ export class LabChatModel
         // update the model ID.
         if (change.key === 'id') {
           this.id = change.newValue as string;
+        }
+      });
+    }
+
+    if (changes.userChanges) {
+      // Update the current user if it changes (if it has been mentioned for example).
+      changes.userChanges.forEach(change => {
+        if (change.key === this._user.username && change.newValue) {
+          this._user = change.newValue;
         }
       });
     }

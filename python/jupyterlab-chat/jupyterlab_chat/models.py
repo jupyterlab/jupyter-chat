@@ -73,7 +73,10 @@ class NewMessage:
 
 @dataclass
 class User(JupyterUser):
-    """ Object representing a user (same as Jupyter User ) """
+    """ Object representing a user """
+
+    mention_name: Optional[str] = None
+    """ The string to use as mention in chat """
 
 
 @dataclass
