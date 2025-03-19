@@ -177,6 +177,16 @@ export class LabChatModel
     }
     this.input.clearAttachments();
 
+    if (this.input.mentions.length) {
+      const mentions = this.input.mentions.map(user => {
+        if (!(this.sharedModel.getUser(user.username) === user)) {
+          this.sharedModel.setUser(user);
+        }
+        return user.username;
+      });
+      msg.mentions = mentions;
+      this.input.clearMentions();
+    }
     this.sharedModel.addMessage(msg);
   }
 
@@ -288,6 +298,7 @@ export class LabChatModel
             const {
               sender,
               attachments: attachmentIds,
+              mentions: mentionsIds,
               ...baseMessage
             } = ymessage;
 
@@ -313,6 +324,16 @@ export class LabChatModel
               }
             }
 
+            const mentions = mentionsIds?.map(
+              user =>
+                this.sharedModel.getUser(user) || {
+                  username: 'User undefined'
+                }
+            );
+
+            if (mentions?.length) {
+              msg.mentions = mentions;
+            }
             return msg;
           });
           await this.messagesInserted(index, messages);
