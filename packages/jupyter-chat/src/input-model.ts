@@ -367,7 +367,8 @@ export class InputModel implements IInputModel {
    * Add a user mention.
    */
   addMention(user: IUser): void {
-    if (!this._mentions.includes(user)) {
+    const usernames = this._mentions.map(user => user.username);
+    if (!usernames.includes(user.username)) {
       this._mentions.push(user);
     }
   }
