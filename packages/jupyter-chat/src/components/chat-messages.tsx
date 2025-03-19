@@ -25,6 +25,7 @@ import { IChatCommandRegistry } from '../chat-commands';
 import { IInputModel, InputModel } from '../input-model';
 import { IChatModel } from '../model';
 import { IChatMessage, IUser } from '../types';
+import { replaceSpanToMention } from '../utils';
 
 const MESSAGES_BOX_CLASS = 'jp-chat-messages-container';
 const MESSAGE_CLASS = 'jp-chat-message';
@@ -375,19 +376,26 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
     // Create an input model only if the message is edited.
     useEffect(() => {
       if (edit && canEdit) {
-        setInputModel(
-          new InputModel({
+        setInputModel(() => {
+          let body = message.body;
+          message.mentions?.forEach(user => {
+            body = replaceSpanToMention(body, user);
+          });
+          return new InputModel({
             onSend: (input: string, model?: IInputModel) =>
               updateMessage(message.id, input, model),
             onCancel: () => cancelEdition(),
-            value: message.body,
+            value: body,
+            activeCellManager: model.activeCellManager,
+            selectionWatcher: model.selectionWatcher,
+            documentManager: model.documentManager,
             config: {
               sendWithShiftEnter: model.config.sendWithShiftEnter
             },
             attachments: message.attachments,
-            documentManager: model.documentManager
-          })
-        );
+            mentions: message.mentions
+          });
+        });
       } else {
         setInputModel(null);
       }
@@ -411,6 +419,7 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
       const updatedMessage = { ...message };
       updatedMessage.body = input;
       updatedMessage.attachments = inputModel.attachments;
+      updatedMessage.mentions = inputModel.mentions;
       model.updateMessage!(id, updatedMessage);
       setEdit(false);
     };

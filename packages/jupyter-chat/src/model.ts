@@ -8,6 +8,9 @@ import { CommandRegistry } from '@lumino/commands';
 import { IDisposable } from '@lumino/disposable';
 import { ISignal, Signal } from '@lumino/signaling';
 
+import { IActiveCellManager } from './active-cell-manager';
+import { IInputModel, InputModel } from './input-model';
+import { ISelectionWatcher } from './selection-watcher';
 import {
   IChatHistory,
   INewMessage,
@@ -15,11 +18,7 @@ import {
   IConfig,
   IUser
 } from './types';
-import { IActiveCellManager } from './active-cell-manager';
-import { ISelectionWatcher } from './selection-watcher';
-import { IInputModel, InputModel } from './input-model';
-
-export const MENTION_CLASS = 'jp-chat-mention';
+import { replaceMentionToSpan } from './utils';
 
 /**
  * The chat model interface.
@@ -459,12 +458,7 @@ export abstract class AbstractChatModel implements IChatModel {
    */
   protected formatChatMessage(message: IChatMessage): IChatMessage {
     message.mentions?.forEach(user => {
-      if (!user.mention_name) {
-        return;
-      }
-      const regex = new RegExp(user.mention_name, 'g');
-      const mention = `<span class="${MENTION_CLASS}">${user.mention_name}</span>`;
-      message.body = message.body.replace(regex, mention);
+      message.body = replaceMentionToSpan(message.body, user);
     });
     return message;
   }
