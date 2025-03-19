@@ -431,7 +431,7 @@ export class ChatModel implements IChatModel {
       if (!user.mention_name) {
         return;
       }
-      const regex = new RegExp(user.mention_name);
+      const regex = new RegExp(user.mention_name, 'g');
       const mention = `<span class="${MENTION_CLASS}">${user.mention_name}</span>`;
       message.body = message.body.replace(regex, mention);
     });
