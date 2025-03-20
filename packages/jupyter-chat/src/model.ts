@@ -102,6 +102,11 @@ export interface IChatModel extends IDisposable {
   sendMessage(message: INewMessage): Promise<boolean | void> | boolean | void;
 
   /**
+   * Clear the message list.
+   */
+  clearMessages(): void;
+
+  /**
    * Optional, to update a message from the chat panel.
    *
    * @param id - the unique ID of the message.
@@ -402,6 +407,14 @@ export class ChatModel implements IChatModel {
    * @returns whether the message has been sent or not.
    */
   sendMessage(message: INewMessage): Promise<boolean | void> | boolean | void {}
+
+  /**
+   * Clear the message list.
+   */
+  clearMessages(): void {
+    this._messages = [];
+    this._messagesUpdated.emit();
+  }
 
   /**
    * Dispose the chat model.
