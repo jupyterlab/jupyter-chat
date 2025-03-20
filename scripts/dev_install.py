@@ -15,7 +15,7 @@ def install_dev() -> None:
     execute("jlpm install")
 
     execute("pip uninstall jupyterlab_chat -y")
-    execute("pip install -e python/jupyterlab-chat")
+    execute("pip install -e python/jupyterlab-chat[test]")
     execute("jupyter labextension develop --overwrite python/jupyterlab-chat --overwrite")
 
 
