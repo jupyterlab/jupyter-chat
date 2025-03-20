@@ -28,8 +28,7 @@ jobs:
       - name: Install the extension
         run: |
           set -eux
-          python -m pip install "jupyterlab>=4.0.0,<5"
-          ./scripts/dev_install.sh
+          python ./scripts/dev_install.py
 
       - name: Install tests dependencies
         working-directory: ui-tests
@@ -81,7 +80,7 @@ jobs:
         run: |
           set -eux
           python -m pip install "notebook>=7.0.0,<8"
-          ./scripts/dev_install.sh
+          python ./scripts/dev_install.py
 
       - name: Install dependencies
         working-directory: ui-tests

@@ -17,10 +17,7 @@ The following commands install the extension in development mode:
 
 ```bash
 # Install the extension
-./scripts/dev_install.sh
-
-# Symlink the assets
-jupyter labextension develop --overwrite python/jupyterlab-chat
+python ./scripts/dev_install.py
 ```
 
 To uninstall it, run:
@@ -31,8 +28,8 @@ pip uninstall jupyterlab-chat
 
 ## Building the assets
 
-Changes in typescript sources of `@jupyter/chat` or `jupyterlab-chat` must
-be built again to be available in the jupyterlab.
+Changes in typescript sources of `@jupyter/chat`, `jupyterlab-chat` or
+`jupyterlab-chat-extension` must be built again to be available in jupyterlab.
 
 ```bash
 jlpm build
