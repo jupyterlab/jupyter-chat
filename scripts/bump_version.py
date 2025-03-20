@@ -78,13 +78,26 @@ def bump(force, skip_if_dirty, spec):
         p = p.replace("a", "alpha").replace("b", "beta")
         js_version += f"-{p}.{x}"
 
-    # bump the packages
+    # bump the JS packages
     lerna_cmd = f"{LERNA_CMD} {js_version}"
     if force:
         lerna_cmd += " --yes"
     run(lerna_cmd)
 
     HERE = Path(__file__).parent.parent.resolve()
+
+    # bump the Python packages
+    for version_file in HERE.glob("python/**/_version.py"):
+        content = version_file.read_text().splitlines()
+        variable, current = content[0].split(" = ")
+        if variable != "__version__":
+            raise ValueError(
+                f"Version file {version_file} has unexpected content;"
+                f" expected __version__ assignment in the first line, found {variable}"
+            )
+        current = current.strip("'\"")
+        version_spec = increment_version(current, spec)
+        version_file.write_text(f'__version__ = "{version_spec}"\n')
 
     # bump the local package.json file
     path = HERE.joinpath("package.json")
