@@ -36,7 +36,9 @@ describe('test chat model', () => {
         message.body = 'formatted msg';
         return message;
       }
-      sendMessage(message: INewMessage): Promise<boolean | void> | boolean | void {
+      sendMessage(
+        message: INewMessage
+      ): Promise<boolean | void> | boolean | void {
         // No-op
       }
     }

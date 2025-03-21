@@ -422,7 +422,9 @@ export abstract class ChatModel implements IChatModel {
    * @param message - the message to send.
    * @returns whether the message has been sent or not.
    */
-  abstract sendMessage(message: INewMessage): Promise<boolean | void> | boolean | void;
+  abstract sendMessage(
+    message: INewMessage
+  ): Promise<boolean | void> | boolean | void;
 
   /**
    * Clear the message list.
