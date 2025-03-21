@@ -7,6 +7,9 @@ import { CommandRegistry } from '@lumino/commands';
 import { IDisposable } from '@lumino/disposable';
 import { ISignal, Signal } from '@lumino/signaling';
 
+import { IActiveCellManager } from './active-cell-manager';
+import { IInputModel, InputModel } from './input-model';
+import { ISelectionWatcher } from './selection-watcher';
 import {
   IChatHistory,
   INewMessage,
@@ -14,9 +17,7 @@ import {
   IConfig,
   IUser
 } from './types';
-import { IActiveCellManager } from './active-cell-manager';
-import { ISelectionWatcher } from './selection-watcher';
-import { IInputModel, InputModel } from './input-model';
+import { replaceMentionToSpan } from './utils';
 
 /**
  * The chat model interface.
@@ -438,6 +439,9 @@ export class ChatModel implements IChatModel {
    * Can be useful if some actions are required on the message.
    */
   protected formatChatMessage(message: IChatMessage): IChatMessage {
+    message.mentions?.forEach(user => {
+      message.body = replaceMentionToSpan(message.body, user);
+    });
     return message;
   }
 

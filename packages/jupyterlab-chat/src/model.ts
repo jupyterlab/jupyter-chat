@@ -162,13 +162,20 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
     }
 
     // Add the attachments to the message.
-    if (this.input.attachments.length) {
-      const attachmentIds = this.input.attachments.map(attachment =>
-        this.sharedModel.setAttachment(attachment)
-      );
+    const attachmentIds = this.input.attachments?.map(attachment =>
+      this.sharedModel.setAttachment(attachment)
+    );
+    if (attachmentIds?.length) {
       msg.attachments = attachmentIds;
-      this.input.clearAttachments();
     }
+    this.input.clearAttachments();
+
+    // Add the mentioned users.
+    const mentions = this._buildMentionList(this.input.mentions, message.body);
+    if (mentions.length) {
+      msg.mentions = mentions;
+    }
+    this.input.clearMentions();
 
     this.sharedModel.addMessage(msg);
   }
@@ -201,11 +208,26 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
         edited: true
       };
     }
+
+    // Update the attachments.
     const attachmentIds = updatedMessage.attachments?.map(attachment =>
       this.sharedModel.setAttachment(attachment)
     );
-    if (attachmentIds) {
+    if (attachmentIds?.length) {
       message.attachments = attachmentIds;
+    } else {
+      delete message.attachments;
+    }
+
+    // Update the mentioned users.
+    const mentions = this._buildMentionList(
+      updatedMessage.mentions,
+      updatedMessage.body
+    );
+    if (mentions.length) {
+      message.mentions = mentions;
+    } else {
+      delete message.mentions;
     }
     this.sharedModel.updateMessage(index, message as IYmessage);
   }
@@ -258,6 +280,33 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
     this.updateWriters(writers);
   };
 
+  private _buildMentionList(
+    userMentions: IUser[] | undefined,
+    body: string
+  ): string[] {
+    if (!userMentions) {
+      return [];
+    }
+    const mentions: string[] = [];
+    userMentions.forEach(user => {
+      // Make sure the user is still mentioned.
+      if (!user.mention_name) {
+        return;
+      }
+      const regex = new RegExp(user.mention_name);
+      if (!regex.exec(body)) {
+        return;
+      }
+
+      // Save the mention name if necessary.
+      if (!(this.sharedModel.getUser(user.username) === user)) {
+        this.sharedModel.setUser(user);
+      }
+      mentions.push(user.username);
+    });
+    return mentions;
+  }
+
   private _resetWritingStatus() {
     const awareness = this.sharedModel.awareness;
     const states = awareness.getLocalState();
@@ -278,6 +327,7 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
             const {
               sender,
               attachments: attachmentIds,
+              mentions: mentionsIds,
               ...baseMessage
             } = ymessage;
 
@@ -303,6 +353,16 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
               }
             }
 
+            const mentions = mentionsIds?.map(
+              user =>
+                this.sharedModel.getUser(user) || {
+                  username: 'User undefined'
+                }
+            );
+
+            if (mentions?.length) {
+              msg.mentions = mentions;
+            }
             return msg;
           });
           this.messagesInserted(index, messages);
@@ -319,6 +379,15 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
         // update the model ID.
         if (change.key === 'id') {
           this.id = change.newValue as string;
+        }
+      });
+    }
+
+    if (changes.userChanges) {
+      // Update the current user if it changes (if it has been mentioned for example).
+      changes.userChanges.forEach(change => {
+        if (change.key === this._user.username && change.newValue) {
+          this._user = change.newValue;
         }
       });
     }

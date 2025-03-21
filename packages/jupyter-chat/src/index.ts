@@ -4,6 +4,7 @@
  */
 
 export * from './active-cell-manager';
+export * from './chat-commands';
 export * from './components';
 export * from './icons';
 export * from './input-model';
@@ -14,4 +15,3 @@ export * from './types';
 export * from './widgets/chat-error';
 export * from './widgets/chat-sidebar';
 export * from './widgets/chat-widget';
-export * from './chat-commands';

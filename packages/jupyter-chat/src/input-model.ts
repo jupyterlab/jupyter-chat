@@ -7,7 +7,7 @@ import { IDisposable } from '@lumino/disposable';
 import { ISignal, Signal } from '@lumino/signaling';
 import { IActiveCellManager } from './active-cell-manager';
 import { ISelectionWatcher } from './selection-watcher';
-import { IAttachment } from './types';
+import { IAttachment, IUser } from './types';
 
 const WHITESPACE = new Set([' ', '\n', '\t']);
 
@@ -105,6 +105,26 @@ export interface IInputModel extends IDisposable {
    * Replace the current word in the input with a new one.
    */
   replaceCurrentWord(newWord: string): void;
+
+  /**
+   * The mentioned user list.
+   */
+  readonly mentions: IUser[];
+
+  /**
+   * Add user mention.
+   */
+  addMention?(user: IUser): void;
+
+  /**
+   * Remove a user mention.
+   */
+  removeMention(user: IUser): void;
+
+  /**
+   * Clear mentions list.
+   */
+  clearMentions(): void;
 }
 
 /**
@@ -114,6 +134,7 @@ export class InputModel implements IInputModel {
   constructor(options: InputModel.IOptions) {
     this._value = options.value || '';
     this._attachments = options.attachments || [];
+    this._mentions = options.mentions || [];
     this.cursorIndex = options.cursorIndex || this.value.length;
     this._activeCellManager = options.activeCellManager ?? null;
     this._selectionWatcher = options.selectionWatcher ?? null;
@@ -298,6 +319,40 @@ export class InputModel implements IInputModel {
   }
 
   /**
+   * The mentioned user list.
+   */
+  get mentions(): IUser[] {
+    return this._mentions;
+  }
+
+  /**
+   * Add a user mention.
+   */
+  addMention(user: IUser): void {
+    const usernames = this._mentions.map(user => user.username);
+    if (!usernames.includes(user.username)) {
+      this._mentions.push(user);
+    }
+  }
+
+  /**
+   * Remove a user mention.
+   */
+  removeMention(user: IUser): void {
+    const index = this._mentions.indexOf(user);
+    if (index > -1) {
+      this._mentions.splice(index, 1);
+    }
+  }
+
+  /**
+   * Clear mentions list.
+   */
+  clearMentions = (): void => {
+    this._mentions = [];
+  };
+
+  /**
    * Dispose the input model.
    */
   dispose(): void {
@@ -318,6 +373,7 @@ export class InputModel implements IInputModel {
   private _cursorIndex: number | null = null;
   private _currentWord: string | null = null;
   private _attachments: IAttachment[];
+  private _mentions: IUser[];
   private _activeCellManager: IActiveCellManager | null;
   private _selectionWatcher: ISelectionWatcher | null;
   private _config: InputModel.IConfig;
@@ -341,6 +397,11 @@ export namespace InputModel {
      * The initial attachments.
      */
     attachments?: IAttachment[];
+
+    /**
+     * The initial mentions.
+     */
+    mentions?: IUser[];
 
     /**
      * The current cursor index.
