@@ -8,17 +8,23 @@
  */
 
 import { ChatModel, IChatModel } from '../model';
-import { IChatMessage } from '../types';
+import { IChatMessage, INewMessage } from '../types';
+
+class MyChatModel extends ChatModel {
+  sendMessage(message: INewMessage): Promise<boolean | void> | boolean | void {
+    // No-op
+  }
+}
 
 describe('test chat model', () => {
   describe('model instantiation', () => {
     it('should create a ChatModel', () => {
-      const model = new ChatModel();
+      const model = new MyChatModel();
       expect(model).toBeInstanceOf(ChatModel);
     });
 
     it('should dispose a ChatModel', () => {
-      const model = new ChatModel();
+      const model = new MyChatModel();
       model.dispose();
       expect(model.isDisposed).toBeTruthy();
     });
@@ -29,6 +35,9 @@ describe('test chat model', () => {
       protected formatChatMessage(message: IChatMessage): IChatMessage {
         message.body = 'formatted msg';
         return message;
+      }
+      sendMessage(message: INewMessage): Promise<boolean | void> | boolean | void {
+        // No-op
       }
     }
 
@@ -47,7 +56,7 @@ describe('test chat model', () => {
     });
 
     it('should signal incoming message', () => {
-      model = new ChatModel();
+      model = new MyChatModel();
       model.messagesUpdated.connect((sender: IChatModel) => {
         expect(sender).toBe(model);
         messages = model.messages;
@@ -72,12 +81,12 @@ describe('test chat model', () => {
 
   describe('model config', () => {
     it('should have empty config', () => {
-      const model = new ChatModel();
+      const model = new MyChatModel();
       expect(model.config.sendWithShiftEnter).toBeUndefined();
     });
 
     it('should allow config', () => {
-      const model = new ChatModel({ config: { sendWithShiftEnter: true } });
+      const model = new MyChatModel({ config: { sendWithShiftEnter: true } });
       expect(model.config.sendWithShiftEnter).toBeTruthy();
     });
   });
