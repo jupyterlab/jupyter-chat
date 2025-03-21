@@ -173,6 +173,13 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
     this.sharedModel.addMessage(msg);
   }
 
+  /**
+   * Override the clear messages method.
+   */
+  clearMessages(): void {
+    // No-op as we may not need to clear the messages in file based chat.
+  }
+
   updateMessage(
     id: string,
     updatedMessage: IChatMessage
