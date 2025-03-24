@@ -4,7 +4,6 @@
  */
 
 import { Button } from '@jupyter/react-components';
-import { IDocumentManager } from '@jupyterlab/docmanager';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import {
   LabIcon,
@@ -44,7 +43,6 @@ type BaseMessageProps = {
   rmRegistry: IRenderMimeRegistry;
   model: IChatModel;
   chatCommandRegistry?: IChatCommandRegistry;
-  documentManager?: IDocumentManager;
 };
 
 /**
@@ -364,13 +362,15 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
       if (edit && canEdit) {
         setInputModel(
           new InputModel({
+            onSend: (input: string, model?: IInputModel) =>
+              updateMessage(message.id, input, model),
+            onCancel: () => cancelEdition(),
             value: message.body,
-            activeCellManager: model.activeCellManager,
-            selectionWatcher: model.selectionWatcher,
             config: {
               sendWithShiftEnter: model.config.sendWithShiftEnter
             },
-            attachments: message.attachments
+            attachments: message.attachments,
+            documentManager: model.documentManager
           })
         );
       } else {
@@ -384,14 +384,18 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
     };
 
     // Update the content of the message.
-    const updateMessage = (id: string, input: string): void => {
-      if (!canEdit) {
+    const updateMessage = (
+      id: string,
+      input: string,
+      inputModel?: IInputModel
+    ): void => {
+      if (!canEdit || !inputModel) {
         return;
       }
       // Update the message
       const updatedMessage = { ...message };
       updatedMessage.body = input;
-      updatedMessage.attachments = inputModel?.attachments;
+      updatedMessage.attachments = inputModel.attachments;
       model.updateMessage!(id, updatedMessage);
       setEdit(false);
     };
@@ -411,12 +415,9 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
       <div ref={ref} data-index={props.index}>
         {edit && canEdit && inputModel ? (
           <ChatInput
-            onSend={(input: string) => updateMessage(message.id, input)}
             onCancel={() => cancelEdition()}
             model={inputModel}
-            hideIncludeSelection={true}
             chatCommandRegistry={props.chatCommandRegistry}
-            documentManager={props.documentManager}
           />
         ) : (
           <MarkdownRenderer

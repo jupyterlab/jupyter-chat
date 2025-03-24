@@ -4,7 +4,6 @@
  */
 
 import { IThemeManager } from '@jupyterlab/apputils';
-import { IDocumentManager } from '@jupyterlab/docmanager';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -22,10 +21,6 @@ import { IAttachmentOpenerRegistry } from '../registry';
 
 export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
   const { model } = props;
-  const onSend = async (input: string) => {
-    // send message to backend
-    model.sendMessage({ body: input });
-  };
 
   return (
     <AttachmentOpenerContext.Provider value={props.attachmentOpenerRegistry}>
@@ -33,10 +28,8 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
         rmRegistry={props.rmRegistry}
         model={model}
         chatCommandRegistry={props.chatCommandRegistry}
-        documentManager={props.documentManager}
       />
       <ChatInput
-        onSend={onSend}
         sx={{
           paddingLeft: 4,
           paddingRight: 4,
@@ -45,7 +38,6 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
           borderTop: '1px solid var(--jp-border-color1)'
         }}
         model={model.input}
-        documentManager={props.documentManager}
         chatCommandRegistry={props.chatCommandRegistry}
       />
     </AttachmentOpenerContext.Provider>
@@ -93,7 +85,6 @@ export function Chat(props: Chat.IOptions): JSX.Element {
           <ChatBody
             model={props.model}
             rmRegistry={props.rmRegistry}
-            documentManager={props.documentManager}
             chatCommandRegistry={props.chatCommandRegistry}
             attachmentOpenerRegistry={props.attachmentOpenerRegistry}
           />
@@ -122,10 +113,6 @@ export namespace Chat {
      * The rendermime registry.
      */
     rmRegistry: IRenderMimeRegistry;
-    /**
-     * The document manager.
-     */
-    documentManager?: IDocumentManager;
     /**
      * Chat command registry.
      */

@@ -272,7 +272,8 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
           widgetConfig,
           commands: app.commands,
           activeCellManager,
-          selectionWatcher
+          selectionWatcher,
+          documentManager: filebrowser?.model.manager
         });
         app.docRegistry.addModelFactory(modelFactory);
       })
@@ -292,7 +293,6 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
       rmRegistry,
       toolbarFactory,
       translator,
-      documentManager: filebrowser?.model.manager,
       chatCommandRegistry,
       attachmentOpenerRegistry
     });
@@ -353,6 +353,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     IActiveCellManagerToken,
     IChatPanel,
     ICommandPalette,
+    IDefaultFileBrowser,
     ILauncher,
     ISelectionWatcherToken
   ],
@@ -363,6 +364,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     activeCellManager: IActiveCellManager | null,
     chatPanel: ChatPanel | null,
     commandPalette: ICommandPalette | null,
+    filebrowser: IDefaultFileBrowser | null,
     launcher: ILauncher | null,
     selectionWatcher: ISelectionWatcher | null
   ) => {
@@ -588,7 +590,8 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
                 widgetConfig,
                 commands,
                 activeCellManager,
-                selectionWatcher
+                selectionWatcher,
+                documentManager: filebrowser?.model.manager
               });
 
               // Set the name of the model.
@@ -653,7 +656,6 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
   optional: [
     IAttachmentOpenerRegistry,
     IChatCommandRegistry,
-    IDefaultFileBrowser,
     ILayoutRestorer,
     IThemeManager
   ],
@@ -664,7 +666,6 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
     rmRegistry: IRenderMimeRegistry,
     attachmentOpenerRegistry: IAttachmentOpenerRegistry,
     chatCommandRegistry: IChatCommandRegistry,
-    filebrowser: IDefaultFileBrowser | null,
     restorer: ILayoutRestorer | null,
     themeManager: IThemeManager | null
   ): ChatPanel => {
@@ -681,7 +682,6 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
       rmRegistry,
       themeManager,
       defaultDirectory,
-      documentManager: filebrowser?.model.manager,
       chatCommandRegistry,
       attachmentOpenerRegistry
     });

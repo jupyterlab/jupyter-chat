@@ -76,7 +76,6 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
     super(options);
     this._themeManager = options.themeManager;
     this._rmRegistry = options.rmRegistry;
-    this._documentManager = options.documentManager;
     this._chatCommandRegistry = options.chatCommandRegistry;
     this._attachmentOpenerRegistry = options.attachmentOpenerRegistry;
   }
@@ -90,7 +89,6 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
   protected createNewWidget(context: ChatWidgetFactory.IContext): LabChatPanel {
     context.rmRegistry = this._rmRegistry;
     context.themeManager = this._themeManager;
-    context.documentManager = this._documentManager;
     context.chatCommandRegistry = this._chatCommandRegistry;
     context.attachmentOpenerRegistry = this._attachmentOpenerRegistry;
     return new LabChatPanel({
@@ -101,7 +99,6 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
 
   private _themeManager: IThemeManager | null;
   private _rmRegistry: IRenderMimeRegistry;
-  private _documentManager?: IDocumentManager;
   private _chatCommandRegistry?: IChatCommandRegistry;
   private _attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
 }
@@ -119,7 +116,6 @@ export namespace ChatWidgetFactory {
     extends DocumentRegistry.IWidgetFactoryOptions<T> {
     themeManager: IThemeManager | null;
     rmRegistry: IRenderMimeRegistry;
-    documentManager?: IDocumentManager;
     chatCommandRegistry?: IChatCommandRegistry;
     attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
   }
@@ -134,6 +130,7 @@ export class LabChatModelFactory
     this._commands = options.commands;
     this._activeCellManager = options.activeCellManager ?? null;
     this._selectionWatcher = options.selectionWatcher ?? null;
+    this._documentManager = options.documentManager ?? null;
   }
 
   collaborative = true;
@@ -206,7 +203,8 @@ export class LabChatModelFactory
       widgetConfig: this._widgetConfig,
       commands: this._commands,
       activeCellManager: this._activeCellManager,
-      selectionWatcher: this._selectionWatcher
+      selectionWatcher: this._selectionWatcher,
+      documentManager: this._documentManager
     });
   }
 
@@ -216,4 +214,5 @@ export class LabChatModelFactory
   private _commands?: CommandRegistry;
   private _activeCellManager: IActiveCellManager | null;
   private _selectionWatcher: ISelectionWatcher | null;
+  private _documentManager: IDocumentManager | null;
 }

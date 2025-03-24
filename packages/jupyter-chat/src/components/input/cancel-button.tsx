@@ -7,6 +7,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import React from 'react';
 
 import { TooltippedButton } from '../mui-extras/tooltipped-button';
+import { IInputModel } from '../../input-model';
 
 const CANCEL_BUTTON_CLASS = 'jp-chat-cancel-button';
 
@@ -14,17 +15,20 @@ const CANCEL_BUTTON_CLASS = 'jp-chat-cancel-button';
  * The cancel button props.
  */
 export type CancelButtonProps = {
-  onCancel: () => void;
+  model: IInputModel;
 };
 
 /**
  * The cancel button.
  */
 export function CancelButton(props: CancelButtonProps): JSX.Element {
+  if (!props.model.cancel) {
+    return <></>;
+  }
   const tooltip = 'Cancel edition';
   return (
     <TooltippedButton
-      onClick={props.onCancel}
+      onClick={props.model.cancel}
       tooltip={tooltip}
       buttonProps={{
         size: 'small',

@@ -34,7 +34,6 @@ import React, { useState } from 'react';
 
 import { LabChatModel } from './model';
 import { CommandIDs, chatFileType } from './token';
-import { IDocumentManager } from '@jupyterlab/docmanager';
 
 const MAIN_PANEL_CLASS = 'jp-lab-chat-main-panel';
 const TITLE_UNREAD_CLASS = 'jp-lab-chat-title-unread';
@@ -104,7 +103,6 @@ export class ChatPanel extends SidePanel {
     this._rmRegistry = options.rmRegistry;
     this._themeManager = options.themeManager;
     this._defaultDirectory = options.defaultDirectory;
-    this._documentManager = options.documentManager;
     this._chatCommandRegistry = options.chatCommandRegistry;
     this._attachmentOpenerRegistry = options.attachmentOpenerRegistry;
 
@@ -168,7 +166,6 @@ export class ChatPanel extends SidePanel {
       model: model,
       rmRegistry: this._rmRegistry,
       themeManager: this._themeManager,
-      documentManager: this._documentManager,
       chatCommandRegistry: this._chatCommandRegistry,
       attachmentOpenerRegistry: this._attachmentOpenerRegistry
     });
@@ -289,7 +286,6 @@ export class ChatPanel extends SidePanel {
   private _openChat: ReactWidget;
   private _rmRegistry: IRenderMimeRegistry;
   private _themeManager: IThemeManager | null;
-  private _documentManager?: IDocumentManager;
   private _chatCommandRegistry?: IChatCommandRegistry;
   private _attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
 }
@@ -307,7 +303,6 @@ export namespace ChatPanel {
     rmRegistry: IRenderMimeRegistry;
     themeManager: IThemeManager | null;
     defaultDirectory: string;
-    documentManager?: IDocumentManager;
     chatCommandRegistry?: IChatCommandRegistry;
     attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
   }

@@ -3,13 +3,12 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { IDocumentManager } from '@jupyterlab/docmanager';
 import { FileDialog } from '@jupyterlab/filebrowser';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import React from 'react';
 
 import { TooltippedButton } from '../mui-extras/tooltipped-button';
-import { IAttachment } from '../../types';
+import { IInputModel } from '../../input-model';
 
 const ATTACH_BUTTON_CLASS = 'jp-chat-attach-button';
 
@@ -17,26 +16,33 @@ const ATTACH_BUTTON_CLASS = 'jp-chat-attach-button';
  * The attach button props.
  */
 export type AttachButtonProps = {
-  documentManager: IDocumentManager;
-  onAttach: (attachment: IAttachment) => void;
+  model: IInputModel;
 };
 
 /**
  * The attach button.
  */
 export function AttachButton(props: AttachButtonProps): JSX.Element {
+  const { model } = props;
   const tooltip = 'Add attachment';
 
+  if (!model.documentManager || !model.addAttachment) {
+    return <></>;
+  }
+
   const onclick = async () => {
+    if (!model.documentManager || !model.addAttachment) {
+      return;
+    }
     try {
       const files = await FileDialog.getOpenFiles({
         title: 'Select files to attach',
-        manager: props.documentManager
+        manager: model.documentManager
       });
       if (files.value) {
         files.value.forEach(file => {
           if (file.type !== 'directory') {
-            props.onAttach({ type: 'file', value: file.path });
+            model.addAttachment?.({ type: 'file', value: file.path });
           }
         });
       }

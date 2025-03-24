@@ -3,7 +3,6 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { IDocumentManager } from '@jupyterlab/docmanager';
 import {
   Autocomplete,
   AutocompleteInputChangeReason,
@@ -19,14 +18,15 @@ import React, { useEffect, useRef, useState } from 'react';
 import { AttachmentPreviewList } from './attachments';
 import { AttachButton, CancelButton, SendButton } from './input';
 import { IInputModel, InputModel } from '../input-model';
-import { IAttachment, Selection } from '../types';
+import { IAttachment } from '../types';
 import { useChatCommands } from './input/use-chat-commands';
 import { IChatCommandRegistry } from '../chat-commands';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
+const INPUT_TOOLBAR_CLASS = 'jp-chat-input-toolbar';
 
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
-  const { documentManager, model } = props;
+  const { model } = props;
   const [input, setInput] = useState<string>(model.value);
   const inputRef = useRef<HTMLInputElement>();
 
@@ -38,13 +38,6 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   const [attachments, setAttachments] = useState<IAttachment[]>(
     model.attachments
   );
-
-  // Display the include selection menu if it is not explicitly hidden, and if at least
-  // one of the tool to check for text or cell selection is enabled.
-  let hideIncludeSelection = props.hideIncludeSelection ?? false;
-  if (model.activeCellManager === null && model.selectionWatcher === null) {
-    hideIncludeSelection = true;
-  }
 
   useEffect(() => {
     const inputChanged = (_: IInputModel, value: string) => {
@@ -136,36 +129,10 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
       (sendWithShiftEnter && event.shiftKey) ||
       (!sendWithShiftEnter && !event.shiftKey)
     ) {
-      onSend();
+      model.send(input);
       event.stopPropagation();
       event.preventDefault();
     }
-  }
-
-  /**
-   * Triggered when sending the message.
-   *
-   * Add code block if cell or text is selected.
-   */
-  function onSend(selection?: Selection) {
-    let content = input;
-    if (selection) {
-      content += `
-
-\`\`\`
-${selection.source}
-\`\`\`
-`;
-    }
-    props.onSend(content);
-    model.value = '';
-  }
-
-  /**
-   * Triggered when cancelling edition.
-   */
-  function onCancel() {
-    props.onCancel?.();
   }
 
   // Set the helper text based on whether Shift+Enter is used for sending.
@@ -221,22 +188,12 @@ ${selection.source}
             InputProps={{
               ...params.InputProps,
               endAdornment: (
-                <InputAdornment position="end">
-                  {documentManager && model.addAttachment && (
-                    <AttachButton
-                      documentManager={documentManager}
-                      onAttach={model.addAttachment}
-                    />
+                <InputAdornment position="end" className={INPUT_TOOLBAR_CLASS}>
+                  {model.documentManager && model.addAttachment && (
+                    <AttachButton model={model} />
                   )}
-                  {props.onCancel && <CancelButton onCancel={onCancel} />}
-                  <SendButton
-                    model={model}
-                    sendWithShiftEnter={sendWithShiftEnter}
-                    inputExists={inputExists || attachments.length > 0}
-                    onSend={onSend}
-                    hideIncludeSelection={hideIncludeSelection}
-                    hasButtonOnLeft={!!props.onCancel}
-                  />
+                  {model.cancel && <CancelButton model={model} />}
+                  <SendButton model={model} />
                 </InputAdornment>
               )
             }}
@@ -277,25 +234,13 @@ export namespace ChatInput {
      */
     model: IInputModel;
     /**
-     * The function to be called to send the message.
-     */
-    onSend: (input: string) => unknown;
-    /**
      * The function to be called to cancel editing.
      */
     onCancel?: () => unknown;
     /**
-     * Whether to allow or not including selection.
-     */
-    hideIncludeSelection?: boolean;
-    /**
      * Custom mui/material styles.
      */
     sx?: SxProps<Theme>;
-    /**
-     * The document manager.
-     */
-    documentManager?: IDocumentManager;
     /**
      * Chat command registry.
      */

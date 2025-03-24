@@ -3,6 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { IDocumentManager } from '@jupyterlab/docmanager';
 import { CommandRegistry } from '@lumino/commands';
 import { IDisposable } from '@lumino/disposable';
 import { ISignal, Signal } from '@lumino/signaling';
@@ -66,6 +67,11 @@ export interface IChatModel extends IDisposable {
    * Get the selection watcher.
    */
   readonly selectionWatcher: ISelectionWatcher | null;
+
+  /**
+   * Get the selection watcher.
+   */
+  readonly documentManager: IDocumentManager | null;
 
   /**
    * A signal emitting when the messages list is updated.
@@ -194,16 +200,18 @@ export class ChatModel implements IChatModel {
     this._inputModel = new InputModel({
       activeCellManager: options.activeCellManager,
       selectionWatcher: options.selectionWatcher,
+      documentManager: options.documentManager,
       config: {
         sendWithShiftEnter: config.sendWithShiftEnter
-      }
+      },
+      onSend: (input: string) => this.sendMessage({ body: input })
     });
 
     this._commands = options.commands;
 
     this._activeCellManager = options.activeCellManager ?? null;
-
     this._selectionWatcher = options.selectionWatcher ?? null;
+    this._documentManager = options.documentManager ?? null;
   }
 
   /**
@@ -252,6 +260,13 @@ export class ChatModel implements IChatModel {
    */
   get selectionWatcher(): ISelectionWatcher | null {
     return this._selectionWatcher;
+  }
+
+  /**
+   * Get the document manager.
+   */
+  get documentManager(): IDocumentManager | null {
+    return this._documentManager;
   }
 
   /**
@@ -582,6 +597,7 @@ export class ChatModel implements IChatModel {
   private _commands?: CommandRegistry;
   private _activeCellManager: IActiveCellManager | null;
   private _selectionWatcher: ISelectionWatcher | null;
+  private _documentManager: IDocumentManager | null;
   private _notificationId: string | null = null;
   private _messagesUpdated = new Signal<IChatModel, void>(this);
   private _configChanged = new Signal<IChatModel, IConfig>(this);
@@ -622,5 +638,10 @@ export namespace ChatModel {
      * Selection watcher.
      */
     selectionWatcher?: ISelectionWatcher | null;
+
+    /**
+     * Document manager.
+     */
+    documentManager?: IDocumentManager | null;
   }
 }
