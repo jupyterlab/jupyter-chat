@@ -88,14 +88,7 @@ export function Chat(props: Chat.IOptions): JSX.Element {
           )}
         </Box>
         {/* body */}
-        {view === Chat.View.chat && (
-          <ChatBody
-            model={props.model}
-            rmRegistry={props.rmRegistry}
-            chatCommandRegistry={props.chatCommandRegistry}
-            attachmentOpenerRegistry={props.attachmentOpenerRegistry}
-          />
-        )}
+        {view === Chat.View.chat && <ChatBody {...props} />}
         {view === Chat.View.settings && props.settingsPanel && (
           <props.settingsPanel />
         )}

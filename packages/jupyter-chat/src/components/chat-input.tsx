@@ -82,7 +82,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
    */
   useEffect(() => {
     const updateToolbar = () => {
-      setToolbarElements(toolbarRegistry?.getItems());
+      setToolbarElements(toolbarRegistry.getItems());
     };
 
     toolbarRegistry.itemsChanged.connect(updateToolbar);
