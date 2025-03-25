@@ -8,6 +8,7 @@ import {
   IActiveCellManager,
   IAttachmentOpenerRegistry,
   IChatCommandRegistry,
+  IInputToolbarRegistry,
   ISelectionWatcher
 } from '@jupyter/chat';
 import { IThemeManager } from '@jupyterlab/apputils';
@@ -21,7 +22,11 @@ import { ISignal, Signal } from '@lumino/signaling';
 import { LabChatModel } from './model';
 import { LabChatPanel } from './widget';
 import { YChat } from './ychat';
-import { ILabChatConfig, IWidgetConfig } from './token';
+import {
+  IInputToolbarRegistryFactory,
+  ILabChatConfig,
+  IWidgetConfig
+} from './token';
 
 /**
  * The object provided by the chatDocument extension.
@@ -78,6 +83,9 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
     this._rmRegistry = options.rmRegistry;
     this._chatCommandRegistry = options.chatCommandRegistry;
     this._attachmentOpenerRegistry = options.attachmentOpenerRegistry;
+    if (options.inputToolbarFactory) {
+      this._inputToolbarRegistry = options.inputToolbarFactory.create();
+    }
   }
 
   /**
@@ -91,6 +99,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
     context.themeManager = this._themeManager;
     context.chatCommandRegistry = this._chatCommandRegistry;
     context.attachmentOpenerRegistry = this._attachmentOpenerRegistry;
+    context.inputToolbarRegistry = this._inputToolbarRegistry;
     return new LabChatPanel({
       context,
       content: new ChatWidget(context)
@@ -101,6 +110,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
   private _rmRegistry: IRenderMimeRegistry;
   private _chatCommandRegistry?: IChatCommandRegistry;
   private _attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
+  private _inputToolbarRegistry?: IInputToolbarRegistry;
 }
 
 export namespace ChatWidgetFactory {
@@ -110,6 +120,7 @@ export namespace ChatWidgetFactory {
     documentManager?: IDocumentManager;
     chatCommandRegistry?: IChatCommandRegistry;
     attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
+    inputToolbarRegistry?: IInputToolbarRegistry;
   }
 
   export interface IOptions<T extends LabChatPanel>
@@ -118,6 +129,7 @@ export namespace ChatWidgetFactory {
     rmRegistry: IRenderMimeRegistry;
     chatCommandRegistry?: IChatCommandRegistry;
     attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
+    inputToolbarFactory?: IInputToolbarRegistryFactory;
   }
 }
 

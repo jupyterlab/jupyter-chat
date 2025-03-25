@@ -16,7 +16,11 @@ import clsx from 'clsx';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { AttachmentPreviewList } from './attachments';
-import { InputToolbarRegistry, useChatCommands } from './input';
+import {
+  IInputToolbarRegistry,
+  InputToolbarRegistry,
+  useChatCommands
+} from './input';
 import { IInputModel, InputModel } from '../input-model';
 import { IAttachment } from '../types';
 import { IChatCommandRegistry } from '../chat-commands';
@@ -258,7 +262,7 @@ export namespace ChatInput {
     /**
      * The toolbar registry.
      */
-    toolbarRegistry: InputToolbarRegistry;
+    toolbarRegistry: IInputToolbarRegistry;
     /**
      * The function to be called to cancel editing.
      */

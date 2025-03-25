@@ -18,7 +18,7 @@ import React, { useEffect, useState, useRef, forwardRef } from 'react';
 
 import { AttachmentPreviewList } from './attachments';
 import { ChatInput } from './chat-input';
-import { InputToolbarRegistry } from './input';
+import { IInputToolbarRegistry } from './input';
 import { MarkdownRenderer } from './markdown-renderer';
 import { ScrollContainer } from './scroll-container';
 import { IChatCommandRegistry } from '../chat-commands';
@@ -56,7 +56,7 @@ type BaseMessageProps = {
   /**
    * The input toolbar registry.
    */
-  inputToolbarRegistry: InputToolbarRegistry;
+  inputToolbarRegistry: IInputToolbarRegistry;
 };
 
 /**

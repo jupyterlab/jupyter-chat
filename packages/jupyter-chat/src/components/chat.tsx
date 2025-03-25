@@ -15,7 +15,7 @@ import { JlThemeProvider } from './jl-theme-provider';
 import { IChatCommandRegistry } from '../chat-commands';
 import { ChatMessages } from './chat-messages';
 import { ChatInput } from './chat-input';
-import { InputToolbarRegistry } from './input';
+import { IInputToolbarRegistry, InputToolbarRegistry } from './input';
 import { AttachmentOpenerContext } from '../context';
 import { IChatModel } from '../model';
 import { IAttachmentOpenerRegistry } from '../registry';
@@ -124,7 +124,7 @@ export namespace Chat {
     /**
      * The input toolbar registry
      */
-    inputToolbarRegistry?: InputToolbarRegistry;
+    inputToolbarRegistry?: IInputToolbarRegistry;
   }
 
   /**
