@@ -38,7 +38,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     model.attachments
   );
   const [toolbarElements, setToolbarElements] = useState<
-    InputToolbarRegistry.IInputToolbarItem[]
+    InputToolbarRegistry.IToolbarItem[]
   >([]);
 
   /**

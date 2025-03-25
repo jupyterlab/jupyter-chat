@@ -19,17 +19,17 @@ export interface IInputToolbarRegistry {
   /**
    * Get a toolbar item.
    */
-  get(name: string): InputToolbarRegistry.IInputToolbarItem | undefined;
+  get(name: string): InputToolbarRegistry.IToolbarItem | undefined;
 
   /**
    * Get the list of the visible toolbar items in order.
    */
-  getItems(): InputToolbarRegistry.IInputToolbarItem[];
+  getItems(): InputToolbarRegistry.IToolbarItem[];
 
   /**
    * Add a toolbar item.
    */
-  addItem(name: string, item: InputToolbarRegistry.IInputToolbarItem): void;
+  addItem(name: string, item: InputToolbarRegistry.IToolbarItem): void;
 
   /**
    * Remove a toolbar item.
@@ -61,14 +61,14 @@ export class InputToolbarRegistry implements IInputToolbarRegistry {
   /**
    * Get a toolbar item.
    */
-  get(name: string): InputToolbarRegistry.IInputToolbarItem | undefined {
+  get(name: string): InputToolbarRegistry.IToolbarItem | undefined {
     return this._items.get(name);
   }
 
   /**
    * Get the list of the visible toolbar items in order.
    */
-  getItems(): InputToolbarRegistry.IInputToolbarItem[] {
+  getItems(): InputToolbarRegistry.IToolbarItem[] {
     return Array.from(this._items.values())
       .filter(item => !item.hidden)
       .sort((a, b) => a.position - b.position);
@@ -77,7 +77,7 @@ export class InputToolbarRegistry implements IInputToolbarRegistry {
   /**
    * Add a toolbar item.
    */
-  addItem(name: string, item: InputToolbarRegistry.IInputToolbarItem): void {
+  addItem(name: string, item: InputToolbarRegistry.IToolbarItem): void {
     if (!this._items.has(name)) {
       this._items.set(name, item);
       this._itemsChanged.emit();
@@ -116,7 +116,7 @@ export class InputToolbarRegistry implements IInputToolbarRegistry {
     }
   }
 
-  private _items = new Map<string, InputToolbarRegistry.IInputToolbarItem>();
+  private _items = new Map<string, InputToolbarRegistry.IToolbarItem>();
   private _itemsChanged = new Signal<this, void>(this);
 }
 
@@ -124,12 +124,12 @@ export namespace InputToolbarRegistry {
   /**
    * The toolbar item interface.
    */
-  export interface IInputToolbarItem {
+  export interface IToolbarItem {
     /**
      * The react functional component with the button.
      *
      * NOTE:
-     * This component must be a TooltippedButton for a better integration in the toolbar.
+     * This component must be a TooltippedButton for a good integration in the toolbar.
      */
     element: React.FunctionComponent<IToolbarItemProps>;
     /**
@@ -147,7 +147,7 @@ export namespace InputToolbarRegistry {
    */
   export interface IToolbarItemProps {
     /**
-     * the input model of the input component including the button.
+     * The input model of the input component including the button.
      */
     model: IInputModel;
   }
