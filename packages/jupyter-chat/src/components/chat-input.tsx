@@ -16,17 +16,16 @@ import clsx from 'clsx';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { AttachmentPreviewList } from './attachments';
-import { AttachButton, CancelButton, SendButton } from './input';
+import { InputToolbarRegistry, useChatCommands } from './input';
 import { IInputModel, InputModel } from '../input-model';
 import { IAttachment } from '../types';
-import { useChatCommands } from './input/use-chat-commands';
 import { IChatCommandRegistry } from '../chat-commands';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
 const INPUT_TOOLBAR_CLASS = 'jp-chat-input-toolbar';
 
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
-  const { model } = props;
+  const { model, toolbarRegistry } = props;
   const [input, setInput] = useState<string>(model.value);
   const inputRef = useRef<HTMLInputElement>();
 
@@ -38,7 +37,16 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   const [attachments, setAttachments] = useState<IAttachment[]>(
     model.attachments
   );
+  const [toolbarElements, setToolbarElements] = useState<
+    InputToolbarRegistry.IInputToolbarItem[]
+  >([]);
 
+  /**
+   * Handle the changes on the model that affect the input.
+   * - focus requested
+   * - config changed
+   * - attachments changed
+   */
   useEffect(() => {
     const inputChanged = (_: IInputModel, value: string) => {
       setInput(value);
@@ -68,6 +76,22 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
       model.attachmentsChanged?.disconnect(attachmentChanged);
     };
   }, [model]);
+
+  /**
+   * Handle the changes in the toolbar items.
+   */
+  useEffect(() => {
+    const updateToolbar = () => {
+      setToolbarElements(toolbarRegistry?.getItems());
+    };
+
+    toolbarRegistry.itemsChanged.connect(updateToolbar);
+    updateToolbar();
+
+    return () => {
+      toolbarRegistry.itemsChanged.disconnect(updateToolbar);
+    };
+  }, [toolbarRegistry]);
 
   const inputExists = !!input.trim();
 
@@ -189,11 +213,9 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
               ...params.InputProps,
               endAdornment: (
                 <InputAdornment position="end" className={INPUT_TOOLBAR_CLASS}>
-                  {model.documentManager && model.addAttachment && (
-                    <AttachButton model={model} />
-                  )}
-                  {model.cancel && <CancelButton model={model} />}
-                  <SendButton model={model} />
+                  {toolbarElements.map(item => (
+                    <item.element model={model} />
+                  ))}
                 </InputAdornment>
               )
             }}
@@ -233,6 +255,10 @@ export namespace ChatInput {
      * The chat model.
      */
     model: IInputModel;
+    /**
+     * The toolbar registry.
+     */
+    toolbarRegistry: InputToolbarRegistry;
     /**
      * The function to be called to cancel editing.
      */

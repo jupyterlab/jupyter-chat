@@ -8,25 +8,21 @@ import SendIcon from '@mui/icons-material/Send';
 import { Box, Menu, MenuItem, Typography } from '@mui/material';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { TooltippedButton } from '../mui-extras/tooltipped-button';
-import { includeSelectionIcon } from '../../icons';
-import { IInputModel, InputModel } from '../../input-model';
+import { InputToolbarRegistry } from '../toolbar-registry';
+import { TooltippedButton } from '../../mui-extras/tooltipped-button';
+import { includeSelectionIcon } from '../../../icons';
+import { IInputModel, InputModel } from '../../../input-model';
 
 const SEND_BUTTON_CLASS = 'jp-chat-send-button';
 const SEND_INCLUDE_OPENER_CLASS = 'jp-chat-send-include-opener';
 const SEND_INCLUDE_LI_CLASS = 'jp-chat-send-include';
 
 /**
- * The send button props.
- */
-export type SendButtonProps = {
-  model: IInputModel;
-};
-
-/**
  * The send button, with optional 'include selection' menu.
  */
-export function SendButton(props: SendButtonProps): JSX.Element {
+export function SendButton(
+  props: InputToolbarRegistry.IToolbarItemProps
+): JSX.Element {
   const { model } = props;
   const { activeCellManager, selectionWatcher } = model;
   const hideIncludeSelection = !activeCellManager || !selectionWatcher;
@@ -127,7 +123,7 @@ ${source}
   }
 
   return (
-    <Box sx={{ display: 'flex', flexWrap: 'nowrap' }}>
+    <>
       <TooltippedButton
         onClick={() => model.send(model.value)}
         disabled={disabled}
@@ -137,9 +133,6 @@ ${source}
           title: tooltip,
           variant: 'contained',
           className: SEND_BUTTON_CLASS
-        }}
-        sx={{
-          minWidth: 'unset'
         }}
       >
         <SendIcon />
@@ -164,12 +157,6 @@ ${source}
                 e.stopPropagation();
               },
               className: SEND_INCLUDE_OPENER_CLASS
-            }}
-            sx={{
-              minWidth: 'unset',
-              padding: '4px 0px',
-              borderRadius: '0px 2px 2px 0px',
-              marginLeft: '1px'
             }}
           >
             <KeyboardArrowDown />
@@ -219,6 +206,6 @@ ${source}
           </Menu>
         </>
       )}
-    </Box>
+    </>
   );
 }

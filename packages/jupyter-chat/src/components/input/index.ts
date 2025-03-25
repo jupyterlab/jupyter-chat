@@ -3,6 +3,6 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-export * from './attach-button';
-export * from './cancel-button';
-export * from './send-button';
+export * from './buttons';
+export * from './toolbar-registry';
+export * from './use-chat-commands';

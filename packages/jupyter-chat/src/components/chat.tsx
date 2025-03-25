@@ -15,12 +15,17 @@ import { JlThemeProvider } from './jl-theme-provider';
 import { IChatCommandRegistry } from '../chat-commands';
 import { ChatMessages } from './chat-messages';
 import { ChatInput } from './chat-input';
+import { InputToolbarRegistry } from './input';
 import { AttachmentOpenerContext } from '../context';
 import { IChatModel } from '../model';
 import { IAttachmentOpenerRegistry } from '../registry';
 
 export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
   const { model } = props;
+  let { inputToolbarRegistry } = props;
+  if (!inputToolbarRegistry) {
+    inputToolbarRegistry = InputToolbarRegistry.defaultToolbarRegistry();
+  }
 
   return (
     <AttachmentOpenerContext.Provider value={props.attachmentOpenerRegistry}>
@@ -28,6 +33,7 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
         rmRegistry={props.rmRegistry}
         model={model}
         chatCommandRegistry={props.chatCommandRegistry}
+        inputToolbarRegistry={inputToolbarRegistry}
       />
       <ChatInput
         sx={{
@@ -39,6 +45,7 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
         }}
         model={model.input}
         chatCommandRegistry={props.chatCommandRegistry}
+        toolbarRegistry={inputToolbarRegistry}
       />
     </AttachmentOpenerContext.Provider>
   );
@@ -121,6 +128,10 @@ export namespace Chat {
      * Attachment opener registry.
      */
     attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
+    /**
+     * The input toolbar registry
+     */
+    inputToolbarRegistry?: InputToolbarRegistry;
   }
 
   /**

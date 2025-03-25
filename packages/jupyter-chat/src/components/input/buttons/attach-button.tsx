@@ -7,22 +7,17 @@ import { FileDialog } from '@jupyterlab/filebrowser';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import React from 'react';
 
-import { TooltippedButton } from '../mui-extras/tooltipped-button';
-import { IInputModel } from '../../input-model';
+import { InputToolbarRegistry } from '../toolbar-registry';
+import { TooltippedButton } from '../../mui-extras/tooltipped-button';
 
 const ATTACH_BUTTON_CLASS = 'jp-chat-attach-button';
 
 /**
- * The attach button props.
- */
-export type AttachButtonProps = {
-  model: IInputModel;
-};
-
-/**
  * The attach button.
  */
-export function AttachButton(props: AttachButtonProps): JSX.Element {
+export function AttachButton(
+  props: InputToolbarRegistry.IToolbarItemProps
+): JSX.Element {
   const { model } = props;
   const tooltip = 'Add attachment';
 
@@ -60,12 +55,6 @@ export function AttachButton(props: AttachButtonProps): JSX.Element {
         variant: 'contained',
         title: tooltip,
         className: ATTACH_BUTTON_CLASS
-      }}
-      sx={{
-        minWidth: 'unset',
-        padding: '4px',
-        borderRadius: '2px 0px 0px 2px',
-        marginRight: '1px'
       }}
     >
       <AttachFileIcon />

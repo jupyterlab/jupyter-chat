@@ -18,6 +18,7 @@ import React, { useEffect, useState, useRef, forwardRef } from 'react';
 
 import { AttachmentPreviewList } from './attachments';
 import { ChatInput } from './chat-input';
+import { InputToolbarRegistry } from './input';
 import { MarkdownRenderer } from './markdown-renderer';
 import { ScrollContainer } from './scroll-container';
 import { IChatCommandRegistry } from '../chat-commands';
@@ -40,9 +41,22 @@ const NAVIGATION_BOTTOM_CLASS = 'jp-chat-navigation-bottom';
  * The base components props.
  */
 type BaseMessageProps = {
+  /**
+   * The mime renderer registry.
+   */
   rmRegistry: IRenderMimeRegistry;
+  /**
+   * The chat model.
+   */
   model: IChatModel;
+  /**
+   * The chat commands registry.
+   */
   chatCommandRegistry?: IChatCommandRegistry;
+  /**
+   * The input toolbar registry.
+   */
+  inputToolbarRegistry: InputToolbarRegistry;
 };
 
 /**
@@ -198,8 +212,10 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
  * The message header props.
  */
 type ChatMessageHeaderProps = {
+  /**
+   * The chat message.
+   */
   message: IChatMessage;
-  sx?: SxProps<Theme>;
 };
 
 /**
@@ -260,8 +276,7 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
         '& > :not(:last-child)': {
           marginRight: 3
         },
-        marginBottom: message.stacked ? '0px' : '12px',
-        ...props.sx
+        marginBottom: message.stacked ? '0px' : '12px'
       }}
     >
       {avatar}
@@ -418,6 +433,7 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
             onCancel={() => cancelEdition()}
             model={inputModel}
             chatCommandRegistry={props.chatCommandRegistry}
+            toolbarRegistry={props.inputToolbarRegistry}
           />
         ) : (
           <MarkdownRenderer
