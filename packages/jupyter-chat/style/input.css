@@ -8,7 +8,7 @@
 }
 
 .jp-chat-input-toolbar .jp-chat-tooltipped-wrap button {
-  border-radius: 0px;
+  border-radius: 0;
   min-width: unset;
 }
 
@@ -28,5 +28,5 @@
 }
 
 .jp-chat-input-toolbar .jp-chat-send-include-opener {
-  padding: 4px 0px;
+  padding: 4px 0;
 }
