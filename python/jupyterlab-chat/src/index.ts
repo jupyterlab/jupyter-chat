@@ -811,7 +811,6 @@ const inputToolbarFactory: JupyterFrontEndPlugin<IInputToolbarRegistryFactory> =
     activate: (app: JupyterFrontEnd): IInputToolbarRegistryFactory => {
       return {
         create() {
-          console.log('BUILD REGISTRY');
           return InputToolbarRegistry.defaultToolbarRegistry();
         }
       };
