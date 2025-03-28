@@ -169,11 +169,12 @@ export interface IChatModel extends IDisposable {
 }
 
 /**
- * The default chat model implementation.
- * It is not able to send or update a message by itself, since it depends on the
- * chosen technology.
+ * An abstract implementation of IChatModel.
+ *
+ * The class inheriting from it must implement at least:
+ * - sendMessage(message: INewMessage)
  */
-export class ChatModel implements IChatModel {
+export abstract class ChatModel implements IChatModel {
   /**
    * Create a new chat model.
    */
@@ -406,7 +407,9 @@ export class ChatModel implements IChatModel {
    * @param message - the message to send.
    * @returns whether the message has been sent or not.
    */
-  sendMessage(message: INewMessage): Promise<boolean | void> | boolean | void {}
+  abstract sendMessage(
+    message: INewMessage
+  ): Promise<boolean | void> | boolean | void;
 
   /**
    * Clear the message list.
