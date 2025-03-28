@@ -4,7 +4,6 @@
  */
 
 import { IThemeManager } from '@jupyterlab/apputils';
-import { IDocumentManager } from '@jupyterlab/docmanager';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -16,16 +15,17 @@ import { JlThemeProvider } from './jl-theme-provider';
 import { IChatCommandRegistry } from '../chat-commands';
 import { ChatMessages } from './chat-messages';
 import { ChatInput } from './chat-input';
+import { IInputToolbarRegistry, InputToolbarRegistry } from './input';
 import { AttachmentOpenerContext } from '../context';
 import { IChatModel } from '../model';
 import { IAttachmentOpenerRegistry } from '../registry';
 
 export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
   const { model } = props;
-  const onSend = async (input: string) => {
-    // send message to backend
-    model.sendMessage({ body: input });
-  };
+  let { inputToolbarRegistry } = props;
+  if (!inputToolbarRegistry) {
+    inputToolbarRegistry = InputToolbarRegistry.defaultToolbarRegistry();
+  }
 
   return (
     <AttachmentOpenerContext.Provider value={props.attachmentOpenerRegistry}>
@@ -33,10 +33,9 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
         rmRegistry={props.rmRegistry}
         model={model}
         chatCommandRegistry={props.chatCommandRegistry}
-        documentManager={props.documentManager}
+        inputToolbarRegistry={inputToolbarRegistry}
       />
       <ChatInput
-        onSend={onSend}
         sx={{
           paddingLeft: 4,
           paddingRight: 4,
@@ -45,8 +44,8 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
           borderTop: '1px solid var(--jp-border-color1)'
         }}
         model={model.input}
-        documentManager={props.documentManager}
         chatCommandRegistry={props.chatCommandRegistry}
+        toolbarRegistry={inputToolbarRegistry}
       />
     </AttachmentOpenerContext.Provider>
   );
@@ -89,15 +88,7 @@ export function Chat(props: Chat.IOptions): JSX.Element {
           )}
         </Box>
         {/* body */}
-        {view === Chat.View.chat && (
-          <ChatBody
-            model={props.model}
-            rmRegistry={props.rmRegistry}
-            documentManager={props.documentManager}
-            chatCommandRegistry={props.chatCommandRegistry}
-            attachmentOpenerRegistry={props.attachmentOpenerRegistry}
-          />
-        )}
+        {view === Chat.View.chat && <ChatBody {...props} />}
         {view === Chat.View.settings && props.settingsPanel && (
           <props.settingsPanel />
         )}
@@ -123,10 +114,6 @@ export namespace Chat {
      */
     rmRegistry: IRenderMimeRegistry;
     /**
-     * The document manager.
-     */
-    documentManager?: IDocumentManager;
-    /**
      * Chat command registry.
      */
     chatCommandRegistry?: IChatCommandRegistry;
@@ -134,6 +121,10 @@ export namespace Chat {
      * Attachment opener registry.
      */
     attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
+    /**
+     * The input toolbar registry
+     */
+    inputToolbarRegistry?: IInputToolbarRegistry;
   }
 
   /**

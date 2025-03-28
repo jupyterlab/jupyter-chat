@@ -6,7 +6,7 @@
 import { ReactWidget } from '@jupyterlab/apputils';
 import React from 'react';
 
-import { Chat } from '../components/chat';
+import { Chat, IInputToolbarRegistry } from '../components';
 import { chatIcon } from '../icons';
 import { IChatModel } from '../model';
 
@@ -27,6 +27,13 @@ export class ChatWidget extends ReactWidget {
    */
   get model(): IChatModel {
     return this._chatOptions.model;
+  }
+
+  /**
+   * Get the input toolbar registry (if it has been provided when creating the widget).
+   */
+  get inputToolbarRegistry(): IInputToolbarRegistry | undefined {
+    return this._chatOptions.inputToolbarRegistry;
   }
 
   render() {

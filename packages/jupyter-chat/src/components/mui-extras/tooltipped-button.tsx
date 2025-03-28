@@ -3,10 +3,12 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import React from 'react';
 import { Button, ButtonProps, SxProps, TooltipProps } from '@mui/material';
+import React from 'react';
 
 import { ContrastingTooltip } from './contrasting-tooltip';
+
+const TOOLTIPPED_WRAP_CLASS = 'jp-chat-tooltipped-wrap';
 
 export type TooltippedButtonProps = {
   onClick: React.MouseEventHandler<HTMLButtonElement>;
@@ -72,7 +74,7 @@ export function TooltippedButton(props: TooltippedButtonProps): JSX.Element {
 
         See: https://mui.com/material-ui/react-tooltip/#disabled-elements
       */}
-      <span style={{ cursor: 'default' }}>
+      <span style={{ cursor: 'default' }} className={TOOLTIPPED_WRAP_CLASS}>
         <Button
           {...props.buttonProps}
           onClick={props.onClick}

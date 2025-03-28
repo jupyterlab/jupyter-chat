@@ -8,6 +8,7 @@ import { ISignal, Signal } from '@lumino/signaling';
 import { IActiveCellManager } from './active-cell-manager';
 import { ISelectionWatcher } from './selection-watcher';
 import { IAttachment } from './types';
+import { IDocumentManager } from '@jupyterlab/docmanager';
 
 const WHITESPACE = new Set([' ', '\n', '\t']);
 
@@ -15,6 +16,16 @@ const WHITESPACE = new Set([' ', '\n', '\t']);
  * The chat input interface.
  */
 export interface IInputModel extends IDisposable {
+  /**
+   * Function to send a message.
+   */
+  send: (content: string) => void;
+
+  /**
+   * Optional function to cancel edition.
+   */
+  cancel: (() => void) | undefined;
+
   /**
    * The entire input value.
    */
@@ -55,6 +66,11 @@ export interface IInputModel extends IDisposable {
    * Get the selection watcher.
    */
   readonly selectionWatcher: ISelectionWatcher | null;
+
+  /**
+   * Get the document manager.
+   */
+  readonly documentManager: IDocumentManager | null;
 
   /**
    * The input configuration.
@@ -112,16 +128,31 @@ export interface IInputModel extends IDisposable {
  */
 export class InputModel implements IInputModel {
   constructor(options: InputModel.IOptions) {
+    this._onSend = options.onSend;
     this._value = options.value || '';
     this._attachments = options.attachments || [];
     this.cursorIndex = options.cursorIndex || this.value.length;
     this._activeCellManager = options.activeCellManager ?? null;
     this._selectionWatcher = options.selectionWatcher ?? null;
-
+    this._documentManager = options.documentManager ?? null;
     this._config = {
       ...options.config
     };
+    this.cancel = options.onCancel;
   }
+
+  /**
+   * Function to send a message.
+   */
+  send = (input: string): void => {
+    this._onSend(input, this);
+    this.value = '';
+  };
+
+  /**
+   * Optional function to cancel edition.
+   */
+  cancel: (() => void) | undefined;
 
   /**
    * The entire input value.
@@ -197,6 +228,13 @@ export class InputModel implements IInputModel {
    */
   get selectionWatcher(): ISelectionWatcher | null {
     return this._selectionWatcher;
+  }
+
+  /**
+   * Get the document manager.
+   */
+  get documentManager(): IDocumentManager | null {
+    return this._documentManager;
   }
 
   /**
@@ -314,12 +352,14 @@ export class InputModel implements IInputModel {
     return this._isDisposed;
   }
 
+  private _onSend: (input: string, model?: InputModel) => void;
   private _value: string;
   private _cursorIndex: number | null = null;
   private _currentWord: string | null = null;
   private _attachments: IAttachment[];
   private _activeCellManager: IActiveCellManager | null;
   private _selectionWatcher: ISelectionWatcher | null;
+  private _documentManager: IDocumentManager | null;
   private _config: InputModel.IConfig;
   private _valueChanged = new Signal<IInputModel, string>(this);
   private _cursorIndexChanged = new Signal<IInputModel, number | null>(this);
@@ -332,6 +372,18 @@ export class InputModel implements IInputModel {
 
 export namespace InputModel {
   export interface IOptions {
+    /**
+     * The function that should send the message.
+     * @param content - the content of the message.
+     * @param model - the model of the input sending the message.
+     */
+    onSend: (content: string, model?: InputModel) => void;
+
+    /**
+     * Function that should cancel the message edition.
+     */
+    onCancel?: () => void;
+
     /**
      * The initial value of the input.
      */
@@ -362,6 +414,11 @@ export namespace InputModel {
      * Selection watcher.
      */
     selectionWatcher?: ISelectionWatcher | null;
+
+    /**
+     * Document manager.
+     */
+    documentManager?: IDocumentManager | null;
   }
 
   export interface IConfig {

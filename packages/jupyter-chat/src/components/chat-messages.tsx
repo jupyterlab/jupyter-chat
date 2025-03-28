@@ -4,7 +4,6 @@
  */
 
 import { Button } from '@jupyter/react-components';
-import { IDocumentManager } from '@jupyterlab/docmanager';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import {
   LabIcon,
@@ -19,6 +18,7 @@ import React, { useEffect, useState, useRef, forwardRef } from 'react';
 
 import { AttachmentPreviewList } from './attachments';
 import { ChatInput } from './chat-input';
+import { IInputToolbarRegistry } from './input';
 import { MarkdownRenderer } from './markdown-renderer';
 import { ScrollContainer } from './scroll-container';
 import { IChatCommandRegistry } from '../chat-commands';
@@ -41,10 +41,22 @@ const NAVIGATION_BOTTOM_CLASS = 'jp-chat-navigation-bottom';
  * The base components props.
  */
 type BaseMessageProps = {
+  /**
+   * The mime renderer registry.
+   */
   rmRegistry: IRenderMimeRegistry;
+  /**
+   * The chat model.
+   */
   model: IChatModel;
+  /**
+   * The chat commands registry.
+   */
   chatCommandRegistry?: IChatCommandRegistry;
-  documentManager?: IDocumentManager;
+  /**
+   * The input toolbar registry.
+   */
+  inputToolbarRegistry: IInputToolbarRegistry;
 };
 
 /**
@@ -200,8 +212,10 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
  * The message header props.
  */
 type ChatMessageHeaderProps = {
+  /**
+   * The chat message.
+   */
   message: IChatMessage;
-  sx?: SxProps<Theme>;
 };
 
 /**
@@ -262,8 +276,7 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
         '& > :not(:last-child)': {
           marginRight: 3
         },
-        marginBottom: message.stacked ? '0px' : '12px',
-        ...props.sx
+        marginBottom: message.stacked ? '0px' : '12px'
       }}
     >
       {avatar}
@@ -364,13 +377,15 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
       if (edit && canEdit) {
         setInputModel(
           new InputModel({
+            onSend: (input: string, model?: IInputModel) =>
+              updateMessage(message.id, input, model),
+            onCancel: () => cancelEdition(),
             value: message.body,
-            activeCellManager: model.activeCellManager,
-            selectionWatcher: model.selectionWatcher,
             config: {
               sendWithShiftEnter: model.config.sendWithShiftEnter
             },
-            attachments: message.attachments
+            attachments: message.attachments,
+            documentManager: model.documentManager
           })
         );
       } else {
@@ -384,14 +399,18 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
     };
 
     // Update the content of the message.
-    const updateMessage = (id: string, input: string): void => {
-      if (!canEdit) {
+    const updateMessage = (
+      id: string,
+      input: string,
+      inputModel?: IInputModel
+    ): void => {
+      if (!canEdit || !inputModel) {
         return;
       }
       // Update the message
       const updatedMessage = { ...message };
       updatedMessage.body = input;
-      updatedMessage.attachments = inputModel?.attachments;
+      updatedMessage.attachments = inputModel.attachments;
       model.updateMessage!(id, updatedMessage);
       setEdit(false);
     };
@@ -411,12 +430,10 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
       <div ref={ref} data-index={props.index}>
         {edit && canEdit && inputModel ? (
           <ChatInput
-            onSend={(input: string) => updateMessage(message.id, input)}
             onCancel={() => cancelEdition()}
             model={inputModel}
-            hideIncludeSelection={true}
             chatCommandRegistry={props.chatCommandRegistry}
-            documentManager={props.documentManager}
+            toolbarRegistry={props.inputToolbarRegistry}
           />
         ) : (
           <MarkdownRenderer

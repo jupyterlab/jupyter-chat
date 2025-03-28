@@ -8,6 +8,7 @@ import {
   IAttachmentOpenerRegistry,
   IChatCommandRegistry,
   IChatModel,
+  IInputToolbarRegistry,
   readIcon
 } from '@jupyter/chat';
 import { ICollaborativeDrive } from '@jupyter/collaborative-drive';
@@ -33,8 +34,11 @@ import { AccordionPanel, Panel } from '@lumino/widgets';
 import React, { useState } from 'react';
 
 import { LabChatModel } from './model';
-import { CommandIDs, chatFileType } from './token';
-import { IDocumentManager } from '@jupyterlab/docmanager';
+import {
+  CommandIDs,
+  IInputToolbarRegistryFactory,
+  chatFileType
+} from './token';
 
 const MAIN_PANEL_CLASS = 'jp-lab-chat-main-panel';
 const TITLE_UNREAD_CLASS = 'jp-lab-chat-title-unread';
@@ -104,9 +108,9 @@ export class ChatPanel extends SidePanel {
     this._rmRegistry = options.rmRegistry;
     this._themeManager = options.themeManager;
     this._defaultDirectory = options.defaultDirectory;
-    this._documentManager = options.documentManager;
     this._chatCommandRegistry = options.chatCommandRegistry;
     this._attachmentOpenerRegistry = options.attachmentOpenerRegistry;
+    this._inputToolbarFactory = options.inputToolbarFactory;
 
     const addChat = new CommandToolbarButton({
       commands: this._commands,
@@ -163,14 +167,20 @@ export class ChatPanel extends SidePanel {
       content.collapse(i);
     }
 
+    // Create the toolbar registry.
+    let inputToolbarRegistry: IInputToolbarRegistry | undefined;
+    if (this._inputToolbarFactory) {
+      inputToolbarRegistry = this._inputToolbarFactory.create();
+    }
+
     // Create a new widget.
     const widget = new ChatWidget({
       model: model,
       rmRegistry: this._rmRegistry,
       themeManager: this._themeManager,
-      documentManager: this._documentManager,
       chatCommandRegistry: this._chatCommandRegistry,
-      attachmentOpenerRegistry: this._attachmentOpenerRegistry
+      attachmentOpenerRegistry: this._attachmentOpenerRegistry,
+      inputToolbarRegistry
     });
 
     this.addWidget(
@@ -289,9 +299,9 @@ export class ChatPanel extends SidePanel {
   private _openChat: ReactWidget;
   private _rmRegistry: IRenderMimeRegistry;
   private _themeManager: IThemeManager | null;
-  private _documentManager?: IDocumentManager;
   private _chatCommandRegistry?: IChatCommandRegistry;
   private _attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
+  private _inputToolbarFactory?: IInputToolbarRegistryFactory;
 }
 
 /**
@@ -307,9 +317,9 @@ export namespace ChatPanel {
     rmRegistry: IRenderMimeRegistry;
     themeManager: IThemeManager | null;
     defaultDirectory: string;
-    documentManager?: IDocumentManager;
     chatCommandRegistry?: IChatCommandRegistry;
     attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
+    inputToolbarFactory?: IInputToolbarRegistryFactory;
   }
 }
 

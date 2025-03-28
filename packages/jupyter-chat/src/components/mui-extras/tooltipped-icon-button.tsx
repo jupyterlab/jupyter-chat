@@ -3,10 +3,13 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import React from 'react';
+import { classes } from '@jupyterlab/ui-components';
 import { IconButton, IconButtonProps, TooltipProps } from '@mui/material';
+import React from 'react';
 
 import { ContrastingTooltip } from './contrasting-tooltip';
+
+const TOOLTIPPED_WRAP_CLASS = 'jp-chat-tooltipped-wrap';
 
 export type TooltippedIconButtonProps = {
   onClick: () => unknown;
@@ -68,7 +71,7 @@ export function TooltippedIconButton(
 
         See: https://mui.com/material-ui/react-tooltip/#disabled-elements
       */}
-      <span className={props.className}>
+      <span className={classes(props.className, TOOLTIPPED_WRAP_CLASS)}>
         <IconButton
           {...props.iconButtonProps}
           onClick={props.onClick}

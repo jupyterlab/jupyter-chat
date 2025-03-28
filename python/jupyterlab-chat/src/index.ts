@@ -13,6 +13,7 @@ import {
   IAttachmentOpenerRegistry,
   IChatCommandRegistry,
   ISelectionWatcher,
+  InputToolbarRegistry,
   SelectionWatcher,
   chatIcon,
   readIcon
@@ -48,19 +49,20 @@ import { ITranslator, nullTranslator } from '@jupyterlab/translation';
 import { launchIcon } from '@jupyterlab/ui-components';
 import { PromiseDelegate } from '@lumino/coreutils';
 import {
-  IActiveCellManagerToken,
-  chatFileType,
   ChatPanel,
   ChatWidgetFactory,
+  CommandIDs,
+  IActiveCellManagerToken,
+  IChatFactory,
+  IChatPanel,
+  IInputToolbarRegistryFactory,
+  ISelectionWatcherToken,
   LabChatModel,
   LabChatModelFactory,
   LabChatPanel,
-  CommandIDs,
-  IChatFactory,
-  IChatPanel,
   WidgetConfig,
   YChat,
-  ISelectionWatcherToken
+  chatFileType
 } from 'jupyterlab-chat';
 import { chatCommandRegistryPlugin } from './chat-commands/plugins';
 import { emojiCommandsPlugin } from './chat-commands/providers/emoji';
@@ -73,6 +75,7 @@ const pluginIds = {
   chatCommands: 'jupyterlab-chat-extension:commands',
   chatPanel: 'jupyterlab-chat-extension:chat-panel',
   docFactories: 'jupyterlab-chat-extension:factory',
+  inputToolbarFactory: 'jupyterlab-chat-extension:inputToolbarFactory',
   selectionWatcher: 'jupyterlab-chat-extension:selectionWatcher'
 };
 
@@ -109,6 +112,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     IChatCommandRegistry,
     ICollaborativeDrive,
     IDefaultFileBrowser,
+    IInputToolbarRegistryFactory,
     ILayoutRestorer,
     ISelectionWatcherToken,
     ISettingRegistry,
@@ -125,6 +129,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     chatCommandRegistry: IChatCommandRegistry,
     drive: ICollaborativeDrive | null,
     filebrowser: IDefaultFileBrowser | null,
+    inputToolbarFactory: IInputToolbarRegistryFactory,
     restorer: ILayoutRestorer | null,
     selectionWatcher: ISelectionWatcher | null,
     settingRegistry: ISettingRegistry | null,
@@ -272,7 +277,8 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
           widgetConfig,
           commands: app.commands,
           activeCellManager,
-          selectionWatcher
+          selectionWatcher,
+          documentManager: filebrowser?.model.manager
         });
         app.docRegistry.addModelFactory(modelFactory);
       })
@@ -292,9 +298,9 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
       rmRegistry,
       toolbarFactory,
       translator,
-      documentManager: filebrowser?.model.manager,
       chatCommandRegistry,
-      attachmentOpenerRegistry
+      attachmentOpenerRegistry,
+      inputToolbarFactory
     });
 
     // Add the widget to the tracker when it's created
@@ -353,6 +359,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     IActiveCellManagerToken,
     IChatPanel,
     ICommandPalette,
+    IDefaultFileBrowser,
     ILauncher,
     ISelectionWatcherToken
   ],
@@ -363,6 +370,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     activeCellManager: IActiveCellManager | null,
     chatPanel: ChatPanel | null,
     commandPalette: ICommandPalette | null,
+    filebrowser: IDefaultFileBrowser | null,
     launcher: ILauncher | null,
     selectionWatcher: ISelectionWatcher | null
   ) => {
@@ -588,7 +596,8 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
                 widgetConfig,
                 commands,
                 activeCellManager,
-                selectionWatcher
+                selectionWatcher,
+                documentManager: filebrowser?.model.manager
               });
 
               // Set the name of the model.
@@ -653,7 +662,7 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
   optional: [
     IAttachmentOpenerRegistry,
     IChatCommandRegistry,
-    IDefaultFileBrowser,
+    IInputToolbarRegistryFactory,
     ILayoutRestorer,
     IThemeManager
   ],
@@ -664,7 +673,7 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
     rmRegistry: IRenderMimeRegistry,
     attachmentOpenerRegistry: IAttachmentOpenerRegistry,
     chatCommandRegistry: IChatCommandRegistry,
-    filebrowser: IDefaultFileBrowser | null,
+    inputToolbarFactory: IInputToolbarRegistryFactory,
     restorer: ILayoutRestorer | null,
     themeManager: IThemeManager | null
   ): ChatPanel => {
@@ -681,9 +690,9 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
       rmRegistry,
       themeManager,
       defaultDirectory,
-      documentManager: filebrowser?.model.manager,
       chatCommandRegistry,
-      attachmentOpenerRegistry
+      attachmentOpenerRegistry,
+      inputToolbarFactory
     });
     chatPanel.id = 'JupyterlabChat:sidepanel';
     chatPanel.title.icon = chatIcon;
@@ -782,7 +791,6 @@ const selectionWatcher: JupyterFrontEndPlugin<ISelectionWatcher> = {
   id: pluginIds.selectionWatcher,
   description: 'The selection watcher plugin.',
   autoStart: true,
-  requires: [],
   provides: ISelectionWatcherToken,
   activate: (app: JupyterFrontEnd): ISelectionWatcher => {
     return new SelectionWatcher({
@@ -791,13 +799,32 @@ const selectionWatcher: JupyterFrontEndPlugin<ISelectionWatcher> = {
   }
 };
 
+/**
+ * Extension providing the input toolbar registry.
+ */
+const inputToolbarFactory: JupyterFrontEndPlugin<IInputToolbarRegistryFactory> =
+  {
+    id: pluginIds.inputToolbarFactory,
+    description: 'The input toolbar registry plugin.',
+    autoStart: true,
+    provides: IInputToolbarRegistryFactory,
+    activate: (app: JupyterFrontEnd): IInputToolbarRegistryFactory => {
+      return {
+        create() {
+          return InputToolbarRegistry.defaultToolbarRegistry();
+        }
+      };
+    }
+  };
+
 export default [
   activeCellManager,
   attachmentOpeners,
   chatCommands,
+  chatCommandRegistryPlugin,
   chatPanel,
   docFactories,
+  inputToolbarFactory,
   selectionWatcher,
-  chatCommandRegistryPlugin,
   emojiCommandsPlugin
 ];

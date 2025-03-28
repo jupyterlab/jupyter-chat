@@ -195,6 +195,5 @@ test.describe('#attachmentOpenerRegistry', () => {
     expect(logs.filter(s => s === `Attached file: ${chatPath}`)).toHaveLength(
       1
     );
-    await page.pause();
   });
 });

@@ -8,36 +8,29 @@ import SendIcon from '@mui/icons-material/Send';
 import { Box, Menu, MenuItem, Typography } from '@mui/material';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { TooltippedButton } from '../mui-extras/tooltipped-button';
-import { includeSelectionIcon } from '../../icons';
-import { IInputModel } from '../../input-model';
-import { Selection } from '../../types';
+import { InputToolbarRegistry } from '../toolbar-registry';
+import { TooltippedButton } from '../../mui-extras/tooltipped-button';
+import { includeSelectionIcon } from '../../../icons';
+import { IInputModel, InputModel } from '../../../input-model';
 
 const SEND_BUTTON_CLASS = 'jp-chat-send-button';
 const SEND_INCLUDE_OPENER_CLASS = 'jp-chat-send-include-opener';
 const SEND_INCLUDE_LI_CLASS = 'jp-chat-send-include';
 
 /**
- * The send button props.
- */
-export type SendButtonProps = {
-  model: IInputModel;
-  sendWithShiftEnter: boolean;
-  inputExists: boolean;
-  onSend: (selection?: Selection) => unknown;
-  hideIncludeSelection?: boolean;
-  hasButtonOnLeft?: boolean;
-};
-
-/**
  * The send button, with optional 'include selection' menu.
  */
-export function SendButton(props: SendButtonProps): JSX.Element {
-  const { activeCellManager, selectionWatcher } = props.model;
-  const hideIncludeSelection = props.hideIncludeSelection ?? false;
-  const hasButtonOnLeft = props.hasButtonOnLeft ?? false;
+export function SendButton(
+  props: InputToolbarRegistry.IToolbarItemProps
+): JSX.Element {
+  const { model } = props;
+  const { activeCellManager, selectionWatcher } = model;
+  const hideIncludeSelection = !activeCellManager || !selectionWatcher;
+
   const [menuAnchorEl, setMenuAnchorEl] = useState<HTMLElement | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [disabled, setDisabled] = useState(false);
+  const [tooltip, setTooltip] = useState<string>('');
 
   const openMenu = useCallback((el: HTMLElement | null) => {
     setMenuAnchorEl(el);
@@ -48,10 +41,35 @@ export function SendButton(props: SendButtonProps): JSX.Element {
     setMenuOpen(false);
   }, []);
 
-  const disabled = !props.inputExists;
-
   const [selectionTooltip, setSelectionTooltip] = useState<string>('');
   const [disableInclude, setDisableInclude] = useState<boolean>(true);
+
+  useEffect(() => {
+    const inputChanged = () => {
+      const inputExist = !!model.value.trim() || model.attachments.length;
+      setDisabled(!inputExist);
+    };
+
+    model.valueChanged.connect(inputChanged);
+    model.attachmentsChanged?.connect(inputChanged);
+
+    inputChanged();
+
+    const configChanged = (_: IInputModel, config: InputModel.IConfig) => {
+      setTooltip(
+        (config.sendWithShiftEnter ?? false)
+          ? 'Send message (SHIFT+ENTER)'
+          : 'Send message (ENTER)'
+      );
+    };
+    model.configChanged.connect(configChanged);
+
+    return () => {
+      model.valueChanged.disconnect(inputChanged);
+      model.attachmentsChanged?.disconnect(inputChanged);
+      model.configChanged?.disconnect(configChanged);
+    };
+  }, [model]);
 
   useEffect(() => {
     /**
@@ -78,54 +96,43 @@ export function SendButton(props: SendButtonProps): JSX.Element {
       selectionWatcher?.selectionChanged.disconnect(toggleIncludeState);
       activeCellManager?.availabilityChanged.disconnect(toggleIncludeState);
     };
-  }, [activeCellManager, selectionWatcher, hideIncludeSelection]);
-
-  const defaultTooltip = props.sendWithShiftEnter
-    ? 'Send message (SHIFT+ENTER)'
-    : 'Send message (ENTER)';
-  const tooltip = defaultTooltip;
+  }, [activeCellManager, selectionWatcher]);
 
   function sendWithSelection() {
-    // Append the selected text if exists.
-    if (selectionWatcher?.selection) {
-      props.onSend({
-        type: 'text',
-        source: selectionWatcher.selection.text
-      });
-      closeMenu();
-      return;
-    }
+    let source = '';
 
-    // Append the active cell content if exists.
-    if (activeCellManager?.available) {
-      props.onSend({
-        type: 'cell',
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        source: activeCellManager.getContent(false)!.source
-      });
-      closeMenu();
-      return;
+    if (selectionWatcher?.selection) {
+      // Append the selected text if exists.
+      source = selectionWatcher.selection.text;
+    } else if (activeCellManager?.available) {
+      // Append the active cell content if exists.
+      source = activeCellManager.getContent(false)!.source;
     }
+    let content = model.value;
+    if (source) {
+      content += `
+
+\`\`\`
+${source}
+\`\`\`
+`;
+    }
+    model.send(content);
+    closeMenu();
+    model.value = '';
   }
 
   return (
-    <Box sx={{ display: 'flex', flexWrap: 'nowrap' }}>
+    <>
       <TooltippedButton
-        onClick={() => props.onSend()}
+        onClick={() => model.send(model.value)}
         disabled={disabled}
         tooltip={tooltip}
         buttonProps={{
           size: 'small',
-          title: defaultTooltip,
+          title: tooltip,
           variant: 'contained',
           className: SEND_BUTTON_CLASS
-        }}
-        sx={{
-          minWidth: 'unset',
-          borderTopLeftRadius: hasButtonOnLeft ? '0px' : '2px',
-          borderTopRightRadius: hideIncludeSelection ? '2px' : '0px',
-          borderBottomRightRadius: hideIncludeSelection ? '2px' : '0px',
-          borderBottomLeftRadius: hasButtonOnLeft ? '0px' : '2px'
         }}
       >
         <SendIcon />
@@ -150,12 +157,6 @@ export function SendButton(props: SendButtonProps): JSX.Element {
                 e.stopPropagation();
               },
               className: SEND_INCLUDE_OPENER_CLASS
-            }}
-            sx={{
-              minWidth: 'unset',
-              padding: '4px 0px',
-              borderRadius: '0px 2px 2px 0px',
-              marginLeft: '1px'
             }}
           >
             <KeyboardArrowDown />
@@ -205,6 +206,6 @@ export function SendButton(props: SendButtonProps): JSX.Element {
           </Menu>
         </>
       )}
-    </Box>
+    </>
   );
 }

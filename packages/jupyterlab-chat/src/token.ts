@@ -8,7 +8,8 @@ import {
   chatIcon,
   IActiveCellManager,
   ISelectionWatcher,
-  ChatWidget
+  ChatWidget,
+  IInputToolbarRegistry
 } from '@jupyter/chat';
 import { WidgetTracker } from '@jupyterlab/apputils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
@@ -125,3 +126,21 @@ export const IActiveCellManagerToken = new Token<IActiveCellManager>(
 export const ISelectionWatcherToken = new Token<ISelectionWatcher>(
   'jupyterlab-chat:ISelectionWatcher'
 );
+
+/**
+ * The input toolbar registry factory.
+ */
+export interface IInputToolbarRegistryFactory {
+  /**
+   * Create an input toolbar registry.
+   */
+  create: () => IInputToolbarRegistry;
+}
+
+/**
+ * The token of the factory to create an input toolbar registry.
+ */
+export const IInputToolbarRegistryFactory =
+  new Token<IInputToolbarRegistryFactory>(
+    'jupyterlab-chat:IInputToolbarRegistryFactory'
+  );

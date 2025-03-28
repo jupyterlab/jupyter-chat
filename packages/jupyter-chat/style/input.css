@@ -1,0 +1,32 @@
+/*
+ * Copyright (c) Jupyter Development Team.
+ * Distributed under the terms of the Modified BSD License.
+ */
+
+.jp-chat-input-toolbar {
+  gap: 1px;
+}
+
+.jp-chat-input-toolbar .jp-chat-tooltipped-wrap button {
+  border-radius: 0;
+  min-width: unset;
+}
+
+.jp-chat-input-toolbar .jp-chat-tooltipped-wrap:first-child button {
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
+}
+
+.jp-chat-input-toolbar .jp-chat-tooltipped-wrap:last-child button {
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
+}
+
+.jp-chat-input-toolbar .jp-chat-attach-button,
+.jp-chat-input-toolbar .jp-chat-cancel-button {
+  padding: 4px;
+}
+
+.jp-chat-input-toolbar .jp-chat-send-include-opener {
+  padding: 4px 0;
+}

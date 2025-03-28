@@ -77,7 +77,11 @@ const plugin: JupyterFrontEndPlugin<void> = {
       shell: app.shell
     });
 
-    const model = new MyChatModel({ activeCellManager, selectionWatcher });
+    const model = new MyChatModel({
+      activeCellManager,
+      selectionWatcher,
+      documentManager: filebrowser?.model.manager
+    });
 
     // Update the settings when they change.
     function loadSetting(setting: ISettingRegistry.ISettings): void {
@@ -122,7 +126,6 @@ const plugin: JupyterFrontEndPlugin<void> = {
       model,
       rmRegistry,
       themeManager,
-      documentManager: filebrowser?.model.manager,
       attachmentOpenerRegistry
     });
     app.shell.add(panel, 'left');
