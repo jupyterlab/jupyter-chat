@@ -16,7 +16,7 @@ import {
 const CHAT = 'test.chat';
 
 test.describe('#inputToolbar', () => {
-  test('Should remove toolbar item for main area chat', async ({
+  test('Should hide toolbar item for main area chat only', async ({
     page,
     tmpPath
   }) => {
@@ -30,7 +30,7 @@ test.describe('#inputToolbar', () => {
       ).tracker;
 
       const updateToolbar = registry => {
-        registry.removeItem('attach');
+        registry.hide('attach');
       };
 
       // Should update the input toolbar of main area widgets only
