@@ -32,11 +32,6 @@ export interface IInputToolbarRegistry {
   addItem(name: string, item: InputToolbarRegistry.IToolbarItem): void;
 
   /**
-   * Remove a toolbar item.
-   */
-  removeItem(name: string): void;
-
-  /**
    * Hide an element.
    */
   hide(name: string): void;
@@ -84,14 +79,6 @@ export class InputToolbarRegistry implements IInputToolbarRegistry {
     } else {
       console.warn(`A chat input toolbar item '${name}' is already registered`);
     }
-  }
-
-  /**
-   * Remove a toolbar item.
-   */
-  removeItem(name: string): void {
-    this._items.delete(name);
-    this._itemsChanged.emit();
   }
 
   /**
