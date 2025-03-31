@@ -2,6 +2,34 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.9.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.8.1...e182c03aa81119250818bf78da9d932a74f9cef4))
+
+### Enhancements made
+
+- Input toolbar registry [#198](https://github.com/jupyterlab/jupyter-chat/pull/198) ([@brichet](https://github.com/brichet))
+- Add a clearMessages() method in ChatModel [#195](https://github.com/jupyterlab/jupyter-chat/pull/195) ([@brichet](https://github.com/brichet))
+- Disable the copy button in insecure contexts [#192](https://github.com/jupyterlab/jupyter-chat/pull/192) ([@keerthi-swarna](https://github.com/keerthi-swarna))
+
+### Bugs fixed
+
+- Fix the trailing hyphen in completion without description [#191](https://github.com/jupyterlab/jupyter-chat/pull/191) ([@brichet](https://github.com/brichet))
+
+### Maintenance and upkeep improvements
+
+- Bump vega from 5.28.0 to 5.33.0 in /ui-tests in the npm_and_yarn group across 1 directory [#199](https://github.com/jupyterlab/jupyter-chat/pull/199) ([@dependabot](https://github.com/dependabot))
+- Bump the npm_and_yarn group across 1 directory with 2 updates [#193](https://github.com/jupyterlab/jupyter-chat/pull/193) ([@dependabot](https://github.com/dependabot))
+- Bump axios from 1.7.4 to 1.8.2 in the npm_and_yarn group across 1 directory [#189](https://github.com/jupyterlab/jupyter-chat/pull/189) ([@dependabot](https://github.com/dependabot))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2025-03-11&to=2025-03-28&type=c))
+
+[@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2025-03-11..2025-03-28&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adependabot+updated%3A2025-03-11..2025-03-28&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2025-03-11..2025-03-28&type=Issues) | [@keerthi-swarna](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Akeerthi-swarna+updated%3A2025-03-11..2025-03-28&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.8.1
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.8.0...d7b867a567b179a3c5c449a2e59bdbe01071aa43))
@@ -15,8 +43,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2025-03-03&to=2025-03-11&type=c))
 
 [@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2025-03-03..2025-03-11&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.8.0
 
