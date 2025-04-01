@@ -35,6 +35,9 @@ class Message:
     # 3.9 reaches EOL.
     type: Literal["msg"] = "msg"
 
+    attachments: Optional[list[str]] = None
+    """ The message attachments, a list of attachment ID """
+
     raw_time: Optional[bool] = None
     """
     Whether the timestamp is raw (from client) or not (from server, unified)
