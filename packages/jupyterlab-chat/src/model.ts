@@ -162,13 +162,13 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
     }
 
     // Add the attachments to the message.
-    if (this.input.attachments.length) {
-      const attachmentIds = this.input.attachments.map(attachment =>
-        this.sharedModel.setAttachment(attachment)
-      );
+    const attachmentIds = this.input.attachments?.map(attachment =>
+      this.sharedModel.setAttachment(attachment)
+    );
+    if (attachmentIds?.length) {
       msg.attachments = attachmentIds;
-      this.input.clearAttachments();
     }
+    this.input.clearAttachments();
 
     this.sharedModel.addMessage(msg);
   }
@@ -204,9 +204,12 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
     const attachmentIds = updatedMessage.attachments?.map(attachment =>
       this.sharedModel.setAttachment(attachment)
     );
-    if (attachmentIds) {
+    if (attachmentIds?.length) {
       message.attachments = attachmentIds;
+    } else {
+      delete message.attachments;
     }
+
     this.sharedModel.updateMessage(index, message as IYmessage);
   }
 
