@@ -10100,9 +10100,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"jupyterlab-chat-extension@workspace:python/jupyterlab-chat":
+"jupyterlab-chat-extension@workspace:packages/jupyterlab-chat-extension":
   version: 0.0.0-use.local
-  resolution: "jupyterlab-chat-extension@workspace:python/jupyterlab-chat"
+  resolution: "jupyterlab-chat-extension@workspace:packages/jupyterlab-chat-extension"
   dependencies:
     "@jupyter-notebook/application": ^7.2.0
     "@jupyter/collaborative-drive": ^3.0.0

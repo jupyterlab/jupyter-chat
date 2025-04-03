@@ -23,7 +23,6 @@
   },
   "workspaces": [
     "packages/*",
-    "python/jupyterlab-chat",
     "docs/jupyter-chat-example"
   ],
   "scripts": {
@@ -34,17 +33,17 @@
     "clean": "lerna run clean",
     "clean:all": "lerna run clean:all",
     "dev": "jupyter lab --config playground/config.py",
-    "dev-install": "jlpm build && lerna run dev-install",
     "eslint": "eslint . --ext .ts,.tsx --cache --fix",
     "eslint:check": "eslint . --ext .ts,.tsx",
-    "prettier": "prettier --write \"**/*{.ts,.tsx,.js,.jsx,.css,.json,.md,.yml}\"",
-    "prettier:check": "prettier --list-different \"**/*{.ts,.tsx,.js,.jsx,.css,.json,.md,.yml}\"",
+    "install:extension": "lerna run install:extension",
     "lint:check": "jlpm run prettier:check && jlpm run eslint:check",
     "lint": "jlpm run prettier && jlpm run eslint && jlpm stylelint",
+    "prettier": "prettier --write \"**/*{.ts,.tsx,.js,.jsx,.css,.json,.md,.yml}\"",
+    "prettier:check": "prettier --list-different \"**/*{.ts,.tsx,.js,.jsx,.css,.json,.md,.yml}\"",
     "stylelint": "jlpm stylelint:check --fix",
     "stylelint:check": "stylelint --cache \"**/style/**/*.css\"",
-    "watch": "lerna run watch --parallel --stream",
-    "test": "lerna run test"
+    "test": "lerna run test",
+    "watch": "lerna run watch --parallel --stream"
   },
   "devDependencies": {
     "@stylistic/eslint-plugin": "^3.0.1",
