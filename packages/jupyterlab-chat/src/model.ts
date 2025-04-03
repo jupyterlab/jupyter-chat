@@ -4,9 +4,10 @@
  */
 
 import {
-  ChatModel,
+  AbstractChatModel,
   IAttachment,
   IChatMessage,
+  IChatModel,
   IInputModel,
   INewMessage,
   IUser
@@ -26,7 +27,7 @@ const WRITING_DELAY = 1000;
  * Chat model namespace.
  */
 export namespace LabChatModel {
-  export interface IOptions extends ChatModel.IOptions {
+  export interface IOptions extends IChatModel.IOptions {
     widgetConfig: IWidgetConfig;
     user: User.IIdentity | null;
     sharedModel?: YChat;
@@ -37,7 +38,10 @@ export namespace LabChatModel {
 /**
  * The chat model.
  */
-export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
+export class LabChatModel
+  extends AbstractChatModel
+  implements DocumentRegistry.IModel
+{
   constructor(options: LabChatModel.IOptions) {
     super(options);
 
