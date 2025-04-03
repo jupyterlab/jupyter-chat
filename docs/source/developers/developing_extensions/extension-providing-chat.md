@@ -52,9 +52,9 @@ As an example, here is a simple model that logs the message to the console and a
 the message list.
 
 ```typescript
-import { ChatModel, IChatMessage, INewMessage } from '@jupyter/chat';
+import { AbstractChatModel, IChatMessage, INewMessage } from '@jupyter/chat';
 
-class MyModel extends ChatModel {
+class MyModel extends AbstractChatModel {
   sendMessage(
     newMessage: INewMessage
   ): Promise<boolean | void> | boolean | void {
@@ -94,7 +94,7 @@ methods to correctly manage message transmission and reception.
 
 ```typescript
 import {
-  ChatModel,
+  AbstractChatModel,
   ChatWidget,
   IChatMessage,
   INewMessage
@@ -106,7 +106,7 @@ import {
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { UUID } from '@lumino/coreutils';
 
-class MyModel extends ChatModel {
+class MyModel extends AbstractChatModel {
   sendMessage(
     newMessage: INewMessage
   ): Promise<boolean | void> | boolean | void {
@@ -242,7 +242,7 @@ jupyterlab. In the previous example, the modification would be:
 ```typescript
 import {
   ActiveCellManager,
-  ChatModel,
+  AbstractChatModel,
   ChatWidget,
   IChatMessage,
   INewMessage
@@ -325,7 +325,7 @@ specific function for an attachment type.
 ```typescript
 import {
   AttachmentOpenerRegistry,
-  ChatModel,
+  AbstractChatModel,
   ChatWidget,
   IAttachment,
   IChatMessage,
@@ -335,7 +335,7 @@ import { IDefaultFileBrowser } from '@jupyterlab/filebrowser';
 
 ...
 
-class MyModel extends ChatModel {
+class MyModel extends AbstractChatModel {
   sendMessage(
     newMessage: INewMessage
   ): Promise<boolean | void> | boolean | void {

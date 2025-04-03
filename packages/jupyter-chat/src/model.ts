@@ -180,11 +180,11 @@ export interface IChatModel extends IDisposable {
  * The class inheriting from it must implement at least:
  * - sendMessage(message: INewMessage)
  */
-export abstract class ChatModel implements IChatModel {
+export abstract class AbstractChatModel implements IChatModel {
   /**
    * Create a new chat model.
    */
-  constructor(options: ChatModel.IOptions = {}) {
+  constructor(options: IChatModel.IOptions = {}) {
     if (options.id) {
       this.id = options.id;
     }
@@ -612,7 +612,7 @@ export abstract class ChatModel implements IChatModel {
 /**
  * The chat model namespace.
  */
-export namespace ChatModel {
+export namespace IChatModel {
   /**
    * The instantiation options for a ChatModel.
    */

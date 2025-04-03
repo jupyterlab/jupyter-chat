@@ -7,7 +7,7 @@ import {
   ActiveCellManager,
   AttachmentOpenerRegistry,
   buildChatSidebar,
-  ChatModel,
+  AbstractChatModel,
   IAttachment,
   IChatMessage,
   INewMessage,
@@ -24,7 +24,7 @@ import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { UUID } from '@lumino/coreutils';
 
-class MyChatModel extends ChatModel {
+class MyChatModel extends AbstractChatModel {
   sendMessage(
     newMessage: INewMessage
   ): Promise<boolean | void> | boolean | void {

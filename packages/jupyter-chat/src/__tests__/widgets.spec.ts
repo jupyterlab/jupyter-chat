@@ -11,11 +11,11 @@ import {
   IRenderMimeRegistry,
   RenderMimeRegistry
 } from '@jupyterlab/rendermime';
-import { ChatModel, IChatModel } from '../model';
+import { AbstractChatModel, IChatModel } from '../model';
 import { INewMessage } from '../types';
 import { ChatWidget } from '../widgets/chat-widget';
 
-class MyChatModel extends ChatModel {
+class MyChatModel extends AbstractChatModel {
   sendMessage(message: INewMessage): Promise<boolean | void> | boolean | void {
     // No-op
   }
@@ -31,12 +31,12 @@ describe('test chat widget', () => {
   });
 
   describe('model instantiation', () => {
-    it('should create a ChatModel', () => {
+    it('should create an AbstractChatModel', () => {
       const widget = new ChatWidget({ model, rmRegistry });
       expect(widget).toBeInstanceOf(ChatWidget);
     });
 
-    it('should dispose a ChatModel', () => {
+    it('should dispose an AbstractChatModel', () => {
       const widget = new ChatWidget({ model, rmRegistry });
       widget.dispose();
       expect(widget.isDisposed).toBeTruthy();

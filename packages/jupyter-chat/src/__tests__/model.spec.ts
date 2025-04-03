@@ -7,10 +7,10 @@
  * Example of [Jest](https://jestjs.io/docs/getting-started) unit tests
  */
 
-import { ChatModel, IChatModel } from '../model';
+import { AbstractChatModel, IChatModel } from '../model';
 import { IChatMessage, INewMessage } from '../types';
 
-class MyChatModel extends ChatModel {
+class MyChatModel extends AbstractChatModel {
   sendMessage(message: INewMessage): Promise<boolean | void> | boolean | void {
     // No-op
   }
@@ -18,12 +18,12 @@ class MyChatModel extends ChatModel {
 
 describe('test chat model', () => {
   describe('model instantiation', () => {
-    it('should create a ChatModel', () => {
+    it('should create an AbstractChatModel', () => {
       const model = new MyChatModel();
-      expect(model).toBeInstanceOf(ChatModel);
+      expect(model).toBeInstanceOf(AbstractChatModel);
     });
 
-    it('should dispose a ChatModel', () => {
+    it('should dispose an AbstractChatModel', () => {
       const model = new MyChatModel();
       model.dispose();
       expect(model.isDisposed).toBeTruthy();
@@ -31,7 +31,7 @@ describe('test chat model', () => {
   });
 
   describe('incoming message', () => {
-    class TestChat extends ChatModel {
+    class TestChat extends AbstractChatModel {
       protected formatChatMessage(message: IChatMessage): IChatMessage {
         message.body = 'formatted msg';
         return message;
