@@ -133,10 +133,13 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
     // nothing to do
   }
 
-  messagesInserted(index: number, messages: IChatMessage[]): void {
+  async messagesInserted(
+    index: number,
+    messages: IChatMessage[]
+  ): Promise<void> {
     // Ensure the chat has an ID before inserting the messages, to properly catch the
     // unread messages (the last read message is saved using the chat ID).
-    this._ready.promise.then(() => {
+    return this._ready.promise.then(() => {
       super.messagesInserted(index, messages);
     });
   }
@@ -269,11 +272,11 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
     this._timeoutWriting = null;
   }
 
-  private _onchange = (_: YChat, changes: IChatChanges) => {
+  private _onchange = async (_: YChat, changes: IChatChanges) => {
     if (changes.messageChanges) {
       const msgDelta = changes.messageChanges;
       let index = 0;
-      msgDelta.forEach(delta => {
+      for (const delta of msgDelta) {
         if (delta.retain) {
           index += delta.retain;
         } else if (delta.insert) {
@@ -308,12 +311,12 @@ export class LabChatModel extends ChatModel implements DocumentRegistry.IModel {
 
             return msg;
           });
-          this.messagesInserted(index, messages);
+          await this.messagesInserted(index, messages);
           index += messages.length;
         } else if (delta.delete) {
           this.messagesDeleted(index, delta.delete);
         }
-      });
+      }
     }
 
     if (changes.metadataChanges) {
