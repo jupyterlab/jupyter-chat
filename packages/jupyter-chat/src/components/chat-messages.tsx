@@ -382,6 +382,7 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
             body = replaceSpanToMention(body, user);
           });
           return new InputModel({
+            chatContext: model.createChatContext(),
             onSend: (input: string, model?: IInputModel) =>
               updateMessage(message.id, input, model),
             onCancel: () => cancelEdition(),
@@ -443,7 +444,6 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
             model={inputModel}
             chatCommandRegistry={props.chatCommandRegistry}
             toolbarRegistry={props.inputToolbarRegistry}
-            chatModel={model}
           />
         ) : (
           <MarkdownRenderer

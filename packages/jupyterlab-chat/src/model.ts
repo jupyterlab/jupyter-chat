@@ -5,7 +5,9 @@
 
 import {
   AbstractChatModel,
+  ChatContext,
   IAttachment,
+  IChatContext,
   IChatMessage,
   IChatModel,
   IInputModel,
@@ -15,7 +17,12 @@ import {
 import { IChangedArgs } from '@jupyterlab/coreutils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { User } from '@jupyterlab/services';
-import { PartialJSONObject, PromiseDelegate, UUID } from '@lumino/coreutils';
+import {
+  JSONObject,
+  PartialJSONObject,
+  PromiseDelegate,
+  UUID
+} from '@lumino/coreutils';
 import { ISignal, Signal } from '@lumino/signaling';
 
 import { IWidgetConfig } from './token';
@@ -135,6 +142,10 @@ export class LabChatModel
 
   fromJSON(data: PartialJSONObject): void {
     // nothing to do
+  }
+
+  createChatContext(): IChatContext {
+    return new LabChatContext({ model: this });
   }
 
   async messagesInserted(
@@ -415,4 +426,38 @@ export class LabChatModel
   private _timeoutWriting: number | null = null;
 
   private _user: IUser;
+}
+
+/**
+ * The chat context to be sent to the input model.
+ */
+export class LabChatContext extends ChatContext {
+  /**
+   * The list of users who already wrote or has been mentioned in the chat, or are
+   * currently connected to it.
+   */
+  get users(): IUser[] {
+    const model = this._model as LabChatModel;
+    const users = new Set<IUser>();
+
+    // Get the user list from the chat file.
+    Object.values(model.sharedModel.users).forEach(userObject => {
+      userObject = userObject as JSONObject;
+      if (!userObject.username) {
+        return;
+      }
+
+      users.add(userObject as unknown as IUser);
+    });
+
+    // Add the users connected to the chat (even if they never sent a message).
+    model.sharedModel.awareness.getStates().forEach(value => {
+      const user = value.user as IUser;
+      if (!user) {
+        return;
+      }
+      users.add(user);
+    });
+    return Array.from(users);
+  }
 }

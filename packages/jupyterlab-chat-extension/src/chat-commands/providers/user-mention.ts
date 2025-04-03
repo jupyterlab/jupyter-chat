@@ -13,8 +13,7 @@ import {
 } from '@jupyter/chat';
 import { JupyterFrontEndPlugin } from '@jupyterlab/application';
 import { User } from '@jupyterlab/services';
-import { JSONObject } from '@lumino/coreutils';
-import { LabChatModel } from 'jupyterlab-chat';
+import { LabChatContext } from 'jupyterlab-chat';
 
 export const mentionCommandsPlugin: JupyterFrontEndPlugin<void> = {
   id: 'jupyterlab-chat-extension:mentionCommandsPlugin',
@@ -32,38 +31,15 @@ class MentionCommandProvider implements IChatCommandProvider {
   // regex used to test the current word
   private _regex: RegExp = /^@[\w-]*:?/;
 
-  async getChatCommands(inputModel: IInputModel, chatModel: LabChatModel) {
+  async getChatCommands(inputModel: IInputModel) {
     this._users.clear();
     const match = inputModel.currentWord?.match(this._regex)?.[0];
     if (!match) {
       return [];
     }
 
-    // Get the user list from the chat file.
-    Object.values(chatModel.sharedModel.users).forEach(userObject => {
-      userObject = userObject as JSONObject;
-      if (!userObject.username) {
-        return;
-      }
-      const user = userObject as unknown as IUser;
-      let mentionName = user.mention_name;
-      if (!mentionName) {
-        mentionName = Private.getMentionName(user);
-        user.mention_name = mentionName;
-      }
-
-      this._users.set(mentionName, {
-        user,
-        icon: Avatar({ user: user as User.IIdentity }) ?? undefined
-      });
-    });
-
-    // Add the users connected to the chat (even if they never sent a message).
-    chatModel.sharedModel.awareness.getStates().forEach(value => {
-      const user = value.user as IUser;
-      if (!user) {
-        return;
-      }
+    const users = (inputModel.chatContext as LabChatContext).users;
+    users.forEach(user => {
       let mentionName = user.mention_name;
       if (!mentionName) {
         mentionName = Private.getMentionName(user);
@@ -92,8 +68,7 @@ class MentionCommandProvider implements IChatCommandProvider {
 
   async handleChatCommand(
     command: ChatCommand,
-    inputModel: IInputModel,
-    chatModel: LabChatModel
+    inputModel: IInputModel
   ): Promise<void> {
     inputModel.replaceCurrentWord(`${command.name} `);
     if (this._users.has(command.name)) {
