@@ -5,7 +5,9 @@
 
 import {
   AbstractChatModel,
+  ChatContext,
   IAttachment,
+  IChatContext,
   IChatMessage,
   IChatModel,
   IInputModel,
@@ -15,7 +17,12 @@ import {
 import { IChangedArgs } from '@jupyterlab/coreutils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { User } from '@jupyterlab/services';
-import { PartialJSONObject, PromiseDelegate, UUID } from '@lumino/coreutils';
+import {
+  JSONObject,
+  PartialJSONObject,
+  PromiseDelegate,
+  UUID
+} from '@lumino/coreutils';
 import { ISignal, Signal } from '@lumino/signaling';
 
 import { IWidgetConfig } from './token';
@@ -137,6 +144,10 @@ export class LabChatModel
     // nothing to do
   }
 
+  createChatContext(): IChatContext {
+    return new LabChatContext({ model: this });
+  }
+
   async messagesInserted(
     index: number,
     messages: IChatMessage[]
@@ -177,6 +188,13 @@ export class LabChatModel
     }
     this.input.clearAttachments();
 
+    // Add the mentioned users.
+    const mentions = this._buildMentionList(this.input.mentions, message.body);
+    if (mentions.length) {
+      msg.mentions = mentions;
+    }
+    this.input.clearMentions();
+
     this.sharedModel.addMessage(msg);
   }
 
@@ -208,6 +226,8 @@ export class LabChatModel
         edited: true
       };
     }
+
+    // Update the attachments.
     const attachmentIds = updatedMessage.attachments?.map(attachment =>
       this.sharedModel.setAttachment(attachment)
     );
@@ -215,6 +235,17 @@ export class LabChatModel
       message.attachments = attachmentIds;
     } else {
       delete message.attachments;
+    }
+
+    // Update the mentioned users.
+    const mentions = this._buildMentionList(
+      updatedMessage.mentions,
+      updatedMessage.body
+    );
+    if (mentions.length) {
+      message.mentions = mentions;
+    } else {
+      delete message.mentions;
     }
 
     this.sharedModel.updateMessage(index, message as IYmessage);
@@ -268,6 +299,33 @@ export class LabChatModel
     this.updateWriters(writers);
   };
 
+  private _buildMentionList(
+    userMentions: IUser[] | undefined,
+    body: string
+  ): string[] {
+    if (!userMentions) {
+      return [];
+    }
+    const mentions: string[] = [];
+    userMentions.forEach(user => {
+      // Make sure the user is still mentioned.
+      if (!user.mention_name) {
+        return;
+      }
+      const regex = new RegExp(user.mention_name);
+      if (!regex.exec(body)) {
+        return;
+      }
+
+      // Save the mention name if necessary.
+      if (!(this.sharedModel.getUser(user.username) === user)) {
+        this.sharedModel.setUser(user);
+      }
+      mentions.push(user.username);
+    });
+    return mentions;
+  }
+
   private _resetWritingStatus() {
     const awareness = this.sharedModel.awareness;
     const states = awareness.getLocalState();
@@ -288,6 +346,7 @@ export class LabChatModel
             const {
               sender,
               attachments: attachmentIds,
+              mentions: mentionsIds,
               ...baseMessage
             } = ymessage;
 
@@ -313,6 +372,16 @@ export class LabChatModel
               }
             }
 
+            const mentions = mentionsIds?.map(
+              user =>
+                this.sharedModel.getUser(user) || {
+                  username: 'User undefined'
+                }
+            );
+
+            if (mentions?.length) {
+              msg.mentions = mentions;
+            }
             return msg;
           });
           await this.messagesInserted(index, messages);
@@ -332,6 +401,15 @@ export class LabChatModel
         }
       });
     }
+
+    if (changes.userChanges) {
+      // Update the current user if it changes (if it has been mentioned for example).
+      changes.userChanges.forEach(change => {
+        if (change.key === this._user.username && change.newValue) {
+          this._user = change.newValue;
+        }
+      });
+    }
   };
 
   readonly defaultKernelName: string = '';
@@ -348,4 +426,38 @@ export class LabChatModel
   private _timeoutWriting: number | null = null;
 
   private _user: IUser;
+}
+
+/**
+ * The chat context to be sent to the input model.
+ */
+export class LabChatContext extends ChatContext {
+  /**
+   * The list of users who already wrote or has been mentioned in the chat, or are
+   * currently connected to it.
+   */
+  get users(): IUser[] {
+    const model = this._model as LabChatModel;
+    const users = new Set<IUser>();
+
+    // Get the user list from the chat file.
+    Object.values(model.sharedModel.users).forEach(userObject => {
+      userObject = userObject as JSONObject;
+      if (!userObject.username) {
+        return;
+      }
+
+      users.add(userObject as unknown as IUser);
+    });
+
+    // Add the users connected to the chat (even if they never sent a message).
+    model.sharedModel.awareness.getStates().forEach(value => {
+      const user = value.user as IUser;
+      if (!user) {
+        return;
+      }
+      users.add(user);
+    });
+    return Array.from(users);
+  }
 }
