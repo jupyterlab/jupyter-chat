@@ -23,8 +23,7 @@ import { replaceMentionToSpan } from './utils';
 /**
  * The chat model interface.
  */
-export interface IChatModel<T extends IChatContext = IChatContext>
-  extends IDisposable {
+export interface IChatModel extends IDisposable {
   /**
    * The chat model name.
    */
@@ -58,7 +57,7 @@ export interface IChatModel<T extends IChatContext = IChatContext>
   /**
    * The input model.
    */
-  readonly input: IInputModel<T>;
+  readonly input: IInputModel;
 
   /**
    * Get the active cell manager.
@@ -78,27 +77,27 @@ export interface IChatModel<T extends IChatContext = IChatContext>
   /**
    * A signal emitting when the messages list is updated.
    */
-  readonly messagesUpdated: ISignal<IChatModel<T>, void>;
+  readonly messagesUpdated: ISignal<IChatModel, void>;
 
   /**
    * A signal emitting when the messages list is updated.
    */
-  get configChanged(): ISignal<IChatModel<T>, IConfig>;
+  get configChanged(): ISignal<IChatModel, IConfig>;
 
   /**
    * A signal emitting when unread messages change.
    */
-  readonly unreadChanged?: ISignal<IChatModel<T>, number[]>;
+  readonly unreadChanged?: ISignal<IChatModel, number[]>;
 
   /**
    * A signal emitting when the viewport change.
    */
-  readonly viewportChanged?: ISignal<IChatModel<T>, number[]>;
+  readonly viewportChanged?: ISignal<IChatModel, number[]>;
 
   /**
    * A signal emitting when the writers change.
    */
-  readonly writersChanged?: ISignal<IChatModel<T>, IUser[]>;
+  readonly writersChanged?: ISignal<IChatModel, IUser[]>;
 
   /**
    * Send a message, to be defined depending on the chosen technology.
@@ -180,7 +179,7 @@ export interface IChatModel<T extends IChatContext = IChatContext>
    * not implemented in the abstract chat model, and should be implemented by chat model
    * extending it to be available in the input model.
    */
-  createChatContext(): T | undefined;
+  createChatContext(): IChatContext;
 }
 
 /**
@@ -189,9 +188,7 @@ export interface IChatModel<T extends IChatContext = IChatContext>
  * The class inheriting from it must implement at least:
  * - sendMessage(message: INewMessage)
  */
-export abstract class AbstractChatModel<T extends IChatContext = IChatContext>
-  implements IChatModel<T>
-{
+export abstract class AbstractChatModel implements IChatModel {
   /**
    * Create a new chat model.
    */
@@ -209,7 +206,7 @@ export abstract class AbstractChatModel<T extends IChatContext = IChatContext>
       ...config
     };
 
-    this._inputModel = new InputModel<T>({
+    this._inputModel = new InputModel({
       chatContext: this.createChatContext(),
       activeCellManager: options.activeCellManager,
       selectionWatcher: options.selectionWatcher,
@@ -257,7 +254,7 @@ export abstract class AbstractChatModel<T extends IChatContext = IChatContext>
   /**
    * The input model.
    */
-  get input(): IInputModel<T> {
+  get input(): IInputModel {
     return this._inputModel;
   }
 
@@ -395,35 +392,35 @@ export abstract class AbstractChatModel<T extends IChatContext = IChatContext>
   /**
    * A signal emitting when the messages list is updated.
    */
-  get messagesUpdated(): ISignal<IChatModel<T>, void> {
+  get messagesUpdated(): ISignal<IChatModel, void> {
     return this._messagesUpdated;
   }
 
   /**
    * A signal emitting when the messages list is updated.
    */
-  get configChanged(): ISignal<IChatModel<T>, IConfig> {
+  get configChanged(): ISignal<IChatModel, IConfig> {
     return this._configChanged;
   }
 
   /**
    * A signal emitting when unread messages change.
    */
-  get unreadChanged(): ISignal<IChatModel<T>, number[]> {
+  get unreadChanged(): ISignal<IChatModel, number[]> {
     return this._unreadChanged;
   }
 
   /**
    * A signal emitting when the viewport change.
    */
-  get viewportChanged(): ISignal<IChatModel<T>, number[]> {
+  get viewportChanged(): ISignal<IChatModel, number[]> {
     return this._viewportChanged;
   }
 
   /**
    * A signal emitting when the writers change.
    */
-  get writersChanged(): ISignal<IChatModel<T>, IUser[]> {
+  get writersChanged(): ISignal<IChatModel, IUser[]> {
     return this._writersChanged;
   }
 
@@ -560,9 +557,8 @@ export abstract class AbstractChatModel<T extends IChatContext = IChatContext>
    * not implemented in the abstract chat model, and should be implemented by chat model
    * extending it to be available in the input model.
    */
-  createChatContext(): T | undefined {
-    // No-op if not defined
-    return;
+  createChatContext(): IChatContext {
+    return new ChatContext({ model: this });
   }
 
   /**
@@ -620,18 +616,18 @@ export abstract class AbstractChatModel<T extends IChatContext = IChatContext>
   private _id: string | undefined;
   private _name: string = '';
   private _config: IConfig;
-  private _inputModel: IInputModel<T>;
+  private _inputModel: IInputModel;
   private _isDisposed = false;
   private _commands?: CommandRegistry;
   private _activeCellManager: IActiveCellManager | null;
   private _selectionWatcher: ISelectionWatcher | null;
   private _documentManager: IDocumentManager | null;
   private _notificationId: string | null = null;
-  private _messagesUpdated = new Signal<IChatModel<T>, void>(this);
-  private _configChanged = new Signal<IChatModel<T>, IConfig>(this);
-  private _unreadChanged = new Signal<IChatModel<T>, number[]>(this);
-  private _viewportChanged = new Signal<IChatModel<T>, number[]>(this);
-  private _writersChanged = new Signal<IChatModel<T>, IUser[]>(this);
+  private _messagesUpdated = new Signal<IChatModel, void>(this);
+  private _configChanged = new Signal<IChatModel, IConfig>(this);
+  private _unreadChanged = new Signal<IChatModel, number[]>(this);
+  private _viewportChanged = new Signal<IChatModel, number[]>(this);
+  private _writersChanged = new Signal<IChatModel, IUser[]>(this);
 }
 
 /**
@@ -685,6 +681,10 @@ export interface IChatContext {
    * The name of the chat.
    */
   readonly name: string;
+  /**
+   * A copy of the messages.
+   */
+  readonly messages: IChatMessage[];
 }
 
 /**
@@ -698,6 +698,10 @@ export class ChatContext implements IChatContext {
 
   get name(): string {
     return this._model.name;
+  }
+
+  get messages(): IChatMessage[] {
+    return [...this._model.messages];
   }
 
   protected _model: IChatModel;

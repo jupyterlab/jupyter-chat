@@ -16,12 +16,11 @@ const WHITESPACE = new Set([' ', '\n', '\t']);
 /**
  * The chat input interface.
  */
-export interface IInputModel<T extends IChatContext = IChatContext>
-  extends IDisposable {
+export interface IInputModel extends IDisposable {
   /**
    * The chat context (a readonly subset of the chat model).
    */
-  readonly chatContext: T | undefined;
+  readonly chatContext: IChatContext;
 
   /**
    * Function to send a message.
@@ -41,7 +40,7 @@ export interface IInputModel<T extends IChatContext = IChatContext>
   /**
    * A signal emitting when the value has changed.
    */
-  readonly valueChanged: ISignal<IInputModel<T>, string>;
+  readonly valueChanged: ISignal<IInputModel, string>;
 
   /**
    * The current cursor index.
@@ -52,7 +51,7 @@ export interface IInputModel<T extends IChatContext = IChatContext>
   /**
    * A signal emitting when the cursor position has changed.
    */
-  readonly cursorIndexChanged: ISignal<IInputModel<T>, number | null>;
+  readonly cursorIndexChanged: ISignal<IInputModel, number | null>;
 
   /**
    * The current word behind the user's cursor, space-separated.
@@ -62,7 +61,7 @@ export interface IInputModel<T extends IChatContext = IChatContext>
   /**
    * A signal emitting when the current word has changed.
    */
-  readonly currentWordChanged: ISignal<IInputModel<T>, string | null>;
+  readonly currentWordChanged: ISignal<IInputModel, string | null>;
 
   /**
    * Get the active cell manager.
@@ -87,7 +86,7 @@ export interface IInputModel<T extends IChatContext = IChatContext>
   /**
    * A signal emitting when the messages list is updated.
    */
-  readonly configChanged: ISignal<IInputModel<T>, InputModel.IConfig>;
+  readonly configChanged: ISignal<IInputModel, InputModel.IConfig>;
 
   /**
    * Function to request the focus on the input of the chat.
@@ -97,7 +96,7 @@ export interface IInputModel<T extends IChatContext = IChatContext>
   /**
    * A signal emitting when the focus is requested on the input.
    */
-  readonly focusInputSignal?: ISignal<IInputModel<T>, void>;
+  readonly focusInputSignal?: ISignal<IInputModel, void>;
 
   /**
    * The attachments list.
@@ -122,7 +121,7 @@ export interface IInputModel<T extends IChatContext = IChatContext>
   /**
    * A signal emitting when the attachment list has changed.
    */
-  readonly attachmentsChanged?: ISignal<IInputModel<T>, IAttachment[]>;
+  readonly attachmentsChanged?: ISignal<IInputModel, IAttachment[]>;
 
   /**
    * Replace the current word in the input with a new one.
@@ -153,10 +152,8 @@ export interface IInputModel<T extends IChatContext = IChatContext>
 /**
  * The input model.
  */
-export class InputModel<T extends IChatContext = IChatContext>
-  implements IInputModel<T>
-{
-  constructor(options: InputModel.IOptions<T>) {
+export class InputModel implements IInputModel {
+  constructor(options: InputModel.IOptions) {
     this._onSend = options.onSend;
     this._chatContext = options.chatContext;
     this._value = options.value || '';
@@ -175,7 +172,7 @@ export class InputModel<T extends IChatContext = IChatContext>
   /**
    * The chat context (a readonly subset of the chat model);
    */
-  get chatContext(): T | undefined {
+  get chatContext(): IChatContext {
     return this._chatContext;
   }
 
@@ -206,7 +203,7 @@ export class InputModel<T extends IChatContext = IChatContext>
   /**
    * A signal emitting when the value has changed.
    */
-  get valueChanged(): ISignal<IInputModel<T>, string> {
+  get valueChanged(): ISignal<IInputModel, string> {
     return this._valueChanged;
   }
 
@@ -236,7 +233,7 @@ export class InputModel<T extends IChatContext = IChatContext>
   /**
    * A signal emitting when the cursor position has changed.
    */
-  get cursorIndexChanged(): ISignal<IInputModel<T>, number | null> {
+  get cursorIndexChanged(): ISignal<IInputModel, number | null> {
     return this._cursorIndexChanged;
   }
 
@@ -250,7 +247,7 @@ export class InputModel<T extends IChatContext = IChatContext>
   /**
    * A signal emitting when the current word has changed.
    */
-  get currentWordChanged(): ISignal<IInputModel<T>, string | null> {
+  get currentWordChanged(): ISignal<IInputModel, string | null> {
     return this._currentWordChanged;
   }
 
@@ -289,7 +286,7 @@ export class InputModel<T extends IChatContext = IChatContext>
   /**
    * A signal emitting when the configuration is updated.
    */
-  get configChanged(): ISignal<IInputModel<T>, InputModel.IConfig> {
+  get configChanged(): ISignal<IInputModel, InputModel.IConfig> {
     return this._configChanged;
   }
 
@@ -303,7 +300,7 @@ export class InputModel<T extends IChatContext = IChatContext>
   /**
    * A signal emitting when the focus is requested on the input.
    */
-  get focusInputSignal(): ISignal<IInputModel<T>, void> {
+  get focusInputSignal(): ISignal<IInputModel, void> {
     return this._focusInputSignal;
   }
 
@@ -355,7 +352,7 @@ export class InputModel<T extends IChatContext = IChatContext>
   /**
    * A signal emitting when the input attachments changed.
    */
-  get attachmentsChanged(): ISignal<IInputModel<T>, IAttachment[]> {
+  get attachmentsChanged(): ISignal<IInputModel, IAttachment[]> {
     return this._attachmentsChanged;
   }
 
@@ -424,8 +421,8 @@ export class InputModel<T extends IChatContext = IChatContext>
     return this._isDisposed;
   }
 
-  private _onSend: (input: string, model?: InputModel<T>) => void;
-  private _chatContext?: T;
+  private _onSend: (input: string, model?: InputModel) => void;
+  private _chatContext: IChatContext;
   private _value: string;
   private _cursorIndex: number | null = null;
   private _currentWord: string | null = null;
@@ -435,28 +432,28 @@ export class InputModel<T extends IChatContext = IChatContext>
   private _selectionWatcher: ISelectionWatcher | null;
   private _documentManager: IDocumentManager | null;
   private _config: InputModel.IConfig;
-  private _valueChanged = new Signal<IInputModel<T>, string>(this);
-  private _cursorIndexChanged = new Signal<IInputModel<T>, number | null>(this);
-  private _currentWordChanged = new Signal<IInputModel<T>, string | null>(this);
-  private _configChanged = new Signal<IInputModel<T>, InputModel.IConfig>(this);
-  private _focusInputSignal = new Signal<InputModel<T>, void>(this);
-  private _attachmentsChanged = new Signal<InputModel<T>, IAttachment[]>(this);
+  private _valueChanged = new Signal<IInputModel, string>(this);
+  private _cursorIndexChanged = new Signal<IInputModel, number | null>(this);
+  private _currentWordChanged = new Signal<IInputModel, string | null>(this);
+  private _configChanged = new Signal<IInputModel, InputModel.IConfig>(this);
+  private _focusInputSignal = new Signal<InputModel, void>(this);
+  private _attachmentsChanged = new Signal<InputModel, IAttachment[]>(this);
   private _isDisposed = false;
 }
 
 export namespace InputModel {
-  export interface IOptions<T extends IChatContext = IChatContext> {
+  export interface IOptions {
     /**
      * The chat context (a readonly subset of the chat model).
      */
-    chatContext?: T;
+    chatContext: IChatContext;
 
     /**
      * The function that should send the message.
      * @param content - the content of the message.
      * @param model - the model of the input sending the message.
      */
-    onSend: (content: string, model?: InputModel<T>) => void;
+    onSend: (content: string, model?: InputModel) => void;
 
     /**
      * Function that should cancel the message edition.
