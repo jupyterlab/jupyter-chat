@@ -175,9 +175,7 @@ export interface IChatModel extends IDisposable {
   updateWriters(writers: IUser[]): void;
 
   /**
-   * Create the chat context that will be passed to the input model. By default this is
-   * not implemented in the abstract chat model, and should be implemented by chat model
-   * extending it to be available in the input model.
+   * Create the chat context that will be passed to the input model.
    */
   createChatContext(): IChatContext;
 }
@@ -553,9 +551,7 @@ export abstract class AbstractChatModel implements IChatModel {
   }
 
   /**
-   * Create the chat context that will be passed to the input model. By default this is
-   * not implemented in the abstract chat model, and should be implemented by chat model
-   * extending it to be available in the input model.
+   * Create the chat context that will be passed to the input model.
    */
   createChatContext(): IChatContext {
     return new ChatContext({ model: this });
