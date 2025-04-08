@@ -83,9 +83,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
     this._rmRegistry = options.rmRegistry;
     this._chatCommandRegistry = options.chatCommandRegistry;
     this._attachmentOpenerRegistry = options.attachmentOpenerRegistry;
-    if (options.inputToolbarFactory) {
-      this._inputToolbarRegistry = options.inputToolbarFactory.create();
-    }
+    this._inputToolbarFactory = options.inputToolbarFactory;
   }
 
   /**
@@ -99,7 +97,9 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
     context.themeManager = this._themeManager;
     context.chatCommandRegistry = this._chatCommandRegistry;
     context.attachmentOpenerRegistry = this._attachmentOpenerRegistry;
-    context.inputToolbarRegistry = this._inputToolbarRegistry;
+    if (this._inputToolbarFactory) {
+      context.inputToolbarRegistry = this._inputToolbarFactory.create();
+    }
     return new LabChatPanel({
       context,
       content: new ChatWidget(context)
@@ -110,7 +110,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
   private _rmRegistry: IRenderMimeRegistry;
   private _chatCommandRegistry?: IChatCommandRegistry;
   private _attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
-  private _inputToolbarRegistry?: IInputToolbarRegistry;
+  private _inputToolbarFactory?: IInputToolbarRegistryFactory;
 }
 
 export namespace ChatWidgetFactory {
