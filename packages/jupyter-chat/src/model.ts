@@ -553,9 +553,7 @@ export abstract class AbstractChatModel implements IChatModel {
   /**
    * Create the chat context that will be passed to the input model.
    */
-  createChatContext(): IChatContext {
-    return new ChatContext({ model: this });
-  }
+  abstract createChatContext(): IChatContext;
 
   /**
    * Add unread messages to the list.
@@ -681,13 +679,17 @@ export interface IChatContext {
    * A copy of the messages.
    */
   readonly messages: IChatMessage[];
+  /**
+   * A list of all users who have connected to this chat.
+   */
+  readonly users: IUser[];
 }
 
 /**
- * A default implementation of the IChatContext, that can be extended to provide more
- * attributes.
+ * An abstract base class implementing `IChatContext`. This can be extended into
+ * a complete implementation, as done in `jupyterlab-chat`.
  */
-export class ChatContext implements IChatContext {
+export abstract class AbstractChatContext implements IChatContext {
   constructor(options: { model: IChatModel }) {
     this._model = options.model;
   }
@@ -699,6 +701,11 @@ export class ChatContext implements IChatContext {
   get messages(): IChatMessage[] {
     return [...this._model.messages];
   }
+
+  /**
+   * ABSTRACT: Should return a list of users who have connected to this chat.
+   */
+  abstract get users(): IUser[];
 
   protected _model: IChatModel;
 }
