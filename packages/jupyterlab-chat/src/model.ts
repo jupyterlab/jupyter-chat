@@ -440,14 +440,9 @@ export class LabChatContext extends ChatContext {
     const model = this._model as LabChatModel;
     const users = new Set<IUser>();
 
-    // Get the user list from the chat file.
+    // Get the user list from the shared YChat
     Object.values(model.sharedModel.users).forEach(userObject => {
-      userObject = userObject as JSONObject;
-      if (!userObject.username) {
-        return;
-      }
-
-      users.add(userObject as unknown as IUser);
+      users.add(userObject);
     });
 
     // Add the users connected to the chat (even if they never sent a message).
@@ -458,6 +453,7 @@ export class LabChatContext extends ChatContext {
       }
       users.add(user);
     });
+
     return Array.from(users);
   }
 }
