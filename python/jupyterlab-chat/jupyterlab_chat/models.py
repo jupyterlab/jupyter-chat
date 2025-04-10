@@ -1,7 +1,7 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Literal, Optional
 from jupyter_server.auth import User as JupyterUser
 
@@ -37,6 +37,9 @@ class Message:
 
     attachments: Optional[list[str]] = None
     """ The message attachments, a list of attachment ID """
+    
+    mentions: Optional[list[str]] = field(default_factory=list)
+    """ Users mentioned in the message """
 
     raw_time: Optional[bool] = None
     """
@@ -70,7 +73,10 @@ class NewMessage:
 
 @dataclass
 class User(JupyterUser):
-    """ Object representing a user (same as Jupyter User ) """
+    """ Object representing a user """
+
+    mention_name: Optional[str] = None
+    """ The string to use as mention in chat """
 
 
 @dataclass

@@ -13,6 +13,10 @@ export interface IUser {
   initials?: string;
   color?: string;
   avatar_url?: string;
+  /**
+   * The string to use to mention a user in the chat.
+   */
+  mention_name?: string;
 }
 
 /**
@@ -51,6 +55,7 @@ export interface IChatMessage<T = IUser, U = IAttachment> {
   time: number;
   sender: T;
   attachments?: U[];
+  mentions?: T[];
   raw_time?: boolean;
   deleted?: boolean;
   edited?: boolean;

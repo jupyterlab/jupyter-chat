@@ -66,6 +66,7 @@ import {
 } from 'jupyterlab-chat';
 import { chatCommandRegistryPlugin } from './chat-commands/plugins';
 import { emojiCommandsPlugin } from './chat-commands/providers/emoji';
+import { mentionCommandsPlugin } from './chat-commands/providers/user-mention';
 
 const FACTORY = 'Chat';
 
@@ -826,5 +827,6 @@ export default [
   docFactories,
   inputToolbarFactory,
   selectionWatcher,
-  emojiCommandsPlugin
+  emojiCommandsPlugin,
+  mentionCommandsPlugin
 ];

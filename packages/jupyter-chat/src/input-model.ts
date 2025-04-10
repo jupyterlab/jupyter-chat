@@ -3,12 +3,13 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { IDocumentManager } from '@jupyterlab/docmanager';
 import { IDisposable } from '@lumino/disposable';
 import { ISignal, Signal } from '@lumino/signaling';
 import { IActiveCellManager } from './active-cell-manager';
 import { ISelectionWatcher } from './selection-watcher';
-import { IAttachment } from './types';
-import { IDocumentManager } from '@jupyterlab/docmanager';
+import { IChatContext } from './model';
+import { IAttachment, IUser } from './types';
 
 const WHITESPACE = new Set([' ', '\n', '\t']);
 
@@ -16,6 +17,11 @@ const WHITESPACE = new Set([' ', '\n', '\t']);
  * The chat input interface.
  */
 export interface IInputModel extends IDisposable {
+  /**
+   * The chat context (a readonly subset of the chat model).
+   */
+  readonly chatContext: IChatContext;
+
   /**
    * Function to send a message.
    */
@@ -121,6 +127,26 @@ export interface IInputModel extends IDisposable {
    * Replace the current word in the input with a new one.
    */
   replaceCurrentWord(newWord: string): void;
+
+  /**
+   * The mentioned user list.
+   */
+  readonly mentions: IUser[];
+
+  /**
+   * Add user mention.
+   */
+  addMention?(user: IUser): void;
+
+  /**
+   * Remove a user mention.
+   */
+  removeMention(user: IUser): void;
+
+  /**
+   * Clear mentions list.
+   */
+  clearMentions(): void;
 }
 
 /**
@@ -129,8 +155,10 @@ export interface IInputModel extends IDisposable {
 export class InputModel implements IInputModel {
   constructor(options: InputModel.IOptions) {
     this._onSend = options.onSend;
+    this._chatContext = options.chatContext;
     this._value = options.value || '';
     this._attachments = options.attachments || [];
+    this._mentions = options.mentions || [];
     this.cursorIndex = options.cursorIndex || this.value.length;
     this._activeCellManager = options.activeCellManager ?? null;
     this._selectionWatcher = options.selectionWatcher ?? null;
@@ -139,6 +167,13 @@ export class InputModel implements IInputModel {
       ...options.config
     };
     this.cancel = options.onCancel;
+  }
+
+  /**
+   * The chat context (a readonly subset of the chat model);
+   */
+  get chatContext(): IChatContext {
+    return this._chatContext;
   }
 
   /**
@@ -336,6 +371,40 @@ export class InputModel implements IInputModel {
   }
 
   /**
+   * The mentioned user list.
+   */
+  get mentions(): IUser[] {
+    return this._mentions;
+  }
+
+  /**
+   * Add a user mention.
+   */
+  addMention(user: IUser): void {
+    const usernames = this._mentions.map(user => user.username);
+    if (!usernames.includes(user.username)) {
+      this._mentions.push(user);
+    }
+  }
+
+  /**
+   * Remove a user mention.
+   */
+  removeMention(user: IUser): void {
+    const index = this._mentions.indexOf(user);
+    if (index > -1) {
+      this._mentions.splice(index, 1);
+    }
+  }
+
+  /**
+   * Clear mentions list.
+   */
+  clearMentions = (): void => {
+    this._mentions = [];
+  };
+
+  /**
    * Dispose the input model.
    */
   dispose(): void {
@@ -353,10 +422,12 @@ export class InputModel implements IInputModel {
   }
 
   private _onSend: (input: string, model?: InputModel) => void;
+  private _chatContext: IChatContext;
   private _value: string;
   private _cursorIndex: number | null = null;
   private _currentWord: string | null = null;
   private _attachments: IAttachment[];
+  private _mentions: IUser[];
   private _activeCellManager: IActiveCellManager | null;
   private _selectionWatcher: ISelectionWatcher | null;
   private _documentManager: IDocumentManager | null;
@@ -372,6 +443,11 @@ export class InputModel implements IInputModel {
 
 export namespace InputModel {
   export interface IOptions {
+    /**
+     * The chat context (a readonly subset of the chat model).
+     */
+    chatContext: IChatContext;
+
     /**
      * The function that should send the message.
      * @param content - the content of the message.
@@ -393,6 +469,11 @@ export namespace InputModel {
      * The initial attachments.
      */
     attachments?: IAttachment[];
+
+    /**
+     * The initial mentions.
+     */
+    mentions?: IUser[];
 
     /**
      * The current cursor index.

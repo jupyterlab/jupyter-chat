@@ -22,8 +22,8 @@ import {
   useChatCommands
 } from './input';
 import { IInputModel, InputModel } from '../input-model';
-import { IAttachment } from '../types';
 import { IChatCommandRegistry } from '../chat-commands';
+import { IAttachment } from '../types';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
 const INPUT_TOOLBAR_CLASS = 'jp-chat-input-toolbar';
@@ -256,7 +256,7 @@ export namespace ChatInput {
    */
   export interface IProps {
     /**
-     * The chat model.
+     * The input model.
      */
     model: IInputModel;
     /**

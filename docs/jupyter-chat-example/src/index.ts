@@ -11,7 +11,9 @@ import {
   IAttachment,
   IChatMessage,
   INewMessage,
-  SelectionWatcher
+  SelectionWatcher,
+  IChatContext,
+  AbstractChatContext
 } from '@jupyter/chat';
 import {
   JupyterFrontEnd,
@@ -23,6 +25,12 @@ import { INotebookTracker } from '@jupyterlab/notebook';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { UUID } from '@lumino/coreutils';
+
+class ChatContext extends AbstractChatContext {
+  get users() {
+    return [];
+  }
+}
 
 class MyChatModel extends AbstractChatModel {
   sendMessage(
@@ -38,6 +46,10 @@ class MyChatModel extends AbstractChatModel {
     };
     this.messageAdded(message);
     this.input.clearAttachments();
+  }
+
+  createChatContext(): IChatContext {
+    return new ChatContext({ model: this });
   }
 }
 

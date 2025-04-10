@@ -3,13 +3,13 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import React from 'react';
-import { useEffect, useState } from 'react';
+import { LabIcon } from '@jupyterlab/ui-components';
 import type {
   AutocompleteChangeReason,
   AutocompleteProps as GenericAutocompleteProps
 } from '@mui/material';
 import { Box } from '@mui/material';
+import React, { useEffect, useState } from 'react';
 
 import { ChatCommand, IChatCommandRegistry } from '../../chat-commands';
 import { IInputModel } from '../../input-model';
@@ -131,9 +131,11 @@ export function useChatCommands(
         ___: unknown
       ) => {
         const { key, ...listItemProps } = defaultProps;
-        const commandIcon: JSX.Element = (
+        const commandIcon: JSX.Element = React.isValidElement(command.icon) ? (
+          command.icon
+        ) : (
           <span>
-            {typeof command.icon === 'object' ? (
+            {command.icon instanceof LabIcon ? (
               <command.icon.react />
             ) : (
               command.icon

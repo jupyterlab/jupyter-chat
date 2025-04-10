@@ -8,6 +8,9 @@ import { CommandRegistry } from '@lumino/commands';
 import { IDisposable } from '@lumino/disposable';
 import { ISignal, Signal } from '@lumino/signaling';
 
+import { IActiveCellManager } from './active-cell-manager';
+import { IInputModel, InputModel } from './input-model';
+import { ISelectionWatcher } from './selection-watcher';
 import {
   IChatHistory,
   INewMessage,
@@ -15,9 +18,7 @@ import {
   IConfig,
   IUser
 } from './types';
-import { IActiveCellManager } from './active-cell-manager';
-import { ISelectionWatcher } from './selection-watcher';
-import { IInputModel, InputModel } from './input-model';
+import { replaceMentionToSpan } from './utils';
 
 /**
  * The chat model interface.
@@ -172,6 +173,11 @@ export interface IChatModel extends IDisposable {
    * Update the current writers list.
    */
   updateWriters(writers: IUser[]): void;
+
+  /**
+   * Create the chat context that will be passed to the input model.
+   */
+  createChatContext(): IChatContext;
 }
 
 /**
@@ -199,6 +205,7 @@ export abstract class AbstractChatModel implements IChatModel {
     };
 
     this._inputModel = new InputModel({
+      chatContext: this.createChatContext(),
       activeCellManager: options.activeCellManager,
       selectionWatcher: options.selectionWatcher,
       documentManager: options.documentManager,
@@ -456,6 +463,9 @@ export abstract class AbstractChatModel implements IChatModel {
    * Can be useful if some actions are required on the message.
    */
   protected formatChatMessage(message: IChatMessage): IChatMessage {
+    message.mentions?.forEach(user => {
+      message.body = replaceMentionToSpan(message.body, user);
+    });
     return message;
   }
 
@@ -539,6 +549,11 @@ export abstract class AbstractChatModel implements IChatModel {
   updateWriters(writers: IUser[]): void {
     this._writersChanged.emit(writers);
   }
+
+  /**
+   * Create the chat context that will be passed to the input model.
+   */
+  abstract createChatContext(): IChatContext;
 
   /**
    * Add unread messages to the list.
@@ -647,4 +662,50 @@ export namespace IChatModel {
      */
     documentManager?: IDocumentManager | null;
   }
+}
+
+/**
+ * Interface of the chat context, a 'subset' of the model with readonly attribute,
+ * which can be passed to the input model.
+ * This allows third party extensions to get some attribute of the model without
+ * exposing the method that can modify it.
+ */
+export interface IChatContext {
+  /**
+   * The name of the chat.
+   */
+  readonly name: string;
+  /**
+   * A copy of the messages.
+   */
+  readonly messages: IChatMessage[];
+  /**
+   * A list of all users who have connected to this chat.
+   */
+  readonly users: IUser[];
+}
+
+/**
+ * An abstract base class implementing `IChatContext`. This can be extended into
+ * a complete implementation, as done in `jupyterlab-chat`.
+ */
+export abstract class AbstractChatContext implements IChatContext {
+  constructor(options: { model: IChatModel }) {
+    this._model = options.model;
+  }
+
+  get name(): string {
+    return this._model.name;
+  }
+
+  get messages(): IChatMessage[] {
+    return [...this._model.messages];
+  }
+
+  /**
+   * ABSTRACT: Should return a list of users who have connected to this chat.
+   */
+  abstract get users(): IUser[];
+
+  protected _model: IChatModel;
 }
