@@ -11,22 +11,16 @@ import {
   IRenderMimeRegistry,
   RenderMimeRegistry
 } from '@jupyterlab/rendermime';
-import { AbstractChatModel, IChatModel } from '../model';
-import { INewMessage } from '../types';
+import { IChatModel } from '../model';
 import { ChatWidget } from '../widgets/chat-widget';
-
-class MyChatModel extends AbstractChatModel {
-  sendMessage(message: INewMessage): Promise<boolean | void> | boolean | void {
-    // No-op
-  }
-}
+import { MockChatModel } from './mocks';
 
 describe('test chat widget', () => {
   let model: IChatModel;
   let rmRegistry: IRenderMimeRegistry;
 
   beforeEach(() => {
-    model = new MyChatModel();
+    model = new MockChatModel();
     rmRegistry = new RenderMimeRegistry();
   });
 

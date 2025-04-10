@@ -7,31 +7,26 @@
  * Example of [Jest](https://jestjs.io/docs/getting-started) unit tests
  */
 
-import { AbstractChatModel, IChatModel } from '../model';
+import { AbstractChatModel, IChatContext, IChatModel } from '../model';
 import { IChatMessage, INewMessage } from '../types';
-
-class MyChatModel extends AbstractChatModel {
-  sendMessage(message: INewMessage): Promise<boolean | void> | boolean | void {
-    // No-op
-  }
-}
+import { MockChatModel, MockChatContext } from './mocks';
 
 describe('test chat model', () => {
   describe('model instantiation', () => {
     it('should create an AbstractChatModel', () => {
-      const model = new MyChatModel();
+      const model = new MockChatModel();
       expect(model).toBeInstanceOf(AbstractChatModel);
     });
 
     it('should dispose an AbstractChatModel', () => {
-      const model = new MyChatModel();
+      const model = new MockChatModel();
       model.dispose();
       expect(model.isDisposed).toBeTruthy();
     });
   });
 
   describe('incoming message', () => {
-    class TestChat extends AbstractChatModel {
+    class TestChat extends AbstractChatModel implements IChatModel {
       protected formatChatMessage(message: IChatMessage): IChatMessage {
         message.body = 'formatted msg';
         return message;
@@ -40,6 +35,10 @@ describe('test chat model', () => {
         message: INewMessage
       ): Promise<boolean | void> | boolean | void {
         // No-op
+      }
+
+      createChatContext(): IChatContext {
+        return new MockChatContext({ model: this });
       }
     }
 
@@ -58,7 +57,7 @@ describe('test chat model', () => {
     });
 
     it('should signal incoming message', () => {
-      model = new MyChatModel();
+      model = new MockChatModel();
       model.messagesUpdated.connect((sender: IChatModel) => {
         expect(sender).toBe(model);
         messages = model.messages;
@@ -83,12 +82,12 @@ describe('test chat model', () => {
 
   describe('model config', () => {
     it('should have empty config', () => {
-      const model = new MyChatModel();
+      const model = new MockChatModel();
       expect(model.config.sendWithShiftEnter).toBeUndefined();
     });
 
     it('should allow config', () => {
-      const model = new MyChatModel({ config: { sendWithShiftEnter: true } });
+      const model = new MockChatModel({ config: { sendWithShiftEnter: true } });
       expect(model.config.sendWithShiftEnter).toBeTruthy();
     });
   });

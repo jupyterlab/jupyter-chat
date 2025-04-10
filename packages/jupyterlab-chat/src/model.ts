@@ -5,7 +5,7 @@
 
 import {
   AbstractChatModel,
-  ChatContext,
+  AbstractChatContext,
   IAttachment,
   IChatContext,
   IChatMessage,
@@ -17,12 +17,7 @@ import {
 import { IChangedArgs } from '@jupyterlab/coreutils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { User } from '@jupyterlab/services';
-import {
-  JSONObject,
-  PartialJSONObject,
-  PromiseDelegate,
-  UUID
-} from '@lumino/coreutils';
+import { PartialJSONObject, PromiseDelegate, UUID } from '@lumino/coreutils';
 import { ISignal, Signal } from '@lumino/signaling';
 
 import { IWidgetConfig } from './token';
@@ -431,23 +426,17 @@ export class LabChatModel
 /**
  * The chat context to be sent to the input model.
  */
-export class LabChatContext extends ChatContext {
+export class LabChatContext extends AbstractChatContext {
   /**
-   * The list of users who already wrote or has been mentioned in the chat, or are
-   * currently connected to it.
+   * The list of users who have connected to this chat.
    */
   get users(): IUser[] {
     const model = this._model as LabChatModel;
     const users = new Set<IUser>();
 
-    // Get the user list from the chat file.
+    // Get the user list from the shared YChat
     Object.values(model.sharedModel.users).forEach(userObject => {
-      userObject = userObject as JSONObject;
-      if (!userObject.username) {
-        return;
-      }
-
-      users.add(userObject as unknown as IUser);
+      users.add(userObject);
     });
 
     // Add the users connected to the chat (even if they never sent a message).
@@ -458,6 +447,7 @@ export class LabChatContext extends ChatContext {
       }
       users.add(user);
     });
+
     return Array.from(users);
   }
 }

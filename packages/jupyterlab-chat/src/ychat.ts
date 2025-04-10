@@ -100,8 +100,13 @@ export class YChat extends YDocument<IChatChanges> {
     return (this._metadata.get('id') as string) || '';
   }
 
-  get users(): JSONObject {
-    return JSONExt.deepCopy(this._users.toJSON());
+  get users(): Record<string, IUser> {
+    const userDict = JSONExt.deepCopy(this._users.toJSON()) as Record<
+      string,
+      IUser
+    >;
+
+    return userDict;
   }
 
   get messages(): string[] {

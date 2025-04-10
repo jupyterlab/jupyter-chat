@@ -3,6 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import React from 'react';
 import {
   IChatCommandProvider,
   IChatCommandRegistry,
@@ -12,8 +13,6 @@ import {
   IUser
 } from '@jupyter/chat';
 import { JupyterFrontEndPlugin } from '@jupyterlab/application';
-import { User } from '@jupyterlab/services';
-import { LabChatContext } from 'jupyterlab-chat';
 
 export const mentionCommandsPlugin: JupyterFrontEndPlugin<void> = {
   id: 'jupyterlab-chat-extension:mentionCommandsPlugin',
@@ -38,7 +37,7 @@ class MentionCommandProvider implements IChatCommandProvider {
       return [];
     }
 
-    const users = (inputModel.chatContext as LabChatContext).users;
+    const users = inputModel.chatContext.users;
     users.forEach(user => {
       let mentionName = user.mention_name;
       if (!mentionName) {
@@ -48,7 +47,7 @@ class MentionCommandProvider implements IChatCommandProvider {
 
       this._users.set(mentionName, {
         user,
-        icon: Avatar({ user: user as User.IIdentity }) ?? undefined
+        icon: <Avatar user={user} />
       });
     });
 
@@ -82,7 +81,7 @@ class MentionCommandProvider implements IChatCommandProvider {
 namespace Private {
   export type CommandUser = {
     user: IUser;
-    icon?: JSX.Element;
+    icon: JSX.Element | null;
   };
 
   /**
