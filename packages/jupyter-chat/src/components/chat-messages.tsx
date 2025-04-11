@@ -106,8 +106,8 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
       setMessages([...model.messages]);
     }
 
-    function handleWritersChange(_: IChatModel, writers: IUser[]) {
-      setCurrentWriters(writers);
+    function handleWritersChange(_: IChatModel, writers: IChatModel.IWriter[]) {
+      setCurrentWriters(writers.map(writer => writer.user));
     }
 
     model.messagesUpdated.connect(handleChatEvents);
@@ -370,10 +370,10 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
     const [deleted, setDeleted] = useState<boolean>(false);
     const [canEdit, setCanEdit] = useState<boolean>(false);
     const [canDelete, setCanDelete] = useState<boolean>(false);
-    const [inputModel, setInputModel] = useState<IInputModel | null>(null);
 
     // Look if the message can be deleted or edited.
     useEffect(() => {
+      // Init canDelete and canEdit state.
       setDeleted(message.deleted ?? false);
       if (model.user !== undefined && !message.deleted) {
         if (model.user.username === message.sender.username) {
@@ -388,39 +388,63 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
         setCanEdit(false);
         setCanDelete(false);
       }
+
+      // Update canEdit state (only one message can be edited)
+      const updateCanEdit = (
+        _: IChatModel,
+        edition: IChatModel.IMessageEdition | null
+      ) => {
+        if (
+          !message.deleted &&
+          model.user?.username === message.sender.username
+        ) {
+          if (edition === null || edition.id === message.id) {
+            setCanEdit(true);
+          } else {
+            setCanEdit(false);
+          }
+        } else {
+          setCanEdit(false);
+        }
+      };
+      model.messageEditionChanged.connect(updateCanEdit);
+
+      return () => {
+        model.messageEditionChanged.disconnect(updateCanEdit);
+      };
     }, [model, message]);
 
-    // Create an input model only if the message is edited.
-    useEffect(() => {
-      if (edit && canEdit) {
-        setInputModel(() => {
-          let body = message.body;
-          message.mentions?.forEach(user => {
-            body = replaceSpanToMention(body, user);
-          });
-          return new InputModel({
-            chatContext: model.createChatContext(),
-            onSend: (input: string, model?: IInputModel) =>
-              updateMessage(message.id, input, model),
-            onCancel: () => cancelEdition(),
-            value: body,
-            activeCellManager: model.activeCellManager,
-            selectionWatcher: model.selectionWatcher,
-            documentManager: model.documentManager,
-            config: {
-              sendWithShiftEnter: model.config.sendWithShiftEnter
-            },
-            attachments: message.attachments,
-            mentions: message.mentions
-          });
-        });
-      } else {
-        setInputModel(null);
+    const startEdition = (): void => {
+      if (!canEdit) {
+        return;
       }
-    }, [edit]);
+      let body = message.body;
+      message.mentions?.forEach(user => {
+        body = replaceSpanToMention(body, user);
+      });
+      const inputModel = new InputModel({
+        chatContext: model.createChatContext(),
+        onSend: (input: string, model?: IInputModel) =>
+          updateMessage(message.id, input, model),
+        onCancel: () => cancelEdition(),
+        value: body,
+        activeCellManager: model.activeCellManager,
+        selectionWatcher: model.selectionWatcher,
+        documentManager: model.documentManager,
+        config: {
+          sendWithShiftEnter: model.config.sendWithShiftEnter
+        },
+        attachments: message.attachments,
+        mentions: message.mentions
+      });
+      model.messageEdition = { id: message.id, model: inputModel };
+      setEdit(true);
+    };
 
     // Cancel the current edition of the message.
     const cancelEdition = (): void => {
+      model.messageEdition?.model.dispose();
+      model.messageEdition = null;
       setEdit(false);
     };
 
@@ -455,10 +479,10 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
       <div ref={ref} data-index={props.index}></div>
     ) : (
       <div ref={ref} data-index={props.index}>
-        {edit && canEdit && inputModel ? (
+        {edit && canEdit && model.messageEdition ? (
           <ChatInput
             onCancel={() => cancelEdition()}
-            model={inputModel}
+            model={model.messageEdition.model}
             chatCommandRegistry={props.chatCommandRegistry}
             toolbarRegistry={props.inputToolbarRegistry}
           />
@@ -467,7 +491,7 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
             rmRegistry={rmRegistry}
             markdownStr={message.body}
             model={model}
-            edit={canEdit ? () => setEdit(true) : undefined}
+            edit={canEdit ? startEdition : undefined}
             delete={canDelete ? () => deleteMessage(message.id) : undefined}
             rendered={props.renderedPromise}
           />

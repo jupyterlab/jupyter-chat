@@ -45,6 +45,11 @@ export interface IChatModel extends IDisposable {
   messagesInViewport?: number[];
 
   /**
+   * The input model of the current message in edition (null if no message are edited).
+   */
+  messageEdition: IChatModel.IMessageEdition | null;
+
+  /**
    * The user connected to the chat panel.
    */
   readonly user?: IUser;
@@ -82,7 +87,7 @@ export interface IChatModel extends IDisposable {
   /**
    * A signal emitting when the messages list is updated.
    */
-  get configChanged(): ISignal<IChatModel, IConfig>;
+  readonly configChanged: ISignal<IChatModel, IConfig>;
 
   /**
    * A signal emitting when unread messages change.
@@ -97,7 +102,15 @@ export interface IChatModel extends IDisposable {
   /**
    * A signal emitting when the writers change.
    */
-  readonly writersChanged?: ISignal<IChatModel, IUser[]>;
+  readonly writersChanged?: ISignal<IChatModel, IChatModel.IWriter[]>;
+
+  /**
+   * A signal emitting when the message edition input changed change.
+   */
+  readonly messageEditionChanged: ISignal<
+    IChatModel,
+    IChatModel.IMessageEdition | null
+  >;
 
   /**
    * Send a message, to be defined depending on the chosen technology.
@@ -172,7 +185,7 @@ export interface IChatModel extends IDisposable {
   /**
    * Update the current writers list.
    */
-  updateWriters(writers: IUser[]): void;
+  updateWriters(writers: IChatModel.IWriter[]): void;
 
   /**
    * Create the chat context that will be passed to the input model.
@@ -388,6 +401,20 @@ export abstract class AbstractChatModel implements IChatModel {
   }
 
   /**
+   * The input model of the current message in edition (null if no message are edited).
+   */
+  get messageEdition(): IChatModel.IMessageEdition | null {
+    return this._messageEdition;
+  }
+  set messageEdition(editionModel: IChatModel.IMessageEdition | null) {
+    if (this._messageEdition) {
+      this._messageEdition.model.dispose();
+    }
+    this._messageEdition = editionModel;
+    this._messageEditionChanged.emit(this._messageEdition);
+  }
+
+  /**
    * A signal emitting when the messages list is updated.
    */
   get messagesUpdated(): ISignal<IChatModel, void> {
@@ -418,8 +445,18 @@ export abstract class AbstractChatModel implements IChatModel {
   /**
    * A signal emitting when the writers change.
    */
-  get writersChanged(): ISignal<IChatModel, IUser[]> {
+  get writersChanged(): ISignal<IChatModel, IChatModel.IWriter[]> {
     return this._writersChanged;
+  }
+
+  /**
+   * A signal emitting when the message edition input changed change.
+   */
+  get messageEditionChanged(): ISignal<
+    IChatModel,
+    IChatModel.IMessageEdition | null
+  > {
+    return this._messageEditionChanged;
   }
 
   /**
@@ -546,7 +583,7 @@ export abstract class AbstractChatModel implements IChatModel {
    * Update the current writers list.
    * This implementation only propagate the list via a signal.
    */
-  updateWriters(writers: IUser[]): void {
+  updateWriters(writers: IChatModel.IWriter[]): void {
     this._writersChanged.emit(writers);
   }
 
@@ -616,12 +653,17 @@ export abstract class AbstractChatModel implements IChatModel {
   private _activeCellManager: IActiveCellManager | null;
   private _selectionWatcher: ISelectionWatcher | null;
   private _documentManager: IDocumentManager | null;
+  private _messageEdition: IChatModel.IMessageEdition | null = null;
   private _notificationId: string | null = null;
   private _messagesUpdated = new Signal<IChatModel, void>(this);
   private _configChanged = new Signal<IChatModel, IConfig>(this);
   private _unreadChanged = new Signal<IChatModel, number[]>(this);
   private _viewportChanged = new Signal<IChatModel, number[]>(this);
-  private _writersChanged = new Signal<IChatModel, IUser[]>(this);
+  private _writersChanged = new Signal<IChatModel, IChatModel.IWriter[]>(this);
+  private _messageEditionChanged = new Signal<
+    IChatModel,
+    IChatModel.IMessageEdition | null
+  >(this);
 }
 
 /**
@@ -661,6 +703,34 @@ export namespace IChatModel {
      * Document manager.
      */
     documentManager?: IDocumentManager | null;
+  }
+
+  /**
+   * Representation of a message edition.
+   */
+  export interface IMessageEdition {
+    /**
+     * The id of the edited message.
+     */
+    id: string;
+    /**
+     * The model of the input editing the message.
+     */
+    model: IInputModel;
+  }
+
+  /**
+   * Writer interface, including the message ID if the writer is editing a message.
+   */
+  export interface IWriter {
+    /**
+     * The user currently writing.
+     */
+    user: IUser;
+    /**
+     * The message ID (optional)
+     */
+    messageID?: string;
   }
 }
 
