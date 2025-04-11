@@ -96,7 +96,10 @@ def bump(force, skip_if_dirty, spec):
                 f" expected __version__ assignment in the first line, found {variable}"
             )
         current = current.strip("'\"")
-        version_spec = increment_version(current, spec)
+        if spec in VERSION_SPEC:
+            version_spec = increment_version(current, spec)
+        else:
+            version_spec = spec
         version_file.write_text(f'__version__ = "{version_spec}"\n')
 
     # bump the local package.json file
