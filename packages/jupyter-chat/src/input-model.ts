@@ -147,6 +147,11 @@ export interface IInputModel extends IDisposable {
    * Clear mentions list.
    */
   clearMentions(): void;
+
+  /**
+   * A signal emitting when disposing of the model.
+   */
+  readonly onDispose: ISignal<InputModel, void>;
 }
 
 /**
@@ -411,7 +416,15 @@ export class InputModel implements IInputModel {
     if (this.isDisposed) {
       return;
     }
+    this._onDispose.emit();
     this._isDisposed = true;
+  }
+
+  /**
+   * A signal emitting when disposing of the model.
+   */
+  get onDispose(): ISignal<InputModel, void> {
+    return this._onDispose;
   }
 
   /**
@@ -438,6 +451,7 @@ export class InputModel implements IInputModel {
   private _configChanged = new Signal<IInputModel, InputModel.IConfig>(this);
   private _focusInputSignal = new Signal<InputModel, void>(this);
   private _attachmentsChanged = new Signal<InputModel, IAttachment[]>(this);
+  private _onDispose = new Signal<InputModel, void>(this);
   private _isDisposed = false;
 }
 
