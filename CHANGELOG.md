@@ -2,6 +2,35 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.10.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.9.0...c713dba7549b8ea829621b02e3cb838bfefb5fbb))
+
+### Enhancements made
+
+- Mention users in messages (using @) [#190](https://github.com/jupyterlab/jupyter-chat/pull/190) ([@brichet](https://github.com/brichet))
+
+### Bugs fixed
+
+- Fix the toolbar registry for main area chat [#206](https://github.com/jupyterlab/jupyter-chat/pull/206) ([@brichet](https://github.com/brichet))
+- Fix the attachments on message edition and on python Message model [#200](https://github.com/jupyterlab/jupyter-chat/pull/200) ([@brichet](https://github.com/brichet))
+- Fix duplication after message edition [#194](https://github.com/jupyterlab/jupyter-chat/pull/194) ([@brichet](https://github.com/brichet))
+
+### Maintenance and upkeep improvements
+
+- Fix \_version.py file version bump [#207](https://github.com/jupyterlab/jupyter-chat/pull/207) ([@brichet](https://github.com/brichet))
+- Fix the wrong version of python package [#205](https://github.com/jupyterlab/jupyter-chat/pull/205) ([@brichet](https://github.com/brichet))
+- Abstract ChatModel class [#197](https://github.com/jupyterlab/jupyter-chat/pull/197) ([@brichet](https://github.com/brichet))
+- Move jupyterlab-chat-extension to packages directory [#196](https://github.com/jupyterlab/jupyter-chat/pull/196) ([@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2025-03-31&to=2025-04-11&type=c))
+
+[@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2025-03-31..2025-04-11&type=Issues) | [@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2025-03-31..2025-04-11&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2025-03-31..2025-04-11&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.9.0
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.8.1...e182c03aa81119250818bf78da9d932a74f9cef4))
@@ -27,8 +56,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2025-03-11&to=2025-03-28&type=c))
 
 [@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2025-03-11..2025-03-28&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adependabot+updated%3A2025-03-11..2025-03-28&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2025-03-11..2025-03-28&type=Issues) | [@keerthi-swarna](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Akeerthi-swarna+updated%3A2025-03-11..2025-03-28&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.8.1
 
