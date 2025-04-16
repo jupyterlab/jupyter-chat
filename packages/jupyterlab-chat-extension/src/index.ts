@@ -7,11 +7,13 @@ import { NotebookShell } from '@jupyter-notebook/application';
 import {
   ActiveCellManager,
   AttachmentOpenerRegistry,
+  ChatFooterRegistry,
   ChatWidget,
   IActiveCellManager,
   IAttachment,
   IAttachmentOpenerRegistry,
   IChatCommandRegistry,
+  IChatFooterRegistry,
   ISelectionWatcher,
   InputToolbarRegistry,
   SelectionWatcher,
@@ -111,6 +113,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     IActiveCellManagerToken,
     IAttachmentOpenerRegistry,
     IChatCommandRegistry,
+    IChatFooterRegistry,
     ICollaborativeDrive,
     IDefaultFileBrowser,
     IInputToolbarRegistryFactory,
@@ -128,6 +131,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     activeCellManager: IActiveCellManager | null,
     attachmentOpenerRegistry: IAttachmentOpenerRegistry,
     chatCommandRegistry: IChatCommandRegistry,
+    chatFooterRegistry: IChatFooterRegistry,
     drive: ICollaborativeDrive | null,
     filebrowser: IDefaultFileBrowser | null,
     inputToolbarFactory: IInputToolbarRegistryFactory,
@@ -301,7 +305,8 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
       translator,
       chatCommandRegistry,
       attachmentOpenerRegistry,
-      inputToolbarFactory
+      inputToolbarFactory,
+      chatFooterRegistry
     });
 
     // Add the widget to the tracker when it's created
@@ -663,6 +668,7 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
   optional: [
     IAttachmentOpenerRegistry,
     IChatCommandRegistry,
+    IChatFooterRegistry,
     IInputToolbarRegistryFactory,
     ILayoutRestorer,
     IThemeManager
@@ -674,6 +680,7 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
     rmRegistry: IRenderMimeRegistry,
     attachmentOpenerRegistry: IAttachmentOpenerRegistry,
     chatCommandRegistry: IChatCommandRegistry,
+    chatFooterRegistry: IChatFooterRegistry,
     inputToolbarFactory: IInputToolbarRegistryFactory,
     restorer: ILayoutRestorer | null,
     themeManager: IThemeManager | null
@@ -693,7 +700,8 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
       defaultDirectory,
       chatCommandRegistry,
       attachmentOpenerRegistry,
-      inputToolbarFactory
+      inputToolbarFactory,
+      chatFooterRegistry
     });
     chatPanel.id = 'JupyterlabChat:sidepanel';
     chatPanel.title.icon = chatIcon;
@@ -818,6 +826,19 @@ const inputToolbarFactory: JupyterFrontEndPlugin<IInputToolbarRegistryFactory> =
     }
   };
 
+/**
+ * Extension providing the message footer registry.
+ */
+const footerRegistry: JupyterFrontEndPlugin<IChatFooterRegistry> = {
+  id: 'jupyterlab-chat/footerRegistry',
+  description: 'The footer registry plugin.',
+  autoStart: true,
+  provides: IChatFooterRegistry,
+  activate: (app: JupyterFrontEnd): IChatFooterRegistry => {
+    return new ChatFooterRegistry();
+  }
+};
+
 export default [
   activeCellManager,
   attachmentOpeners,
@@ -825,6 +846,7 @@ export default [
   chatCommandRegistryPlugin,
   chatPanel,
   docFactories,
+  footerRegistry,
   inputToolbarFactory,
   selectionWatcher,
   emojiCommandsPlugin,
