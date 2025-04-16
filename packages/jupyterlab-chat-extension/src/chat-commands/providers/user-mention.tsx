@@ -54,7 +54,7 @@ class MentionCommandProvider implements IChatCommandProvider {
     // Build the commands for each user.
     const commands: ChatCommand[] = Array.from(this._users)
       .sort()
-      .filter(user => user[0].startsWith(match))
+      .filter(user => user[0].toLowerCase().startsWith(match.toLowerCase()))
       .map(user => {
         return {
           name: user[0],
