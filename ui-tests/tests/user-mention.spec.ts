@@ -124,4 +124,24 @@ test.describe('#collaborator-mention', () => {
       );
     }
   });
+
+  test('should not be case sensitive', async ({ page }) => {
+    const chatPanel = await openChat(page, FILENAME);
+
+    // Send a message from guest.
+    await sendMessage(guestPage, FILENAME, 'test');
+
+    const input = chatPanel
+      .locator('.jp-chat-input-container')
+      .getByRole('combobox');
+    const chatCommandName = page.locator('.jp-chat-command-name');
+
+    await input.pressSequentially('@JO');
+    await expect(chatCommandName).toHaveCount(2);
+    for (let i = 0; i < (await chatCommandName.count()); i++) {
+      expect(['@jovyan', '@jovyan_2']).toContain(
+        await chatCommandName.nth(i).textContent()
+      );
+    }
+  });
 });
