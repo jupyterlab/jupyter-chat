@@ -17,7 +17,7 @@ import { ChatMessages } from './chat-messages';
 import { ChatInput } from './chat-input';
 import { IInputToolbarRegistry, InputToolbarRegistry } from './input';
 import { AttachmentOpenerContext } from '../context';
-import { IChatFooterRegistry } from '../footers';
+import { IMessageFooterRegistry } from '../footers';
 import { IChatModel } from '../model';
 import { IAttachmentOpenerRegistry } from '../registry';
 
@@ -35,7 +35,7 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
         model={model}
         chatCommandRegistry={props.chatCommandRegistry}
         inputToolbarRegistry={inputToolbarRegistry}
-        chatFooterRegistry={props.chatFooterRegistry}
+        messageFooterRegistry={props.messageFooterRegistry}
       />
       <ChatInput
         sx={{
@@ -130,7 +130,7 @@ export namespace Chat {
     /**
      * The footer registry.
      */
-    chatFooterRegistry?: IChatFooterRegistry;
+    messageFooterRegistry?: IMessageFooterRegistry;
   }
 
   /**

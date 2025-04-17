@@ -4,31 +4,32 @@
  */
 
 import { Token } from '@lumino/coreutils';
-import { Footers, IChatMessageFooter } from './types';
+import { MessageFooter, MessageFooterSection } from './types';
 
 /**
  * The interface of a registry to provide chat footer.
  */
-export interface IChatFooterRegistry {
+export interface IMessageFooterRegistry {
   /**
-   * Get the footer from the registry.
+   * Get the message footer.
    */
-  get(): Footers;
+  getFooter(): MessageFooter;
   /**
-   * Add a message footer.
-   * If several extension add footers, only the last one will be displayed.
+   * Add a message footer section.
+   * If multiple labextensions add a section in the same region, only
+   * the last one will be displayed.
    */
-  add(footer: IChatMessageFooter): void;
+  addSection(section: MessageFooterSection): void;
 }
 
 /**
- * The default implementation of the chat footer registry.
+ * The default implementation of the message footer registry.
  */
-export class ChatFooterRegistry implements IChatFooterRegistry {
+export class MessageFooterRegistry implements IMessageFooterRegistry {
   /**
    * Get the footer from the registry.
    */
-  get(): Footers {
+  getFooter(): MessageFooter {
     return this._footers;
   }
 
@@ -36,16 +37,16 @@ export class ChatFooterRegistry implements IChatFooterRegistry {
    * Add a message footer.
    * If several extension add footers, only the last one will be displayed.
    */
-  add(footer: IChatMessageFooter): void {
+  addSection(footer: MessageFooterSection): void {
     this._footers[footer.position] = footer;
   }
 
-  private _footers: Footers = {};
+  private _footers: MessageFooter = {};
 }
 
 /**
  * The token providing the chat footer registry.
  */
-export const IChatFooterRegistry = new Token<IChatFooterRegistry>(
+export const IMessageFooterRegistry = new Token<IMessageFooterRegistry>(
   '@jupyter/chat:ChatFooterRegistry'
 );

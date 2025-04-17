@@ -7,9 +7,9 @@ import {
   ChatWidget,
   IAttachmentOpenerRegistry,
   IChatCommandRegistry,
-  IChatFooterRegistry,
   IChatModel,
   IInputToolbarRegistry,
+  IMessageFooterRegistry,
   readIcon
 } from '@jupyter/chat';
 import { ICollaborativeDrive } from '@jupyter/collaborative-drive';
@@ -112,7 +112,7 @@ export class ChatPanel extends SidePanel {
     this._chatCommandRegistry = options.chatCommandRegistry;
     this._attachmentOpenerRegistry = options.attachmentOpenerRegistry;
     this._inputToolbarFactory = options.inputToolbarFactory;
-    this._chatFooterRegistry = options.chatFooterRegistry;
+    this._messageFooterRegistry = options.messageFooterRegistry;
 
     const addChat = new CommandToolbarButton({
       commands: this._commands,
@@ -183,7 +183,7 @@ export class ChatPanel extends SidePanel {
       chatCommandRegistry: this._chatCommandRegistry,
       attachmentOpenerRegistry: this._attachmentOpenerRegistry,
       inputToolbarRegistry,
-      chatFooterRegistry: this._chatFooterRegistry
+      messageFooterRegistry: this._messageFooterRegistry
     });
 
     this.addWidget(
@@ -305,7 +305,7 @@ export class ChatPanel extends SidePanel {
   private _chatCommandRegistry?: IChatCommandRegistry;
   private _attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
   private _inputToolbarFactory?: IInputToolbarRegistryFactory;
-  private _chatFooterRegistry?: IChatFooterRegistry;
+  private _messageFooterRegistry?: IMessageFooterRegistry;
 }
 
 /**
@@ -324,7 +324,7 @@ export namespace ChatPanel {
     chatCommandRegistry?: IChatCommandRegistry;
     attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
     inputToolbarFactory?: IInputToolbarRegistryFactory;
-    chatFooterRegistry?: IChatFooterRegistry;
+    messageFooterRegistry?: IMessageFooterRegistry;
   }
 }
 

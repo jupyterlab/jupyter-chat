@@ -20,10 +20,10 @@ import { AttachmentPreviewList } from './attachments';
 import { ChatInput } from './chat-input';
 import { IInputToolbarRegistry } from './input';
 import { MarkdownRenderer } from './markdown-renderer';
-import { ChatFooters } from './messages/footer';
+import { MessageFooter } from './messages/footer';
 import { ScrollContainer } from './scroll-container';
 import { IChatCommandRegistry } from '../chat-commands';
-import { IChatFooterRegistry } from '../footers';
+import { IMessageFooterRegistry } from '../footers';
 import { IInputModel, InputModel } from '../input-model';
 import { IChatModel } from '../model';
 import { IChatMessage, IUser } from '../types';
@@ -63,7 +63,7 @@ type BaseMessageProps = {
   /**
    * The footer registry.
    */
-  chatFooterRegistry?: IChatFooterRegistry;
+  messageFooterRegistry?: IMessageFooterRegistry;
 };
 
 /**
@@ -204,9 +204,9 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
                   renderedPromise={renderedPromise.current[i]}
                   ref={el => (listRef.current[i] = el)}
                 />
-                {props.chatFooterRegistry && (
-                  <ChatFooters
-                    registry={props.chatFooterRegistry}
+                {props.messageFooterRegistry && (
+                  <MessageFooter
+                    registry={props.messageFooterRegistry}
                     message={message}
                     model={model}
                   />

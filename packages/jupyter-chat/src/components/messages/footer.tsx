@@ -5,40 +5,43 @@
 
 import { Box } from '@mui/material';
 import React from 'react';
-import { IChatMessageFooterProps, IChatFooterRegistry } from '../../footers';
+import {
+  IMessageFooterRegistry,
+  MessageFooterSectionProps
+} from '../../footers';
 
 /**
  * The chat footer component properties.
  */
-export interface IChatFootersProps extends IChatMessageFooterProps {
+export interface IMessageFootersProps extends MessageFooterSectionProps {
   /**
    * The chat footer registry.
    */
-  registry: IChatFooterRegistry;
+  registry: IMessageFooterRegistry;
 }
 
 /**
  * The chat footer component, which displays footer components on a row according to
  * their respective positions.
  */
-export function ChatFooters(props: IChatFootersProps): JSX.Element {
+export function MessageFooter(props: IMessageFootersProps): JSX.Element {
   const { message, model, registry } = props;
-  const footers = registry.get();
+  const footer = registry.getFooter();
 
   return (
     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-      {footers.left?.component ? (
-        <footers.left.component message={message} model={model} />
+      {footer.left?.component ? (
+        <footer.left.component message={message} model={model} />
       ) : (
         <div />
       )}
-      {footers.center?.component ? (
-        <footers.center.component message={message} model={model} />
+      {footer.center?.component ? (
+        <footer.center.component message={message} model={model} />
       ) : (
         <div />
       )}
-      {footers.right?.component ? (
-        <footers.right.component message={message} model={model} />
+      {footer.right?.component ? (
+        <footer.right.component message={message} model={model} />
       ) : (
         <div />
       )}

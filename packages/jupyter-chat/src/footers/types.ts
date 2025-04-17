@@ -7,26 +7,27 @@ import { IChatModel } from '../model';
 import { IChatMessage } from '../types';
 
 /**
- * The properties sent to any footer component.
+ * The props sent passed to each `MessageFooterSection` React component.
  */
-export interface IChatMessageFooterProps {
+export type MessageFooterSectionProps = {
   model: IChatModel;
   message: IChatMessage;
-}
+};
 
 /**
- * The chat footer added to the registry.
+ * A message footer section which can be added to the footer registry.
  */
-export interface IChatMessageFooter {
-  component: React.FC<IChatMessageFooterProps>;
+export type MessageFooterSection = {
+  component: React.FC<MessageFooterSectionProps>;
   position: 'left' | 'center' | 'right';
-}
+};
 
 /**
- * The footers returned by the registry.
+ * The message footer returned by the registry, composed of 'left', 'center',
+ * and 'right' sections.
  */
-export type Footers = {
-  left?: IChatMessageFooter;
-  center?: IChatMessageFooter;
-  right?: IChatMessageFooter;
+export type MessageFooter = {
+  left?: MessageFooterSection;
+  center?: MessageFooterSection;
+  right?: MessageFooterSection;
 };
