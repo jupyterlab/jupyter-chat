@@ -45,11 +45,6 @@ export interface IChatModel extends IDisposable {
   messagesInViewport?: number[];
 
   /**
-   * The input model of the current message in edition (null if no message are edited).
-   */
-  messageEdition: IChatModel.IMessageEdition | null;
-
-  /**
    * The user connected to the chat panel.
    */
   readonly user?: IUser;
@@ -107,10 +102,7 @@ export interface IChatModel extends IDisposable {
   /**
    * A signal emitting when the message edition input changed change.
    */
-  readonly messageEditionChanged: ISignal<
-    IChatModel,
-    IChatModel.IMessageEdition | null
-  >;
+  readonly messageEditionAdded: ISignal<IChatModel, IChatModel.IMessageEdition>;
 
   /**
    * Send a message, to be defined depending on the chosen technology.
@@ -191,6 +183,16 @@ export interface IChatModel extends IDisposable {
    * Create the chat context that will be passed to the input model.
    */
   createChatContext(): IChatContext;
+
+  /**
+   * Get the input model of the edited message, given its id.
+   */
+  getEditionModel(messageID: string): IInputModel | undefined;
+
+  /**
+   * Add an input model of the edited message.
+   */
+  addEditionModel(messageID: string, inputModel: IInputModel): void;
 }
 
 /**
@@ -401,20 +403,6 @@ export abstract class AbstractChatModel implements IChatModel {
   }
 
   /**
-   * The input model of the current message in edition (null if no message are edited).
-   */
-  get messageEdition(): IChatModel.IMessageEdition | null {
-    return this._messageEdition;
-  }
-  set messageEdition(editionModel: IChatModel.IMessageEdition | null) {
-    if (this._messageEdition) {
-      this._messageEdition.model.dispose();
-    }
-    this._messageEdition = editionModel;
-    this._messageEditionChanged.emit(this._messageEdition);
-  }
-
-  /**
    * A signal emitting when the messages list is updated.
    */
   get messagesUpdated(): ISignal<IChatModel, void> {
@@ -452,11 +440,8 @@ export abstract class AbstractChatModel implements IChatModel {
   /**
    * A signal emitting when the message edition input changed change.
    */
-  get messageEditionChanged(): ISignal<
-    IChatModel,
-    IChatModel.IMessageEdition | null
-  > {
-    return this._messageEditionChanged;
+  get messageEditionAdded(): ISignal<IChatModel, IChatModel.IMessageEdition> {
+    return this._messageEditionAdded;
   }
 
   /**
@@ -593,6 +578,28 @@ export abstract class AbstractChatModel implements IChatModel {
   abstract createChatContext(): IChatContext;
 
   /**
+   * Get the input model of the edited message, given its id.
+   */
+  getEditionModel(messageID: string): IInputModel | undefined {
+    return this._messageEditions.get(messageID);
+  }
+
+  /**
+   * Add an input model of the edited message.
+   */
+  addEditionModel(messageID: string, inputModel: IInputModel): void {
+    if (this.getEditionModel(messageID)) {
+      this.getEditionModel(messageID)?.dispose();
+    }
+    this._messageEditions.set(messageID, inputModel);
+    this._messageEditionAdded.emit({ id: messageID, model: inputModel });
+
+    inputModel.onDisposed.connect(() => {
+      this._messageEditions.delete(messageID);
+    });
+  }
+
+  /**
    * Add unread messages to the list.
    * @param indexes - list of new indexes.
    */
@@ -653,16 +660,16 @@ export abstract class AbstractChatModel implements IChatModel {
   private _activeCellManager: IActiveCellManager | null;
   private _selectionWatcher: ISelectionWatcher | null;
   private _documentManager: IDocumentManager | null;
-  private _messageEdition: IChatModel.IMessageEdition | null = null;
   private _notificationId: string | null = null;
+  private _messageEditions = new Map<string, IInputModel>();
   private _messagesUpdated = new Signal<IChatModel, void>(this);
   private _configChanged = new Signal<IChatModel, IConfig>(this);
   private _unreadChanged = new Signal<IChatModel, number[]>(this);
   private _viewportChanged = new Signal<IChatModel, number[]>(this);
   private _writersChanged = new Signal<IChatModel, IChatModel.IWriter[]>(this);
-  private _messageEditionChanged = new Signal<
+  private _messageEditionAdded = new Signal<
     IChatModel,
-    IChatModel.IMessageEdition | null
+    IChatModel.IMessageEdition
   >(this);
 }
 

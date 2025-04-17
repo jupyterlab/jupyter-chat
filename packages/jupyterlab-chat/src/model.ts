@@ -68,7 +68,7 @@ export class LabChatModel
     this.sharedModel.awareness.on('change', this.onAwarenessChange);
 
     this.input.valueChanged.connect((_, value) => this.onInputChanged(value));
-    this.messageEditionChanged.connect(this.onMessageEditionChanged);
+    this.messageEditionAdded.connect(this.onMessageEditionAdded);
   }
 
   readonly collaborative = true;
@@ -279,9 +279,9 @@ export class LabChatModel
   /**
    * Listen to the message edition input.
    */
-  onMessageEditionChanged = (
+  onMessageEditionAdded = (
     _: IChatModel,
-    edition: IChatModel.IMessageEdition | null
+    edition: IChatModel.IMessageEdition
   ) => {
     if (edition !== null) {
       const _onInputChanged = (_: IInputModel, value: string) => {
@@ -289,9 +289,6 @@ export class LabChatModel
       };
 
       edition.model.valueChanged.connect(_onInputChanged);
-      edition.model.onDispose.connect(() =>
-        edition.model.valueChanged.disconnect(_onInputChanged)
-      );
     }
   };
 
