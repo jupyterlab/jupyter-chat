@@ -2,6 +2,22 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.10.1
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.10.0...171ebfaef4e88a2e3e0ccef6016500119f4a2155))
+
+### Bugs fixed
+
+- Fix case-sensitivity in user mention commands [#211](https://github.com/jupyterlab/jupyter-chat/pull/211) ([@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2025-04-11&to=2025-04-17&type=c))
+
+[@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2025-04-11..2025-04-17&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2025-04-11..2025-04-17&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.10.0
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.9.0...c713dba7549b8ea829621b02e3cb838bfefb5fbb))
@@ -28,8 +44,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2025-03-31&to=2025-04-11&type=c))
 
 [@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2025-03-31..2025-04-11&type=Issues) | [@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2025-03-31..2025-04-11&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2025-03-31..2025-04-11&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.9.0
 

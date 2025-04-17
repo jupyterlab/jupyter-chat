@@ -2494,7 +2494,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyter/chat@^0.10.0, @jupyter/chat@workspace:packages/jupyter-chat":
+"@jupyter/chat@^0.10.1, @jupyter/chat@workspace:packages/jupyter-chat":
   version: 0.0.0-use.local
   resolution: "@jupyter/chat@workspace:packages/jupyter-chat"
   dependencies:
@@ -10058,7 +10058,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "jupyter-chat-example@workspace:docs/jupyter-chat-example"
   dependencies:
-    "@jupyter/chat": ^0.10.0
+    "@jupyter/chat": ^0.10.1
     "@jupyterlab/application": ^4.2.0
     "@jupyterlab/apputils": ^4.3.0
     "@jupyterlab/builder": ^4.2.0
@@ -10128,7 +10128,7 @@ __metadata:
     "@types/react": ^18.2.0
     "@types/react-addons-linked-state-mixin": ^0.14.22
     css-loader: ^6.7.1
-    jupyterlab-chat: ^0.10.0
+    jupyterlab-chat: ^0.10.1
     mkdirp: ^1.0.3
     npm-run-all: ^4.1.5
     react: ^18.2.0
@@ -10141,11 +10141,11 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"jupyterlab-chat@^0.10.0, jupyterlab-chat@workspace:packages/jupyterlab-chat":
+"jupyterlab-chat@^0.10.1, jupyterlab-chat@workspace:packages/jupyterlab-chat":
   version: 0.0.0-use.local
   resolution: "jupyterlab-chat@workspace:packages/jupyterlab-chat"
   dependencies:
-    "@jupyter/chat": ^0.10.0
+    "@jupyter/chat": ^0.10.1
     "@jupyter/collaborative-drive": ^3.0.0
     "@jupyter/ydoc": ^2.0.0 || ^3.0.0
     "@jupyterlab/application": ^4.2.0
