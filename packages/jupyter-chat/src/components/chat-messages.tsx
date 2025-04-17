@@ -388,32 +388,9 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
         setCanEdit(false);
         setCanDelete(false);
       }
-
-      // Update canEdit state (only one message can be edited)
-      const updateCanEdit = (
-        _: IChatModel,
-        edition: IChatModel.IMessageEdition | null
-      ) => {
-        if (
-          !message.deleted &&
-          model.user?.username === message.sender.username
-        ) {
-          if (edition === null || edition.id === message.id) {
-            setCanEdit(true);
-          } else {
-            setCanEdit(false);
-          }
-        } else {
-          setCanEdit(false);
-        }
-      };
-      model.messageEditionChanged.connect(updateCanEdit);
-
-      return () => {
-        model.messageEditionChanged.disconnect(updateCanEdit);
-      };
     }, [model, message]);
 
+    // Create an input model only if the message is edited.
     const startEdition = (): void => {
       if (!canEdit) {
         return;
@@ -437,14 +414,13 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
         attachments: message.attachments,
         mentions: message.mentions
       });
-      model.messageEdition = { id: message.id, model: inputModel };
+      model.addEditionModel(message.id, inputModel);
       setEdit(true);
     };
 
     // Cancel the current edition of the message.
     const cancelEdition = (): void => {
-      model.messageEdition?.model.dispose();
-      model.messageEdition = null;
+      model.getEditionModel(message.id)?.dispose();
       setEdit(false);
     };
 
@@ -479,10 +455,10 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
       <div ref={ref} data-index={props.index}></div>
     ) : (
       <div ref={ref} data-index={props.index}>
-        {edit && canEdit && model.messageEdition ? (
+        {edit && canEdit && model.getEditionModel(message.id) ? (
           <ChatInput
             onCancel={() => cancelEdition()}
-            model={model.messageEdition.model}
+            model={model.getEditionModel(message.id)!}
             chatCommandRegistry={props.chatCommandRegistry}
             toolbarRegistry={props.inputToolbarRegistry}
           />
