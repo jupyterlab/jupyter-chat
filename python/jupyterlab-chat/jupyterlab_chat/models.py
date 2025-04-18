@@ -78,6 +78,9 @@ class User(JupyterUser):
     mention_name: Optional[str] = None
     """ The string to use as mention in chat """
 
+    bot: Optional[bool] = None
+    """ Boolean identifying if user is a bot """
+
 
 @dataclass
 class Attachment:
