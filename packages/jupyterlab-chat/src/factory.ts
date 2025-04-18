@@ -9,6 +9,7 @@ import {
   IAttachmentOpenerRegistry,
   IChatCommandRegistry,
   IInputToolbarRegistry,
+  IMessageFooterRegistry,
   ISelectionWatcher
 } from '@jupyter/chat';
 import { IThemeManager } from '@jupyterlab/apputils';
@@ -84,6 +85,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
     this._chatCommandRegistry = options.chatCommandRegistry;
     this._attachmentOpenerRegistry = options.attachmentOpenerRegistry;
     this._inputToolbarFactory = options.inputToolbarFactory;
+    this._messageFooterRegistry = options.messageFooterRegistry;
   }
 
   /**
@@ -97,6 +99,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
     context.themeManager = this._themeManager;
     context.chatCommandRegistry = this._chatCommandRegistry;
     context.attachmentOpenerRegistry = this._attachmentOpenerRegistry;
+    context.messageFooterRegistry = this._messageFooterRegistry;
     if (this._inputToolbarFactory) {
       context.inputToolbarRegistry = this._inputToolbarFactory.create();
     }
@@ -111,6 +114,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
   private _chatCommandRegistry?: IChatCommandRegistry;
   private _attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
   private _inputToolbarFactory?: IInputToolbarRegistryFactory;
+  private _messageFooterRegistry?: IMessageFooterRegistry;
 }
 
 export namespace ChatWidgetFactory {
@@ -121,6 +125,7 @@ export namespace ChatWidgetFactory {
     chatCommandRegistry?: IChatCommandRegistry;
     attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
     inputToolbarRegistry?: IInputToolbarRegistry;
+    messageFooterRegistry?: IMessageFooterRegistry;
   }
 
   export interface IOptions<T extends LabChatPanel>
@@ -130,6 +135,7 @@ export namespace ChatWidgetFactory {
     chatCommandRegistry?: IChatCommandRegistry;
     attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
     inputToolbarFactory?: IInputToolbarRegistryFactory;
+    messageFooterRegistry?: IMessageFooterRegistry;
   }
 }
 

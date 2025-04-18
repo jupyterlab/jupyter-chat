@@ -6,6 +6,7 @@
 export * from './active-cell-manager';
 export * from './chat-commands';
 export * from './components';
+export * from './footers';
 export * from './icons';
 export * from './input-model';
 export * from './model';
