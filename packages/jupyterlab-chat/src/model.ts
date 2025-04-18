@@ -67,7 +67,8 @@ export class LabChatModel
 
     this.sharedModel.awareness.on('change', this.onAwarenessChange);
 
-    this.input.valueChanged.connect(this.onInputChanged);
+    this.input.valueChanged.connect((_, value) => this.onInputChanged(value));
+    this.messageEditionAdded.connect(this.onMessageEditionAdded);
   }
 
   readonly collaborative = true;
@@ -261,7 +262,7 @@ export class LabChatModel
   /**
    * Function called by the input on key pressed.
    */
-  onInputChanged = (_: IInputModel, value: string): void => {
+  onInputChanged = (value: string, messageID?: string): void => {
     if (!value || !this.config.sendTypingNotification) {
       return;
     }
@@ -269,10 +270,26 @@ export class LabChatModel
     if (this._timeoutWriting !== null) {
       window.clearTimeout(this._timeoutWriting);
     }
-    awareness.setLocalStateField('isWriting', true);
+    awareness.setLocalStateField('isWriting', messageID ?? true);
     this._timeoutWriting = window.setTimeout(() => {
       this._resetWritingStatus();
     }, WRITING_DELAY);
+  };
+
+  /**
+   * Listen to the message edition input.
+   */
+  onMessageEditionAdded = (
+    _: IChatModel,
+    edition: IChatModel.IMessageEdition
+  ) => {
+    if (edition !== null) {
+      const _onInputChanged = (_: IInputModel, value: string) => {
+        this.onInputChanged(value, edition.id);
+      };
+
+      edition.model.valueChanged.connect(_onInputChanged);
+    }
   };
 
   /**
@@ -280,7 +297,7 @@ export class LabChatModel
    * Used to populate the writers list.
    */
   onAwarenessChange = () => {
-    const writers: IUser[] = [];
+    const writers: IChatModel.IWriter[] = [];
     const states = this.sharedModel.awareness.getStates();
     for (const stateID of states.keys()) {
       const state = states.get(stateID);
@@ -288,7 +305,11 @@ export class LabChatModel
         continue;
       }
       if (state.isWriting) {
-        writers.push(state.user);
+        const writer: IChatModel.IWriter = {
+          user: state.user,
+          messageID: state.isWriting === true ? undefined : state.isWriting
+        };
+        writers.push(writer);
       }
     }
     this.updateWriters(writers);
