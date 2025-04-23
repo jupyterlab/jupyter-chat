@@ -17,6 +17,10 @@ export interface IUser {
    * The string to use to mention a user in the chat.
    */
   mention_name?: string;
+  /**
+   * Boolean identifying if user is a bot.
+   */
+  bot?: boolean;
 }
 
 /**

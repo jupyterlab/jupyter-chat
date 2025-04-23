@@ -379,6 +379,10 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
         if (model.user.username === message.sender.username) {
           setCanEdit(model.updateMessage !== undefined);
           setCanDelete(model.deleteMessage !== undefined);
+          return;
+        }
+        if (message.sender.bot) {
+          setCanDelete(model.deleteMessage !== undefined);
         }
       } else {
         setCanEdit(false);
