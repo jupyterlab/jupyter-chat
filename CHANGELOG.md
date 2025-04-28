@@ -2,6 +2,23 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.11.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.10.1...1a3d91843e9ae70147b0d92158126002068661b6))
+
+### Enhancements made
+
+- Allow Users to delete messages if sender is a bot, add optional `bot` bool to user models [#214](https://github.com/jupyterlab/jupyter-chat/pull/214) ([@andrii-i](https://github.com/andrii-i))
+- Add a message footer registry, to allow extensions to provides their footers [#210](https://github.com/jupyterlab/jupyter-chat/pull/210) ([@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2025-04-17&to=2025-04-28&type=c))
+
+[@andrii-i](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Aandrii-i+updated%3A2025-04-17..2025-04-28&type=Issues) | [@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2025-04-17..2025-04-28&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2025-04-17..2025-04-28&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.10.1
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.10.0...171ebfaef4e88a2e3e0ccef6016500119f4a2155))
@@ -15,8 +32,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2025-04-11&to=2025-04-17&type=c))
 
 [@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2025-04-11..2025-04-17&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2025-04-11..2025-04-17&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.10.0
 
