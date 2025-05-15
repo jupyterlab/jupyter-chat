@@ -439,6 +439,7 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
       updatedMessage.attachments = inputModel.attachments;
       updatedMessage.mentions = inputModel.mentions;
       model.updateMessage!(id, updatedMessage);
+      model.getEditionModel(message.id)?.dispose();
       setEdit(false);
     };
 

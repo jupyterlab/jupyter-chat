@@ -588,9 +588,9 @@ export abstract class AbstractChatModel implements IChatModel {
    * Add an input model of the edited message.
    */
   addEditionModel(messageID: string, inputModel: IInputModel): void {
-    if (this.getEditionModel(messageID)) {
-      this.getEditionModel(messageID)?.dispose();
-    }
+    // Dispose of an hypothetic previous model for this message.
+    this.getEditionModel(messageID)?.dispose();
+
     this._messageEditions.set(messageID, inputModel);
     this._messageEditionAdded.emit({ id: messageID, model: inputModel });
 
