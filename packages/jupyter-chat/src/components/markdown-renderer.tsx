@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
+import { IRenderMime, IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { PromiseDelegate } from '@lumino/coreutils';
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
@@ -12,10 +12,67 @@ import { CodeToolbar, CodeToolbarProps } from './code-blocks/code-toolbar';
 import { MessageToolbar } from './toolbar';
 import { IChatModel } from '../model';
 
-const MD_MIME_TYPE = 'text/markdown';
-const MD_RENDERED_CLASS = 'jp-chat-rendered-markdown';
+export const MD_RENDERED_CLASS = 'jp-chat-rendered-markdown';
+export const MD_MIME_TYPE = 'text/markdown';
 
-type MarkdownRendererProps = {
+/**
+ * A namespace for the MarkdownRenderer.
+ */
+export namespace MarkdownRenderer {
+  /**
+   * A generic function to render a markdown string into a DOM element.
+   *
+   * @param content - the markdown content.
+   * @param rmRegistry - the rendermime registry.
+   * @returns a promise that resolves to the renderer.
+   */
+  export async function renderContent(
+    content: string,
+    rmRegistry: IRenderMimeRegistry
+  ): Promise<IRenderMime.IRenderer> {
+    // initialize mime model
+    const mdStr = escapeLatexDelimiters(content);
+    const model = rmRegistry.createModel({
+      data: { [MD_MIME_TYPE]: mdStr }
+    });
+
+    const renderer = rmRegistry.createRenderer(MD_MIME_TYPE);
+
+    // step 1: render markdown
+    await renderer.renderModel(model);
+    if (!renderer.node) {
+      throw new Error(
+        'Rendermime was unable to render Markdown content within a chat message. Please report this upstream to Jupyter chat on GitHub.'
+      );
+    }
+
+    // step 2: render LaTeX via MathJax.
+    rmRegistry.latexTypesetter?.typeset(renderer.node);
+
+    return renderer;
+  }
+
+  /**
+   * Escapes backslashes in LaTeX delimiters such that they appear in the DOM
+   * after the initial MarkDown render. For example, this function takes '\(` and
+   * returns `\\(`.
+   *
+   * Required for proper rendering of MarkDown + LaTeX markup in the chat by
+   * `ILatexTypesetter`.
+   */
+  export function escapeLatexDelimiters(text: string) {
+    return text
+      .replace(/\\\(/g, '\\\\(')
+      .replace(/\\\)/g, '\\\\)')
+      .replace(/\\\[/g, '\\\\[')
+      .replace(/\\\]/g, '\\\\]');
+  }
+}
+
+/**
+ * The type of the props for the MessageRenderer component.
+ */
+type MessageRendererProps = {
   /**
    * The string to render.
    */
@@ -47,22 +104,9 @@ type MarkdownRendererProps = {
 };
 
 /**
- * Escapes backslashes in LaTeX delimiters such that they appear in the DOM
- * after the initial MarkDown render. For example, this function takes '\(` and
- * returns `\\(`.
- *
- * Required for proper rendering of MarkDown + LaTeX markup in the chat by
- * `ILatexTypesetter`.
+ * The message renderer base component.
  */
-function escapeLatexDelimiters(text: string) {
-  return text
-    .replace(/\\\(/g, '\\\\(')
-    .replace(/\\\)/g, '\\\\)')
-    .replace(/\\\[/g, '\\\\[')
-    .replace(/\\\]/g, '\\\\]');
-}
-
-function MarkdownRendererBase(props: MarkdownRendererProps): JSX.Element {
+function MessageRendererBase(props: MessageRendererProps): JSX.Element {
   const appendContent = props.appendContent || false;
   const [renderedContent, setRenderedContent] = useState<HTMLElement | null>(
     null
@@ -75,25 +119,10 @@ function MarkdownRendererBase(props: MarkdownRendererProps): JSX.Element {
 
   useEffect(() => {
     const renderContent = async () => {
-      // initialize mime model
-      const mdStr = escapeLatexDelimiters(props.markdownStr);
-      const model = props.rmRegistry.createModel({
-        data: { [MD_MIME_TYPE]: mdStr }
-      });
-
-      const renderer = props.rmRegistry.createRenderer(MD_MIME_TYPE);
-
-      // step 1: render markdown
-      await renderer.renderModel(model);
-      props.rmRegistry.latexTypesetter?.typeset(renderer.node);
-      if (!renderer.node) {
-        throw new Error(
-          'Rendermime was unable to render Markdown content within a chat message. Please report this upstream to Jupyter chat on GitHub.'
-        );
-      }
-
-      // step 2: render LaTeX via MathJax.
-      props.rmRegistry.latexTypesetter?.typeset(renderer.node);
+      const renderer = await MarkdownRenderer.renderContent(
+        props.markdownStr,
+        props.rmRegistry
+      );
 
       const newCodeToolbarDefns: [HTMLDivElement, CodeToolbarProps][] = [];
 
@@ -146,4 +175,4 @@ function MarkdownRendererBase(props: MarkdownRendererProps): JSX.Element {
   );
 }
 
-export const MarkdownRenderer = React.memo(MarkdownRendererBase);
+export const MessageRenderer = React.memo(MessageRendererBase);

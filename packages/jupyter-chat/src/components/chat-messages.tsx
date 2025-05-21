@@ -19,7 +19,7 @@ import React, { useEffect, useState, useRef, forwardRef } from 'react';
 import { AttachmentPreviewList } from './attachments';
 import { ChatInput } from './chat-input';
 import { IInputToolbarRegistry } from './input';
-import { MarkdownRenderer } from './markdown-renderer';
+import { MessageRenderer } from './markdown-renderer';
 import { MessageFooter } from './messages/footer';
 import { ScrollContainer } from './scroll-container';
 import { IChatCommandRegistry } from '../chat-commands';
@@ -463,7 +463,7 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
             toolbarRegistry={props.inputToolbarRegistry}
           />
         ) : (
-          <MarkdownRenderer
+          <MessageRenderer
             rmRegistry={rmRegistry}
             markdownStr={message.body}
             model={model}
