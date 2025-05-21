@@ -36,6 +36,7 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
         chatCommandRegistry={props.chatCommandRegistry}
         inputToolbarRegistry={inputToolbarRegistry}
         messageFooterRegistry={props.messageFooterRegistry}
+        welcomeMessage={props.welcomeMessage}
       />
       <ChatInput
         sx={{
@@ -131,6 +132,10 @@ export namespace Chat {
      * The footer registry.
      */
     messageFooterRegistry?: IMessageFooterRegistry;
+    /**
+     * The welcome message.
+     */
+    welcomeMessage?: string;
   }
 
   /**
