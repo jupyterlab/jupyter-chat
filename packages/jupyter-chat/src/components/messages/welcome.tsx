@@ -21,6 +21,8 @@ export interface IWelcomeMessageProps {
 
 /**
  * The welcome message component.
+ * This message is displayed on top of the chat messages, and is rendered using a
+ * markdown renderer.
  */
 export function WelcomeMessage(props: IWelcomeMessageProps): JSX.Element {
   const { rmRegistry } = props;
