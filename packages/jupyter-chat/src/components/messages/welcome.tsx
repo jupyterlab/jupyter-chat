@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) Jupyter Development Team.
+ * Distributed under the terms of the Modified BSD License.
+ */
+
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { classes } from '@jupyterlab/ui-components';
 import React, { useEffect, useRef } from 'react';
