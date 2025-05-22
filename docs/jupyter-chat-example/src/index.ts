@@ -26,6 +26,21 @@ import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { UUID } from '@lumino/coreutils';
 
+const welcomeMessage = `
+### Welcome to Jupyter Chat!
+
+This is a simple chat panel that allows you to send messages and share files.
+
+The messages are rendered as markdown, allowing you to format the messages with e.g.:
+- **bold**
+- _italic_
+- \`\`\`python
+  # This is a code block
+  print('Hello world!')
+  \`\`\`
+- [link](https://jupyter.org)
+`;
+
 class ChatContext extends AbstractChatContext {
   get users() {
     return [];
@@ -138,7 +153,8 @@ const plugin: JupyterFrontEndPlugin<void> = {
       model,
       rmRegistry,
       themeManager,
-      attachmentOpenerRegistry
+      attachmentOpenerRegistry,
+      welcomeMessage
     });
     app.shell.add(panel, 'left');
   }
