@@ -3,33 +3,18 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { classes } from '@jupyterlab/ui-components';
 import React, { useEffect, useRef } from 'react';
-import { MarkdownRenderer, MD_RENDERED_CLASS } from '../markdown-renderer';
+import { MarkdownRenderer, MD_RENDERED_CLASS } from '../../markdown-renderer';
 
 const WELCOME_MESSAGE_CLASS = 'jp-chat-welcome-message';
-
-/**
- * The welcome message props.
- */
-export interface IWelcomeMessageProps {
-  /**
-   * The content of the welcome message.
-   */
-  content: string;
-  /**
-   * The rendermime registry.
-   */
-  rmRegistry: IRenderMimeRegistry;
-}
 
 /**
  * The welcome message component.
  * This message is displayed on top of the chat messages, and is rendered using a
  * markdown renderer.
  */
-export function WelcomeMessage(props: IWelcomeMessageProps): JSX.Element {
+export function WelcomeMessage(props: MarkdownRenderer.IOptions): JSX.Element {
   const { rmRegistry } = props;
   const content = props.content + '\n----\n';
 
@@ -44,10 +29,10 @@ export function WelcomeMessage(props: IWelcomeMessageProps): JSX.Element {
    */
   useEffect(() => {
     const renderContent = async () => {
-      const renderer = await MarkdownRenderer.renderContent(
+      const renderer = await MarkdownRenderer.renderContent({
         content,
         rmRegistry
-      );
+      });
 
       // insert the rendering into renderingContainer if not yet inserted
       if (renderingContainer.current !== null && !renderingInserted.current) {
