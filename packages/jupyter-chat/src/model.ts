@@ -4,6 +4,7 @@
  */
 
 import { IDocumentManager } from '@jupyterlab/docmanager';
+import { ArrayExt } from '@lumino/algorithm';
 import { CommandRegistry } from '@lumino/commands';
 import { IDisposable } from '@lumino/disposable';
 import { ISignal, Signal } from '@lumino/signaling';
@@ -58,6 +59,11 @@ export interface IChatModel extends IDisposable {
    * The input model.
    */
   readonly input: IInputModel;
+
+  /**
+   * The current writer list.
+   */
+  readonly writers: IChatModel.IWriter[];
 
   /**
    * Get the active cell manager.
@@ -269,6 +275,13 @@ export abstract class AbstractChatModel implements IChatModel {
    */
   get input(): IInputModel {
     return this._inputModel;
+  }
+
+  /**
+   * The current writer list.
+   */
+  get writers(): IChatModel.IWriter[] {
+    return this._writers;
   }
 
   /**
@@ -569,7 +582,17 @@ export abstract class AbstractChatModel implements IChatModel {
    * This implementation only propagate the list via a signal.
    */
   updateWriters(writers: IChatModel.IWriter[]): void {
-    this._writersChanged.emit(writers);
+    const compareWriters = (a: IChatModel.IWriter, b: IChatModel.IWriter) => {
+      return (
+        a.user.username === b.user.username &&
+        a.user.display_name === b.user.display_name &&
+        a.messageID === b.messageID
+      );
+    };
+    if (!ArrayExt.shallowEqual(this._writers, writers, compareWriters)) {
+      this._writers = writers;
+      this._writersChanged.emit(writers);
+    }
   }
 
   /**
@@ -661,6 +684,7 @@ export abstract class AbstractChatModel implements IChatModel {
   private _selectionWatcher: ISelectionWatcher | null;
   private _documentManager: IDocumentManager | null;
   private _notificationId: string | null = null;
+  private _writers: IChatModel.IWriter[] = [];
   private _messageEditions = new Map<string, IInputModel>();
   private _messagesUpdated = new Signal<IChatModel, void>(this);
   private _configChanged = new Signal<IChatModel, IConfig>(this);

@@ -304,7 +304,7 @@ export class LabChatModel
       if (!state || !state.user || state.user.username === this.user.username) {
         continue;
       }
-      if (state.isWriting) {
+      if (state.isWriting !== undefined && state.isWriting !== false) {
         const writer: IChatModel.IWriter = {
           user: state.user,
           messageID: state.isWriting === true ? undefined : state.isWriting
