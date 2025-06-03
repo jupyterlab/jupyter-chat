@@ -2,6 +2,27 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.12.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.11.0...2867f2edc63cfdad16c81d91c00074d0911726ff))
+
+### Enhancements made
+
+- Add a welcome message [#221](https://github.com/jupyterlab/jupyter-chat/pull/221) ([@brichet](https://github.com/brichet))
+- Display user writing notification when editing a message [#208](https://github.com/jupyterlab/jupyter-chat/pull/208) ([@brichet](https://github.com/brichet))
+
+### Bugs fixed
+
+- Fix scrollbar in empty chat [#223](https://github.com/jupyterlab/jupyter-chat/pull/223) ([@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2025-04-28&to=2025-06-03&type=c))
+
+[@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2025-04-28..2025-06-03&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2025-04-28..2025-06-03&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.11.0
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.10.1...1a3d91843e9ae70147b0d92158126002068661b6))
@@ -16,8 +37,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2025-04-17&to=2025-04-28&type=c))
 
 [@andrii-i](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Aandrii-i+updated%3A2025-04-17..2025-04-28&type=Issues) | [@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2025-04-17..2025-04-28&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2025-04-17..2025-04-28&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.10.1
 
