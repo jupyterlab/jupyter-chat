@@ -86,6 +86,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
     this._attachmentOpenerRegistry = options.attachmentOpenerRegistry;
     this._inputToolbarFactory = options.inputToolbarFactory;
     this._messageFooterRegistry = options.messageFooterRegistry;
+    this._welcomeMessage = options.welcomeMessage;
   }
 
   /**
@@ -100,6 +101,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
     context.chatCommandRegistry = this._chatCommandRegistry;
     context.attachmentOpenerRegistry = this._attachmentOpenerRegistry;
     context.messageFooterRegistry = this._messageFooterRegistry;
+    context.welcomeMessage = this._welcomeMessage;
     if (this._inputToolbarFactory) {
       context.inputToolbarRegistry = this._inputToolbarFactory.create();
     }
@@ -115,6 +117,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
   private _attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
   private _inputToolbarFactory?: IInputToolbarRegistryFactory;
   private _messageFooterRegistry?: IMessageFooterRegistry;
+  private _welcomeMessage?: string;
 }
 
 export namespace ChatWidgetFactory {
@@ -126,6 +129,7 @@ export namespace ChatWidgetFactory {
     attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
     inputToolbarRegistry?: IInputToolbarRegistry;
     messageFooterRegistry?: IMessageFooterRegistry;
+    welcomeMessage?: string;
   }
 
   export interface IOptions<T extends LabChatPanel>
@@ -136,6 +140,7 @@ export namespace ChatWidgetFactory {
     attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
     inputToolbarFactory?: IInputToolbarRegistryFactory;
     messageFooterRegistry?: IMessageFooterRegistry;
+    welcomeMessage?: string;
   }
 }
 

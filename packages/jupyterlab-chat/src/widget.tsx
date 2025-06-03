@@ -113,6 +113,7 @@ export class ChatPanel extends SidePanel {
     this._attachmentOpenerRegistry = options.attachmentOpenerRegistry;
     this._inputToolbarFactory = options.inputToolbarFactory;
     this._messageFooterRegistry = options.messageFooterRegistry;
+    this._welcomeMessage = options.welcomeMessage;
 
     const addChat = new CommandToolbarButton({
       commands: this._commands,
@@ -183,7 +184,8 @@ export class ChatPanel extends SidePanel {
       chatCommandRegistry: this._chatCommandRegistry,
       attachmentOpenerRegistry: this._attachmentOpenerRegistry,
       inputToolbarRegistry,
-      messageFooterRegistry: this._messageFooterRegistry
+      messageFooterRegistry: this._messageFooterRegistry,
+      welcomeMessage: this._welcomeMessage
     });
 
     this.addWidget(
@@ -306,6 +308,7 @@ export class ChatPanel extends SidePanel {
   private _attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
   private _inputToolbarFactory?: IInputToolbarRegistryFactory;
   private _messageFooterRegistry?: IMessageFooterRegistry;
+  private _welcomeMessage?: string;
 }
 
 /**
@@ -325,6 +328,7 @@ export namespace ChatPanel {
     attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
     inputToolbarFactory?: IInputToolbarRegistryFactory;
     messageFooterRegistry?: IMessageFooterRegistry;
+    welcomeMessage?: string;
   }
 }
 

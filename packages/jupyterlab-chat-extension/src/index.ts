@@ -59,6 +59,7 @@ import {
   IChatPanel,
   IInputToolbarRegistryFactory,
   ISelectionWatcherToken,
+  IWelcomeMessage,
   LabChatModel,
   LabChatModelFactory,
   LabChatPanel,
@@ -122,7 +123,8 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     ISettingRegistry,
     IThemeManager,
     IToolbarWidgetRegistry,
-    ITranslator
+    ITranslator,
+    IWelcomeMessage
   ],
   provides: IChatFactory,
   activate: (
@@ -140,7 +142,8 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     settingRegistry: ISettingRegistry | null,
     themeManager: IThemeManager | null,
     toolbarRegistry: IToolbarWidgetRegistry | null,
-    translator_: ITranslator | null
+    translator_: ITranslator | null,
+    welcomeMessage: string
   ): IChatFactory => {
     const translator = translator_ ?? nullTranslator;
 
@@ -306,7 +309,8 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
       chatCommandRegistry,
       attachmentOpenerRegistry,
       inputToolbarFactory,
-      messageFooterRegistry
+      messageFooterRegistry,
+      welcomeMessage
     });
 
     // Add the widget to the tracker when it's created
@@ -671,7 +675,8 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
     IInputToolbarRegistryFactory,
     ILayoutRestorer,
     IMessageFooterRegistry,
-    IThemeManager
+    IThemeManager,
+    IWelcomeMessage
   ],
   activate: (
     app: JupyterFrontEnd,
@@ -683,7 +688,8 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
     inputToolbarFactory: IInputToolbarRegistryFactory,
     restorer: ILayoutRestorer | null,
     messageFooterRegistry: IMessageFooterRegistry,
-    themeManager: IThemeManager | null
+    themeManager: IThemeManager | null,
+    welcomeMessage: string
   ): ChatPanel => {
     const { commands } = app;
 
@@ -701,7 +707,8 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
       chatCommandRegistry,
       attachmentOpenerRegistry,
       inputToolbarFactory,
-      messageFooterRegistry
+      messageFooterRegistry,
+      welcomeMessage
     });
     chatPanel.id = 'JupyterlabChat:sidepanel';
     chatPanel.title.icon = chatIcon;

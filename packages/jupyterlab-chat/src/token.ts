@@ -144,3 +144,12 @@ export const IInputToolbarRegistryFactory =
   new Token<IInputToolbarRegistryFactory>(
     'jupyterlab-chat:IInputToolbarRegistryFactory'
   );
+
+/**
+ * The token to add a welcome message to the chat.
+ * This token is not provided by default, but can be provided by third party extensions
+ * willing to add a welcome message to the chat.
+ */
+export const IWelcomeMessage = new Token<string>(
+  'jupyterlab-chat:IWelcomeMessage'
+);

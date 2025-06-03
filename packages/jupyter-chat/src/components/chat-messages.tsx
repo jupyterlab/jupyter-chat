@@ -19,8 +19,9 @@ import React, { useEffect, useState, useRef, forwardRef } from 'react';
 import { AttachmentPreviewList } from './attachments';
 import { ChatInput } from './chat-input';
 import { IInputToolbarRegistry } from './input';
-import { MarkdownRenderer } from './markdown-renderer';
 import { MessageFooter } from './messages/footer';
+import { MessageRenderer } from './messages/message-renderer';
+import { WelcomeMessage } from './messages/welcome';
 import { ScrollContainer } from './scroll-container';
 import { IChatCommandRegistry } from '../chat-commands';
 import { IMessageFooterRegistry } from '../footers';
@@ -64,6 +65,10 @@ type BaseMessageProps = {
    * The footer registry.
    */
   messageFooterRegistry?: IMessageFooterRegistry;
+  /**
+   * The welcome message.
+   */
+  welcomeMessage?: string;
 };
 
 /**
@@ -184,6 +189,12 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
   return (
     <>
       <ScrollContainer sx={{ flexGrow: 1 }}>
+        {props.welcomeMessage && (
+          <WelcomeMessage
+            rmRegistry={props.rmRegistry}
+            content={props.welcomeMessage}
+          />
+        )}
         <Box ref={refMsgBox} className={clsx(MESSAGES_BOX_CLASS)}>
           {messages.map((message, i) => {
             renderedPromise.current[i] = new PromiseDelegate();
@@ -464,7 +475,7 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
             toolbarRegistry={props.inputToolbarRegistry}
           />
         ) : (
-          <MarkdownRenderer
+          <MessageRenderer
             rmRegistry={rmRegistry}
             markdownStr={message.body}
             model={model}

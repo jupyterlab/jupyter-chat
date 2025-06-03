@@ -9,7 +9,6 @@ export * from './chat-messages';
 export * from './code-blocks';
 export * from './input';
 export * from './jl-theme-provider';
-export * from './markdown-renderer';
 export * from './mui-extras';
 export * from './scroll-container';
 export * from './toolbar';
