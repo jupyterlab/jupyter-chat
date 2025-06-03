@@ -613,7 +613,10 @@ export function Navigation(props: NavigationProps): JSX.Element {
   // in viewport.
   useEffect(() => {
     const viewportChanged = (model: IChatModel, viewport: number[]) => {
-      setLastInViewport(viewport.includes(model.messages.length - 1));
+      setLastInViewport(
+        model.messages.length === 0 ||
+          viewport.includes(model.messages.length - 1)
+      );
     };
 
     model.viewportChanged?.connect(viewportChanged);
