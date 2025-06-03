@@ -26,6 +26,10 @@
  * See: https://jupyterlab.readthedocs.io/en/latest/extension/extension_migration.html#css-styling
  * See also: https://github.com/jupyterlab/jupyter-ai/issues/1090
  */
+.jp-ThemedContainer .jp-chat-rendered-markdown.jp-chat-welcome-message {
+  padding: 0 1em;
+}
+
 .jp-ThemedContainer .jp-chat-rendered-markdown .jp-RenderedHTMLCommon {
   padding-right: 0;
 }

@@ -8,14 +8,15 @@ import { PromiseDelegate } from '@lumino/coreutils';
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
-import { CodeToolbar, CodeToolbarProps } from './code-blocks/code-toolbar';
-import { MessageToolbar } from './toolbar';
-import { IChatModel } from '../model';
+import { CodeToolbar, CodeToolbarProps } from '../code-blocks/code-toolbar';
+import { MessageToolbar } from '../toolbar';
+import { MarkdownRenderer, MD_RENDERED_CLASS } from '../../markdown-renderer';
+import { IChatModel } from '../../model';
 
-const MD_MIME_TYPE = 'text/markdown';
-const MD_RENDERED_CLASS = 'jp-chat-rendered-markdown';
-
-type MarkdownRendererProps = {
+/**
+ * The type of the props for the MessageRenderer component.
+ */
+type MessageRendererProps = {
   /**
    * The string to render.
    */
@@ -47,22 +48,10 @@ type MarkdownRendererProps = {
 };
 
 /**
- * Escapes backslashes in LaTeX delimiters such that they appear in the DOM
- * after the initial MarkDown render. For example, this function takes '\(` and
- * returns `\\(`.
- *
- * Required for proper rendering of MarkDown + LaTeX markup in the chat by
- * `ILatexTypesetter`.
+ * The message renderer base component.
  */
-function escapeLatexDelimiters(text: string) {
-  return text
-    .replace(/\\\(/g, '\\\\(')
-    .replace(/\\\)/g, '\\\\)')
-    .replace(/\\\[/g, '\\\\[')
-    .replace(/\\\]/g, '\\\\]');
-}
-
-function MarkdownRendererBase(props: MarkdownRendererProps): JSX.Element {
+function MessageRendererBase(props: MessageRendererProps): JSX.Element {
+  const { markdownStr, rmRegistry } = props;
   const appendContent = props.appendContent || false;
   const [renderedContent, setRenderedContent] = useState<HTMLElement | null>(
     null
@@ -75,25 +64,10 @@ function MarkdownRendererBase(props: MarkdownRendererProps): JSX.Element {
 
   useEffect(() => {
     const renderContent = async () => {
-      // initialize mime model
-      const mdStr = escapeLatexDelimiters(props.markdownStr);
-      const model = props.rmRegistry.createModel({
-        data: { [MD_MIME_TYPE]: mdStr }
+      const renderer = await MarkdownRenderer.renderContent({
+        content: markdownStr,
+        rmRegistry
       });
-
-      const renderer = props.rmRegistry.createRenderer(MD_MIME_TYPE);
-
-      // step 1: render markdown
-      await renderer.renderModel(model);
-      props.rmRegistry.latexTypesetter?.typeset(renderer.node);
-      if (!renderer.node) {
-        throw new Error(
-          'Rendermime was unable to render Markdown content within a chat message. Please report this upstream to Jupyter chat on GitHub.'
-        );
-      }
-
-      // step 2: render LaTeX via MathJax.
-      props.rmRegistry.latexTypesetter?.typeset(renderer.node);
 
       const newCodeToolbarDefns: [HTMLDivElement, CodeToolbarProps][] = [];
 
@@ -119,7 +93,7 @@ function MarkdownRendererBase(props: MarkdownRendererProps): JSX.Element {
     };
 
     renderContent();
-  }, [props.markdownStr, props.rmRegistry]);
+  }, [markdownStr, rmRegistry]);
 
   return (
     <div className={MD_RENDERED_CLASS}>
@@ -146,4 +120,4 @@ function MarkdownRendererBase(props: MarkdownRendererProps): JSX.Element {
   );
 }
 
-export const MarkdownRenderer = React.memo(MarkdownRendererBase);
+export const MessageRenderer = React.memo(MessageRendererBase);

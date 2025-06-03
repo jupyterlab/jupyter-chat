@@ -9,6 +9,7 @@ export * from './components';
 export * from './footers';
 export * from './icons';
 export * from './input-model';
+export * from './markdown-renderer';
 export * from './model';
 export * from './registry';
 export * from './selection-watcher';
