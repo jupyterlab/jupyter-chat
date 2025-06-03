@@ -260,7 +260,10 @@ export class LabChatModel
   }
 
   /**
-   * Function called by the input on key pressed.
+   * Function called when the input content changed.
+   *
+   * @param value - The whole input content.
+   * @param messageID - The ID of the message being edited, if any.
    */
   onInputChanged = (value: string, messageID?: string): void => {
     if (!value || !this.config.sendTypingNotification) {
