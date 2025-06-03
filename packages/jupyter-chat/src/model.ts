@@ -4,6 +4,7 @@
  */
 
 import { IDocumentManager } from '@jupyterlab/docmanager';
+import { ArrayExt } from '@lumino/algorithm';
 import { CommandRegistry } from '@lumino/commands';
 import { IDisposable } from '@lumino/disposable';
 import { ISignal, Signal } from '@lumino/signaling';
@@ -60,6 +61,11 @@ export interface IChatModel extends IDisposable {
   readonly input: IInputModel;
 
   /**
+   * The current writer list.
+   */
+  readonly writers: IChatModel.IWriter[];
+
+  /**
    * Get the active cell manager.
    */
   readonly activeCellManager: IActiveCellManager | null;
@@ -82,7 +88,7 @@ export interface IChatModel extends IDisposable {
   /**
    * A signal emitting when the messages list is updated.
    */
-  get configChanged(): ISignal<IChatModel, IConfig>;
+  readonly configChanged: ISignal<IChatModel, IConfig>;
 
   /**
    * A signal emitting when unread messages change.
@@ -97,7 +103,12 @@ export interface IChatModel extends IDisposable {
   /**
    * A signal emitting when the writers change.
    */
-  readonly writersChanged?: ISignal<IChatModel, IUser[]>;
+  readonly writersChanged?: ISignal<IChatModel, IChatModel.IWriter[]>;
+
+  /**
+   * A signal emitting when the message edition input changed change.
+   */
+  readonly messageEditionAdded: ISignal<IChatModel, IChatModel.IMessageEdition>;
 
   /**
    * Send a message, to be defined depending on the chosen technology.
@@ -172,12 +183,22 @@ export interface IChatModel extends IDisposable {
   /**
    * Update the current writers list.
    */
-  updateWriters(writers: IUser[]): void;
+  updateWriters(writers: IChatModel.IWriter[]): void;
 
   /**
    * Create the chat context that will be passed to the input model.
    */
   createChatContext(): IChatContext;
+
+  /**
+   * Get the input model of the edited message, given its id.
+   */
+  getEditionModel(messageID: string): IInputModel | undefined;
+
+  /**
+   * Add an input model of the edited message.
+   */
+  addEditionModel(messageID: string, inputModel: IInputModel): void;
 }
 
 /**
@@ -254,6 +275,13 @@ export abstract class AbstractChatModel implements IChatModel {
    */
   get input(): IInputModel {
     return this._inputModel;
+  }
+
+  /**
+   * The current writer list.
+   */
+  get writers(): IChatModel.IWriter[] {
+    return this._writers;
   }
 
   /**
@@ -418,8 +446,15 @@ export abstract class AbstractChatModel implements IChatModel {
   /**
    * A signal emitting when the writers change.
    */
-  get writersChanged(): ISignal<IChatModel, IUser[]> {
+  get writersChanged(): ISignal<IChatModel, IChatModel.IWriter[]> {
     return this._writersChanged;
+  }
+
+  /**
+   * A signal emitting when the message edition input changed change.
+   */
+  get messageEditionAdded(): ISignal<IChatModel, IChatModel.IMessageEdition> {
+    return this._messageEditionAdded;
   }
 
   /**
@@ -546,14 +581,46 @@ export abstract class AbstractChatModel implements IChatModel {
    * Update the current writers list.
    * This implementation only propagate the list via a signal.
    */
-  updateWriters(writers: IUser[]): void {
-    this._writersChanged.emit(writers);
+  updateWriters(writers: IChatModel.IWriter[]): void {
+    const compareWriters = (a: IChatModel.IWriter, b: IChatModel.IWriter) => {
+      return (
+        a.user.username === b.user.username &&
+        a.user.display_name === b.user.display_name &&
+        a.messageID === b.messageID
+      );
+    };
+    if (!ArrayExt.shallowEqual(this._writers, writers, compareWriters)) {
+      this._writers = writers;
+      this._writersChanged.emit(writers);
+    }
   }
 
   /**
    * Create the chat context that will be passed to the input model.
    */
   abstract createChatContext(): IChatContext;
+
+  /**
+   * Get the input model of the edited message, given its id.
+   */
+  getEditionModel(messageID: string): IInputModel | undefined {
+    return this._messageEditions.get(messageID);
+  }
+
+  /**
+   * Add an input model of the edited message.
+   */
+  addEditionModel(messageID: string, inputModel: IInputModel): void {
+    // Dispose of an hypothetic previous model for this message.
+    this.getEditionModel(messageID)?.dispose();
+
+    this._messageEditions.set(messageID, inputModel);
+    this._messageEditionAdded.emit({ id: messageID, model: inputModel });
+
+    inputModel.onDisposed.connect(() => {
+      this._messageEditions.delete(messageID);
+    });
+  }
 
   /**
    * Add unread messages to the list.
@@ -617,11 +684,17 @@ export abstract class AbstractChatModel implements IChatModel {
   private _selectionWatcher: ISelectionWatcher | null;
   private _documentManager: IDocumentManager | null;
   private _notificationId: string | null = null;
+  private _writers: IChatModel.IWriter[] = [];
+  private _messageEditions = new Map<string, IInputModel>();
   private _messagesUpdated = new Signal<IChatModel, void>(this);
   private _configChanged = new Signal<IChatModel, IConfig>(this);
   private _unreadChanged = new Signal<IChatModel, number[]>(this);
   private _viewportChanged = new Signal<IChatModel, number[]>(this);
-  private _writersChanged = new Signal<IChatModel, IUser[]>(this);
+  private _writersChanged = new Signal<IChatModel, IChatModel.IWriter[]>(this);
+  private _messageEditionAdded = new Signal<
+    IChatModel,
+    IChatModel.IMessageEdition
+  >(this);
 }
 
 /**
@@ -661,6 +734,34 @@ export namespace IChatModel {
      * Document manager.
      */
     documentManager?: IDocumentManager | null;
+  }
+
+  /**
+   * Representation of a message edition.
+   */
+  export interface IMessageEdition {
+    /**
+     * The id of the edited message.
+     */
+    id: string;
+    /**
+     * The model of the input editing the message.
+     */
+    model: IInputModel;
+  }
+
+  /**
+   * Writer interface, including the message ID if the writer is editing a message.
+   */
+  export interface IWriter {
+    /**
+     * The user currently writing.
+     */
+    user: IUser;
+    /**
+     * The message ID (optional)
+     */
+    messageID?: string;
   }
 }
 
