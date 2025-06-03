@@ -43,7 +43,7 @@ export function ScrollContainer(props: ScrollContainerProps): JSX.Element {
         ...props.sx
       }}
     >
-      <Box sx={{ minHeight: '100.01%' }}>{props.children}</Box>
+      <Box>{props.children}</Box>
       <Box sx={{ overflowAnchor: 'auto', height: '1px' }} />
     </Box>
   );
