@@ -11,7 +11,9 @@
       {
         "name": "markAsRead",
         "command": "jupyterlab-chat:markAsRead"
-      }
+      },
+      { "name": "spacer", "type": "spacer", "rank": 100 },
+      { "name": "usersItem", "rank": 150 }
     ]
   },
   "properties": {},

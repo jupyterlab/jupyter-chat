@@ -48,6 +48,7 @@
   },
   "dependencies": {
     "@jupyter-notebook/application": "^7.2.0",
+    "@jupyter/collaboration": "^3.1.1",
     "@jupyter/collaborative-drive": "^3.0.0",
     "@jupyter/ydoc": "^2.0.0 || ^3.0.0",
     "@jupyterlab/application": "^4.2.0",
