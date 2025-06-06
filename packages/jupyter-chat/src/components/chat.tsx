@@ -18,11 +18,13 @@ import {
 } from './input';
 import { JlThemeProvider } from './jl-theme-provider';
 import { ChatMessages } from './messages';
-import { IChatCommandRegistry } from '../chat-commands';
 import { AttachmentOpenerContext } from '../context';
-import { IMessageFooterRegistry } from '../footers';
 import { IChatModel } from '../model';
-import { IAttachmentOpenerRegistry } from '../registry';
+import {
+  IAttachmentOpenerRegistry,
+  IChatCommandRegistry,
+  IMessageFooterRegistry
+} from '../registers';
 
 export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
   const { model } = props;

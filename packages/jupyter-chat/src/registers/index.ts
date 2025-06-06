@@ -3,5 +3,6 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-export * from './registry';
-export * from './types';
+export * from './attachment-openers';
+export * from './chat-commands';
+export * from './footers';

@@ -17,8 +17,7 @@ import { WelcomeMessage } from './welcome';
 import { Writers } from './writers';
 import { IInputToolbarRegistry } from '../input';
 import { ScrollContainer } from '../scroll-container';
-import { IChatCommandRegistry } from '../../chat-commands';
-import { IMessageFooterRegistry } from '../../footers';
+import { IChatCommandRegistry, IMessageFooterRegistry } from '../../registers';
 import { IChatModel } from '../../model';
 import { IChatMessage, IUser } from '../../types';
 
