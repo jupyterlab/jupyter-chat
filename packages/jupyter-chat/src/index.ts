@@ -12,6 +12,4 @@ export * from './model';
 export * from './registers';
 export * from './selection-watcher';
 export * from './types';
-export * from './widgets/chat-error';
-export * from './widgets/chat-sidebar';
-export * from './widgets/chat-widget';
+export * from './widgets';
