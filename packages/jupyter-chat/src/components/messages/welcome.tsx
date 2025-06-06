@@ -5,6 +5,7 @@
 
 import { classes } from '@jupyterlab/ui-components';
 import React, { useEffect, useRef } from 'react';
+
 import { MarkdownRenderer, MD_RENDERED_CLASS } from '../../markdown-renderer';
 
 const WELCOME_MESSAGE_CLASS = 'jp-chat-welcome-message';

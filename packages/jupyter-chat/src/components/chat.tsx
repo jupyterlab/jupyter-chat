@@ -11,11 +11,11 @@ import { IconButton } from '@mui/material';
 import { Box } from '@mui/system';
 import React, { useState } from 'react';
 
-import { JlThemeProvider } from './jl-theme-provider';
-import { IChatCommandRegistry } from '../chat-commands';
-import { ChatMessages } from './chat-messages';
 import { ChatInput } from './chat-input';
 import { IInputToolbarRegistry, InputToolbarRegistry } from './input';
+import { JlThemeProvider } from './jl-theme-provider';
+import { ChatMessages } from './messages';
+import { IChatCommandRegistry } from '../chat-commands';
 import { AttachmentOpenerContext } from '../context';
 import { IMessageFooterRegistry } from '../footers';
 import { IChatModel } from '../model';
