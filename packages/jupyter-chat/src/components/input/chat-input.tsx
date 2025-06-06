@@ -22,7 +22,7 @@ import {
   useChatCommands
 } from '.';
 import { IInputModel, InputModel } from '../../input-model';
-import { IChatCommandRegistry } from '../../chat-commands';
+import { IChatCommandRegistry } from '../../registers';
 import { IAttachment } from '../../types';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';

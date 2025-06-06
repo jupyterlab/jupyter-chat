@@ -9,7 +9,7 @@ import React from 'react';
 import {
   IMessageFooterRegistry,
   MessageFooterSectionProps
-} from '../../footers';
+} from '../../registers';
 
 /**
  * The chat footer component properties.

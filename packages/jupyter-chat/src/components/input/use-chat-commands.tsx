@@ -11,7 +11,7 @@ import type {
 import { Box } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
-import { ChatCommand, IChatCommandRegistry } from '../../chat-commands';
+import { ChatCommand, IChatCommandRegistry } from '../../registers';
 import { IInputModel } from '../../input-model';
 
 type AutocompleteProps = GenericAutocompleteProps<any, any, any, any>;
