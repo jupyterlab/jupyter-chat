@@ -15,15 +15,15 @@ import {
 import clsx from 'clsx';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { AttachmentPreviewList } from './attachments';
+import { AttachmentPreviewList } from '../attachments';
 import {
   IInputToolbarRegistry,
   InputToolbarRegistry,
   useChatCommands
-} from './input';
-import { IInputModel, InputModel } from '../input-model';
-import { IChatCommandRegistry } from '../chat-commands';
-import { IAttachment } from '../types';
+} from '.';
+import { IInputModel, InputModel } from '../../input-model';
+import { IChatCommandRegistry } from '../../registers';
+import { IAttachment } from '../../types';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
 const INPUT_TOOLBAR_CLASS = 'jp-chat-input-toolbar';
