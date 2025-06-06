@@ -9,7 +9,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 import { CodeToolbar, CodeToolbarProps } from '../code-blocks/code-toolbar';
-import { MessageToolbar } from '../toolbar';
+import { MessageToolbar } from './toolbar';
 import { MarkdownRenderer, MD_RENDERED_CLASS } from '../../markdown-renderer';
 import { IChatModel } from '../../model';
 
