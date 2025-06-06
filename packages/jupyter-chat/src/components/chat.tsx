@@ -11,8 +11,11 @@ import { IconButton } from '@mui/material';
 import { Box } from '@mui/system';
 import React, { useState } from 'react';
 
-import { ChatInput } from './chat-input';
-import { IInputToolbarRegistry, InputToolbarRegistry } from './input';
+import {
+  ChatInput,
+  IInputToolbarRegistry,
+  InputToolbarRegistry
+} from './input';
 import { JlThemeProvider } from './jl-theme-provider';
 import { ChatMessages } from './messages';
 import { IChatCommandRegistry } from '../chat-commands';

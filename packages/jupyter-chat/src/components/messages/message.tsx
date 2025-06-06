@@ -9,7 +9,7 @@ import React, { forwardRef, useEffect, useState } from 'react';
 import { MessageRenderer } from './message-renderer';
 import { BaseMessageProps } from './messages';
 import { AttachmentPreviewList } from '../attachments';
-import { ChatInput } from '../chat-input';
+import { ChatInput } from '../input';
 import { IInputModel, InputModel } from '../../input-model';
 import { IChatMessage } from '../../types';
 import { replaceSpanToMention } from '../../utils';

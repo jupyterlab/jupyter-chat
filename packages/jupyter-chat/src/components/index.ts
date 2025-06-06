@@ -5,7 +5,6 @@
 
 export * from './avatar';
 export * from './chat';
-export * from './chat-input';
 export * from './code-blocks';
 export * from './input';
 export * from './jl-theme-provider';
