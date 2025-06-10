@@ -35,6 +35,7 @@ import {
   createToolbarFactory,
   showErrorMessage
 } from '@jupyterlab/apputils';
+import { IEditorLanguageRegistry } from '@jupyterlab/codemirror';
 import { PathExt } from '@jupyterlab/coreutils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { IDefaultFileBrowser } from '@jupyterlab/filebrowser';
@@ -813,9 +814,14 @@ const selectionWatcher: JupyterFrontEndPlugin<ISelectionWatcher> = {
   description: 'The selection watcher plugin.',
   autoStart: true,
   provides: ISelectionWatcherToken,
-  activate: (app: JupyterFrontEnd): ISelectionWatcher => {
+  optional: [IEditorLanguageRegistry],
+  activate: (
+    app: JupyterFrontEnd,
+    languages: IEditorLanguageRegistry
+  ): ISelectionWatcher => {
     return new SelectionWatcher({
-      shell: app.shell
+      shell: app.shell,
+      languages
     });
   }
 };
