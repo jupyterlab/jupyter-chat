@@ -164,7 +164,7 @@ test.describe('#sendMessages', () => {
     );
   });
 
-  test('should send with cell content', async ({ page }) => {
+  test('should send with code cell content', async ({ page }) => {
     const cellContent = 'a = 1\nprint(f"a={a}")';
     const chatPanel = await openChat(page, FILENAME);
     const messages = chatPanel.locator('.jp-chat-messages-container');
@@ -189,14 +189,56 @@ test.describe('#sendMessages', () => {
     await expect(sendWithSelection).toBeEnabled();
     await expect(sendWithSelection).toContainText('Code from 1 active cell');
     await sendWithSelection.click();
-
     await expect(messages!.locator('.jp-chat-message')).toHaveCount(1);
 
     // It seems that the markdown renderer adds a new line, but the '\n' inserter when
     // pressing Enter above is trimmed.
-    await expect(
-      messages.locator('.jp-chat-message .jp-chat-rendered-markdown')
-    ).toHaveText(`${MSG_CONTENT}\n${cellContent}\n`);
+    const rendered = messages.locator(
+      '.jp-chat-message .jp-chat-rendered-markdown'
+    );
+    await expect(rendered).toHaveText(`${MSG_CONTENT}\n${cellContent}\n`);
+
+    // Code should have python language class.
+    await expect(rendered.locator('code')).toHaveClass('language-python');
+  });
+
+  test('should send with markdown cell content', async ({ page }) => {
+    const cellContent = 'markdown content';
+    const chatPanel = await openChat(page, FILENAME);
+    const messages = chatPanel.locator('.jp-chat-messages-container');
+    const input = chatPanel
+      .locator('.jp-chat-input-container')
+      .getByRole('combobox');
+    const openerButton = chatPanel.locator(
+      '.jp-chat-input-container .jp-chat-send-include-opener'
+    );
+    const sendWithSelection = page.locator('.jp-chat-send-include');
+
+    const notebook = await page.notebook.createNew();
+    // write content in the first cell after changing it to markdown.
+    const cell = (await page.notebook.getCellLocator(0))!;
+    await page.notebook.setCellType(0, 'markdown');
+    await cell.getByRole('textbox').pressSequentially(cellContent);
+
+    await splitMainArea(page, notebook!);
+
+    await input.pressSequentially(MSG_CONTENT);
+    await openerButton.click();
+    await expect(sendWithSelection).toBeVisible();
+    await expect(sendWithSelection).toBeEnabled();
+    await expect(sendWithSelection).toContainText('Code from 1 active cell');
+    await sendWithSelection.click();
+    await expect(messages!.locator('.jp-chat-message')).toHaveCount(1);
+
+    // It seems that the markdown renderer adds a new line, but the '\n' inserter when
+    // pressing Enter above is trimmed.
+    const rendered = messages.locator(
+      '.jp-chat-message .jp-chat-rendered-markdown'
+    );
+    await expect(rendered).toHaveText(`${MSG_CONTENT}\n${cellContent}\n`);
+
+    // Code should not have python language class since it come from a markdown cell.
+    await expect(rendered.locator('code')).toHaveClass('');
   });
 
   test('should send with text selection', async ({ page }) => {
@@ -243,8 +285,12 @@ test.describe('#sendMessages', () => {
 
     // It seems that the markdown renderer adds a new line, but the '\n' inserter when
     // pressing Enter above is trimmed.
-    await expect(
-      messages.locator('.jp-chat-message .jp-chat-rendered-markdown')
-    ).toHaveText(`${MSG_CONTENT}\nprint\n`);
+    const rendered = messages.locator(
+      '.jp-chat-message .jp-chat-rendered-markdown'
+    );
+    await expect(rendered).toHaveText(`${MSG_CONTENT}\nprint\n`);
+
+    // Code should have python or ipython language class.
+    await expect(rendered.locator('code')).toHaveClass(/language-[i]?python/);
   });
 });
