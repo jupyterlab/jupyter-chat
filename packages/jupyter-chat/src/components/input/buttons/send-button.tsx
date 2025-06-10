@@ -113,6 +113,7 @@ export function SendButton(
     if (selectionWatcher?.selection) {
       // Append the selected text if exists.
       source = selectionWatcher.selection.text;
+      language = selectionWatcher.selection.language;
     } else if (activeCellManager?.available) {
       // Append the active cell content if exists.
       const content = activeCellManager.getContent(false);

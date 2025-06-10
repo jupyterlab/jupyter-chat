@@ -2269,6 +2269,8 @@ __metadata:
     "@jupyter/react-components": ^0.15.2
     "@jupyterlab/application": ^4.2.0
     "@jupyterlab/apputils": ^4.3.0
+    "@jupyterlab/codeeditor": ^4.2.0
+    "@jupyterlab/codemirror": ^4.2.0
     "@jupyterlab/docmanager": ^4.2.0
     "@jupyterlab/filebrowser": ^4.2.0
     "@jupyterlab/fileeditor": ^4.2.0
@@ -2534,7 +2536,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyterlab/codeeditor@npm:^4.2.3, @jupyterlab/codeeditor@npm:^4.4.3":
+"@jupyterlab/codeeditor@npm:^4.2.0, @jupyterlab/codeeditor@npm:^4.2.3, @jupyterlab/codeeditor@npm:^4.4.3":
   version: 4.4.3
   resolution: "@jupyterlab/codeeditor@npm:4.4.3"
   dependencies:
@@ -2558,7 +2560,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyterlab/codemirror@npm:^4.2.3, @jupyterlab/codemirror@npm:^4.4.3":
+"@jupyterlab/codemirror@npm:^4.2.0, @jupyterlab/codemirror@npm:^4.2.3, @jupyterlab/codemirror@npm:^4.4.0, @jupyterlab/codemirror@npm:^4.4.3":
   version: 4.4.3
   resolution: "@jupyterlab/codemirror@npm:4.4.3"
   dependencies:
@@ -9724,6 +9726,7 @@ __metadata:
     "@jupyterlab/application": ^4.4.0
     "@jupyterlab/apputils": ^4.5.0
     "@jupyterlab/builder": ^4.2.0
+    "@jupyterlab/codemirror": ^4.4.0
     "@jupyterlab/coreutils": ^6.4.0
     "@jupyterlab/docregistry": ^4.4.0
     "@jupyterlab/filebrowser": ^4.4.0
