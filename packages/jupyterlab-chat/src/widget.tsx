@@ -12,7 +12,7 @@ import {
   IMessageFooterRegistry,
   readIcon
 } from '@jupyter/chat';
-import { ICollaborativeDrive } from '@jupyter/collaborative-drive';
+import { Contents } from '@jupyterlab/services';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { PathExt } from '@jupyterlab/coreutils';
 import { DocumentWidget } from '@jupyterlab/docregistry';
@@ -105,7 +105,7 @@ export class ChatPanel extends SidePanel {
     super(options);
     this.addClass(SIDEPANEL_CLASS);
     this._commands = options.commands;
-    this._drive = options.drive;
+    this._contentsManager = options.contentsManager;
     this._rmRegistry = options.rmRegistry;
     this._themeManager = options.themeManager;
     this._defaultDirectory = options.defaultDirectory;
@@ -205,9 +205,9 @@ export class ChatPanel extends SidePanel {
    */
   updateChatList = async (): Promise<void> => {
     const extension = chatFileType.extensions[0];
-    this._drive
+    this._contentsManager
       .get(this._defaultDirectory)
-      .then(contentModel => {
+      .then((contentModel: { content: any[] }) => {
         const chatsNames: { [name: string]: string } = {};
         (contentModel.content as any[])
           .filter(f => f.type === 'file' && f.name.endsWith(extension))
@@ -300,7 +300,7 @@ export class ChatPanel extends SidePanel {
   );
   private _commands: CommandRegistry;
   private _defaultDirectory: string;
-  private _drive: ICollaborativeDrive;
+  private _contentsManager: Contents.IManager;
   private _openChat: ReactWidget;
   private _rmRegistry: IRenderMimeRegistry;
   private _themeManager: IThemeManager | null;
@@ -320,7 +320,7 @@ export namespace ChatPanel {
    */
   export interface IOptions extends SidePanel.IOptions {
     commands: CommandRegistry;
-    drive: ICollaborativeDrive;
+    contentsManager: Contents.IManager;
     rmRegistry: IRenderMimeRegistry;
     themeManager: IThemeManager | null;
     defaultDirectory: string;

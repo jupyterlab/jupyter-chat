@@ -111,6 +111,12 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
     });
   }
 
+  /**
+   * IMPORTANT: this property must be defined to use the `RtcContentProvider`
+   * registered by `jupyter_collaboration`. Without this, the chat document
+   * widgets will not connect.
+   */
+  readonly contentProviderId = 'rtc';
   private _themeManager: IThemeManager | null;
   private _rmRegistry: IRenderMimeRegistry;
   private _chatCommandRegistry?: IChatCommandRegistry;
