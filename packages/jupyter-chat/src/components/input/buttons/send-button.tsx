@@ -109,18 +109,21 @@ export function SendButton(
     // Run all chat command providers
     await chatCommandRegistry?.onSubmit(model);
 
+    let language = '';
     if (selectionWatcher?.selection) {
       // Append the selected text if exists.
       source = selectionWatcher.selection.text;
     } else if (activeCellManager?.available) {
       // Append the active cell content if exists.
-      source = activeCellManager.getContent(false)!.source;
+      const content = activeCellManager.getContent(false);
+      source = content!.source;
+      language = content?.language || '';
     }
     let content = model.value;
     if (source) {
       content += `
 
-\`\`\`
+\`\`\`${language}
 ${source}
 \`\`\`
 `;
