@@ -46,7 +46,7 @@ import { Contents } from '@jupyterlab/services';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { ITranslator, nullTranslator } from '@jupyterlab/translation';
 import { launchIcon } from '@jupyterlab/ui-components';
-import { PromiseDelegate, Token } from '@lumino/coreutils';
+import { PromiseDelegate } from '@lumino/coreutils';
 import {
   ChatPanel,
   ChatWidgetFactory,
@@ -67,18 +67,8 @@ import {
 import { chatCommandRegistryPlugin } from './chat-commands/plugins';
 import { emojiCommandsPlugin } from './chat-commands/providers/emoji';
 import { mentionCommandsPlugin } from './chat-commands/providers/user-mention';
-import { DocumentChange, YDocument } from '@jupyter/ydoc';
 
 const FACTORY = 'Chat';
-
-// Cast ICollaborativeContentProvider token so TypeScript accepts it in plugin optional/requires arrays.
-// The arrays expect Token<any> from JupyterLab's @lumino/coreutils, but our token is from
-// @jupyter/collaborative-drive's @lumino/coreutils. These have separate Token class declarations
-// with their own private '_tokenStructuralPropertyT' properties, making TypeScript treat them as
-// distinct incompatible types even though they work identically. This is safe because tokens are just
-// dependency injection identifiers - the actual ICollaborativeContentProvider instance works correctly.
-const ICollaborativeContentProviderToken =
-  ICollaborativeContentProvider as unknown as Token<any>;
 
 const pluginIds = {
   activeCellManager: 'jupyterlab-chat-extension:activeCellManager',
@@ -121,7 +111,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     IActiveCellManagerToken,
     IAttachmentOpenerRegistry,
     IChatCommandRegistry,
-    ICollaborativeContentProviderToken,
+    ICollaborativeContentProvider,
     IDefaultFileBrowser,
     IInputToolbarRegistryFactory,
     ILayoutRestorer,
@@ -277,14 +267,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     app.docRegistry.addFileType(chatFileType);
 
     if (drive) {
-      // Cast YChat return type to match SharedDocumentFactory's expected return type.
-      // SharedDocumentFactory expects YDocument<DocumentChange>, but YChat.create() returns
-      // YDocument<IChatChanges>. Since IChatChanges extends DocumentChange, the cast is valid.
-      // TypeScript's generic invariance requires the cast as YDocument<Subtype> isn't assignable
-      // to YDocument<Supertype> even when Subtype extends Supertype.
-      const chatFactory = () => {
-        return YChat.create() as unknown as YDocument<DocumentChange>;
-      };
+      const chatFactory = () => YChat.create();
       drive.sharedModelFactory.registerDocumentFactory('chat', chatFactory);
     }
 
@@ -376,7 +359,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
   id: pluginIds.chatCommands,
   description: 'The commands to create or open a chat.',
   autoStart: true,
-  requires: [ICollaborativeContentProviderToken, IChatFactory],
+  requires: [ICollaborativeContentProvider, IChatFactory],
   optional: [
     IActiveCellManagerToken,
     IChatPanel,
@@ -690,11 +673,7 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
   description: 'The chat panel widget.',
   autoStart: true,
   provides: IChatPanel,
-  requires: [
-    IChatFactory,
-    ICollaborativeContentProviderToken,
-    IRenderMimeRegistry
-  ],
+  requires: [IChatFactory, ICollaborativeContentProvider, IRenderMimeRegistry],
   optional: [
     IAttachmentOpenerRegistry,
     IChatCommandRegistry,
