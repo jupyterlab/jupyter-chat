@@ -207,7 +207,7 @@ export class ChatPanel extends SidePanel {
     const extension = chatFileType.extensions[0];
     this._contentsManager
       .get(this._defaultDirectory)
-      .then((contentModel: { content: any[] }) => {
+      .then((contentModel: Contents.IModel) => {
         const chatsNames: { [name: string]: string } = {};
         (contentModel.content as any[])
           .filter(f => f.type === 'file' && f.name.endsWith(extension))
