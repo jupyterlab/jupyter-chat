@@ -11,15 +11,20 @@ import { IconButton } from '@mui/material';
 import { Box } from '@mui/system';
 import React, { useState } from 'react';
 
+import {
+  ChatInput,
+  IInputToolbarRegistry,
+  InputToolbarRegistry
+} from './input';
 import { JlThemeProvider } from './jl-theme-provider';
-import { IChatCommandRegistry } from '../chat-commands';
-import { ChatMessages } from './chat-messages';
-import { ChatInput } from './chat-input';
-import { IInputToolbarRegistry, InputToolbarRegistry } from './input';
+import { ChatMessages } from './messages';
 import { AttachmentOpenerContext } from '../context';
-import { IMessageFooterRegistry } from '../footers';
 import { IChatModel } from '../model';
-import { IAttachmentOpenerRegistry } from '../registry';
+import {
+  IAttachmentOpenerRegistry,
+  IChatCommandRegistry,
+  IMessageFooterRegistry
+} from '../registers';
 
 export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
   const { model } = props;

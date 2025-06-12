@@ -5,10 +5,11 @@
 
 import { Box } from '@mui/material';
 import React from 'react';
+
 import {
   IMessageFooterRegistry,
   MessageFooterSectionProps
-} from '../../footers';
+} from '../../registers';
 
 /**
  * The chat footer component properties.
@@ -24,7 +25,9 @@ export interface IMessageFootersProps extends MessageFooterSectionProps {
  * The chat footer component, which displays footer components on a row according to
  * their respective positions.
  */
-export function MessageFooter(props: IMessageFootersProps): JSX.Element {
+export function MessageFooterComponent(
+  props: IMessageFootersProps
+): JSX.Element {
   const { message, model, registry } = props;
   const footer = registry.getFooter();
 

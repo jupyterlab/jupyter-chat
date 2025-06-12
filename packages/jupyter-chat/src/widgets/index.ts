@@ -3,5 +3,6 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-export * from './types';
-export * from './registry';
+export * from './chat-error';
+export * from './chat-sidebar';
+export * from './chat-widget';

@@ -4,7 +4,32 @@
  */
 
 import { LabIcon } from '@jupyterlab/ui-components';
+import { Token } from '@lumino/coreutils';
 import { IInputModel } from '../input-model';
+
+/**
+ * The token for the chat command registry, which can be provided by an extension
+ * using @jupyter/chat package.
+ */
+export const IChatCommandRegistry = new Token<IChatCommandRegistry>(
+  '@jupyter/chat:IChatCommandRegistry'
+);
+
+/**
+ * Interface of a chat command registry, which tracks a list of chat command
+ * providers. Providers provide a list of commands given a user's partial input,
+ * and define how commands are handled when accepted in the chat commands menu.
+ */
+export interface IChatCommandRegistry {
+  addProvider(provider: IChatCommandProvider): void;
+  getProviders(): IChatCommandProvider[];
+
+  /**
+   * Handles a chat command by calling `handleChatCommand()` on the provider
+   * corresponding to this chat command.
+   */
+  handleChatCommand(command: ChatCommand, inputModel: IInputModel): void;
+}
 
 export type ChatCommand = {
   /**
@@ -64,4 +89,36 @@ export interface IChatCommandProvider {
     command: ChatCommand,
     inputModel: IInputModel
   ): Promise<void>;
+}
+
+/**
+ * Default chat command registry implementation.
+ */
+export class ChatCommandRegistry implements IChatCommandRegistry {
+  constructor() {
+    this._providers = new Map<string, IChatCommandProvider>();
+  }
+
+  addProvider(provider: IChatCommandProvider): void {
+    this._providers.set(provider.id, provider);
+  }
+
+  getProviders(): IChatCommandProvider[] {
+    return Array.from(this._providers.values());
+  }
+
+  handleChatCommand(command: ChatCommand, inputModel: IInputModel) {
+    const provider = this._providers.get(command.providerId);
+    if (!provider) {
+      console.error(
+        'Error in handling chat command: No command provider has an ID of ' +
+          command.providerId
+      );
+      return;
+    }
+
+    provider.handleChatCommand(command, inputModel);
+  }
+
+  private _providers: Map<string, IChatCommandProvider>;
 }

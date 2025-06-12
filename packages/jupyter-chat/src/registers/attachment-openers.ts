@@ -2,8 +2,9 @@
  * Copyright (c) Jupyter Development Team.
  * Distributed under the terms of the Modified BSD License.
  */
+
 import { Token } from '@lumino/coreutils';
-import { IAttachment } from './types';
+import { IAttachment } from '../types';
 
 /**
  * The token for the attachments opener registry, which can be provided by an extension

@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 import { createContext } from 'react';
-import { IAttachmentOpenerRegistry } from './registry';
+import { IAttachmentOpenerRegistry } from './registers';
 
 export const AttachmentOpenerContext = createContext<
   IAttachmentOpenerRegistry | undefined
