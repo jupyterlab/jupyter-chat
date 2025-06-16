@@ -55,7 +55,7 @@ export namespace SelectionWatcher {
     /**
      * The language of the selection.
      */
-    language: string;
+    language?: string;
     /**
      * The ID of the cell in which the selection was made, if the original widget
      * was a notebook.
@@ -225,7 +225,7 @@ async function getTextSelection(
     [start, end] = [end, start];
   }
 
-  const language = await languages.getLanguage(editor?.model.mimeType);
+  const language = (await languages.getLanguage(editor?.model.mimeType))?.name;
   return {
     ...selectionObj,
     start,
@@ -233,7 +233,10 @@ async function getTextSelection(
     text,
     numLines: text.split('\n').length,
     widgetId: widget.id,
-    language: language?.name || '',
+
+    ...(language && {
+      language
+    }),
     ...(cellId && {
       cellId
     })

@@ -153,7 +153,7 @@ export class ActiveCellManager implements IActiveCellManager {
     const language =
       sharedModel?.cell_type === 'code'
         ? this._notebookTracker.currentWidget?.model?.defaultKernelLanguage
-        : '';
+        : undefined;
 
     if (!sharedModel) {
       return null;
