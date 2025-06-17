@@ -47,7 +47,7 @@ export class EmojiCommandProvider implements IChatCommandProvider {
   // regex used to test the current word
   private _regex: RegExp = /^:\w*:?/;
 
-  async getChatCommands(inputModel: IInputModel) {
+  async listCommandCompletions(inputModel: IInputModel) {
     const match = inputModel.currentWord?.match(this._regex)?.[0];
     if (!match) {
       return [];
@@ -59,11 +59,10 @@ export class EmojiCommandProvider implements IChatCommandProvider {
     return commands;
   }
 
-  async handleChatCommand(
-    command: ChatCommand,
-    inputModel: IInputModel
-  ): Promise<void> {
-    // no handling needed because `replaceWith` is set in each command.
+  async onSubmit(inputModel: IInputModel) {
+    // this provider only provides commands that replace the current word
+    // when typed / selected from the menu. this method does not need to handle
+    // anything on submission.
     return;
   }
 }

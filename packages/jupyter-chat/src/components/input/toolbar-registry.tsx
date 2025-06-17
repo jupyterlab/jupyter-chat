@@ -7,6 +7,7 @@ import * as React from 'react';
 import { AttachButton, CancelButton, SendButton } from './buttons';
 import { IInputModel } from '../../input-model';
 import { ISignal, Signal } from '@lumino/signaling';
+import { IChatCommandRegistry } from '../../registers';
 
 /**
  * The toolbar registry interface.
@@ -137,6 +138,11 @@ export namespace InputToolbarRegistry {
      * The input model of the input component including the button.
      */
     model: IInputModel;
+    /**
+     * Chat command registry. Should be used by the "Send" button to run
+     * `onSubmit()` on all command providers before sending the message.
+     */
+    chatCommandRegistry?: IChatCommandRegistry;
   }
 
   /**

@@ -28,54 +28,73 @@ class MentionCommandProvider implements IChatCommandProvider {
   public id: string = 'jupyter-chat:mention-commands';
 
   // regex used to test the current word
-  private _regex: RegExp = /^@[\w-]*:?/;
+  private _regex: RegExp = /^@[\w-]*:?/g;
 
-  async getChatCommands(inputModel: IInputModel) {
-    this._users.clear();
+  /**
+   * Lists all valid user mentions that complete the current word.
+   */
+  async listCommandCompletions(inputModel: IInputModel) {
     const match = inputModel.currentWord?.match(this._regex)?.[0];
     if (!match) {
       return [];
     }
 
-    const users = inputModel.chatContext.users;
-    users.forEach(user => {
-      let mentionName = user.mention_name;
-      if (!mentionName) {
-        mentionName = Private.getMentionName(user);
-        user.mention_name = mentionName;
-      }
-
-      this._users.set(mentionName, {
-        user,
-        icon: <Avatar user={user} />
-      });
-    });
-
     // Build the commands for each user.
-    const commands: ChatCommand[] = Array.from(this._users)
+    const commands: ChatCommand[] = Array.from(this._getUsers(inputModel))
       .sort()
       .filter(user => user[0].toLowerCase().startsWith(match.toLowerCase()))
       .map(user => {
         return {
           name: user[0],
           providerId: this.id,
-          icon: user[1].icon
+          icon: user[1].icon,
+          // include an extra space to push the cursor forward after accepting
+          // the command from the menu.
+          replaceWith: user[0] + ' '
         };
       });
+
     return commands;
   }
 
-  async handleChatCommand(
-    command: ChatCommand,
-    inputModel: IInputModel
-  ): Promise<void> {
-    inputModel.replaceCurrentWord(`${command.name} `);
-    if (this._users.has(command.name)) {
-      inputModel.addMention?.(this._users.get(command.name)!.user);
+  /**
+   * Adds all users identified via `@` as mentions to the new message prior to
+   * submission.
+   */
+  async onSubmit(inputModel: IInputModel) {
+    const input = inputModel.value;
+    const matches = input.match(this._regex) ?? [];
+
+    for (const match of matches) {
+      const mentionedUser = this._getUsers(inputModel).get(match);
+      if (mentionedUser) {
+        inputModel.addMention?.(mentionedUser.user);
+      }
     }
   }
 
-  private _users = new Map<string, Private.CommandUser>();
+  /**
+   * Returns a dictionary of `{ user: IUser, icon: JSX.Element }` entries, keyed
+   * by the user's mention name.
+   */
+  _getUsers(inputModel: IInputModel): Map<string, Private.CommandUser> {
+    const users = new Map();
+    const userList = inputModel.chatContext.users;
+    userList.forEach(user => {
+      let mentionName = user.mention_name;
+      if (!mentionName) {
+        mentionName = Private.getMentionName(user);
+        user.mention_name = mentionName;
+      }
+
+      users.set(mentionName, {
+        user,
+        icon: <Avatar user={user} />
+      });
+    });
+
+    return users;
+  }
 }
 
 namespace Private {

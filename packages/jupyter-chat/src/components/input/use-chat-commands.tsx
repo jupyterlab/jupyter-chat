@@ -45,6 +45,9 @@ export function useChatCommands(
   const [commands, setCommands] = useState<ChatCommand[]>([]);
 
   useEffect(() => {
+    /**
+     * Callback that runs whenever the current word changes.
+     */
     async function getCommands(_: IInputModel, currentWord: string | null) {
       const providers = chatCommandRegistry?.getProviders();
       if (!providers) {
@@ -63,7 +66,7 @@ export function useChatCommands(
         // TODO: optimize performance when this method is truly async
         try {
           newCommands = newCommands.concat(
-            await provider.getChatCommands(inputModel)
+            await provider.listCommandCompletions(inputModel)
           );
         } catch (e) {
           console.error(
@@ -87,7 +90,8 @@ export function useChatCommands(
 
   /**
    * onChange(): the callback invoked when a command is selected from the chat
-   * commands menu by the user.
+   * commands menu. When a command `cmd` is selected, this function replaces the
+   * current word with `cmd.replaceWith` if set, `cmd.name` otherwise.
    */
   const onChange: AutocompleteProps['onChange'] = (
     e: unknown,
@@ -109,14 +113,11 @@ export function useChatCommands(
       return;
     }
 
-    // if replaceWith is set, handle the command immediately
     if (command.replaceWith) {
       inputModel.replaceCurrentWord(command.replaceWith);
-      return;
+    } else {
+      inputModel.replaceCurrentWord(command.name);
     }
-
-    // otherwise, defer handling to the command provider
-    chatCommandRegistry.handleChatCommand(command, inputModel);
   };
 
   return {
