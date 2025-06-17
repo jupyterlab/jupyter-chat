@@ -27,8 +27,9 @@ export const mentionCommandsPlugin: JupyterFrontEndPlugin<void> = {
 class MentionCommandProvider implements IChatCommandProvider {
   public id: string = 'jupyter-chat:mention-commands';
 
-  // regex used to test the current word
-  private _regex: RegExp = /^@[\w-]*:?/g;
+  // Regex used to find all mentions in a message.
+  // IMPORTANT: the global flag must be specified to find >1 mentions.
+  private _regex: RegExp = /@[\w-]*:?/g;
 
   /**
    * Lists all valid user mentions that complete the current word.
