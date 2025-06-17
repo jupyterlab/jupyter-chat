@@ -35,15 +35,20 @@ class MentionCommandProvider implements IChatCommandProvider {
    * Lists all valid user mentions that complete the current word.
    */
   async listCommandCompletions(inputModel: IInputModel) {
+    // Return early if the current word does not match the expected syntax
     const match = inputModel.currentWord?.match(this._regex)?.[0];
     if (!match) {
       return [];
     }
 
-    // Build the commands for each user.
+    // Otherwise, build the list of `@`-mention commands that complete the
+    // current word.
+    const existingMentions = new Set(inputModel.value?.match(this._regex));
     const commands: ChatCommand[] = Array.from(this._getUsers(inputModel))
-      .sort()
+      // remove users whose mention names that do not complete the match
       .filter(user => user[0].toLowerCase().startsWith(match.toLowerCase()))
+      // remove users already mentioned in the message
+      .filter(user => !existingMentions.has(user[0]))
       .map(user => {
         return {
           name: user[0],
@@ -57,8 +62,8 @@ class MentionCommandProvider implements IChatCommandProvider {
   }
 
   /**
-   * Adds all users identified via `@` as mentions to the new message prior to
-   * submission.
+   * Adds all users identified via `@` as mentions to the new message
+   * immediately prior to submission.
    */
   async onSubmit(inputModel: IInputModel) {
     const input = inputModel.value;
