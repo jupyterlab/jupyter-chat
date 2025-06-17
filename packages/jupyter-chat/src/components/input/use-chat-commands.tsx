@@ -81,15 +81,11 @@ export function useChatCommands(
       if (
         commandCompletions.length === 1 &&
         commandCompletions[0].name === inputModel.currentWord &&
-        commandCompletions[0].replaceWith
+        commandCompletions[0].replaceWith !== undefined
       ) {
         const replacement = commandCompletions[0].replaceWith;
-        if (
-          replacement !== undefined &&
-          replacement.trim() !== inputModel.currentWord
-        ) {
-          inputModel.replaceCurrentWord(replacement);
-        }
+        inputModel.replaceCurrentWord(replacement);
+        return;
       }
 
       // Otherwise, open/close the menu based on the presence of command
