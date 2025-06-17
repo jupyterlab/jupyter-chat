@@ -130,11 +130,12 @@ export function useChatCommands(
       return;
     }
 
-    if (command.replaceWith) {
-      inputModel.replaceCurrentWord(command.replaceWith);
-    } else {
-      inputModel.replaceCurrentWord(command.name);
+    let replacement =
+      command.replaceWith === undefined ? command.name : command.replaceWith;
+    if (command.spaceOnAccept) {
+      replacement += ' ';
     }
+    inputModel.replaceCurrentWord(replacement);
   };
 
   return {

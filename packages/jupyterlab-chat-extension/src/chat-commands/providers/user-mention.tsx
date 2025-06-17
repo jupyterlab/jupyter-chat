@@ -48,9 +48,7 @@ class MentionCommandProvider implements IChatCommandProvider {
           name: user[0],
           providerId: this.id,
           icon: user[1].icon,
-          // include an extra space to push the cursor forward after accepting
-          // the command from the menu.
-          replaceWith: user[0] + ' '
+          spaceOnAccept: true
         };
       });
 

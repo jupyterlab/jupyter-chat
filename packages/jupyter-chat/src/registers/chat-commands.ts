@@ -67,15 +67,22 @@ export type ChatCommand = {
   description?: string;
 
   /**
-   * If set, Jupyter Chat will replace the current word with this string immediately once
-   * the command is selected from the chat commands menu or the current word
+   * If set, Jupyter Chat will replace the current word with this string immediately when
+   * the command is accepted from the chat commands menu or the current word
    * matches the command's `name` exactly.
    *
-   * This can be set to `name` with a trailing space ' '. Doing so will
-   * automatically add a space after the user selects the command from the
-   * commands menu.
+   * This is generally used by "shortcut command" providers, e.g. the emoji
+   * command provider.
    */
   replaceWith?: string;
+
+  /**
+   * Specifies whether the application should add a space ' ' after the command
+   * is accepted from the menu.
+   *
+   * Defaults to `false`.
+   */
+  spaceOnAccept?: boolean;
 };
 
 /**
