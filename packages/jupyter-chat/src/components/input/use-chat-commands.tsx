@@ -61,11 +61,11 @@ export function useChatCommands(
         return;
       }
 
-      let newCommands: ChatCommand[] = [];
+      let commandCompletions: ChatCommand[] = [];
       for (const provider of providers) {
         // TODO: optimize performance when this method is truly async
         try {
-          newCommands = newCommands.concat(
+          commandCompletions = commandCompletions.concat(
             await provider.listCommandCompletions(inputModel)
           );
         } catch (e) {
@@ -75,10 +75,27 @@ export function useChatCommands(
           );
         }
       }
-      if (newCommands) {
-        setOpen(true);
+
+      // Immediately replace the current word if it exactly matches one command
+      // and 'replaceWith' is set.
+      if (
+        commandCompletions.length === 1 &&
+        commandCompletions[0].name === inputModel.currentWord &&
+        commandCompletions[0].replaceWith
+      ) {
+        const replacement = commandCompletions[0].replaceWith;
+        if (
+          replacement !== undefined &&
+          replacement.trim() !== inputModel.currentWord
+        ) {
+          inputModel.replaceCurrentWord(replacement);
+        }
       }
-      setCommands(newCommands);
+
+      // Otherwise, open/close the menu based on the presence of command
+      // completions and set the menu entries.
+      setOpen(!!commandCompletions.length);
+      setCommands(commandCompletions);
     }
 
     inputModel.currentWordChanged.connect(getCommands);

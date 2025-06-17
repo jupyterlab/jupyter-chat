@@ -71,7 +71,7 @@ export type ChatCommand = {
    * the command is selected from the chat commands menu or the current word
    * matches the command's `name` exactly.
    *
-   * This can be set to `name` with a trailing space ' '. This will
+   * This can be set to `name` with a trailing space ' '. Doing so will
    * automatically add a space after the user selects the command from the
    * commands menu.
    */

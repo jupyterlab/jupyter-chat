@@ -16,28 +16,28 @@ export class EmojiCommandProvider implements IChatCommandProvider {
   private _slash_commands: ChatCommand[] = [
     {
       name: ':heart:',
-      replaceWith: '❤ ',
+      replaceWith: '❤',
       providerId: this.id,
       description: 'Emoji',
       icon: '❤'
     },
     {
       name: ':smile:',
-      replaceWith: '🙂 ',
+      replaceWith: '🙂',
       providerId: this.id,
       description: 'Emoji',
       icon: '🙂'
     },
     {
       name: ':thinking:',
-      replaceWith: '🤔 ',
+      replaceWith: '🤔',
       providerId: this.id,
       description: 'Emoji',
       icon: '🤔'
     },
     {
       name: ':cool:',
-      replaceWith: '😎 ',
+      replaceWith: '😎',
       providerId: this.id,
       description: 'Emoji',
       icon: '😎'
