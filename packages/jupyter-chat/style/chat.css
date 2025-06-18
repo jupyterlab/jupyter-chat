@@ -112,12 +112,10 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-left: 4px;
 }
 
 .jp-chat-writing-text {
   color: var(--jp-ui-font-color2);
-  font-style: italic;
 }
 
 /* Animated typing indicator */

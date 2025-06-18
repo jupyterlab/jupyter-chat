@@ -4,7 +4,7 @@
  */
 
 import { Box, Typography } from '@mui/material';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { Avatar } from '../avatar';
 import { IUser } from '../../types';
@@ -35,7 +35,7 @@ const TypingIndicator = (): JSX.Element => (
 /**
  * The writers component, displaying the current writers.
  */
-export function Writers(props: writersProps): JSX.Element | null {
+export function WritingUsersList(props: writersProps): JSX.Element | null {
   const { writers } = props;
 
   // Don't render if no writers
@@ -45,24 +45,30 @@ export function Writers(props: writersProps): JSX.Element | null {
 
   const writersText = writers.length > 1 ? ' are writing' : ' is writing';
 
+  const writingUsers: JSX.Element[] = useMemo(
+    () =>
+      writers.map((writer, index) => (
+        <Box key={writer.username || index} className="jp-chat-writer-item">
+          <Avatar user={writer} small />
+          <Typography variant="body2" className="jp-chat-writer-name">
+            {writer.display_name ??
+              writer.name ??
+              (writer.username || 'User undefined')}
+          </Typography>
+          {index < writers.length - 1 && (
+            <Typography variant="body2" className="jp-chat-writer-separator">
+              {index < writers.length - 2 ? ', ' : ' and '}
+            </Typography>
+          )}
+        </Box>
+      )),
+    [writers]
+  );
+
   return (
     <Box className={`${WRITERS_CLASS}`}>
       <Box className="jp-chat-writers-content">
-        {writers.map((writer, index) => (
-          <Box key={writer.username || index} className="jp-chat-writer-item">
-            <Avatar user={writer} small />
-            <Typography variant="body2" className="jp-chat-writer-name">
-              {writer.display_name ??
-                writer.name ??
-                (writer.username || 'User undefined')}
-            </Typography>
-            {index < writers.length - 1 && (
-              <Typography variant="body2" className="jp-chat-writer-separator">
-                {index < writers.length - 2 ? ', ' : ' and '}
-              </Typography>
-            )}
-          </Box>
-        ))}
+        {writingUsers}
         <Box className="jp-chat-writing-status">
           <Typography variant="body2" className="jp-chat-writing-text">
             {writersText}
