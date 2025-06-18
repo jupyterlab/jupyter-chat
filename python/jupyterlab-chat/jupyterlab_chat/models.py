@@ -75,11 +75,14 @@ class NewMessage:
 class User(JupyterUser):
     """ Object representing a user """
 
-    mention_name: Optional[str] = None
-    """ The string to use as mention in chat """
-
     bot: Optional[bool] = None
     """ Boolean identifying if user is a bot """
+
+    @property
+    def mention_name(self) -> str:
+        name: str = self.display_name or self.name or self.username
+        name = name.replace(" ", "-")
+        return name
 
 
 @dataclass

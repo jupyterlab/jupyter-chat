@@ -22,6 +22,11 @@ USER2 = User(
     display_name="Test user 2"
 )
 
+USER3 = User(
+    username=str(uuid4()),
+    name="Test user 3",
+    display_name="Test user 3"
+)
 
 def create_new_message(body="This is a test message") -> NewMessage:
     return NewMessage(
@@ -42,6 +47,11 @@ def test_add_user():
     chat.set_user(USER)
     assert USER.username in chat._get_users().keys()
     assert chat._get_users()[USER.username] == asdict(USER)
+
+def test_mention_names():
+    assert USER.mention_name == "Test-user"
+    assert USER2.mention_name == "Test-user-2"
+    assert USER3.mention_name == "Test-user-3"
 
 
 def test_get_user_type():
@@ -82,6 +92,21 @@ def test_add_message():
     message_dict = chat._get_messages()[0]
     assert message_dict["body"] == msg.body
     assert message_dict["sender"] == msg.sender
+
+
+def test_add_message_includes_mentions():
+    chat = YChat()
+    chat.set_user(USER)
+    chat.set_user(USER2)
+    chat.set_user(USER3)
+
+    new_msg = create_new_message(
+        f"@{USER2.mention_name} @{USER3.mention_name} Hello!"
+    )
+    msg_id = chat.add_message(new_msg)
+    msg = chat.get_message(msg_id)
+
+    assert set(msg.mentions) == set([USER2.username, USER3.username])
 
 
 def test_get_message_should_return_the_message():

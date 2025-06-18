@@ -12,6 +12,7 @@ from jupyter_ydoc.ybasedoc import YBaseDoc
 from typing import Any, Callable, Optional, Set
 from uuid import uuid4
 from pycrdt import Array, ArrayEvent, Map, MapEvent
+import re
 
 from .models import message_asdict_factory, Attachment, Message, NewMessage, User
 
@@ -132,8 +133,18 @@ class YChat(YBaseDoc):
         message = Message(
             **asdict(new_message),
             time=timestamp,
-            id=uid
+            id=uid,
         )
+
+        # find all mentioned users and add them as message mentions
+        mention_pattern = re.compile("@([\w-]+):?")
+        mentioned_names: Set[str] = set(re.findall(mention_pattern, message.body))
+        users = self.get_users()
+        mentioned_usernames = []
+        for username, user in users.items():
+            if user.mention_name in mentioned_names and user.username not in mentioned_usernames:
+                mentioned_usernames.append(username)
+        message.mentions = mentioned_usernames
 
         with self._ydoc.transaction():
             index = len(self._ymessages) - next((i for i, v in enumerate(self._get_messages()[::-1]) if v["time"] < timestamp), len(self._ymessages))
