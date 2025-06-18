@@ -13,11 +13,13 @@ import { ISignal, Signal } from '@lumino/signaling';
 type CellContent = {
   type: string;
   source: string;
+  language?: string;
 };
 
 type CellWithErrorContent = {
   type: 'code';
   source: string;
+  language?: string;
   error: {
     name: string;
     value: string;
@@ -148,6 +150,11 @@ export class ActiveCellManager implements IActiveCellManager {
   getContent(withError: true): CellWithErrorContent | null;
   getContent(withError = false): CellContent | CellWithErrorContent | null {
     const sharedModel = this._notebookTracker.activeCell?.model.sharedModel;
+    const language =
+      sharedModel?.cell_type === 'code'
+        ? this._notebookTracker.currentWidget?.model?.defaultKernelLanguage
+        : undefined;
+
     if (!sharedModel) {
       return null;
     }
@@ -156,7 +163,8 @@ export class ActiveCellManager implements IActiveCellManager {
     if (!withError) {
       return {
         type: sharedModel.cell_type,
-        source: sharedModel.getSource()
+        source: sharedModel.getSource(),
+        language
       };
     }
 
@@ -166,6 +174,7 @@ export class ActiveCellManager implements IActiveCellManager {
       return {
         type: 'code',
         source: sharedModel.getSource(),
+        language,
         error: {
           name: error.ename,
           value: error.evalue,

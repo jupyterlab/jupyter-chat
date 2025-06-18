@@ -6,6 +6,10 @@
 import { JupyterFrontEnd } from '@jupyterlab/application';
 import { DocumentWidget } from '@jupyterlab/docregistry';
 import { CodeEditor } from '@jupyterlab/codeeditor';
+import {
+  EditorLanguageRegistry,
+  IEditorLanguageRegistry
+} from '@jupyterlab/codemirror';
 import { Notebook } from '@jupyterlab/notebook';
 
 import { find } from '@lumino/algorithm';
@@ -26,6 +30,10 @@ export namespace SelectionWatcher {
      * The current shell of the application.
      */
     shell: JupyterFrontEnd.IShell;
+    /**
+     * Editor language registry.
+     */
+    languages?: IEditorLanguageRegistry;
   }
 
   /**
@@ -44,6 +52,10 @@ export namespace SelectionWatcher {
      * The ID of the document widget in which the selection was made.
      */
     widgetId: string;
+    /**
+     * The language of the selection.
+     */
+    language?: string;
     /**
      * The ID of the cell in which the selection was made, if the original widget
      * was a notebook.
@@ -70,6 +82,7 @@ export interface ISelectionWatcher {
 export class SelectionWatcher {
   constructor(options: SelectionWatcher.IOptions) {
     this._shell = options.shell;
+    this._languages = options.languages || new EditorLanguageRegistry();
     this._shell.currentChanged?.connect((sender, args) => {
       // Do not change the main area widget if the new one has no editor, for example
       // a chat panel. However, the selected text is only available if the main area
@@ -149,12 +162,15 @@ export class SelectionWatcher {
     editor.setSelection({ start: newPosition, end: newPosition });
   }
 
-  protected _poll(): void {
+  protected async _poll(): Promise<void> {
     let currSelection: SelectionWatcher.Selection | null = null;
     const prevSelection = this._selection;
     // Do not return selected text if the main area widget is hidden.
     if (this._mainAreaDocumentWidget?.isVisible) {
-      currSelection = getTextSelection(this._mainAreaDocumentWidget);
+      currSelection = await getTextSelection(
+        this._mainAreaDocumentWidget,
+        this._languages
+      );
     }
     if (prevSelection?.text !== currSelection?.text) {
       this._selection = currSelection;
@@ -169,14 +185,16 @@ export class SelectionWatcher {
     this,
     SelectionWatcher.Selection | null
   >(this);
+  private _languages: IEditorLanguageRegistry;
 }
 
 /**
  * Gets a Selection object from a document widget. Returns `null` if unable.
  */
-function getTextSelection(
-  widget: Widget | null
-): SelectionWatcher.Selection | null {
+async function getTextSelection(
+  widget: Widget | null,
+  languages: IEditorLanguageRegistry
+): Promise<SelectionWatcher.Selection | null> {
   const editor = getEditor(widget);
   // widget type check is redundant but hints the type to TypeScript
   if (!editor || !(widget instanceof DocumentWidget)) {
@@ -207,6 +225,7 @@ function getTextSelection(
     [start, end] = [end, start];
   }
 
+  const language = (await languages.getLanguage(editor?.model.mimeType))?.name;
   return {
     ...selectionObj,
     start,
@@ -214,6 +233,10 @@ function getTextSelection(
     text,
     numLines: text.split('\n').length,
     widgetId: widget.id,
+
+    ...(language && {
+      language
+    }),
     ...(cellId && {
       cellId
     })
