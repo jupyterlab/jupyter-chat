@@ -23,7 +23,7 @@ const SEND_INCLUDE_LI_CLASS = 'jp-chat-send-include';
 export function SendButton(
   props: InputToolbarRegistry.IToolbarItemProps
 ): JSX.Element {
-  const { model } = props;
+  const { model, chatCommandRegistry } = props;
   const { activeCellManager, selectionWatcher } = model;
   const hideIncludeSelection = !activeCellManager || !selectionWatcher;
 
@@ -98,8 +98,16 @@ export function SendButton(
     };
   }, [activeCellManager, selectionWatcher]);
 
-  function sendWithSelection() {
+  async function send() {
+    await chatCommandRegistry?.onSubmit(model);
+    model.send(model.value);
+  }
+
+  async function sendWithSelection() {
     let source = '';
+
+    // Run all chat command providers
+    await chatCommandRegistry?.onSubmit(model);
 
     if (selectionWatcher?.selection) {
       // Append the selected text if exists.
@@ -125,7 +133,7 @@ ${source}
   return (
     <>
       <TooltippedButton
-        onClick={() => model.send(model.value)}
+        onClick={send}
         disabled={disabled}
         tooltip={tooltip}
         buttonProps={{

@@ -105,7 +105,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
    * "Enter". This also handles many of the edge cases in the MUI Autocomplete
    * component.
    */
-  function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+  async function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
     /**
      * IMPORTANT: This statement ensures that arrow keys can be used to navigate
      * the multiline input when the chat commands menu is closed.
@@ -157,6 +157,8 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
       (sendWithShiftEnter && event.shiftKey) ||
       (!sendWithShiftEnter && !event.shiftKey)
     ) {
+      // Run all command providers
+      await props.chatCommandRegistry?.onSubmit(model);
       model.send(input);
       event.stopPropagation();
       event.preventDefault();
@@ -218,7 +220,10 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
               endAdornment: (
                 <InputAdornment position="end" className={INPUT_TOOLBAR_CLASS}>
                   {toolbarElements.map(item => (
-                    <item.element model={model} />
+                    <item.element
+                      model={model}
+                      chatCommandRegistry={props.chatCommandRegistry}
+                    />
                   ))}
                 </InputAdornment>
               )

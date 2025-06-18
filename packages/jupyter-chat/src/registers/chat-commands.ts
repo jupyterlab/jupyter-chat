@@ -21,14 +21,25 @@ export const IChatCommandRegistry = new Token<IChatCommandRegistry>(
  * and define how commands are handled when accepted in the chat commands menu.
  */
 export interface IChatCommandRegistry {
+  /**
+   * Adds a chat command provider to the registry.
+   */
   addProvider(provider: IChatCommandProvider): void;
+
+  /**
+   * Lists all chat command providers previously added via `addProvider()`.
+   */
   getProviders(): IChatCommandProvider[];
 
   /**
-   * Handles a chat command by calling `handleChatCommand()` on the provider
-   * corresponding to this chat command.
+   * Calls `onSubmit()` on each command provider in serial. Each command
+   * provider's `onSubmit()` method is responsible for checking the entire input
+   * for command calls and handling them accordingly.
+   *
+   * This method is called by the application after the user presses the "Send"
+   * button but before the message is sent to server.
    */
-  handleChatCommand(command: ChatCommand, inputModel: IInputModel): void;
+  onSubmit(inputModel: IInputModel): Promise<void>;
 }
 
 export type ChatCommand = {
@@ -56,13 +67,24 @@ export type ChatCommand = {
   description?: string;
 
   /**
-   * If set, Jupyter Chat will replace the current word with this string after
-   * the command is run from the chat commands menu.
+   * If set, Jupyter Chat will replace the current word with this string immediately when
+   * the command is accepted from the chat commands menu or the current word
+   * matches the command's `name` exactly.
    *
-   * If all commands from a provider have this property set, then
-   * `handleChatCommands()` can just return on the first line.
+   * This is generally used by "shortcut command" providers, e.g. the emoji
+   * command provider.
    */
   replaceWith?: string;
+
+  /**
+   * Specifies whether the application should add a space ' ' after the command
+   * is accepted from the menu. This should be set to `true` if the command that
+   * replaces the current word needs to be handled on submit, and the command is
+   * valid on its own.
+   *
+   * Defaults to `false`.
+   */
+  spaceOnAccept?: boolean;
 };
 
 /**
@@ -75,20 +97,23 @@ export interface IChatCommandProvider {
   id: string;
 
   /**
-   * Async function which accepts the input model and returns a list of
-   * valid chat commands that match the current word. The current word is
-   * space-separated word at the user's cursor.
+   * A method that should return the list of valid chat commands whose names
+   * complete the current word.
+   *
+   * The current word should be accessed from `inputModel.currentWord`.
    */
-  getChatCommands(inputModel: IInputModel): Promise<ChatCommand[]>;
+  listCommandCompletions(inputModel: IInputModel): Promise<ChatCommand[]>;
 
   /**
-   * Function called when a chat command is run by the user through the chat
-   * commands menu.
+   * A method that should identify and handle *all* command calls within a
+   * message that the user intends to submit. This method is called after a user
+   * presses the "Send" button but before the message is sent to the server.
+   *
+   * The entire message should be read from `inputModel.value`. This method may
+   * modify the new message before submission by setting `inputModel.value` or
+   * by calling other methods available on `inputModel`.
    */
-  handleChatCommand(
-    command: ChatCommand,
-    inputModel: IInputModel
-  ): Promise<void>;
+  onSubmit(inputModel: IInputModel): Promise<void>;
 }
 
 /**
@@ -107,17 +132,10 @@ export class ChatCommandRegistry implements IChatCommandRegistry {
     return Array.from(this._providers.values());
   }
 
-  handleChatCommand(command: ChatCommand, inputModel: IInputModel) {
-    const provider = this._providers.get(command.providerId);
-    if (!provider) {
-      console.error(
-        'Error in handling chat command: No command provider has an ID of ' +
-          command.providerId
-      );
-      return;
+  async onSubmit(inputModel: IInputModel) {
+    for (const provider of this._providers.values()) {
+      await provider.onSubmit(inputModel);
     }
-
-    provider.handleChatCommand(command, inputModel);
   }
 
   private _providers: Map<string, IChatCommandProvider>;

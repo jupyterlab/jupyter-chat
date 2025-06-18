@@ -45,6 +45,9 @@ export function useChatCommands(
   const [commands, setCommands] = useState<ChatCommand[]>([]);
 
   useEffect(() => {
+    /**
+     * Callback that runs whenever the current word changes.
+     */
     async function getCommands(_: IInputModel, currentWord: string | null) {
       const providers = chatCommandRegistry?.getProviders();
       if (!providers) {
@@ -58,12 +61,12 @@ export function useChatCommands(
         return;
       }
 
-      let newCommands: ChatCommand[] = [];
+      let commandCompletions: ChatCommand[] = [];
       for (const provider of providers) {
         // TODO: optimize performance when this method is truly async
         try {
-          newCommands = newCommands.concat(
-            await provider.getChatCommands(inputModel)
+          commandCompletions = commandCompletions.concat(
+            await provider.listCommandCompletions(inputModel)
           );
         } catch (e) {
           console.error(
@@ -72,10 +75,23 @@ export function useChatCommands(
           );
         }
       }
-      if (newCommands) {
-        setOpen(true);
+
+      // Immediately replace the current word if it exactly matches one command
+      // and 'replaceWith' is set.
+      if (
+        commandCompletions.length === 1 &&
+        commandCompletions[0].name === inputModel.currentWord &&
+        commandCompletions[0].replaceWith !== undefined
+      ) {
+        const replacement = commandCompletions[0].replaceWith;
+        inputModel.replaceCurrentWord(replacement);
+        return;
       }
-      setCommands(newCommands);
+
+      // Otherwise, open/close the menu based on the presence of command
+      // completions and set the menu entries.
+      setOpen(!!commandCompletions.length);
+      setCommands(commandCompletions);
     }
 
     inputModel.currentWordChanged.connect(getCommands);
@@ -87,7 +103,8 @@ export function useChatCommands(
 
   /**
    * onChange(): the callback invoked when a command is selected from the chat
-   * commands menu by the user.
+   * commands menu. When a command `cmd` is selected, this function replaces the
+   * current word with `cmd.replaceWith` if set, `cmd.name` otherwise.
    */
   const onChange: AutocompleteProps['onChange'] = (
     e: unknown,
@@ -109,14 +126,12 @@ export function useChatCommands(
       return;
     }
 
-    // if replaceWith is set, handle the command immediately
-    if (command.replaceWith) {
-      inputModel.replaceCurrentWord(command.replaceWith);
-      return;
+    let replacement =
+      command.replaceWith === undefined ? command.name : command.replaceWith;
+    if (command.spaceOnAccept) {
+      replacement += ' ';
     }
-
-    // otherwise, defer handling to the command provider
-    chatCommandRegistry.handleChatCommand(command, inputModel);
+    inputModel.replaceCurrentWord(replacement);
   };
 
   return {

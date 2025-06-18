@@ -27,55 +27,78 @@ export const mentionCommandsPlugin: JupyterFrontEndPlugin<void> = {
 class MentionCommandProvider implements IChatCommandProvider {
   public id: string = 'jupyter-chat:mention-commands';
 
-  // regex used to test the current word
-  private _regex: RegExp = /^@[\w-]*:?/;
+  // Regex used to find all mentions in a message.
+  // IMPORTANT: the global flag must be specified to find >1 mentions.
+  private _regex: RegExp = /@[\w-]*/g;
 
-  async getChatCommands(inputModel: IInputModel) {
-    this._users.clear();
+  /**
+   * Lists all valid user mentions that complete the current word.
+   */
+  async listCommandCompletions(inputModel: IInputModel) {
+    // Return early if the current word does not match the expected syntax
     const match = inputModel.currentWord?.match(this._regex)?.[0];
     if (!match) {
       return [];
     }
 
-    const users = inputModel.chatContext.users;
-    users.forEach(user => {
+    // Otherwise, build the list of `@`-mention commands that complete the
+    // current word.
+    const existingMentions = new Set(inputModel.value?.match(this._regex));
+    const commands: ChatCommand[] = Array.from(this._getUsers(inputModel))
+      // remove users whose mention names that do not complete the match
+      .filter(user => user[0].toLowerCase().startsWith(match.toLowerCase()))
+      // remove users already mentioned in the message
+      .filter(user => !existingMentions.has(user[0]))
+      .map(user => {
+        return {
+          name: user[0],
+          providerId: this.id,
+          icon: user[1].icon,
+          spaceOnAccept: true
+        };
+      });
+
+    return commands;
+  }
+
+  /**
+   * Adds all users identified via `@` as mentions to the new message
+   * immediately prior to submission.
+   */
+  async onSubmit(inputModel: IInputModel) {
+    const input = inputModel.value;
+    const matches = input.match(this._regex) ?? [];
+
+    for (const match of matches) {
+      const mentionedUser = this._getUsers(inputModel).get(match);
+      if (mentionedUser) {
+        inputModel.addMention?.(mentionedUser.user);
+      }
+    }
+  }
+
+  /**
+   * Returns a dictionary of `{ user: IUser, icon: JSX.Element }` entries, keyed
+   * by the user's mention name.
+   */
+  _getUsers(inputModel: IInputModel): Map<string, Private.CommandUser> {
+    const users = new Map();
+    const userList = inputModel.chatContext.users;
+    userList.forEach(user => {
       let mentionName = user.mention_name;
       if (!mentionName) {
         mentionName = Private.getMentionName(user);
         user.mention_name = mentionName;
       }
 
-      this._users.set(mentionName, {
+      users.set(mentionName, {
         user,
         icon: <Avatar user={user} />
       });
     });
 
-    // Build the commands for each user.
-    const commands: ChatCommand[] = Array.from(this._users)
-      .sort()
-      .filter(user => user[0].toLowerCase().startsWith(match.toLowerCase()))
-      .map(user => {
-        return {
-          name: user[0],
-          providerId: this.id,
-          icon: user[1].icon
-        };
-      });
-    return commands;
+    return users;
   }
-
-  async handleChatCommand(
-    command: ChatCommand,
-    inputModel: IInputModel
-  ): Promise<void> {
-    inputModel.replaceCurrentWord(`${command.name} `);
-    if (this._users.has(command.name)) {
-      inputModel.addMention?.(this._users.get(command.name)!.user);
-    }
-  }
-
-  private _users = new Map<string, Private.CommandUser>();
 }
 
 namespace Private {
