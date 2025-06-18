@@ -4,7 +4,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 # Install chat extension
-./scripts/dev_install.sh
+python ./scripts/dev_install.py
 
 jupyter troubleshoot
 jupyter notebook --show-config
