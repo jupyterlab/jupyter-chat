@@ -78,7 +78,9 @@ export type ChatCommand = {
 
   /**
    * Specifies whether the application should add a space ' ' after the command
-   * is accepted from the menu.
+   * is accepted from the menu. This should be set to `true` if the command that
+   * replaces the current word needs to be handled on submit, and the command is
+   * valid on its own.
    *
    * Defaults to `false`.
    */
