@@ -129,20 +129,27 @@ test.describe('#messageToolbar', () => {
     ).not.toContain('(edited)');
   });
 
-  test('should set the message as deleted', async ({ page }) => {
+  test('should not render deleted message', async ({ page }) => {
     const chatPanel = await openChat(page, FILENAME);
-    const message = chatPanel
-      .locator('.jp-chat-messages-container .jp-chat-message')
-      .first();
+    const messagesContainer = chatPanel.locator('.jp-chat-messages-container');
+
+    const messageCountBefore = await messagesContainer
+      .locator('.jp-chat-message')
+      .count();
+    expect(messageCountBefore).toBe(1);
+
+    const message = messagesContainer.locator('.jp-chat-message').first();
     const messageContent = message.locator('.jp-chat-rendered-markdown');
 
     // Should display the message toolbar
     await messageContent.hover({ position: { x: 5, y: 5 } });
     await messageContent.locator('.jp-chat-toolbar jp-button').last().click();
 
-    await expect(messageContent).not.toBeVisible();
-    expect(
-      await message.locator('.jp-chat-message-header').textContent()
-    ).toContain('(message deleted)');
+    await expect(message).not.toBeVisible();
+
+    const messageCountAfter = await messagesContainer
+      .locator('.jp-chat-message')
+      .count();
+    expect(messageCountAfter).toBe(0);
   });
 });
