@@ -115,7 +115,12 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
     const observer = new IntersectionObserver(entries => {
       // Used on first rendering, to ensure all the message as been rendered once.
       if (!allRendered) {
-        Promise.all(renderedPromise.current.map(p => p.promise)).then(() => {
+        const activePromises = renderedPromise.current
+          // Filter out nulls signigying deleted messages
+          .filter(p => p)
+          .map(p => p.promise);
+
+        Promise.all(activePromises).then(() => {
           setAllRendered(true);
         });
       }
@@ -181,6 +186,11 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
         )}
         <Box ref={refMsgBox} className={clsx(MESSAGES_BOX_CLASS)}>
           {messages.map((message, i) => {
+            // Skip rendering deleted messages while preventing sparse array
+            if (message.deleted) {
+              listRef.current[i] = null;
+              return null;
+            }
             renderedPromise.current[i] = new PromiseDelegate();
             return (
               // extra div needed to ensure each bubble is on a new line
