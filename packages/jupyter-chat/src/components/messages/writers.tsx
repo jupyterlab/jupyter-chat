@@ -43,7 +43,7 @@ export function Writers(props: writersProps): JSX.Element | null {
     return null;
   }
 
-  const writersText = writers.length > 1 ? 'are writing' : 'is writing';
+  const writersText = writers.length > 1 ? ' are writing' : ' is writing';
 
   return (
     <Box className={`${WRITERS_CLASS}`}>
