@@ -210,8 +210,8 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
             );
           })}
         </Box>
-        <Writers writers={currentWriters}></Writers>
       </ScrollContainer>
+      <Writers writers={currentWriters}></Writers>
       <Navigation {...props} refMsgBox={refMsgBox} allRendered={allRendered} />
     </>
   );
