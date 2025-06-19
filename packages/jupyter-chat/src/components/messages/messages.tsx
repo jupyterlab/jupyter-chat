@@ -14,7 +14,7 @@ import { ChatMessageHeader } from './header';
 import { ChatMessage } from './message';
 import { Navigation } from './navigation';
 import { WelcomeMessage } from './welcome';
-import { Writers } from './writers';
+import { WritingUsersList } from './writers';
 import { IInputToolbarRegistry } from '../input';
 import { ScrollContainer } from '../scroll-container';
 import { IChatCommandRegistry, IMessageFooterRegistry } from '../../registers';
@@ -210,8 +210,8 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
             );
           })}
         </Box>
-        <Writers writers={currentWriters}></Writers>
       </ScrollContainer>
+      <WritingUsersList writers={currentWriters}></WritingUsersList>
       <Navigation {...props} refMsgBox={refMsgBox} allRendered={allRendered} />
     </>
   );
