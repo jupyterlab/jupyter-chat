@@ -116,7 +116,7 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
       // Used on first rendering, to ensure all the message as been rendered once.
       if (!allRendered) {
         const activePromises = renderedPromise.current
-          // Filter out nulls signigying deleted messages
+          // Filter out nulls signifying deleted messages
           .filter(p => p)
           .map(p => p.promise);
 
