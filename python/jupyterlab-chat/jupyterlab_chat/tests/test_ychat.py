@@ -105,6 +105,7 @@ def test_add_message_includes_mentions():
     )
     msg_id = chat.add_message(new_msg)
     msg = chat.get_message(msg_id)
+    assert msg
 
     assert set(msg.mentions) == set([USER2.username, USER3.username])
 

@@ -38,7 +38,7 @@ class Message:
     attachments: Optional[list[str]] = None
     """ The message attachments, a list of attachment ID """
     
-    mentions: Optional[list[str]] = field(default_factory=list)
+    mentions: list[str] = field(default_factory=list)
     """ Users mentioned in the message """
 
     raw_time: Optional[bool] = None
