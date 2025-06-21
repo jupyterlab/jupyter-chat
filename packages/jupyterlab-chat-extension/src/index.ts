@@ -421,11 +421,9 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           } else {
             filepath = `${name}${chatFileType.extensions[0]}`;
           }
-          // Add the default directory to the path.
-          filepath = PathExt.join(
-            widgetConfig.config.defaultDirectory || '',
-            filepath
-          );
+          // Prepend filepath with file browser cwd
+          const cwd = filebrowser?.model.path ?? '';
+          filepath = PathExt.join(cwd, filepath);
         }
 
         let fileExist = true;
