@@ -2,6 +2,34 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.14.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.13.0...23a5c18036a34420a1ee94dd3b3e6dc19d11ae0a))
+
+### Enhancements made
+
+- Allow users to be mentioned via Python API [#235](https://github.com/jupyterlab/jupyter-chat/pull/235) ([@dlqqq](https://github.com/dlqqq))
+- Typing notification improvements [#232](https://github.com/jupyterlab/jupyter-chat/pull/232) ([@jtpio](https://github.com/jtpio))
+- Run chat commands on message submission [#231](https://github.com/jupyterlab/jupyter-chat/pull/231) ([@dlqqq](https://github.com/dlqqq))
+
+### Bugs fixed
+
+- Code highlight in message [#226](https://github.com/jupyterlab/jupyter-chat/pull/226) ([@brichet](https://github.com/brichet))
+
+### Maintenance and upkeep improvements
+
+- Fix the Binder environment [#233](https://github.com/jupyterlab/jupyter-chat/pull/233) ([@jtpio](https://github.com/jtpio))
+- Bump brace-expansion from 2.0.1 to 2.0.2 in /ui-tests in the npm_and_yarn group across 1 directory [#229](https://github.com/jupyterlab/jupyter-chat/pull/229) ([@dependabot](https://github.com/dependabot))
+- Jupyter chat package reorganization [#225](https://github.com/jupyterlab/jupyter-chat/pull/225) ([@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2025-06-11&to=2025-06-23&type=c))
+
+[@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2025-06-11..2025-06-23&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adependabot+updated%3A2025-06-11..2025-06-23&type=Issues) | [@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2025-06-11..2025-06-23&type=Issues) | [@ellisonbg](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Aellisonbg+updated%3A2025-06-11..2025-06-23&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2025-06-11..2025-06-23&type=Issues) | [@jtpio](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2025-06-11..2025-06-23&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.13.0
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.12.0...2b688d7ef2914f78150c9c5e227d44b81ff26231))
@@ -15,8 +43,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2025-06-03&to=2025-06-11&type=c))
 
 [@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2025-06-03..2025-06-11&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2025-06-03..2025-06-11&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.12.0
 
