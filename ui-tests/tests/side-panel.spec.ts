@@ -168,6 +168,16 @@ test.describe('#sidepanel', () => {
       await expect(select.locator('option').last()).toHaveText(name);
     });
 
+    test('should attach a spinner while loading the chat', async ({ page }) => {
+      panel = await openSidePanel(page);
+      select = panel.locator(
+        '.jp-SidePanel-toolbar .jp-Toolbar-item.jp-lab-chat-open select'
+      );
+      await select.selectOption(name);
+      await expect(panel.locator('.jp-Spinner')).toBeAttached();
+      await expect(panel.locator('.jp-Spinner')).not.toBeAttached();
+    });
+
     test('should open an existing chat and close it', async ({ page }) => {
       panel = await openSidePanel(page);
       select = panel.locator(
