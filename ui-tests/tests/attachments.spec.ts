@@ -14,8 +14,9 @@ test.describe('#attachments', () => {
   let chatPath: string;
   test.beforeEach(async ({ page, tmpPath }) => {
     chatPath = PathExt.join(tmpPath, CHAT);
+
     // Create a chat, a notebook and a markdown file.
-    await createChat(page, chatPath);
+    await createChat(page, CHAT, false, tmpPath);
     await page.menu.clickMenuItem('File>New>Markdown File');
     await page.notebook.createNew(NOTEBOOK);
 
@@ -176,7 +177,7 @@ test.describe('#attachmentOpenerRegistry', () => {
     });
 
     const chatPath = PathExt.join(tmpPath, CHAT);
-    await createChat(page, chatPath);
+    await createChat(page, CHAT, false, tmpPath);
     const chatPanel = await openChat(page, chatPath);
 
     const input = chatPanel.locator('.jp-chat-input-container');

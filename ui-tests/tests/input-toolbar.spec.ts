@@ -45,7 +45,7 @@ test.describe('#inputToolbar', () => {
     });
 
     const chatPath = PathExt.join(tmpPath, CHAT);
-    await createChat(page, chatPath);
+    await createChat(page, CHAT, false, tmpPath);
     const chatPanel = await openChat(page, chatPath);
 
     // The main area chat input should not contain the 'attach' button.
