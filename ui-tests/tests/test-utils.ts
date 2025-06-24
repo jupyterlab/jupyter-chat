@@ -21,13 +21,27 @@ export const USER: User.IUser = {
 
 export const createChat = async (
   page: IJupyterLabPageFixture,
-  filename: string
+  filename: string,
+  inSidePanel: boolean = false,
+  path?: string
 ): Promise<void> => {
-  await page.evaluate(async name => {
-    await window.jupyterapp.commands.execute('jupyterlab-chat:create', {
-      name
-    });
-  }, filename);
+  await page.evaluate(
+    async ({
+      name,
+      inSidePanel,
+      path
+    }: {
+      name: string;
+      inSidePanel: boolean;
+    }) => {
+      await window.jupyterapp.commands.execute('jupyterlab-chat:create', {
+        name,
+        inSidePanel,
+        ...(path !== undefined && { path })
+      });
+    },
+    { name: filename, inSidePanel, path }
+  );
 };
 
 export const openChat = async (

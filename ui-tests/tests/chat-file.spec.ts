@@ -48,7 +48,7 @@ test.describe('#chatCreation', () => {
   });
 
   test('should create a file in root directory', async ({ page }) => {
-    await createChat(page, CHAT_NAME);
+    await createChat(page, CHAT_NAME, true);
     expect(await page.filebrowser.contents.fileExists(FILENAME)).toBeTruthy();
   });
 
@@ -112,7 +112,7 @@ test.describe('#chatCreation', () => {
       /jp-mod-dirty/
     );
 
-    await createChat(page, CHAT_NAME);
+    await createChat(page, CHAT_NAME, true);
     expect(
       await page.filebrowser.contents.fileExists(
         PathExt.join(CHAT_DIR, FILENAME)
