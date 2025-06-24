@@ -392,8 +392,6 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
      *                Whether to open the chat in side panel or in main area.
      *  isPalette -   optional (default to false).
      *                Whether the command is in commands palette or not.
-     *  fromLauncher - optional (default to false).
-     *                Whether the command executed from the launcher.
      */
     commands.addCommand(CommandIDs.createChat, {
       label: args => (args.isPalette ? 'Create a new chat' : 'Chat'),
@@ -401,7 +399,6 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
       icon: args => (args.isPalette ? undefined : chatIcon),
       execute: async args => {
         const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
-        const fromLauncher: boolean = (args.fromLauncher as boolean) ?? false;
         let name: string | null = (args.name as string) ?? null;
         let filepath = '';
         if (!name) {
@@ -424,15 +421,16 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           } else {
             filepath = `${name}${chatFileType.extensions[0]}`;
           }
-          // Create new chat in file browser cwd if created from the launcher.
-          // Create in default dir if created from filebrowser as "Open a chat"
-          // dropdown only discovers chat files in default dir.
-          if (fromLauncher) {
-            const cwd = filebrowser?.model.path ?? '';
-            filepath = PathExt.join(cwd, filepath);
-          } else {
+          // Create new chat file in default dir if created from filebrowser
+          // as "Open a chat" dropdown only discovers chat files in default
+          // dir. Create new chat in file browser cwd if created from main
+          // area (launcher, menu, palette).
+          if (inSidePanel) {
             const defaultDir = widgetConfig.config.defaultDirectory ?? '';
             filepath = PathExt.join(defaultDir, filepath);
+          } else {
+            const cwd = filebrowser?.model.path ?? '';
+            filepath = PathExt.join(cwd, filepath);
           }
         }
 
@@ -501,8 +499,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     if (launcher) {
       launcher.add({
         command: CommandIDs.createChat,
-        category: 'Other',
-        args: { fromLauncher: true }
+        category: 'Other'
       });
     }
 
