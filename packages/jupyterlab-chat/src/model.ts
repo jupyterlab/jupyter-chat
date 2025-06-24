@@ -89,6 +89,10 @@ export class LabChatModel
     return this._stateChanged;
   }
 
+  get ready(): Promise<void> {
+    return this._ready.promise;
+  }
+
   get dirty(): boolean {
     return this._dirty;
   }

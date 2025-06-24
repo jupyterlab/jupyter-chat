@@ -26,6 +26,7 @@ import {
   PanelWithToolbar,
   ReactWidget,
   SidePanel,
+  Spinner,
   ToolbarButton
 } from '@jupyterlab/ui-components';
 import { CommandRegistry } from '@lumino/commands';
@@ -343,6 +344,7 @@ class ChatSection extends PanelWithToolbar {
     super(options);
 
     this.addWidget(options.widget);
+    this.addWidget(this._spinner);
 
     this.addClass(SECTION_CLASS);
     this._defaultDirectory = options.defaultDirectory;
@@ -389,6 +391,14 @@ class ChatSection extends PanelWithToolbar {
     this._markAsRead.enabled = this.model.unreadMessages.length > 0;
 
     options.widget.node.style.height = '100%';
+
+    /**
+     * Remove the spinner when the chat is ready.
+     */
+    const model = this.model as LabChatModel;
+    model.ready.then(() => {
+      this._spinner.dispose();
+    });
   }
 
   /**
@@ -458,6 +468,7 @@ class ChatSection extends PanelWithToolbar {
   private _defaultDirectory: string;
   private _markAsRead: ToolbarButton;
   private _path: string;
+  private _spinner = new Spinner();
 }
 
 /**
