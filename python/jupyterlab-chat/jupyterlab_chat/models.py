@@ -78,11 +78,23 @@ class User(JupyterUser):
     bot: Optional[bool] = None
     """ Boolean identifying if user is a bot """
 
+    mention_name: str
+    """
+    Returns the user's mention name.
+
+    NOTE: This is a computed read-only property. The `mention_name`
+    argument is ignored if passed in the constructor.
+    """
+
     @property
     def mention_name(self) -> str:
         name: str = self.display_name or self.name or self.username
         name = name.replace(" ", "-")
         return name
+    
+    @mention_name.setter
+    def mention_name(self, value: str) -> None:
+        pass
 
 
 @dataclass
