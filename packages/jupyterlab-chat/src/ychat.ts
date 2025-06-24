@@ -158,6 +158,9 @@ export class YChat extends YDocument<IChatChanges> {
 
   setUser(value: IUser): void {
     this.transact(() => {
+      if (value.toJSON) {
+        value = value.toJSON();
+      }
       this._users.set(value.username, value);
     });
   }

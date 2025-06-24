@@ -60,9 +60,10 @@ export function replaceMentionToSpan(content: string, user: IUser): string {
   if (!user.mention_name) {
     return content;
   }
-  const regex = new RegExp(user.mention_name, 'g');
-  const mention = `<span class="${MENTION_CLASS}">${user.mention_name}</span>`;
-  return content.replace(regex, mention);
+  const mention = '@' + user.mention_name;
+  const regex = new RegExp(mention, 'g');
+  const mentionEl = `<span class="${MENTION_CLASS}">${mention}</span>`;
+  return content.replace(regex, mentionEl);
 }
 
 /**
@@ -75,7 +76,8 @@ export function replaceSpanToMention(content: string, user: IUser): string {
   if (!user.mention_name) {
     return content;
   }
-  const span = `<span class="${MENTION_CLASS}">${user.mention_name}</span>`;
-  const regex = new RegExp(span, 'g');
-  return content.replace(regex, user.mention_name);
+  const mention = '@' + user.mention_name;
+  const mentionEl = `<span class="${MENTION_CLASS}">${mention}</span>`;
+  const regex = new RegExp(mentionEl, 'g');
+  return content.replace(regex, mention);
 }

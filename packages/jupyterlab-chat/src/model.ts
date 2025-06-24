@@ -38,7 +38,54 @@ export namespace LabChatModel {
 }
 
 /**
- * The chat model.
+ * A data model class that represents a user and implements the `IUser` interface.
+ * Currently, this just just ensures that `user.mention_name` is always
+ * accessible by defining it as a getter property.
+ *
+ * The constructor accepts an `identity: User.IIdentity | IUser | null` object.
+ * If `identity == null`, this class provides default values for each required
+ * field.
+ *
+ * TODO: should `identity` (from `LabChatModel.IOptions.user`) ever be `null`?
+ *
+ * TODO: should this be lifted up into `packages/jupyter-chat`?
+ */
+class LabChatUser implements IUser {
+  constructor(identity: User.IIdentity | IUser | null) {
+    this.username = identity?.username ?? 'user undefined';
+    this.name = identity?.name;
+    this.display_name = identity?.display_name;
+    this.color = identity?.color;
+    this.avatar_url = identity?.avatar_url;
+    this.initials = identity?.initials;
+    this.bot = !!identity?.bot || false;
+  }
+
+  get mention_name(): string {
+    let mention_name = this.display_name || this.name || this.username;
+    mention_name = mention_name.replace(/ /g, '-');
+    return mention_name;
+  }
+
+  toJSON() {
+    const simpleObject = {
+      ...this,
+      mention_name: this.mention_name
+    };
+    return simpleObject;
+  }
+
+  username: string;
+  name?: string;
+  display_name?: string;
+  initials?: string;
+  color?: string;
+  avatar_url?: string;
+  bot?: boolean;
+}
+
+/**
+ * The chat document model.
  */
 export class LabChatModel
   extends AbstractChatModel
@@ -47,7 +94,8 @@ export class LabChatModel
   constructor(options: LabChatModel.IOptions) {
     super(options);
 
-    this._user = options.user || { username: 'user undefined' };
+    // initialize current user
+    this._user = new LabChatUser(options.user);
 
     const { widgetConfig, sharedModel } = options;
 
@@ -335,7 +383,8 @@ export class LabChatModel
       if (!user.mention_name) {
         return;
       }
-      const regex = new RegExp(user.mention_name);
+      const mention = '@' + user.mention_name;
+      const regex = new RegExp(mention);
       if (!regex.exec(body)) {
         return;
       }
@@ -377,7 +426,8 @@ export class LabChatModel
             const msg: IChatMessage = {
               ...baseMessage,
               sender: this.sharedModel.getUser(sender) || {
-                username: 'User undefined'
+                username: 'User undefined',
+                mention_name: 'User-undefined'
               }
             };
 
@@ -395,10 +445,11 @@ export class LabChatModel
               }
             }
 
-            const mentions = mentionsIds?.map(
+            const mentions: IUser[] = (mentionsIds ?? []).map(
               user =>
                 this.sharedModel.getUser(user) || {
-                  username: 'User undefined'
+                  username: 'User undefined',
+                  mention_name: 'User-undefined'
                 }
             );
 
@@ -460,22 +511,28 @@ export class LabChatContext extends AbstractChatContext {
    */
   get users(): IUser[] {
     const model = this._model as LabChatModel;
-    const users = new Set<IUser>();
+    const users: Record<string, IUser> = {};
 
-    // Get the user list from the shared YChat
-    Object.values(model.sharedModel.users).forEach(userObject => {
-      users.add(userObject);
-    });
+    // Add existing users from the YChat
+    // This only includes users who have sent a message in the chat.
+    for (const user of Object.values(model.sharedModel.users)) {
+      users[user.username] = new LabChatUser(user);
+    }
 
-    // Add the users connected to the chat (even if they never sent a message).
+    // Add users from awareness to include connected users even if they never
+    // sent a message in the chat.
     model.sharedModel.awareness.getStates().forEach(value => {
-      const user = value.user as IUser;
-      if (!user) {
+      if (!('user' in value)) {
         return;
       }
-      users.add(user);
+      const userObject = value.user as IUser;
+      if (userObject?.username in users) {
+        return;
+      }
+      const user = new LabChatUser(value.user as IUser);
+      users[user.username] = user;
     });
 
-    return Array.from(users);
+    return Array.from(Object.values(users));
   }
 }
