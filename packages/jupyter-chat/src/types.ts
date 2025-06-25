@@ -14,9 +14,14 @@ export interface IUser {
   color?: string;
   avatar_url?: string;
   /**
-   * The string to use to mention a user in the chat.
+   * The string to use to mention a user in the chat. This is computed via the
+   * following procedure:
+   *
+   * 1. Let `mention_name = user.display_name || user.name || user.username`.
+   *
+   * 2. Replace each ' ' character with '-' in `mention_name`.
    */
-  mention_name?: string;
+  mention_name: string;
   /**
    * Boolean identifying if user is a bot.
    */

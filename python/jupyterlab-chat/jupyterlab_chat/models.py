@@ -75,14 +75,34 @@ class NewMessage:
 class User(JupyterUser):
     """ Object representing a user """
 
-    bot: Optional[bool] = None
+    bot: Optional[bool] = False
     """ Boolean identifying if user is a bot """
+
+    def __init__(self, *args, **kwargs):
+        # ignore `mention_name` if passed
+        kwargs.pop("mention_name", None)
+
+        # set all attributes added here manually
+        # required when overriding __init__() in a dataclass
+        self.bot = kwargs.pop("bot", False)
+
+        super().__init__(*args, **kwargs)
 
     @property
     def mention_name(self) -> str:
+        """
+        Returns the user's mention name.
+
+        NOTE: This is a computed read-only property. The `mention_name`
+        argument is ignored if passed in the constructor.
+        """
         name: str = self.display_name or self.name or self.username
         name = name.replace(" ", "-")
         return name
+    
+    @mention_name.setter
+    def mention_name(self, value: str) -> None:
+        pass
 
 
 @dataclass

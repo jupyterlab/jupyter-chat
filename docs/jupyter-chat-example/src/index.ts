@@ -56,7 +56,7 @@ class MyChatModel extends AbstractChatModel {
       id: newMessage.id ?? UUID.uuid4(),
       type: 'msg',
       time: Date.now() / 1000,
-      sender: { username: 'me' },
+      sender: { username: 'me', mention_name: 'me' },
       attachments: this.input.attachments
     };
     this.messageAdded(message);

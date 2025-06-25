@@ -11,8 +11,6 @@ import { ISelectionWatcher } from './selection-watcher';
 import { IChatContext } from './model';
 import { IAttachment, IUser } from './types';
 
-const WHITESPACE = new Set([' ', '\n', '\t']);
-
 /**
  * The chat input interface.
  */
@@ -525,6 +523,18 @@ export namespace InputModel {
 }
 
 namespace Private {
+  const WHITESPACE = new Set([' ', '\n', '\t']);
+
+  /**
+   * Returns the start index (inclusive) & end index (exclusive) that contain
+   * the current word. The start & end index can be passed to `String.slice()`
+   * to extract the current word. The returned range never includes any
+   * whitespace character unless it is escaped by a backslash `\`.
+   *
+   * NOTE: the escape sequence handling here is naive and non-recursive. This
+   * function considers the space in "`\\ `" as escaped, even though "`\\ `"
+   * defines a backslash followed by an _unescaped_ space in most languages.
+   */
   export function getCurrentWordBoundaries(
     input: string,
     cursorIndex: number
@@ -533,11 +543,30 @@ namespace Private {
     let end = cursorIndex;
     const n = input.length;
 
-    while (start > 0 && !WHITESPACE.has(input[start - 1])) {
+    while (
+      // terminate when `input[start - 1]` is whitespace
+      // i.e. `input[start]` is never whitespace after exiting
+      (start - 1 >= 0 && !WHITESPACE.has(input[start - 1])) ||
+      // unless it is preceded by a backslash
+      (start - 2 >= 0 &&
+        input[start - 2] === '\\' &&
+        WHITESPACE.has(input[start - 1]))
+    ) {
       start--;
     }
 
-    while (end < n && !WHITESPACE.has(input[end])) {
+    // `end` is an exclusive index unlike `start`, hence the different `while`
+    // condition here
+    while (
+      // terminate when `input[end]` is whitespace
+      // i.e. `input[end]` may be whitespace after exiting
+      (end < n && !WHITESPACE.has(input[end])) ||
+      // unless it is preceded by a backslash
+      (end < n &&
+        end - 1 >= 0 &&
+        input[end - 1] === '\\' &&
+        WHITESPACE.has(input[end]))
+    ) {
       end++;
     }
 

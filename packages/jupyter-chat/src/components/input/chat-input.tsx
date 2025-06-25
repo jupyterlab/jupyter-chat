@@ -159,7 +159,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     ) {
       // Run all command providers
       await props.chatCommandRegistry?.onSubmit(model);
-      model.send(input);
+      model.send(model.value);
       event.stopPropagation();
       event.preventDefault();
     }

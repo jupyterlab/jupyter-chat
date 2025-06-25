@@ -41,6 +41,14 @@ def test_initialize_ychat():
     assert chat._get_users() == {}
     assert chat.get_metadata() == {}
 
+def test_user_ignores_mention_name_ctor_arg():
+    user = User(
+        username=str(uuid4()),
+        name="Some random user",
+        display_name="Some random user",
+        mention_name="this key should be ignored"
+    )
+    assert user.mention_name == "Some-random-user"
 
 def test_add_user():
     chat = YChat()

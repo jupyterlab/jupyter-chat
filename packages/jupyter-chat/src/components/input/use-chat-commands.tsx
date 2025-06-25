@@ -37,7 +37,9 @@ export function useChatCommands(
   // whether an option is highlighted in the chat commands menu
   const [highlighted, setHighlighted] = useState(false);
 
-  // whether the chat commands menu is open
+  // whether the chat commands menu is open.
+  // NOTE: every `setOpen(false)` call should be followed by a
+  // `setHighlighted(false)` call.
   const [open, setOpen] = useState(false);
 
   // current list of chat commands matched by the current word.
@@ -90,7 +92,12 @@ export function useChatCommands(
 
       // Otherwise, open/close the menu based on the presence of command
       // completions and set the menu entries.
-      setOpen(!!commandCompletions.length);
+      if (commandCompletions.length) {
+        setOpen(true);
+      } else {
+        setOpen(false);
+        setHighlighted(false);
+      }
       setCommands(commandCompletions);
     }
 
@@ -138,7 +145,8 @@ export function useChatCommands(
     autocompleteProps: {
       open,
       options: commands,
-      getOptionLabel: (command: ChatCommand) => command.name,
+      getOptionLabel: (command: ChatCommand | string) =>
+        typeof command === 'string' ? '' : command.name,
       renderOption: (
         defaultProps,
         command: ChatCommand,
