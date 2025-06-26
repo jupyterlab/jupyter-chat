@@ -130,6 +130,14 @@ class MentionCommandProvider implements IChatCommandProvider {
     // type `LabChatUser[]`, where `mention_name` is always defined.
     const userList = inputModel.chatContext.users;
     userList.forEach(user => {
+      if (!user.mention_name) {
+        console.error(
+          `No 'mention_name' property for user '${user.username}'. ` +
+            'This user is being omitted from ' +
+            "'MentionCommandProvider._getUsers()'."
+        );
+        return;
+      }
       users.set(user.mention_name, {
         user,
         icon: <Avatar user={user} />
