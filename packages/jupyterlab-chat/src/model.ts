@@ -509,9 +509,9 @@ export class LabChatContext extends AbstractChatContext {
   /**
    * The list of users who have connected to this chat.
    */
-  get users(): IUser[] {
+  get users(): LabChatUser[] {
     const model = this._model as LabChatModel;
-    const users: Record<string, IUser> = {};
+    const users: Record<string, LabChatUser> = {};
 
     // Add existing users from the YChat
     // This only includes users who have sent a message in the chat.
