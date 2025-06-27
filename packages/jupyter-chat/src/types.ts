@@ -87,21 +87,70 @@ export interface INewMessage {
 }
 
 /**
- * The attachment interface.
+ * The attachment type. Jupyter Chat allows for two types of attachments
+ * currently:
+ *
+ * 1. File attachments (`IFileAttachment`)
+ * 2. Cell attachments (`ICellAttachment`)
+ *
+ * The `type` field is always defined on every attachment, so it can be used to
+ * distinguish different attachment types.
  */
-export interface IAttachment {
+export type IAttachment = IFileAttachment | ICellAttachment;
+
+export interface IFileAttachment {
+  type: 'file';
   /**
-   * The type of the attachment (basically 'file', 'variable', 'image')
-   */
-  type: string;
-  /**
-   * The value, i.e. the file path, the variable name or image content.
+   * The path to the file, relative to `ContentsManager.root_dir`.
    */
   value: string;
   /**
-   * The mimetype of the attachment, optional.
+   * (optional) The MIME type of the attachment.
    */
-  mimetype?: string;
+  mimeType?: string;
+  /**
+   * (optional) A selection range within the file. See `IAttachmentSelection`
+   * for more info.
+   */
+  selection?: IAttachmentSelection;
+}
+
+export interface ICellAttachment {
+  type: 'cell';
+  /**
+   * ID of the cell within the notebook. This should always be obtainable from
+   * the cell metadata.
+   */
+  value: string;
+  /**
+   * Type of the cell.
+   */
+  cellType: 'raw' | 'markdown' | 'code';
+  /**
+   * Path to the notebook containing this cell, relative to
+   * `ContentsManager.root_dir`.
+   */
+  notebookPath: string;
+  /**
+   * (optional) A selection range within the cell. See `IAttachmentSelection`
+   * for more info.
+   */
+  selection?: IAttachmentSelection;
+}
+
+export interface IAttachmentSelection {
+  /**
+   * The line number & column number of where the selection begins (inclusive).
+   */
+  start: [number, number];
+  /**
+   * The line number & column number of where the selection ends (inclusive).
+   */
+  end: [number, number];
+  /**
+   * The initial content of the selection.
+   */
+  content: string;
 }
 
 /**

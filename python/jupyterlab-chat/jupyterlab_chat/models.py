@@ -2,7 +2,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 from dataclasses import dataclass, field
-from typing import Literal, Optional
+from typing import Literal, Optional, Tuple
 from jupyter_server.auth import User as JupyterUser
 
 
@@ -104,19 +104,77 @@ class User(JupyterUser):
     def mention_name(self, value: str) -> None:
         pass
 
+@dataclass
+class AttachmentSelection:
+    start: Tuple[int, int]
+    """
+    The line number & column number of where the selection begins (inclusive).
+    """
+
+    end: Tuple[int, int]
+    """
+    The line number & column number of where the selection ends (inclusive).
+    """
+
+    content: str
+    """
+    The initial content of the selection.
+    """
 
 @dataclass
-class Attachment:
-    """ Object representing an attachment """
+class FileAttachment:
+    """
+    Model of a file attachment.
 
-    type: str
-    """ The type of attachment (i.e. "file", "variable", "image") """
+    The corresponding frontend model is `IFileAttachment`.
+    """
 
     value: str
-    """ The value (i.e. a path, a variable name, an image content) """
+    """
+    The path to the file, relative to `ContentsManager.root_dir`.
+    """
+
+    type: Literal['file'] = 'file'
 
     mimetype: Optional[str] = None
     """
-    The mime type of the attachment
-    Default to None.
+    (optional) The mime type of the file. Defaults to `None`.
+    """
+
+    selection: Optional[AttachmentSelection] = None
+    """
+    (optional) A selection range within the file. See `AttachmentSelection` for
+    more info.
+    """
+
+@dataclass
+class CellAttachment:
+    """
+    Model of a cell attachment.
+
+    The corresponding frontend model is `ICellAttachment`.
+    """
+
+    value: str
+    """
+    The ID of the cell within the notebook.
+    """
+
+    cell_type: Literal["raw", "markdown", "code"]
+    """
+    The type of the cell.
+    """
+
+    notebook_path: str
+    """
+    The path of the notebook containing this cell, relative to
+    `ContentsManager.root_dir`.
+    """
+
+    type: Literal['cell'] = 'cell'
+
+    selection: Optional[AttachmentSelection] = None
+    """
+    (optional) A selection range within the file. See `AttachmentSelection` for
+    more info.
     """
