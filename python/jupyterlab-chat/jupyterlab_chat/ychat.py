@@ -9,12 +9,12 @@ import time
 import asyncio
 from functools import partial
 from jupyter_ydoc.ybasedoc import YBaseDoc
-from typing import Any, Callable, Optional, Set
+from typing import Any, Callable, Optional, Set, Union
 from uuid import uuid4
 from pycrdt import Array, ArrayEvent, Map, MapEvent
 import re
 
-from .models import message_asdict_factory, Attachment, Message, NewMessage, User
+from .models import message_asdict_factory, FileAttachment, CellAttachment, Message, NewMessage, User
 
 
 class YChat(YBaseDoc):
@@ -168,13 +168,13 @@ class YChat(YBaseDoc):
                 message.body = initial_message["body"] + message.body  # type:ignore[index]
             self._ymessages[index] = asdict(message, dict_factory=message_asdict_factory)
 
-    def get_attachments(self) -> dict[str, Attachment]:
+    def get_attachments(self) -> dict[str, Union[FileAttachment, CellAttachment]]:
         """
         Returns the attachments of the document.
         """
         return self._yattachments.to_py() or {}
 
-    def set_attachment(self, attachment: Attachment):
+    def set_attachment(self, attachment: Union[FileAttachment, CellAttachment]):
         """
         Add or modify an attachments of the document.
         """
