@@ -170,22 +170,41 @@ class YChat(YBaseDoc):
 
     def get_attachments(self) -> dict[str, Union[FileAttachment, CellAttachment]]:
         """
-        Returns the attachments of the document.
+        Returns all attachments in the chat as a dictionary, indexed by
+        attachment ID.
         """
         return self._yattachments.to_py() or {}
 
-    def set_attachment(self, attachment: Union[FileAttachment, CellAttachment]):
+    def set_attachment(self, attachment: Union[FileAttachment, CellAttachment]) -> str:
         """
-        Add or modify an attachments of the document.
+        Add or modify an attachment in the chat, and returns the ID of the
+        attachment.
+
+        NOTE: This method does not add an attachment to any message. It merely
+        adds the attachment data to the chat file and returns an attachment ID.
+        To add an attachment to a new message, consumers should call this method
+        & add the returned ID to `NewMessage.attachments`.
         """
-        attachment_id = str(uuid4())
-        with self._ydoc.transaction():
-            # Search if the attachment already exist to update it, otherwise add it.
+        if attachment.selection:
+            # Generate a unique ID if the attachment contains a selection.
+            # Attachments with selections are always considered unique because
+            # the selection range is generally specific.
+            attachment_id = str(uuid4())
+        else:
+            # Otherwise, use the ID of the existing attachment if one exists.
+            # Attachments without selections are considered identical if they
+            # share the same `type` and `value`. 
             for id, att in self.get_attachments().items():
                 if att.type == attachment.type and att.value == attachment.value:
                     attachment_id = id
                     break
+            if not attachment_id:
+                attachment_id = str(uuid4())
+
+        # Update the attachment with the computed ID, then return the ID
+        with self._ydoc.transaction():
             self._yattachments.update({attachment_id: asdict(attachment)})
+        return attachment_id
 
     def get_metadata(self) -> dict[str, Any]:
         """
