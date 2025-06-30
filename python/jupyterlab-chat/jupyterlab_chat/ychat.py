@@ -185,21 +185,16 @@ class YChat(YBaseDoc):
         To add an attachment to a new message, consumers should call this method
         & add the returned ID to `NewMessage.attachments`.
         """
-        if attachment.selection:
-            # Generate a unique ID if the attachment contains a selection.
-            # Attachments with selections are always considered unique because
-            # the selection range is generally specific.
+        # Use the existing ID if the attachment already exists, otherwise create
+        # a new ID
+        attachment_json = json.dumps(asdict(attachment), sort_keys=True)
+        attachment_id = None
+        for id, att in self.get_attachments().items():
+            if json.dumps(att, sort_keys=True) == attachment_json:
+                attachment_id = id
+                break
+        if not attachment_id:
             attachment_id = str(uuid4())
-        else:
-            # Otherwise, use the ID of the existing attachment if one exists.
-            # Attachments without selections are considered identical if they
-            # share the same `type` and `value`. 
-            for id, att in self.get_attachments().items():
-                if att.type == attachment.type and att.value == attachment.value:
-                    attachment_id = id
-                    break
-            if not attachment_id:
-                attachment_id = str(uuid4())
 
         # Update the attachment with the computed ID, then return the ID
         with self._ydoc.transaction():

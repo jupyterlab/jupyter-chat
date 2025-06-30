@@ -207,22 +207,13 @@ export class YChat extends YDocument<IChatChanges> {
    * returned ID to `NewMessage.attachments`.
    */
   setAttachment(attachment: IAttachment): string {
-    let id: string;
-    if (attachment.selection) {
-      // Generate a unique ID if the attachment contains a selection.
-      // Attachments with selections are always considered unique because the
-      // selection range is generally specific.
-      id = UUID.uuid4();
-    } else {
-      // Otherwise, use the ID of the existing attachment if one exists.
-      // Attachments without selections are considered to be identical if they
-      // have the same `type` and `value`.
-      id =
-        Array.from(this._attachments.entries()).find(
-          ([_, att]) =>
-            att.type === attachment.type && att.value === attachment.value
-        )?.[0] || UUID.uuid4();
-    }
+    // Use the existing ID if the attachment already exists, otherwise create a
+    // new ID
+    const attachmentJson = JSON.stringify(attachment);
+    const existingId = Array.from(this._attachments.entries()).find(
+      ([_, att]) => JSON.stringify(att) === attachmentJson
+    )?.[0];
+    const id = existingId || UUID.uuid4();
 
     // Set the attachment using the computed ID, then return the ID
     this.transact(() => {
