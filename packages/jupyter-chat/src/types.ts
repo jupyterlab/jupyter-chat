@@ -91,12 +91,12 @@ export interface INewMessage {
  * currently:
  *
  * 1. File attachments (`IFileAttachment`)
- * 2. Cell attachments (`ICellAttachment`)
+ * 2. Notebook attachments (`INotebookAttachment`)
  *
  * The `type` field is always defined on every attachment, so it can be used to
  * distinguish different attachment types.
  */
-export type IAttachment = IFileAttachment | ICellAttachment;
+export type IAttachment = IFileAttachment | INotebookAttachment;
 
 export interface IFileAttachment {
   type: 'file';
@@ -115,27 +115,42 @@ export interface IFileAttachment {
   selection?: IAttachmentSelection;
 }
 
-export interface ICellAttachment {
-  type: 'cell';
+/**
+ * Model of a single cell within a notebook attachment.
+ * 
+ * The corresponding backend model is `NotebookCell`.
+ */
+export interface INotebookAttachmentCell {
   /**
-   * ID of the cell within the notebook. This should always be obtainable from
-   * the cell metadata.
+   * The ID of the cell within the notebook.
+   */
+  id: string;
+  /**
+   * The type of the cell.
+   */
+  input_type: 'raw' | 'markdown' | 'code';
+  /**
+   * (optional) A selection range within the cell. See `IAttachmentSelection` for
+   * more info.
+   */
+  selection?: IAttachmentSelection;
+}
+
+/**
+ * Model of a notebook attachment.
+ * 
+ * The corresponding backend model is `NotebookAttachment`.
+ */
+export interface INotebookAttachment {
+  type: 'notebook';
+  /**
+   * The local path of the notebook, relative to `ContentsManager.root_dir`.
    */
   value: string;
   /**
-   * Type of the cell.
+   * (optional) A list of cells in the notebook.
    */
-  cellType: 'raw' | 'markdown' | 'code';
-  /**
-   * Path to the notebook containing this cell, relative to
-   * `ContentsManager.root_dir`.
-   */
-  notebookPath: string;
-  /**
-   * (optional) A selection range within the cell. See `IAttachmentSelection`
-   * for more info.
-   */
-  selection?: IAttachmentSelection;
+  cells?: INotebookAttachmentCell[];
 }
 
 export interface IAttachmentSelection {

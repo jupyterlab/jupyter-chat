@@ -148,33 +148,45 @@ class FileAttachment:
     """
 
 @dataclass
-class CellAttachment:
+class NotebookAttachmentCell:
     """
-    Model of a cell attachment.
+    Model of a single cell within a notebook attachment.
+    
+    The corresponding frontend model is `INotebookAttachmentCell`.
+    """
+    
+    id: str
+    """
+    The ID of the cell within the notebook.
+    """
+    
+    input_type: Literal["raw", "markdown", "code"]
+    """
+    The type of the cell.
+    """
+    
+    selection: Optional[AttachmentSelection] = None
+    """
+    (optional) A selection range within the cell. See `AttachmentSelection` for
+    more info.
+    """
 
-    The corresponding frontend model is `ICellAttachment`.
+@dataclass
+class NotebookAttachment:
+    """
+    Model of a notebook attachment.
+
+    The corresponding frontend model is `INotebookAttachment`.
     """
 
     value: str
     """
-    The ID of the cell within the notebook.
+    The local path of the notebook, relative to `ContentsManager.root_dir`.
     """
 
-    cell_type: Literal["raw", "markdown", "code"]
-    """
-    The type of the cell.
-    """
+    type: Literal['notebook'] = 'notebook'
 
-    notebook_path: str
+    cells: Optional[list[NotebookAttachmentCell]] = None
     """
-    The path of the notebook containing this cell, relative to
-    `ContentsManager.root_dir`.
-    """
-
-    type: Literal['cell'] = 'cell'
-
-    selection: Optional[AttachmentSelection] = None
-    """
-    (optional) A selection range within the file. See `AttachmentSelection` for
-    more info.
+    (optional) A list of cells in the notebook.
     """

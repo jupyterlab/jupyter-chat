@@ -14,7 +14,7 @@ from uuid import uuid4
 from pycrdt import Array, ArrayEvent, Map, MapEvent
 import re
 
-from .models import message_asdict_factory, FileAttachment, CellAttachment, Message, NewMessage, User
+from .models import message_asdict_factory, FileAttachment, NotebookAttachment, Message, NewMessage, User
 
 
 class YChat(YBaseDoc):
@@ -168,14 +168,14 @@ class YChat(YBaseDoc):
                 message.body = initial_message["body"] + message.body  # type:ignore[index]
             self._ymessages[index] = asdict(message, dict_factory=message_asdict_factory)
 
-    def get_attachments(self) -> dict[str, Union[FileAttachment, CellAttachment]]:
+    def get_attachments(self) -> dict[str, Union[FileAttachment, NotebookAttachment]]:
         """
         Returns all attachments in the chat as a dictionary, indexed by
         attachment ID.
         """
         return self._yattachments.to_py() or {}
 
-    def set_attachment(self, attachment: Union[FileAttachment, CellAttachment]) -> str:
+    def set_attachment(self, attachment: Union[FileAttachment, NotebookAttachment]) -> str:
         """
         Add or modify an attachment in the chat, and returns the ID of the
         attachment.
