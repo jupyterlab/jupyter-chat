@@ -117,7 +117,7 @@ export interface IFileAttachment {
 
 /**
  * Model of a single cell within a notebook attachment.
- * 
+ *
  * The corresponding backend model is `NotebookCell`.
  */
 export interface INotebookAttachmentCell {
@@ -138,7 +138,7 @@ export interface INotebookAttachmentCell {
 
 /**
  * Model of a notebook attachment.
- * 
+ *
  * The corresponding backend model is `NotebookAttachment`.
  */
 export interface INotebookAttachment {
