@@ -3,7 +3,6 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-// import { IDocumentManager } from '@jupyterlab/docmanager';
 import CloseIcon from '@mui/icons-material/Close';
 import { Box } from '@mui/material';
 import React, { useContext } from 'react';
@@ -18,8 +17,30 @@ const ATTACHMENT_CLICKABLE_CLASS = 'jp-chat-attachment-clickable';
 const REMOVE_BUTTON_CLASS = 'jp-chat-attachment-remove';
 
 /**
- * The attachments props.
+ * Generate a user-friendly display name for an attachment
  */
+function getAttachmentDisplayName(attachment: IAttachment): string {
+  if (attachment.type === 'cell') {
+    // Extract notebook filename with extension
+    const notebook =
+      attachment.notebookPath.split('/').pop() ||
+      attachment.notebookPath ||
+      'Unknown notebook';
+
+    return `${notebook}: ${attachment.cellType} cell`;
+  }
+
+  if (attachment.type === 'file') {
+    // Extract filename with extension
+    const fileName =
+      attachment.value.split('/').pop() || attachment.value || 'Unknown file';
+
+    return fileName;
+  }
+
+  return (attachment as any).value || 'Unknown attachment';
+}
+
 export type AttachmentsProps = {
   attachments: IAttachment[];
   onRemove?: (attachment: IAttachment) => void;
@@ -32,7 +53,11 @@ export function AttachmentPreviewList(props: AttachmentsProps): JSX.Element {
   return (
     <Box className={ATTACHMENTS_CLASS}>
       {props.attachments.map(attachment => (
-        <AttachmentPreview {...props} attachment={attachment} />
+        <AttachmentPreview
+          key={`${attachment.type}-${attachment.value}`}
+          {...props}
+          attachment={attachment}
+        />
       ))}
     </Box>
   );
@@ -66,7 +91,7 @@ export function AttachmentPreview(props: AttachmentProps): JSX.Element {
           )
         }
       >
-        {props.attachment.value}
+        {getAttachmentDisplayName(props.attachment)}
       </span>
       {props.onRemove && (
         <TooltippedButton

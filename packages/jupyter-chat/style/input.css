@@ -30,3 +30,33 @@
 .jp-chat-input-toolbar .jp-chat-send-include-opener {
   padding: 4px 0;
 }
+
+/* Drag and drop styles */
+.jp-chat-input-container {
+  position: relative;
+  transition: all 150ms ease;
+}
+
+.jp-chat-input-container.jp-chat-drag-hover {
+  background: rgba(33, 150, 243, 0.1);
+  border: 2px dashed var(--jp-brand-color1);
+  border-radius: 4px;
+  padding: 8px;
+}
+
+/* Visual indicator for drop zone */
+.jp-chat-input-container.jp-chat-drag-hover::before {
+  content: 'Drop files or cells here';
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--jp-brand-color1);
+  font-size: 12px;
+  font-weight: 500;
+  pointer-events: none;
+  background: var(--jp-layout-color0);
+  padding: 2px 8px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
