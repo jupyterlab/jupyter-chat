@@ -20,7 +20,7 @@ test.use({
 
 test.describe('#user-mention', () => {
   let guestPage: IJupyterLabPageFixture;
-   test.beforeEach(
+  test.beforeEach(
     async ({ baseURL, browser, page, tmpPath, waitForApplication }) => {
       await page.filebrowser.contents.uploadContent('{}', 'text', FILENAME);
       // Create a new user.
@@ -58,13 +58,13 @@ test.describe('#user-mention', () => {
       await page.filebrowser.contents.deleteFile(FILENAME);
     }
   });
-  
+
   test('should open chat command with guest user', async ({ page }) => {
     const chatPanel = await openChat(page, FILENAME);
 
     // Send a message from guest to make sure users are populated
     await sendMessage(guestPage, FILENAME, 'Hello from guest');
-    
+
     // Check mentions on main page
     const input = chatPanel
       .locator('.jp-chat-input-container')
@@ -88,7 +88,7 @@ test.describe('#user-mention', () => {
       '.jp-chat-input-container .jp-chat-send-button'
     );
     const chatCommandName = page.locator('.jp-chat-command-name');
-    
+
     await input.press('@');
     await chatCommandName.nth(0).click();
 
@@ -147,21 +147,21 @@ test.describe('#current-user-filter', () => {
   test('should not show current user in mention list', async ({ page }) => {
     // Open the chat panel
     const chatPanel = await openChat(page, FILENAME);
-    
+
     // Send a message from guest to make sure users are populated
     await sendMessage(guestPage, FILENAME, 'Hello from guest');
-    
+
     // Get the input field on the main page
     const input = chatPanel
       .locator('.jp-chat-input-container')
       .getByRole('combobox');
-    
+
     // Wait for the mention list to appear
     const chatCommandName = page.locator('.jp-chat-command-name');
     await input.press('@');
     await expect(chatCommandName).toBeVisible();
-    
-    // There should only be one user in the list (jovyan_2) 
+
+    // There should only be one user in the list (jovyan_2)
     // The current user (jovyan) should not appear
     await expect(chatCommandName).toHaveCount(1);
     expect(await chatCommandName.nth(0).textContent()).toBe('@jovyan_2');
