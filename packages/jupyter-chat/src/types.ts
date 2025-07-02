@@ -107,7 +107,7 @@ export interface IFileAttachment {
   /**
    * (optional) The MIME type of the attachment.
    */
-  mimeType?: string;
+  mimetype?: string;
   /**
    * (optional) A selection range within the file. See `IAttachmentSelection`
    * for more info.
