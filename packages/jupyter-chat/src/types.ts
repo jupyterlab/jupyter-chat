@@ -87,21 +87,85 @@ export interface INewMessage {
 }
 
 /**
- * The attachment interface.
+ * The attachment type. Jupyter Chat allows for two types of attachments
+ * currently:
+ *
+ * 1. File attachments (`IFileAttachment`)
+ * 2. Notebook attachments (`INotebookAttachment`)
+ *
+ * The `type` field is always defined on every attachment, so it can be used to
+ * distinguish different attachment types.
  */
-export interface IAttachment {
+export type IAttachment = IFileAttachment | INotebookAttachment;
+
+export interface IFileAttachment {
+  type: 'file';
   /**
-   * The type of the attachment (basically 'file', 'variable', 'image')
-   */
-  type: string;
-  /**
-   * The value, i.e. the file path, the variable name or image content.
+   * The path to the file, relative to `ContentsManager.root_dir`.
    */
   value: string;
   /**
-   * The mimetype of the attachment, optional.
+   * (optional) The MIME type of the attachment.
    */
   mimetype?: string;
+  /**
+   * (optional) A selection range within the file. See `IAttachmentSelection`
+   * for more info.
+   */
+  selection?: IAttachmentSelection;
+}
+
+/**
+ * Model of a single cell within a notebook attachment.
+ *
+ * The corresponding backend model is `NotebookCell`.
+ */
+export interface INotebookAttachmentCell {
+  /**
+   * The ID of the cell within the notebook.
+   */
+  id: string;
+  /**
+   * The type of the cell.
+   */
+  input_type: 'raw' | 'markdown' | 'code';
+  /**
+   * (optional) A selection range within the cell. See `IAttachmentSelection` for
+   * more info.
+   */
+  selection?: IAttachmentSelection;
+}
+
+/**
+ * Model of a notebook attachment.
+ *
+ * The corresponding backend model is `NotebookAttachment`.
+ */
+export interface INotebookAttachment {
+  type: 'notebook';
+  /**
+   * The local path of the notebook, relative to `ContentsManager.root_dir`.
+   */
+  value: string;
+  /**
+   * (optional) A list of cells in the notebook.
+   */
+  cells?: INotebookAttachmentCell[];
+}
+
+export interface IAttachmentSelection {
+  /**
+   * The line number & column number of where the selection begins (inclusive).
+   */
+  start: [number, number];
+  /**
+   * The line number & column number of where the selection ends (inclusive).
+   */
+  end: [number, number];
+  /**
+   * The initial content of the selection.
+   */
+  content: string;
 }
 
 /**

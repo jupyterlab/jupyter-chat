@@ -9,12 +9,12 @@ import time
 import asyncio
 from functools import partial
 from jupyter_ydoc.ybasedoc import YBaseDoc
-from typing import Any, Callable, Optional, Set
+from typing import Any, Callable, Optional, Set, Union
 from uuid import uuid4
 from pycrdt import Array, ArrayEvent, Map, MapEvent
 import re
 
-from .models import message_asdict_factory, Attachment, Message, NewMessage, User
+from .models import message_asdict_factory, FileAttachment, NotebookAttachment, Message, NewMessage, User
 
 
 class YChat(YBaseDoc):
@@ -168,24 +168,38 @@ class YChat(YBaseDoc):
                 message.body = initial_message["body"] + message.body  # type:ignore[index]
             self._ymessages[index] = asdict(message, dict_factory=message_asdict_factory)
 
-    def get_attachments(self) -> dict[str, Attachment]:
+    def get_attachments(self) -> dict[str, Union[FileAttachment, NotebookAttachment]]:
         """
-        Returns the attachments of the document.
+        Returns all attachments in the chat as a dictionary, indexed by
+        attachment ID.
         """
         return self._yattachments.to_py() or {}
 
-    def set_attachment(self, attachment: Attachment):
+    def set_attachment(self, attachment: Union[FileAttachment, NotebookAttachment]) -> str:
         """
-        Add or modify an attachments of the document.
+        Add or modify an attachment in the chat, and returns the ID of the
+        attachment.
+
+        NOTE: This method does not add an attachment to any message. It merely
+        adds the attachment data to the chat file and returns an attachment ID.
+        To add an attachment to a new message, consumers should call this method
+        & add the returned ID to `NewMessage.attachments`.
         """
-        attachment_id = str(uuid4())
+        # Use the existing ID if the attachment already exists, otherwise create
+        # a new ID
+        attachment_json = json.dumps(asdict(attachment), sort_keys=True)
+        attachment_id = None
+        for id, att in self.get_attachments().items():
+            if json.dumps(att, sort_keys=True) == attachment_json:
+                attachment_id = id
+                break
+        if not attachment_id:
+            attachment_id = str(uuid4())
+
+        # Update the attachment with the computed ID, then return the ID
         with self._ydoc.transaction():
-            # Search if the attachment already exist to update it, otherwise add it.
-            for id, att in self.get_attachments().items():
-                if att.type == attachment.type and att.value == attachment.value:
-                    attachment_id = id
-                    break
             self._yattachments.update({attachment_id: asdict(attachment)})
+        return attachment_id
 
     def get_metadata(self) -> dict[str, Any]:
         """
