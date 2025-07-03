@@ -318,8 +318,10 @@ export class InputModel implements IInputModel {
    * Add attachment to send with next message.
    */
   addAttachment = (attachment: IAttachment): void => {
+    // Use JSON comparison to detect duplicates (same as in YChat.setAttachment)
+    const attachmentJson = JSON.stringify(attachment);
     const duplicateAttachment = this._attachments.find(
-      att => att.type === attachment.type && att.value === attachment.value
+      att => JSON.stringify(att) === attachmentJson
     );
     if (duplicateAttachment) {
       return;
@@ -333,8 +335,10 @@ export class InputModel implements IInputModel {
    * Remove attachment to be sent.
    */
   removeAttachment = (attachment: IAttachment): void => {
+    // Use JSON comparison to detect duplicates (same as in YChat.setAttachment)
+    const attachmentJson = JSON.stringify(attachment);
     const attachmentIndex = this._attachments.findIndex(
-      att => att.type === attachment.type && att.value === attachment.value
+      att => JSON.stringify(att) === attachmentJson
     );
     if (attachmentIndex === -1) {
       return;
