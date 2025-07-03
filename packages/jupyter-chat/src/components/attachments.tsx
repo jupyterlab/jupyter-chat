@@ -7,6 +7,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { Box } from '@mui/material';
 import React, { useContext } from 'react';
 import { PathExt } from '@jupyterlab/coreutils';
+import { UUID } from '@lumino/coreutils';
 
 import { TooltippedButton } from './mui-extras/tooltipped-button';
 import { IAttachment } from '../types';
@@ -58,7 +59,7 @@ export function AttachmentPreviewList(props: AttachmentsProps): JSX.Element {
     <Box className={ATTACHMENTS_CLASS}>
       {props.attachments.map(attachment => (
         <AttachmentPreview
-          key={`${attachment.type}-${attachment.value}`}
+          key={`${PathExt.basename(attachment.value)}-${UUID.uuid4()}`}
           {...props}
           attachment={attachment}
         />
