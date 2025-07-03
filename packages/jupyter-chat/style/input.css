@@ -38,7 +38,7 @@
 }
 
 .jp-chat-input-container.jp-chat-drag-hover {
-  background: rgba(33, 150, 243, 0.1);
+  background: rgb(33 150 243 / 10%);
   border: 2px dashed var(--jp-brand-color1);
   border-radius: 4px;
   padding: 8px;
