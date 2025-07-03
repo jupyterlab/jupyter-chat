@@ -12,7 +12,11 @@ import { IDragEvent } from '@lumino/dragdrop';
 import { Chat, IInputToolbarRegistry } from '../components';
 import { chatIcon } from '../icons';
 import { IChatModel } from '../model';
-import { IFileAttachment, ICellAttachment } from '../types';
+import {
+  IFileAttachment,
+  INotebookAttachment,
+  INotebookAttachmentCell
+} from '../types';
 import { ActiveCellManager } from '../active-cell-manager';
 
 // MIME type constant for file browser drag events
@@ -20,6 +24,10 @@ const FILE_BROWSER_MIME = 'application/x-jupyter-icontentsrich';
 
 // MIME type constant for Notebook cell drag events
 const NOTEBOOK_CELL_MIME = 'application/vnd.jupyter.cells';
+
+// CSS class constants
+const INPUT_CONTAINER_CLASS = 'jp-chat-input-container';
+const DRAG_HOVER_CLASS = 'jp-chat-drag-hover';
 
 export class ChatWidget extends ReactWidget {
   constructor(options: Chat.IOptions) {
@@ -105,7 +113,7 @@ export class ChatWidget extends ReactWidget {
    * Handle drag over events
    */
   private _handleDrag(event: IDragEvent): void {
-    const inputContainer = this.node.querySelector('.jp-chat-input-container');
+    const inputContainer = this.node.querySelector(`.${INPUT_CONTAINER_CLASS}`);
     const target = event.target as HTMLElement;
     const isOverInput =
       inputContainer?.contains(target) || inputContainer === target;
@@ -125,9 +133,9 @@ export class ChatWidget extends ReactWidget {
 
     if (
       inputContainer &&
-      !inputContainer.classList.contains('jp-chat-drag-hover')
+      !inputContainer.classList.contains(DRAG_HOVER_CLASS)
     ) {
-      inputContainer.classList.add('jp-chat-drag-hover');
+      inputContainer.classList.add(DRAG_HOVER_CLASS);
       this._dragTarget = inputContainer as HTMLElement;
     }
   }
@@ -171,15 +179,21 @@ export class ChatWidget extends ReactWidget {
    * Process dropped files
    */
   private _processFileDrop(event: IDragEvent): void {
-    const data = event.mimeData.getData(FILE_BROWSER_MIME) as any;
+    try {
+      const data = event.mimeData.getData(FILE_BROWSER_MIME) as any;
 
-    if (data?.model?.path) {
-      const attachment: IFileAttachment = {
-        type: 'file',
-        value: data.model.path,
-        mimeType: data.model.mimetype || undefined
-      };
-      this.model.input.addAttachment?.(attachment);
+      if (data?.model?.path) {
+        const attachment: IFileAttachment = {
+          type: 'file',
+          value: data.model.path,
+          mimetype: data.model.mimetype
+        };
+        this.model.input.addAttachment?.(attachment);
+      } else {
+        console.warn('Invalid file browser data in drop event');
+      }
+    } catch (error) {
+      console.error('Failed to process file drop:', error);
     }
   }
 
@@ -187,25 +201,55 @@ export class ChatWidget extends ReactWidget {
    * Process dropped cells
    */
   private _processCellDrop(event: IDragEvent): void {
-    const cellData = event.mimeData.getData(NOTEBOOK_CELL_MIME) as any;
+    try {
+      const cellData = event.mimeData.getData(NOTEBOOK_CELL_MIME) as any;
 
-    // Cells might come as array or single object
-    const cells = Array.isArray(cellData) ? cellData : [cellData];
+      // Cells might come as array or single object
+      const cells = Array.isArray(cellData) ? cellData : [cellData];
 
-    for (const cell of cells) {
-      if (cell?.id) {
-        const cellInfo = this._findNotebookAndCellInfo(cell);
+      const validCells: INotebookAttachmentCell[] = [];
+      let notebookPath: string | null = null;
 
-        if (cellInfo) {
-          const attachment: ICellAttachment = {
-            type: 'cell',
-            value: cell.id,
-            cellType: cell.cell_type || 'code',
-            notebookPath: cellInfo.notebookPath
-          };
-          this.model.input.addAttachment?.(attachment);
+      for (const cell of cells) {
+        if (!cell?.id) {
+          console.warn('Dropped cell missing ID, skipping');
+          continue;
         }
+
+        const cellInfo = this._findNotebookAndCellInfo({ id: cell.id } as Cell);
+
+        if (!cellInfo) {
+          console.warn(`Cannot find notebook for cell ${cell.id}, skipping`);
+          continue;
+        }
+
+        if (notebookPath === null) {
+          notebookPath = cellInfo.notebookPath;
+        } else if (notebookPath !== cellInfo.notebookPath) {
+          console.warn(
+            `Mixed notebooks detected, skipping cell ${cell.id} from ${cellInfo.notebookPath}`
+          );
+          continue;
+        }
+
+        const notebookCell: INotebookAttachmentCell = {
+          id: cell.id,
+          input_type: cell.cell_type || 'code'
+        };
+        validCells.push(notebookCell);
       }
+
+      // Create single attachment with all cells from the notebook
+      if (validCells.length && notebookPath) {
+        const attachment: INotebookAttachment = {
+          type: 'notebook',
+          value: notebookPath,
+          cells: validCells
+        };
+        this.model.input.addAttachment?.(attachment);
+      }
+    } catch (error) {
+      console.error('Failed to process cell drop:', error);
     }
   }
 
@@ -257,7 +301,7 @@ export class ChatWidget extends ReactWidget {
    */
   private _removeDragHoverClass(): void {
     if (this._dragTarget) {
-      this._dragTarget.classList.remove('jp-chat-drag-hover');
+      this._dragTarget.classList.remove(DRAG_HOVER_CLASS);
       this._dragTarget = null;
     }
   }

@@ -20,20 +20,23 @@ const REMOVE_BUTTON_CLASS = 'jp-chat-attachment-remove';
  * Generate a user-friendly display name for an attachment
  */
 function getAttachmentDisplayName(attachment: IAttachment): string {
-  if (attachment.type === 'cell') {
+  if (attachment.type === 'notebook') {
     // Extract notebook filename with extension
-    const notebook =
-      attachment.notebookPath.split('/').pop() ||
-      attachment.notebookPath ||
-      'Unknown notebook';
+    const notebook = attachment.value.split('/').pop() || 'Unknown notebook';
 
-    return `${notebook}: ${attachment.cellType} cell`;
+    // Show info about attached cells if there are any
+    if (attachment.cells?.length === 1) {
+      return `${notebook}: ${attachment.cells[0].input_type} cell`;
+    } else if (attachment.cells && attachment.cells.length > 1) {
+      return `${notebook}: ${attachment.cells.length} cells`;
+    }
+
+    return notebook;
   }
 
   if (attachment.type === 'file') {
     // Extract filename with extension
-    const fileName =
-      attachment.value.split('/').pop() || attachment.value || 'Unknown file';
+    const fileName = attachment.value.split('/').pop() || 'Unknown file';
 
     return fileName;
   }
