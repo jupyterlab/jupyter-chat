@@ -37,11 +37,18 @@
   transition: all 150ms ease;
 }
 
-.jp-chat-input-container.jp-chat-drag-hover {
+.jp-chat-input-container.jp-chat-drag-hover::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: rgb(33 150 243 / 10%);
   border: 2px dashed var(--jp-brand-color1);
   border-radius: 4px;
-  padding: 8px;
+  pointer-events: none;
+  z-index: 1;
 }
 
 /* Visual indicator for drop zone */
