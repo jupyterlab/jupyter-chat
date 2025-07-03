@@ -6,6 +6,7 @@
 import CloseIcon from '@mui/icons-material/Close';
 import { Box } from '@mui/material';
 import React, { useContext } from 'react';
+import { PathExt } from '@jupyterlab/coreutils';
 
 import { TooltippedButton } from './mui-extras/tooltipped-button';
 import { IAttachment } from '../types';
@@ -22,7 +23,7 @@ const REMOVE_BUTTON_CLASS = 'jp-chat-attachment-remove';
 function getAttachmentDisplayName(attachment: IAttachment): string {
   if (attachment.type === 'notebook') {
     // Extract notebook filename with extension
-    const notebook = attachment.value.split('/').pop() || 'Unknown notebook';
+    const notebook = PathExt.basename(attachment.value) || 'Unknown notebook';
 
     // Show info about attached cells if there are any
     if (attachment.cells?.length === 1) {
@@ -36,7 +37,7 @@ function getAttachmentDisplayName(attachment: IAttachment): string {
 
   if (attachment.type === 'file') {
     // Extract filename with extension
-    const fileName = attachment.value.split('/').pop() || 'Unknown file';
+    const fileName = PathExt.basename(attachment.value) || 'Unknown file';
 
     return fileName;
   }
