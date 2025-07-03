@@ -26,6 +26,10 @@ type ChatMessageHeaderProps = {
  * The message header component.
  */
 export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
+  // Don't render header for stacked messages
+  if (props.message.stacked) {
+    return <></>;
+  }
   const [datetime, setDatetime] = useState<Record<number, string>>({});
   const message = props.message;
   const sender = message.sender;

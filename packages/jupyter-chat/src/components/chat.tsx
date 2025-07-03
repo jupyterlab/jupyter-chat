@@ -45,10 +45,10 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
       />
       <ChatInput
         sx={{
-          paddingLeft: 4,
-          paddingRight: 4,
-          paddingTop: 0,
-          paddingBottom: 0,
+          paddingLeft: 2,
+          paddingRight: 2,
+          paddingTop: 2,
+          paddingBottom: 2,
           borderTop: '1px solid var(--jp-border-color1)'
         }}
         model={model.input}
