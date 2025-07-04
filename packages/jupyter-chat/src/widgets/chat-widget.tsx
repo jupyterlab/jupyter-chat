@@ -249,7 +249,7 @@ export class ChatWidget extends ReactWidget {
         this.model.input.addAttachment?.(attachment);
       }
     } catch (error) {
-      console.error('Failed to process cell drop:', error);
+      console.error('Failed to process cell drop: ', error);
     }
   }
 

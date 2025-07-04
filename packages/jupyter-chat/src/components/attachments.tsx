@@ -24,16 +24,17 @@ const REMOVE_BUTTON_CLASS = 'jp-chat-attachment-remove';
 function getAttachmentDisplayName(attachment: IAttachment): string {
   if (attachment.type === 'notebook') {
     // Extract notebook filename with extension
-    const notebook = PathExt.basename(attachment.value) || 'Unknown notebook';
+    const notebookName =
+      PathExt.basename(attachment.value) || 'Unknown notebook';
 
     // Show info about attached cells if there are any
     if (attachment.cells?.length === 1) {
-      return `${notebook}: ${attachment.cells[0].input_type} cell`;
+      return `${notebookName}: ${attachment.cells[0].input_type} cell`;
     } else if (attachment.cells && attachment.cells.length > 1) {
-      return `${notebook}: ${attachment.cells.length} cells`;
+      return `${notebookName}: ${attachment.cells.length} cells`;
     }
 
-    return notebook;
+    return notebookName;
   }
 
   if (attachment.type === 'file') {
