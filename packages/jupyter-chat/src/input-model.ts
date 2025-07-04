@@ -9,7 +9,7 @@ import { ISignal, Signal } from '@lumino/signaling';
 import { IActiveCellManager } from './active-cell-manager';
 import { ISelectionWatcher } from './selection-watcher';
 import { IChatContext } from './model';
-import { IAttachment, IUser } from './types';
+import { IAttachment, INotebookAttachment, IUser } from './types';
 
 /**
  * The chat input interface.
@@ -318,11 +318,44 @@ export class InputModel implements IInputModel {
    * Add attachment to send with next message.
    */
   addAttachment = (attachment: IAttachment): void => {
+    // Use JSON comparison to detect duplicates (same as in YChat.setAttachment)
+    const attachmentJson = JSON.stringify(attachment);
     const duplicateAttachment = this._attachments.find(
-      att => att.type === attachment.type && att.value === attachment.value
+      att => JSON.stringify(att) === attachmentJson
     );
     if (duplicateAttachment) {
       return;
+    }
+
+    // Merge cells from same notebook into the same attachment
+    if (attachment.type === 'notebook' && attachment.cells) {
+      const existingNotebookIndex = this._attachments.findIndex(
+        att => att.type === 'notebook' && att.value === attachment.value
+      );
+
+      if (existingNotebookIndex !== -1) {
+        const existingAttachment = this._attachments[
+          existingNotebookIndex
+        ] as INotebookAttachment;
+        const existingCells = existingAttachment.cells || [];
+
+        // Filter out duplicate cells
+        const newCells = attachment.cells.filter(
+          newCell =>
+            !existingCells.some(existingCell => existingCell.id === newCell.id)
+        );
+
+        if (!newCells.length) {
+          return;
+        }
+
+        this._attachments[existingNotebookIndex] = {
+          ...existingAttachment,
+          cells: [...existingCells, ...newCells]
+        };
+        this._attachmentsChanged.emit([...this._attachments]);
+        return;
+      }
     }
 
     this._attachments.push(attachment);
@@ -333,8 +366,10 @@ export class InputModel implements IInputModel {
    * Remove attachment to be sent.
    */
   removeAttachment = (attachment: IAttachment): void => {
+    // Use JSON comparison to detect duplicates (same as in YChat.setAttachment)
+    const attachmentJson = JSON.stringify(attachment);
     const attachmentIndex = this._attachments.findIndex(
-      att => att.type === attachment.type && att.value === attachment.value
+      att => JSON.stringify(att) === attachmentJson
     );
     if (attachmentIndex === -1) {
       return;

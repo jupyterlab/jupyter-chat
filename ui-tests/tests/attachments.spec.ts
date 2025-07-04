@@ -83,12 +83,8 @@ test.describe('#attachments', () => {
     // Should have attachment in input
     const attachments = input.locator('.jp-chat-attachment');
     await expect(attachments).toHaveCount(2);
-    await expect(attachments.nth(0)).toHaveText(
-      PathExt.join(tmpPath, NOTEBOOK)
-    );
-    await expect(attachments.nth(1)).toHaveText(
-      PathExt.join(tmpPath, 'untitled.md')
-    );
+    await expect(attachments.nth(0)).toHaveText(NOTEBOOK);
+    await expect(attachments.nth(1)).toHaveText('untitled.md');
 
     // Should open attachment file from input
     await attachments.nth(1).locator('.jp-chat-attachment-clickable').click();
@@ -135,12 +131,8 @@ test.describe('#attachments', () => {
       .first();
     const attachments = message.locator('.jp-chat-attachment');
     await expect(attachments).toHaveCount(2);
-    await expect(attachments.nth(0)).toHaveText(
-      PathExt.join(tmpPath, NOTEBOOK)
-    );
-    await expect(attachments.nth(1)).toHaveText(
-      PathExt.join(tmpPath, 'untitled.md')
-    );
+    await expect(attachments.nth(0)).toHaveText(NOTEBOOK);
+    await expect(attachments.nth(1)).toHaveText('untitled.md');
 
     // Should open attachment file from input
     await attachments.nth(1).locator('.jp-chat-attachment-clickable').click();

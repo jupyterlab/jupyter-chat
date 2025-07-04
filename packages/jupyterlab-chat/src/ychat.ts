@@ -210,9 +210,13 @@ export class YChat extends YDocument<IChatChanges> {
     // Use the existing ID if the attachment already exists, otherwise create a
     // new ID
     const attachmentJson = JSON.stringify(attachment);
-    const existingId = Array.from(this._attachments.entries()).find(
-      ([_, att]) => JSON.stringify(att) === attachmentJson
-    )?.[0];
+    let existingId: string | undefined;
+    for (const [id, att] of this._attachments.entries()) {
+      if (JSON.stringify(att) === attachmentJson) {
+        existingId = id;
+        break;
+      }
+    }
     const id = existingId || UUID.uuid4();
 
     // Set the attachment using the computed ID, then return the ID
