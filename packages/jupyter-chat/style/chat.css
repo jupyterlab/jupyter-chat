@@ -201,13 +201,15 @@
 
 .jp-chat-attachments {
   display: flex;
-  min-height: 1.5em;
-  overflow-x: auto;
   gap: 4px;
+  flex-wrap: wrap;
+  min-height: 1.5em;
+  padding: 8px 0;
 }
 
-.jp-chat-input-container .jp-chat-attachments {
+.jp-chat-attachments:empty {
   padding: 8px 0;
+  min-height: 1.5em;
 }
 
 .jp-chat-attachment {

@@ -31,10 +31,18 @@
   padding: 4px 0;
 }
 
-/* Drag and drop styles */
 .jp-chat-input-container {
   position: relative;
   transition: all 150ms ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 56px;
+  padding: 8px 0;
+}
+
+.jp-chat-input-container .MuiTextField-root {
+  padding-bottom: 8px;
 }
 
 .jp-chat-input-container.jp-chat-drag-hover::after {
@@ -51,7 +59,6 @@
   z-index: 1;
 }
 
-/* Visual indicator for drop zone */
 .jp-chat-input-container.jp-chat-drag-hover::before {
   content: 'Drop files or cells here';
   position: absolute;

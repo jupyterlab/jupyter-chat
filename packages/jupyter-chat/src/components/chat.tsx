@@ -47,7 +47,7 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
         sx={{
           paddingLeft: 4,
           paddingRight: 4,
-          paddingTop: 1,
+          paddingTop: 0,
           paddingBottom: 0,
           borderTop: '1px solid var(--jp-border-color1)'
         }}
