@@ -76,14 +76,14 @@ export class ChatWidget extends ReactWidget {
         event.stopPropagation();
         break;
       case 'lm-dragover':
-        this._handleDrag(event as Drag.Event);
+        this._handleDrag(event);
         break;
       case 'lm-drop':
-        this._handleDrop(event as Drag.Event);
+        this._handleDrop(event);
         break;
       case 'lm-dragleave': {
         // Remove hover class on leaving the widget
-        const targetElement = (event as DragEvent).relatedTarget;
+        const targetElement = event.relatedTarget;
         if (!targetElement || !this.node.contains(targetElement as Node)) {
           this._removeDragHoverClass();
         }
