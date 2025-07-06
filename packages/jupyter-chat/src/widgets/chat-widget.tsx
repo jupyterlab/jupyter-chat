@@ -65,6 +65,11 @@ export class ChatWidget extends ReactWidget {
    * Handle DOM events for drag and drop
    */
   handleEvent(event: Event): void {
+    // only handle drag-and-drop events
+    if (!(event instanceof Drag.Event)) {
+      return;
+    }
+
     switch (event.type) {
       case 'lm-dragenter':
         event.preventDefault();
