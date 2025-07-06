@@ -7,7 +7,7 @@ import { ReactWidget } from '@jupyterlab/apputils';
 import { Cell } from '@jupyterlab/cells';
 import React from 'react';
 import { Message } from '@lumino/messaging';
-import { IDragEvent } from '@lumino/dragdrop';
+import { Drag } from '@lumino/dragdrop';
 
 import { Chat, IInputToolbarRegistry } from '../components';
 import { chatIcon } from '../icons';
@@ -71,10 +71,10 @@ export class ChatWidget extends ReactWidget {
         event.stopPropagation();
         break;
       case 'lm-dragover':
-        this._handleDrag(event as IDragEvent);
+        this._handleDrag(event as Drag.Event);
         break;
       case 'lm-drop':
-        this._handleDrop(event as IDragEvent);
+        this._handleDrop(event as Drag.Event);
         break;
       case 'lm-dragleave': {
         // Remove hover class on leaving the widget
@@ -112,7 +112,7 @@ export class ChatWidget extends ReactWidget {
   /**
    * Handle drag over events
    */
-  private _handleDrag(event: IDragEvent): void {
+  private _handleDrag(event: Drag.Event): void {
     const inputContainer = this.node.querySelector(`.${INPUT_CONTAINER_CLASS}`);
     const target = event.target as HTMLElement;
     const isOverInput =
@@ -143,7 +143,7 @@ export class ChatWidget extends ReactWidget {
   /**
    * Check if we can handle the drop
    */
-  private _canHandleDrop(event: IDragEvent): boolean {
+  private _canHandleDrop(event: Drag.Event): boolean {
     const types = event.mimeData.types();
     return (
       types.includes(NOTEBOOK_CELL_MIME) || types.includes(FILE_BROWSER_MIME)
@@ -153,7 +153,7 @@ export class ChatWidget extends ReactWidget {
   /**
    * Handle drop events
    */
-  private _handleDrop(event: IDragEvent): void {
+  private _handleDrop(event: Drag.Event): void {
     if (!this._canHandleDrop(event)) {
       return;
     }
@@ -178,7 +178,7 @@ export class ChatWidget extends ReactWidget {
   /**
    * Process dropped files
    */
-  private _processFileDrop(event: IDragEvent): void {
+  private _processFileDrop(event: Drag.Event): void {
     try {
       const data = event.mimeData.getData(FILE_BROWSER_MIME) as any;
 
@@ -200,7 +200,7 @@ export class ChatWidget extends ReactWidget {
   /**
    * Process dropped cells
    */
-  private _processCellDrop(event: IDragEvent): void {
+  private _processCellDrop(event: Drag.Event): void {
     try {
       const cellData = event.mimeData.getData(NOTEBOOK_CELL_MIME) as any;
 
