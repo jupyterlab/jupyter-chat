@@ -5,6 +5,7 @@
 
 import { ReactWidget } from '@jupyterlab/apputils';
 import { Cell } from '@jupyterlab/cells';
+import { DirListing } from '@jupyterlab/filebrowser';
 import React from 'react';
 import { Message } from '@lumino/messaging';
 import { Drag } from '@lumino/dragdrop';
@@ -184,22 +185,21 @@ export class ChatWidget extends ReactWidget {
    * Process dropped files
    */
   private _processFileDrop(event: Drag.Event): void {
-    try {
-      const data = event.mimeData.getData(FILE_BROWSER_MIME) as any;
+    const data = event.mimeData.getData(
+      FILE_BROWSER_MIME
+    ) as DirListing.IContentsThunk;
 
-      if (data?.model?.path) {
-        const attachment: IFileAttachment = {
-          type: 'file',
-          value: data.model.path,
-          mimetype: data.model.mimetype
-        };
-        this.model.input.addAttachment?.(attachment);
-      } else {
-        console.warn('Invalid file browser data in drop event');
-      }
-    } catch (error) {
-      console.error('Failed to process file drop:', error);
+    if (!data?.model?.path) {
+      console.warn('Invalid file browser data in drop event');
+      return;
     }
+
+    const attachment: IFileAttachment = {
+      type: 'file',
+      value: data.model.path,
+      mimetype: data.model.mimetype
+    };
+    this.model.input.addAttachment?.(attachment);
   }
 
   /**
