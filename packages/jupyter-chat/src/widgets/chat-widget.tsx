@@ -214,8 +214,21 @@ export class ChatWidget extends ReactWidget {
       // Cells might come as array or single object
       const cells = Array.isArray(cellData) ? cellData : [cellData];
 
+      // Get path from first cell as all cells come from same notebook as users can only select or drag cells from one notebook at a time
+      if (!cells[0]?.id) {
+        console.warn('No valid cells to process');
+        return;
+      }
+
+      const notebookPath = this._findNotebookPath(String(cells[0].id));
+      if (!notebookPath) {
+        console.warn(
+          `Cannot find notebook for dragged cells from ${cells[0].id}`
+        );
+        return;
+      }
+
       const validCells: INotebookAttachmentCell[] = [];
-      let notebookPath: string | null = null;
 
       for (const cell of cells) {
         if (!cell.id) {
@@ -236,22 +249,6 @@ export class ChatWidget extends ReactWidget {
           continue;
         }
 
-        const cellNotebookPath = this._findNotebookPath(cell.id);
-
-        if (!cellNotebookPath) {
-          console.warn(`Cannot find notebook for cell ${cell.id}, skipping`);
-          continue;
-        }
-
-        if (notebookPath === null) {
-          notebookPath = cellNotebookPath;
-        } else if (notebookPath !== cellNotebookPath) {
-          console.warn(
-            `Mixed notebooks detected, skipping cell ${cell.id} from ${cellNotebookPath}`
-          );
-          continue;
-        }
-
         const notebookCell: INotebookAttachmentCell = {
           id: cell.id,
           input_type: cellType
@@ -260,7 +257,7 @@ export class ChatWidget extends ReactWidget {
       }
 
       // Create single attachment with all cells from the notebook
-      if (validCells.length && notebookPath) {
+      if (validCells.length) {
         const attachment: INotebookAttachment = {
           type: 'notebook',
           value: notebookPath,
