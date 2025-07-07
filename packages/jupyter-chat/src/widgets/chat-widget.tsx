@@ -222,7 +222,7 @@ export class ChatWidget extends ReactWidget {
           continue;
         }
 
-        const cellInfo = this._findNotebookAndCellInfo({ id: cell.id } as Cell);
+        const cellInfo = this._findNotebookPath({ id: cell.id } as Cell);
 
         if (!cellInfo) {
           console.warn(`Cannot find notebook for cell ${cell.id}, skipping`);
@@ -262,9 +262,7 @@ export class ChatWidget extends ReactWidget {
   /**
    * Find the notebook path for a cell by searching through active and open notebooks
    */
-  private _findNotebookAndCellInfo(
-    cell: Cell
-  ): { notebookPath: string } | null {
+  private _findNotebookPath(cell: Cell): { notebookPath: string } | null {
     if (this.model.input.activeCellManager) {
       const activeCellManager = this.model.input
         .activeCellManager as ActiveCellManager;
