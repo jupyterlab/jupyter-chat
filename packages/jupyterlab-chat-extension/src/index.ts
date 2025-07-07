@@ -96,6 +96,10 @@ const attachmentOpeners: JupyterFrontEndPlugin<IAttachmentOpenerRegistry> = {
       app.commands.execute('docmanager:open', { path: attachment.value });
     });
 
+    attachmentOpenerRegistry.set('notebook', (attachment: IAttachment) => {
+      app.commands.execute('docmanager:open', { path: attachment.value });
+    });
+
     return attachmentOpenerRegistry;
   }
 };

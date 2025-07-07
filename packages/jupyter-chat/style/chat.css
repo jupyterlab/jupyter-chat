@@ -201,6 +201,14 @@
 
 .jp-chat-attachments {
   display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  min-height: 1.5em;
+  padding: 8px 0;
+}
+
+.jp-chat-attachments:empty {
+  padding: 8px 0;
   min-height: 1.5em;
 }
 
@@ -211,6 +219,7 @@
   padding: 0 0.3em;
   align-content: center;
   background-color: var(--jp-border-color3);
+  flex-shrink: 0;
 }
 
 .jp-chat-attachment .jp-chat-attachment-clickable:hover {

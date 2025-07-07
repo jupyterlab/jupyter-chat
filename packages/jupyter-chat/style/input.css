@@ -30,3 +30,47 @@
 .jp-chat-input-toolbar .jp-chat-send-include-opener {
   padding: 4px 0;
 }
+
+.jp-chat-input-container {
+  position: relative;
+  transition: all 150ms ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 56px;
+  padding: 8px 0;
+}
+
+.jp-chat-input-container .MuiTextField-root {
+  padding-bottom: 8px;
+}
+
+.jp-chat-input-container.jp-chat-drag-hover::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgb(33 150 243 / 10%);
+  border: 2px dashed var(--jp-brand-color1);
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.jp-chat-input-container.jp-chat-drag-hover::before {
+  content: 'Drop files or cells here';
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--jp-brand-color1);
+  font-size: 12px;
+  font-weight: 500;
+  pointer-events: none;
+  background: var(--jp-layout-color0);
+  padding: 2px 8px;
+  border-radius: 3px;
+  white-space: nowrap;
+}

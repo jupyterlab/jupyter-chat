@@ -3,10 +3,11 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-// import { IDocumentManager } from '@jupyterlab/docmanager';
 import CloseIcon from '@mui/icons-material/Close';
 import { Box } from '@mui/material';
 import React, { useContext } from 'react';
+import { PathExt } from '@jupyterlab/coreutils';
+import { UUID } from '@lumino/coreutils';
 
 import { TooltippedButton } from './mui-extras/tooltipped-button';
 import { IAttachment } from '../types';
@@ -18,8 +19,34 @@ const ATTACHMENT_CLICKABLE_CLASS = 'jp-chat-attachment-clickable';
 const REMOVE_BUTTON_CLASS = 'jp-chat-attachment-remove';
 
 /**
- * The attachments props.
+ * Generate a user-friendly display name for an attachment
  */
+function getAttachmentDisplayName(attachment: IAttachment): string {
+  if (attachment.type === 'notebook') {
+    // Extract notebook filename with extension
+    const notebookName =
+      PathExt.basename(attachment.value) || 'Unknown notebook';
+
+    // Show info about attached cells if there are any
+    if (attachment.cells?.length === 1) {
+      return `${notebookName}: ${attachment.cells[0].input_type} cell`;
+    } else if (attachment.cells && attachment.cells.length > 1) {
+      return `${notebookName}: ${attachment.cells.length} cells`;
+    }
+
+    return notebookName;
+  }
+
+  if (attachment.type === 'file') {
+    // Extract filename with extension
+    const fileName = PathExt.basename(attachment.value) || 'Unknown file';
+
+    return fileName;
+  }
+
+  return (attachment as any).value || 'Unknown attachment';
+}
+
 export type AttachmentsProps = {
   attachments: IAttachment[];
   onRemove?: (attachment: IAttachment) => void;
@@ -32,7 +59,11 @@ export function AttachmentPreviewList(props: AttachmentsProps): JSX.Element {
   return (
     <Box className={ATTACHMENTS_CLASS}>
       {props.attachments.map(attachment => (
-        <AttachmentPreview {...props} attachment={attachment} />
+        <AttachmentPreview
+          key={`${PathExt.basename(attachment.value)}-${UUID.uuid4()}`}
+          {...props}
+          attachment={attachment}
+        />
       ))}
     </Box>
   );
@@ -66,7 +97,7 @@ export function AttachmentPreview(props: AttachmentProps): JSX.Element {
           )
         }
       >
-        {props.attachment.value}
+        {getAttachmentDisplayName(props.attachment)}
       </span>
       {props.onRemove && (
         <TooltippedButton
