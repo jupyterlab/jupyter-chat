@@ -73,6 +73,7 @@ export class ChatWidget extends ReactWidget {
 
     switch (event.type) {
       case 'lm-dragenter':
+        // see `Drag.Event` documentation for context
         event.preventDefault();
         event.stopPropagation();
         break;
