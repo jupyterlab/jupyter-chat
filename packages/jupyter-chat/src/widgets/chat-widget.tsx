@@ -277,36 +277,39 @@ export class ChatWidget extends ReactWidget {
    * Find the notebook path for a cell by searching through active and open notebooks
    */
   private _findNotebookPath(cellId: string): string | null {
-    if (this.model.input.activeCellManager) {
-      const activeCellManager = this.model.input
-        .activeCellManager as ActiveCellManager;
-      const notebookTracker = (activeCellManager as any)._notebookTracker;
+    if (!this.model.input.activeCellManager) {
+      return null;
+    }
 
-      if (notebookTracker?.currentWidget) {
-        const currentNotebook = notebookTracker.currentWidget;
-        const cells = currentNotebook.content.widgets;
-        const cellWidget = cells.find((c: Cell) => c.model.id === cellId);
+    const activeCellManager = this.model.input
+      .activeCellManager as ActiveCellManager;
+    const notebookTracker = (activeCellManager as any)._notebookTracker;
 
-        if (cellWidget) {
-          return currentNotebook.context.path;
-        }
-      }
+    if (!notebookTracker) {
+      return null;
+    }
 
-      // If not in current notebook, check all open notebooks
-      if (notebookTracker) {
-        const widgets = notebookTracker.widgets || [];
-        for (const notebook of widgets) {
-          const cells = notebook.content.widgets;
-          const cellWidget = cells.find((c: Cell) => c.model.id === cellId);
+    if (notebookTracker.currentWidget) {
+      const currentNotebook = notebookTracker.currentWidget;
+      const cells = currentNotebook.content.widgets;
+      const cellWidget = cells.find((c: Cell) => c.model.id === cellId);
 
-          if (cellWidget) {
-            return notebook.context.path;
-          }
-        }
+      if (cellWidget) {
+        return currentNotebook.context.path;
       }
     }
 
-    console.warn('Could not find notebook path for cell:', cellId);
+    // If not in current notebook, check all open notebooks
+    const widgets = notebookTracker.widgets || [];
+    for (const notebook of widgets) {
+      const cells = notebook.content.widgets;
+      const cellWidget = cells.find((c: Cell) => c.model.id === cellId);
+
+      if (cellWidget) {
+        return notebook.context.path;
+      }
+    }
+
     return null;
   }
 
