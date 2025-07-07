@@ -784,6 +784,10 @@ export interface IChatContext {
    * A list of all users who have connected to this chat.
    */
   readonly users: IUser[];
+  /**
+   * Current user connected with the chat panel
+   */
+  readonly user: IUser | undefined;
 }
 
 /**
@@ -801,6 +805,10 @@ export abstract class AbstractChatContext implements IChatContext {
 
   get messages(): IChatMessage[] {
     return [...this._model.messages];
+  }
+
+  get user(): IUser | undefined {
+    return this._model?.user;
   }
 
   /**
