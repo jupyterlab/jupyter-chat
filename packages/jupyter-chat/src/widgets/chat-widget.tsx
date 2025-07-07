@@ -6,6 +6,7 @@
 import { ReactWidget } from '@jupyterlab/apputils';
 import { Cell } from '@jupyterlab/cells';
 import { DirListing } from '@jupyterlab/filebrowser';
+import { ICell, isCode, isMarkdown, isRaw } from '@jupyterlab/nbformat';
 import React from 'react';
 import { Message } from '@lumino/messaging';
 import { Drag } from '@lumino/dragdrop';
@@ -208,7 +209,7 @@ export class ChatWidget extends ReactWidget {
    */
   private _processCellDrop(event: Drag.Event): void {
     try {
-      const cellData = event.mimeData.getData(NOTEBOOK_CELL_MIME) as any;
+      const cellData = event.mimeData.getData(NOTEBOOK_CELL_MIME) as ICell[];
 
       // Cells might come as array or single object
       const cells = Array.isArray(cellData) ? cellData : [cellData];
@@ -217,30 +218,43 @@ export class ChatWidget extends ReactWidget {
       let notebookPath: string | null = null;
 
       for (const cell of cells) {
-        if (!cell?.id) {
-          console.warn('Dropped cell missing ID, skipping');
+        if (!cell.id) {
+          console.warn('Dropped cell missing required ID, skipping');
           continue;
         }
 
-        const cellInfo = this._findNotebookPath({ id: cell.id } as Cell);
+        // Use type guards to validate cell type
+        let cellType: 'code' | 'markdown' | 'raw';
+        if (isCode(cell)) {
+          cellType = 'code';
+        } else if (isMarkdown(cell)) {
+          cellType = 'markdown';
+        } else if (isRaw(cell)) {
+          cellType = 'raw';
+        } else {
+          console.warn(`Unknown cell type: ${cell.cell_type}, skipping`);
+          continue;
+        }
 
-        if (!cellInfo) {
+        const cellNotebookPath = this._findNotebookPath(cell.id);
+
+        if (!cellNotebookPath) {
           console.warn(`Cannot find notebook for cell ${cell.id}, skipping`);
           continue;
         }
 
         if (notebookPath === null) {
-          notebookPath = cellInfo.notebookPath;
-        } else if (notebookPath !== cellInfo.notebookPath) {
+          notebookPath = cellNotebookPath;
+        } else if (notebookPath !== cellNotebookPath) {
           console.warn(
-            `Mixed notebooks detected, skipping cell ${cell.id} from ${cellInfo.notebookPath}`
+            `Mixed notebooks detected, skipping cell ${cell.id} from ${cellNotebookPath}`
           );
           continue;
         }
 
         const notebookCell: INotebookAttachmentCell = {
           id: cell.id,
-          input_type: cell.cell_type || 'code'
+          input_type: cellType
         };
         validCells.push(notebookCell);
       }
@@ -262,7 +276,7 @@ export class ChatWidget extends ReactWidget {
   /**
    * Find the notebook path for a cell by searching through active and open notebooks
    */
-  private _findNotebookPath(cell: Cell): { notebookPath: string } | null {
+  private _findNotebookPath(cellId: string): string | null {
     if (this.model.input.activeCellManager) {
       const activeCellManager = this.model.input
         .activeCellManager as ActiveCellManager;
@@ -271,12 +285,10 @@ export class ChatWidget extends ReactWidget {
       if (notebookTracker?.currentWidget) {
         const currentNotebook = notebookTracker.currentWidget;
         const cells = currentNotebook.content.widgets;
-        const cellWidget = cells.find((c: Cell) => c.model.id === cell.id);
+        const cellWidget = cells.find((c: Cell) => c.model.id === cellId);
 
         if (cellWidget) {
-          return {
-            notebookPath: currentNotebook.context.path
-          };
+          return currentNotebook.context.path;
         }
       }
 
@@ -285,18 +297,16 @@ export class ChatWidget extends ReactWidget {
         const widgets = notebookTracker.widgets || [];
         for (const notebook of widgets) {
           const cells = notebook.content.widgets;
-          const cellWidget = cells.find((c: Cell) => c.model.id === cell.id);
+          const cellWidget = cells.find((c: Cell) => c.model.id === cellId);
 
           if (cellWidget) {
-            return {
-              notebookPath: notebook.context.path
-            };
+            return notebook.context.path;
           }
         }
       }
     }
 
-    console.warn('Could not find notebook path for cell:', cell.id);
+    console.warn('Could not find notebook path for cell:', cellId);
     return null;
   }
 
