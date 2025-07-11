@@ -19,55 +19,9 @@ test.use({
 });
 
 test.describe('#user-mention', () => {
-  test.beforeEach(async ({ page }) => {
-    // Create chat file
-    await page.filebrowser.contents.uploadContent('{}', 'text', FILENAME);
-  });
-
-  test.afterEach(async ({ page }) => {
-    if (await page.filebrowser.contents.fileExists(FILENAME)) {
-      await page.filebrowser.contents.deleteFile(FILENAME);
-    }
-  });
-
-  test('should open chat command', async ({ page }) => {
-    const chatPanel = await openChat(page, FILENAME);
-    const input = chatPanel
-      .locator('.jp-chat-input-container')
-      .getByRole('combobox');
-    const chatCommandName = page.locator('.jp-chat-command-name');
-    await input.press('@');
-    await expect(chatCommandName).toHaveCount(1);
-    expect(await chatCommandName.nth(0).textContent()).toBe('@jovyan');
-  });
-
-  test('should format mention in message', async ({ page }) => {
-    const chatPanel = await openChat(page, FILENAME);
-    const input = chatPanel
-      .locator('.jp-chat-input-container')
-      .getByRole('combobox');
-    const sendButton = chatPanel.locator(
-      '.jp-chat-input-container .jp-chat-send-button'
-    );
-    const chatCommandName = page.locator('.jp-chat-command-name');
-    await input.press('@');
-    await chatCommandName.nth(0).click();
-
-    await expect(input).toContainText('@jovyan');
-    await sendButton.click();
-
-    const message = chatPanel.locator('.jp-chat-messages-container').nth(0);
-    await expect(message).toBeAttached();
-    expect(message.locator('.jp-chat-mention')).toBeAttached();
-    expect(message.locator('.jp-chat-mention')).toContainText('@jovyan');
-  });
-});
-
-test.describe('#collaborator-mention', () => {
   let guestPage: IJupyterLabPageFixture;
   test.beforeEach(
     async ({ baseURL, browser, page, tmpPath, waitForApplication }) => {
-      // Create chat file
       await page.filebrowser.contents.uploadContent('{}', 'text', FILENAME);
       // Create a new user.
       const user2: Partial<User.IUser> = {
@@ -90,7 +44,7 @@ test.describe('#collaborator-mention', () => {
       });
       await newPage.evaluate(() => {
         // Acknowledge any dialog
-        window.galataip.on('dialog', d => {
+        window.galata.on('dialog', d => {
           d?.resolve();
         });
       });
@@ -105,7 +59,23 @@ test.describe('#collaborator-mention', () => {
     }
   });
 
-  test('should display collaborators in chat commands', async ({ page }) => {
+  test('should open chat command with guest user', async ({ page }) => {
+    const chatPanel = await openChat(page, FILENAME);
+
+    // Send a message from guest to make sure users are populated
+    await sendMessage(guestPage, FILENAME, 'Hello from guest');
+
+    // Check mentions on main page
+    const input = chatPanel
+      .locator('.jp-chat-input-container')
+      .getByRole('combobox');
+    const chatCommandName = page.locator('.jp-chat-command-name');
+    await input.press('@');
+    await expect(chatCommandName).toHaveCount(1);
+    expect(await chatCommandName.nth(0).textContent()).toBe('@jovyan_2');
+  });
+
+  test('should format mention in message', async ({ page }) => {
     const chatPanel = await openChat(page, FILENAME);
 
     // Send a message from guest.
@@ -114,15 +84,21 @@ test.describe('#collaborator-mention', () => {
     const input = chatPanel
       .locator('.jp-chat-input-container')
       .getByRole('combobox');
+    const sendButton = chatPanel.locator(
+      '.jp-chat-input-container .jp-chat-send-button'
+    );
     const chatCommandName = page.locator('.jp-chat-command-name');
 
     await input.press('@');
-    await expect(chatCommandName).toHaveCount(2);
-    for (let i = 0; i < (await chatCommandName.count()); i++) {
-      expect(['@jovyan', '@jovyan_2']).toContain(
-        await chatCommandName.nth(i).textContent()
-      );
-    }
+    await chatCommandName.nth(0).click();
+
+    await expect(input).toContainText('@jovyan_2');
+    await sendButton.click();
+
+    const message = chatPanel.locator('.jp-chat-messages-container').nth(0);
+    await expect(message).toBeAttached();
+    expect(message.locator('.jp-chat-mention')).toBeAttached();
+    expect(message.locator('.jp-chat-mention')).toContainText('@jovyan_2');
   });
 
   test('should not be case sensitive', async ({ page }) => {
@@ -137,11 +113,7 @@ test.describe('#collaborator-mention', () => {
     const chatCommandName = page.locator('.jp-chat-command-name');
 
     await input.pressSequentially('@JO');
-    await expect(chatCommandName).toHaveCount(2);
-    for (let i = 0; i < (await chatCommandName.count()); i++) {
-      expect(['@jovyan', '@jovyan_2']).toContain(
-        await chatCommandName.nth(i).textContent()
-      );
-    }
+    await expect(chatCommandName).toHaveCount(1);
+    expect(await chatCommandName.nth(0).textContent()).toBe('@jovyan_2');
   });
 });
