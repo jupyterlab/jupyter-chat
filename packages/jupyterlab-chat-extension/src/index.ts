@@ -488,7 +488,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
             inSidePanel
           });
         } else {
-          commands.execute('docmanager:open', {
+          return commands.execute('docmanager:open', {
             // TODO: support JCollab v3 by optionally prefixing 'RTC:'
             path: `${filepath}`,
             factory: FACTORY
@@ -650,7 +650,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
             } else {
               // The chat is opened in the main area
               // TODO: support JCollab v3 by optionally prefixing 'RTC:'
-              commands.execute('docmanager:open', {
+              return commands.execute('docmanager:open', {
                 path: `${filepath}`,
                 factory: FACTORY
               });
