@@ -760,23 +760,6 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
       restorer.add(chatPanel, 'jupyter-chat');
     }
 
-    // Use events system to watch changes on files, and update the chat list if a chat
-    // file has been created, deleted or renamed.
-    const schemaID =
-      'https://events.jupyter.org/jupyter_server/contents_service/v1';
-    const actions = ['create', 'delete', 'rename'];
-    app.serviceManager.events.stream.connect((_, emission) => {
-      if (emission.schema_id === schemaID) {
-        const action = emission.action as string;
-        if (
-          actions.includes(action) &&
-          (emission.path as string).endsWith(chatFileType.extensions[0])
-        ) {
-          chatPanel.updateChatList();
-        }
-      }
-    });
-
     /*
      * Command to move a chat from the main area to the side panel.
      */
