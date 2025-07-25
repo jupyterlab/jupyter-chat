@@ -137,6 +137,24 @@ export class ChatPanel extends SidePanel {
 
     const content = this.content as AccordionPanel;
     content.expansionToggled.connect(this._onExpansionToggled, this);
+
+    this._contentsManager.fileChanged.connect((_, args) => {
+      if (args.type === 'delete') {
+        this.widgets.forEach(widget => {
+          if ((widget as ChatSection).path === args.oldValue?.path) {
+            widget.dispose();
+          }
+        });
+        this.updateChatList();
+      }
+      const updateActions = ['new', 'rename'];
+      if (
+        updateActions.includes(args.type) &&
+        args.newValue?.path?.endsWith(chatFileType.extensions[0])
+      ) {
+        this.updateChatList();
+      }
+    });
   }
 
   /**
@@ -238,7 +256,7 @@ export class ChatPanel extends SidePanel {
   /**
    * A message handler invoked on an `'after-show'` message.
    */
-  protected onAfterShow(msg: Message): void {
+  protected onAfterAttach(msg: Message): void {
     // Wait for the component to be rendered.
     this._openChat.renderPromise?.then(() => this.updateChatList());
   }
