@@ -151,7 +151,9 @@ test.describe('#sidepanel', () => {
 
     test.beforeEach(async ({ page }) => {
       await page.filebrowser.contents.uploadContent('{}', 'text', FILENAME);
-      await page.waitForCondition(async () => await page.filebrowser.contents.fileExists(FILENAME));
+      await page.waitForCondition(
+        async () => await page.filebrowser.contents.fileExists(FILENAME)
+      );
       await page.goto();
     });
 
