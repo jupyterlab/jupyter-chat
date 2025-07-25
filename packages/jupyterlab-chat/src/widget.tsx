@@ -254,7 +254,7 @@ export class ChatPanel extends SidePanel {
   }
 
   /**
-   * A message handler invoked on an `'after-show'` message.
+   * A message handler invoked on an `'after-attach'` message.
    */
   protected onAfterAttach(msg: Message): void {
     // Wait for the component to be rendered.
