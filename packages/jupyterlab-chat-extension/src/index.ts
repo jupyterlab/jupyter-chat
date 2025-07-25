@@ -346,7 +346,8 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
         command: CommandIDs.openChat,
         args: widget => ({
           filepath: widget.model.name ?? '',
-          inSidePanel: widget instanceof ChatWidget
+          inSidePanel: widget instanceof ChatWidget,
+          startup: true
         }),
         name: widget => widget.model.name,
         when: openCommandReady.promise
@@ -551,11 +552,14 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
          *
          * args:
          *  filepath - the chat file to open.
+         *  startup - optional (default to false).
+         *            Whether the command is called during startup restoration.
          */
         commands.addCommand(CommandIDs.openChat, {
           label: 'Open a chat',
           execute: async args => {
             const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
+            const startup: boolean = (args.startup as boolean) ?? false;
             let filepath: string | null = (args.filepath as string) ?? null;
             if (filepath === null) {
               filepath = (
@@ -579,10 +583,16 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
               });
 
             if (!fileExist) {
-              showErrorMessage(
-                'Error opening chat',
-                `'${filepath}' is not a valid path`
-              );
+              if (startup) {
+                console.warn(
+                  `Chat file '${filepath}' not found during startup restoration`
+                );
+              } else {
+                showErrorMessage(
+                  'Error opening chat',
+                  `'${filepath}' is not a valid path`
+                );
+              }
               return;
             }
 
