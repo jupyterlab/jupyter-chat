@@ -2,6 +2,32 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.17.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.16.0...8a7005fbf7f03d0664611eca667aad2ed5da15ab))
+
+### Enhancements made
+
+- Log warning instead of showing error dialog when chat file path not found during startup restoration [#259](https://github.com/jupyterlab/jupyter-chat/pull/259) ([@andrii-i](https://github.com/andrii-i))
+- Return docmanager widget from createChat/openChat commands to ensure launcher disposal [#258](https://github.com/jupyterlab/jupyter-chat/pull/258) ([@andrii-i](https://github.com/andrii-i))
+
+### Bugs fixed
+
+- Improve file event handling in side panel [#260](https://github.com/jupyterlab/jupyter-chat/pull/260) ([@brichet](https://github.com/brichet))
+- Filters current user from @mention display list [#250](https://github.com/jupyterlab/jupyter-chat/pull/250) ([@3coins](https://github.com/3coins))
+
+### Maintenance and upkeep improvements
+
+- Bump form-data from 4.0.0 to 4.0.4 in the npm_and_yarn group across 1 directory [#255](https://github.com/jupyterlab/jupyter-chat/pull/255) ([@dependabot](https://github.com/dependabot))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2025-07-07&to=2025-07-29&type=c))
+
+[@3coins](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3A3coins+updated%3A2025-07-07..2025-07-29&type=Issues) | [@andrii-i](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Aandrii-i+updated%3A2025-07-07..2025-07-29&type=Issues) | [@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2025-07-07..2025-07-29&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adependabot+updated%3A2025-07-07..2025-07-29&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2025-07-07..2025-07-29&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.16.0
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.15.0...2b54aa4e427caa9a1b96ff0fdc4b713df2c173ae))
@@ -20,8 +46,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2025-06-25&to=2025-07-07&type=c))
 
 [@andrii-i](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Aandrii-i+updated%3A2025-06-25..2025-07-07&type=Issues) | [@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2025-06-25..2025-07-07&type=Issues) | [@ellisonbg](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Aellisonbg+updated%3A2025-06-25..2025-07-07&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2025-06-25..2025-07-07&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.15.0
 
