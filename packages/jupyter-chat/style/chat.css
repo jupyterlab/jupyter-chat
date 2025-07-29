@@ -19,7 +19,6 @@
 }
 
 /*
- *
  * Selectors must be nested in `.jp-ThemedContainer` to have a higher
  * specificity than selectors in rules provided by JupyterLab.
  *
@@ -147,7 +146,6 @@
 }
 
 /* Keyframe animations */
-
 @keyframes jp-chat-typing-bounce {
   0%,
   80%,

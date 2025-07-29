@@ -142,6 +142,8 @@ test.describe('#sidepanel', () => {
   });
 
   test.describe('#openingClosing', () => {
+    test.use({ autoGoto: false });
+
     const name = FILENAME.replace('.chat', '');
     const NEW_DIR = 'chats_dir';
     let panel: Locator;
@@ -149,6 +151,10 @@ test.describe('#sidepanel', () => {
 
     test.beforeEach(async ({ page }) => {
       await page.filebrowser.contents.uploadContent('{}', 'text', FILENAME);
+      await page.waitForCondition(
+        async () => await page.filebrowser.contents.fileExists(FILENAME)
+      );
+      await page.goto();
     });
 
     test.afterEach(async ({ page }) => {
