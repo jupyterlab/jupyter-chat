@@ -49,7 +49,6 @@ import { ITranslator, nullTranslator } from '@jupyterlab/translation';
 import { launchIcon } from '@jupyterlab/ui-components';
 import { PromiseDelegate } from '@lumino/coreutils';
 import {
-  ChatPanel,
   ChatWidgetFactory,
   CommandIDs,
   IActiveCellManagerToken,
@@ -65,6 +64,7 @@ import {
   YChat,
   chatFileType
 } from 'jupyterlab-chat';
+import { MultiChatPanel as ChatPanel } from '@jupyter/chat';
 import { chatCommandRegistryPlugin } from './chat-commands/plugins';
 import { emojiCommandsPlugin } from './chat-commands/providers/emoji';
 import { mentionCommandsPlugin } from './chat-commands/providers/user-mention';
@@ -740,7 +740,10 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
       attachmentOpenerRegistry,
       inputToolbarFactory,
       messageFooterRegistry,
-      welcomeMessage
+      welcomeMessage,
+      chatFileExtension: chatFileType.extensions[0],
+      createChatCommand: CommandIDs.createChat,
+      openChatCommand: CommandIDs.openChat
     });
     chatPanel.id = 'JupyterlabChat:sidepanel';
     chatPanel.title.icon = chatIcon;

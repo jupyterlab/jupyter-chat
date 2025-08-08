@@ -15,7 +15,8 @@ import { WidgetTracker } from '@jupyterlab/apputils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { Token } from '@lumino/coreutils';
 import { ISignal } from '@lumino/signaling';
-import { ChatPanel, LabChatPanel } from './widget';
+import { LabChatPanel } from './widget';
+import { MultiChatPanel as ChatPanel } from '@jupyter/chat';
 
 /**
  * The file type for a chat document.
