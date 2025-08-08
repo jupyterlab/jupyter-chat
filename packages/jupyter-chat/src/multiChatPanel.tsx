@@ -48,6 +48,9 @@ const TOOLBAR_CLASS = 'jp-chat-toolbar';
  * Generic sidepanel widget including multiple chats and the add chat button.
  */
 export class MultiChatPanel extends SidePanel {
+  /**
+   * The constructor of the chat panel.
+   */
   constructor(options: ChatPanel.IOptions) {
     super(options);
     this.addClass(SIDEPANEL_CLASS);
@@ -105,6 +108,9 @@ export class MultiChatPanel extends SidePanel {
     });
   }
 
+  /**
+   * Getter and setter of the defaultDirectory.
+   */
   get defaultDirectory(): string {
     return this._defaultDirectory;
   }
@@ -113,11 +119,20 @@ export class MultiChatPanel extends SidePanel {
       return;
     }
     this._defaultDirectory = value;
+    // Update the list of discoverable chat (in default directory)
     this.updateChatList();
+    // Update the sections names.
     this.widgets.forEach(w => {
       (w as ChatSection).defaultDirectory = value;
     });
   }
+
+  /**
+   * Add a new widget to the chat panel.
+   *
+   * @param model - the model of the chat widget
+   * @param name - the name of the chat.
+   */
 
   addChat(model: IChatModel): ChatWidget {
     const content = this.content as AccordionPanel;
@@ -125,11 +140,13 @@ export class MultiChatPanel extends SidePanel {
       content.collapse(i);
     }
 
+    // Create the toolbar registry.
     let inputToolbarRegistry: IInputToolbarRegistry | undefined;
     if (this._inputToolbarFactory) {
       inputToolbarRegistry = this._inputToolbarFactory.create();
     }
 
+    // Create a new widget.
     const widget = new ChatWidget({
       model,
       rmRegistry: this._rmRegistry,
@@ -154,6 +171,9 @@ export class MultiChatPanel extends SidePanel {
     return widget;
   }
 
+  /**
+   * Update the list of available chats in the default directory.
+   */
   updateChatList = async (): Promise<void> => {
     const extension = this._chatFileExtension;
     this._contentsManager
@@ -170,6 +190,12 @@ export class MultiChatPanel extends SidePanel {
       .catch(e => console.error('Error getting chat files from drive', e));
   };
 
+  /**
+   * Open a chat if it exists in the side panel.
+   *
+   * @param path - the path of the chat.
+   * @returns a boolean, whether the chat existed in the side panel or not.
+   */
   openIfExists(path: string): boolean {
     const index = this._getChatIndex(path);
     if (index > -1) {
@@ -178,20 +204,34 @@ export class MultiChatPanel extends SidePanel {
     return index > -1;
   }
 
+  /**
+   * A message handler invoked on an `'after-attach'` message.
+   */
   protected onAfterAttach(): void {
     this._openChat.renderPromise?.then(() => this.updateChatList());
   }
 
+  /**
+   * Return the index of the chat in the list (-1 if not opened).
+   *
+   * @param name - the chat name.
+   */
   private _getChatIndex(path: string) {
     return this.widgets.findIndex(w => (w as ChatSection).path === path);
   }
 
+  /**
+   * Expand the chat from its index.
+   */
   private _expandChat(index: number): void {
     if (!this.widgets[index].isVisible) {
       (this.content as AccordionPanel).expand(index);
     }
   }
 
+  /**
+   * Handle `change` events for the HTMLSelect component.
+   */
   private _chatSelected = (
     event: React.ChangeEvent<HTMLSelectElement>
   ): void => {
@@ -208,6 +248,10 @@ export class MultiChatPanel extends SidePanel {
     event.target.selectedIndex = 0;
   };
 
+  /**
+   * Triggered when a section is toogled. If the section is opened, all others
+   * sections are closed.
+   */
   private _onExpansionToggled(panel: AccordionPanel, index: number) {
     if (!this.widgets[index].isVisible) {
       return;
@@ -238,7 +282,13 @@ export class MultiChatPanel extends SidePanel {
   private _welcomeMessage?: string;
 }
 
+/**
+ * The chat panel namespace.
+ */
 export namespace ChatPanel {
+  /**
+   * Options of the constructor of the chat panel.
+   */
   export interface IOptions extends SidePanel.IOptions {
     commands: CommandRegistry;
     contentsManager: Contents.IManager;
@@ -259,7 +309,13 @@ export namespace ChatPanel {
   }
 }
 
+/**
+ * The chat section containing a chat widget.
+ */
 class ChatSection extends PanelWithToolbar {
+  /**
+   * Constructor of the chat section.
+   */
   constructor(options: ChatSection.IOptions) {
     super(options);
     this.addWidget(options.widget);
@@ -309,29 +365,49 @@ class ChatSection extends PanelWithToolbar {
     this._markAsRead.enabled = this.model.unreadMessages.length > 0;
 
     options.widget.node.style.height = '100%';
+    /**
+     * Remove the spinner when the chat is ready.
+     */
     (this.model as any).ready?.then?.(() => {
       this._spinner.dispose();
     });
   }
 
+  /**
+   * The path of the chat.
+   */
   get path(): string {
     return this._path;
   }
 
+  /**
+   * Set the default directory property.
+   */
   set defaultDirectory(value: string) {
     this._defaultDirectory = value;
     this._updateTitle();
   }
 
+  /**
+   * The model of the widget.
+   */
   get model(): IChatModel {
     return (this.widgets[0] as ChatWidget).model;
   }
 
+  /**
+   * Dispose of the resources held by the widget.
+   */
   dispose(): void {
     this.model.unreadChanged?.disconnect(this._unreadChanged);
     super.dispose();
   }
 
+  /**
+   * Update the section's title, depending on the default directory and chat file name.
+   * If the chat file is in the default directory, the section's name is its relative
+   * path to that default directory. Otherwise, it is it absolute path.
+   */
   private _updateTitle(): void {
     const inDefault = this._defaultDirectory
       ? !PathExt.relative(this._defaultDirectory, this._path).startsWith('..')
@@ -347,6 +423,14 @@ class ChatSection extends PanelWithToolbar {
     this.title.caption = this._path;
   }
 
+  /**
+   * Change the title when messages are unread.
+   *
+   * TODO: fix it upstream in @jupyterlab/ui-components.
+   * Updating the title create a new Title widget, but does not attach again the
+   * toolbar. The toolbar is attached only when the title widget is attached the first
+   * time.
+   */
   private _unreadChanged = (_: IChatModel, unread: number[]) => {
     this._markAsRead.enabled = unread.length > 0;
   };
@@ -358,7 +442,13 @@ class ChatSection extends PanelWithToolbar {
   private _spinner = new Spinner();
 }
 
+/**
+ * The chat section namespace.
+ */
 export namespace ChatSection {
+  /**
+   * Options to build a chat section.
+   */
   export interface IOptions extends Panel.IOptions {
     commands: CommandRegistry;
     defaultDirectory: string;
@@ -373,11 +463,17 @@ type ChatSelectProps = {
   handleChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
 };
 
+/**
+ * A component to select a chat from the drive.
+ */
 function ChatSelect({
   chatNamesChanged,
   handleChange
 }: ChatSelectProps): JSX.Element {
+  // An object associating a chat name to its path. Both are purely indicative, the name
+  // is the section title and the path is used as caption.
   const [chatNames, setChatNames] = useState<{ [name: string]: string }>({});
+  // Update the chat list.
   chatNamesChanged.connect((_, names) => setChatNames(names));
   return (
     <HTMLSelect onChange={handleChange}>
