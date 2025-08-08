@@ -1,4 +1,9 @@
 /*
+ * Copyright (c) Jupyter Development Team.
+ * Distributed under the terms of the Modified BSD License.
+ */
+
+/*
  * Multi-chat panel for @jupyter/chat
  * Originally adapted from jupyterlab-chat's ChatPanel
  */
