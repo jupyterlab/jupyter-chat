@@ -18,7 +18,8 @@ import {
   MessageFooterRegistry,
   SelectionWatcher,
   chatIcon,
-  readIcon
+  readIcon,
+  IInputToolbarRegistryFactory
 } from '@jupyter/chat';
 import { ICollaborativeContentProvider } from '@jupyter/collaborative-drive';
 import {
@@ -54,7 +55,6 @@ import {
   IActiveCellManagerToken,
   IChatFactory,
   IChatPanel,
-  IInputToolbarRegistryFactory,
   ISelectionWatcherToken,
   IWelcomeMessage,
   LabChatModel,
@@ -64,7 +64,7 @@ import {
   YChat,
   chatFileType
 } from 'jupyterlab-chat';
-import { MultiChatPanel as ChatPanel } from '@jupyter/chat';
+import { MultiChatPanel as ChatPanel, ChatSection } from '@jupyter/chat';
 import { chatCommandRegistryPlugin } from './chat-commands/plugins';
 import { emojiCommandsPlugin } from './chat-commands/providers/emoji';
 import { mentionCommandsPlugin } from './chat-commands/providers/user-mention';
@@ -723,17 +723,45 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
     themeManager: IThemeManager | null,
     welcomeMessage: string
   ): ChatPanel => {
-    const { commands } = app;
+    const { commands, serviceManager } = app;
 
     const defaultDirectory = factory.widgetConfig.config.defaultDirectory || '';
+    const chatFileExtension = chatFileType.extensions[0];
+
+    const getChatNames = async () => {
+      const dirContents = await serviceManager.contents.get(defaultDirectory);
+      const names: { [name: string]: string } = {};
+      for (const file of dirContents.content) {
+        if (file.type === 'file' && file.name.endsWith(chatFileExtension)) {
+          const nameWithoutExt = file.name.replace(chatFileExtension, '');
+          names[nameWithoutExt] = file.path;
+        }
+      }
+      return names;
+    };
+
+    // Hook that fires when files change
+    const onChatsChanged = (cb: () => void) => {
+      serviceManager.contents.fileChanged.connect(
+        (_sender: any, change: { type: string }) => {
+          if (
+            change.type === 'new' ||
+            change.type === 'delete' ||
+            change.type === 'rename'
+          ) {
+            cb();
+          }
+        }
+      );
+    };
 
     /**
      * Add Chat widget to left sidebar
      */
     const chatPanel = new ChatPanel({
-      commands,
-      contentsManager: app.serviceManager.contents,
       rmRegistry,
+      getChatNames,
+      onChatsChanged,
       themeManager,
       defaultDirectory,
       chatCommandRegistry,
@@ -741,9 +769,32 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
       inputToolbarFactory,
       messageFooterRegistry,
       welcomeMessage,
-      chatFileExtension: chatFileType.extensions[0],
-      createChatCommand: CommandIDs.createChat,
-      openChatCommand: CommandIDs.openChat
+      chatFileExtension,
+      createChat: () => {
+        commands.execute(CommandIDs.createChat);
+      },
+      openChat: (path: string) => {
+        commands.execute(CommandIDs.openChat, { filepath: path });
+      },
+      closeChat: (path: string) => {
+        commands.execute(CommandIDs.closeChat, { filepath: path });
+      },
+      moveToMain: (path: string) => {
+        commands.execute(CommandIDs.moveToMain, { filepath: path });
+      },
+      renameChat: (
+        section: ChatSection.IOptions,
+        path: string,
+        newName: string
+      ) => {
+        if (section.widget.title.label !== newName) {
+          const newPath = `${defaultDirectory}/${newName}${chatFileExtension}`;
+          serviceManager.contents
+            .rename(path, newPath)
+            .catch(err => console.error('Rename failed:', err));
+          section.widget.title.label = newName;
+        }
+      }
     });
     chatPanel.id = 'JupyterlabChat:sidepanel';
     chatPanel.title.icon = chatIcon;

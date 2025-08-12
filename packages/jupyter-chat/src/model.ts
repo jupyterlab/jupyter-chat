@@ -20,6 +20,7 @@ import {
   IUser
 } from './types';
 import { replaceMentionToSpan } from './utils';
+import { PromiseDelegate } from '@lumino/coreutils';
 
 /**
  * The chat model interface.
@@ -39,6 +40,11 @@ export interface IChatModel extends IDisposable {
    * The indexes list of the unread messages.
    */
   unreadMessages: number[];
+
+  /**
+   * The promise resolving when the model is ready.
+   */
+  readonly ready: Promise<void>;
 
   /**
    * The indexes list of the messages currently in the viewport.
@@ -241,6 +247,9 @@ export abstract class AbstractChatModel implements IChatModel {
     this._activeCellManager = options.activeCellManager ?? null;
     this._selectionWatcher = options.selectionWatcher ?? null;
     this._documentManager = options.documentManager ?? null;
+
+    this._readyDelegate = new PromiseDelegate<void>();
+    this.ready = this._readyDelegate.promise;
   }
 
   /**
@@ -326,6 +335,18 @@ export abstract class AbstractChatModel implements IChatModel {
     );
     storage.lastRead = value;
     localStorage.setItem(`@jupyter/chat:${this._id}`, JSON.stringify(storage));
+  }
+
+  /**
+   * Promise that resolves when the model is ready.
+   */
+  readonly ready: Promise<void>;
+
+  /**
+   * Mark the model as ready.
+   */
+  protected markReady(): void {
+    this._readyDelegate.resolve();
   }
 
   /**
@@ -677,6 +698,7 @@ export abstract class AbstractChatModel implements IChatModel {
   private _id: string | undefined;
   private _name: string = '';
   private _config: IConfig;
+  private _readyDelegate: PromiseDelegate<void>;
   private _inputModel: IInputModel;
   private _isDisposed = false;
   private _commands?: CommandRegistry;

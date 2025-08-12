@@ -8,9 +8,10 @@ import {
   IAttachmentOpenerRegistry,
   IChatCommandRegistry,
   IChatModel,
-  IMessageFooterRegistry
+  IMessageFooterRegistry,
+  IInputToolbarRegistryFactory
 } from '@jupyter/chat';
-import { MultiChatPanel } from '@jupyter/chat';
+import { MultiChatPanel, ChatSection } from '@jupyter/chat';
 import { Contents } from '@jupyterlab/services';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { DocumentWidget } from '@jupyterlab/docregistry';
@@ -18,11 +19,7 @@ import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { CommandRegistry } from '@lumino/commands';
 
 import { LabChatModel } from './model';
-import {
-  CommandIDs,
-  IInputToolbarRegistryFactory,
-  chatFileType
-} from './token';
+import { CommandIDs, chatFileType } from './token';
 
 const MAIN_PANEL_CLASS = 'jp-lab-chat-main-panel';
 const TITLE_UNREAD_CLASS = 'jp-lab-chat-title-unread';
@@ -84,21 +81,72 @@ export function createMultiChatPanel(options: {
   messageFooterRegistry?: IMessageFooterRegistry;
   welcomeMessage?: string;
 }): MultiChatPanel {
-  const panel = new MultiChatPanel({
-    commands: options.commands,
-    contentsManager: options.contentsManager,
+  const { contentsManager, defaultDirectory } = options;
+  const chatFileExtension = chatFileType.extensions[0];
+
+  // This function replaces updateChatList's file lookup
+  const getChatNames = async () => {
+    const dirContents = await contentsManager.get(defaultDirectory);
+    const names: { [name: string]: string } = {};
+    for (const file of dirContents.content) {
+      if (file.type === 'file' && file.name.endsWith(chatFileExtension)) {
+        const nameWithoutExt = file.name.replace(chatFileExtension, '');
+        names[nameWithoutExt] = file.path;
+      }
+    }
+    return names;
+  };
+
+  // Hook that fires when files change
+  const onChatsChanged = (cb: () => void) => {
+    contentsManager.fileChanged.connect((_sender, change) => {
+      if (
+        change.type === 'new' ||
+        change.type === 'delete' ||
+        (change.type === 'rename' &&
+          change.oldValue?.path !== change.newValue?.path)
+      ) {
+        cb();
+      }
+    });
+  };
+
+  return new MultiChatPanel({
     rmRegistry: options.rmRegistry,
     themeManager: options.themeManager,
     defaultDirectory: options.defaultDirectory,
     chatFileExtension: chatFileType.extensions[0],
-    createChatCommand: CommandIDs.createChat,
-    openChatCommand: CommandIDs.openChat,
+    getChatNames,
+    onChatsChanged,
+    createChat: () => {
+      options.commands.execute(CommandIDs.createChat);
+    },
+    openChat: path => {
+      options.commands.execute(CommandIDs.openChat, { filepath: path });
+    },
+    closeChat: path => {
+      options.commands.execute(CommandIDs.closeChat, { filepath: path });
+    },
+    moveToMain: path => {
+      options.commands.execute(CommandIDs.moveToMain, { filepath: path });
+    },
+    renameChat: (
+      section: ChatSection.IOptions,
+      path: string,
+      newName: string
+    ) => {
+      if (section.widget.title.label !== newName) {
+        const newPath = `${defaultDirectory}/${newName}${chatFileExtension}`;
+        contentsManager
+          .rename(path, newPath)
+          .catch(err => console.error('Rename failed:', err));
+        section.widget.title.label = newName;
+      }
+    },
     chatCommandRegistry: options.chatCommandRegistry,
     attachmentOpenerRegistry: options.attachmentOpenerRegistry,
     inputToolbarFactory: options.inputToolbarFactory,
     messageFooterRegistry: options.messageFooterRegistry,
     welcomeMessage: options.welcomeMessage
   });
-
-  return panel;
 }

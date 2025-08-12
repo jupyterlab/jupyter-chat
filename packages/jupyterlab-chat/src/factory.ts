@@ -10,7 +10,8 @@ import {
   IChatCommandRegistry,
   IInputToolbarRegistry,
   IMessageFooterRegistry,
-  ISelectionWatcher
+  ISelectionWatcher,
+  IInputToolbarRegistryFactory
 } from '@jupyter/chat';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { IDocumentManager } from '@jupyterlab/docmanager';
@@ -23,11 +24,7 @@ import { ISignal, Signal } from '@lumino/signaling';
 import { LabChatModel } from './model';
 import { LabChatPanel } from './widget';
 import { YChat } from './ychat';
-import {
-  IInputToolbarRegistryFactory,
-  ILabChatConfig,
-  IWidgetConfig
-} from './token';
+import { ILabChatConfig, IWidgetConfig } from './token';
 
 /**
  * The object provided by the chatDocument extension.

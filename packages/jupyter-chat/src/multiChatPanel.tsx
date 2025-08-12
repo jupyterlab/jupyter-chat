@@ -17,14 +17,13 @@ import {
   IMessageFooterRegistry,
   readIcon
 } from './index';
-import { Contents } from '@jupyterlab/services';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { PathExt } from '@jupyterlab/coreutils';
+import { ContentsManager } from '@jupyterlab/services';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import {
   addIcon,
   closeIcon,
-  CommandToolbarButton,
   HTMLSelect,
   launchIcon,
   PanelWithToolbar,
@@ -33,10 +32,10 @@ import {
   Spinner,
   ToolbarButton
 } from '@jupyterlab/ui-components';
-import { CommandRegistry } from '@lumino/commands';
 import { ISignal, Signal } from '@lumino/signaling';
 import { AccordionPanel, Panel } from '@lumino/widgets';
 import React, { useState } from 'react';
+import { showRenameDialog } from './utils/renameDialog';
 
 const SIDEPANEL_CLASS = 'jp-chat-sidepanel';
 const ADD_BUTTON_CLASS = 'jp-chat-add';
@@ -48,64 +47,55 @@ const TOOLBAR_CLASS = 'jp-chat-toolbar';
  * Generic sidepanel widget including multiple chats and the add chat button.
  */
 export class MultiChatPanel extends SidePanel {
-  /**
-   * The constructor of the chat panel.
-   */
   constructor(options: ChatPanel.IOptions) {
     super(options);
     this.addClass(SIDEPANEL_CLASS);
-    this._commands = options.commands;
-    this._contentsManager = options.contentsManager;
+
+    this._defaultDirectory = options.defaultDirectory;
     this._rmRegistry = options.rmRegistry;
     this._themeManager = options.themeManager;
-    this._defaultDirectory = options.defaultDirectory;
-    this._chatFileExtension = options.chatFileExtension;
-    this._createChatCommand = options.createChatCommand;
-    this._openChatCommand = options.openChatCommand;
     this._chatCommandRegistry = options.chatCommandRegistry;
     this._attachmentOpenerRegistry = options.attachmentOpenerRegistry;
     this._inputToolbarFactory = options.inputToolbarFactory;
     this._messageFooterRegistry = options.messageFooterRegistry;
     this._welcomeMessage = options.welcomeMessage;
+    this._getChatNames = options.getChatNames;
+    this._onChatsChanged = options.onChatsChanged;
 
-    const addChat = new CommandToolbarButton({
-      commands: this._commands,
-      id: this._createChatCommand,
-      args: { inSidePanel: true },
-      icon: addIcon
+    // Use the passed callback functions
+    this._openChat = options.openChat ?? (() => {});
+    this._createChat = options.createChat ?? (() => {});
+    this._closeChat = options.closeChat ?? (() => {});
+    this._moveToMain = options.moveToMain ?? (() => {});
+
+    // Add chat button calls the createChat callback
+    const addChat = new ToolbarButton({
+      onClick: () => this._createChat(),
+      icon: addIcon,
+      label: 'Chat',
+      tooltip: 'Add a new chat'
     });
     addChat.addClass(ADD_BUTTON_CLASS);
     this.toolbar.addItem('createChat', addChat);
 
-    this._openChat = ReactWidget.create(
+    // Chat select dropdown
+    this._openChatWidget = ReactWidget.create(
       <ChatSelect
         chatNamesChanged={this._chatNamesChanged}
         handleChange={this._chatSelected.bind(this)}
       />
     );
-    this._openChat.addClass(OPEN_SELECT_CLASS);
-    this.toolbar.addItem('openChat', this._openChat);
+    this._openChatWidget.addClass(OPEN_SELECT_CLASS);
+    this.toolbar.addItem('openChat', this._openChatWidget);
 
     const content = this.content as AccordionPanel;
     content.expansionToggled.connect(this._onExpansionToggled, this);
 
-    this._contentsManager.fileChanged.connect((_, args) => {
-      if (args.type === 'delete') {
-        this.widgets.forEach(widget => {
-          if ((widget as ChatSection).path === args.oldValue?.path) {
-            widget.dispose();
-          }
-        });
+    if (this._onChatsChanged) {
+      this._onChatsChanged(() => {
         this.updateChatList();
-      }
-      const updateActions = ['new', 'rename'];
-      if (
-        updateActions.includes(args.type) &&
-        args.newValue?.path?.endsWith(this._chatFileExtension)
-      ) {
-        this.updateChatList();
-      }
-    });
+      });
+    }
   }
 
   /**
@@ -158,15 +148,18 @@ export class MultiChatPanel extends SidePanel {
       welcomeMessage: this._welcomeMessage
     });
 
-    this.addWidget(
-      new ChatSection({
-        widget,
-        commands: this._commands,
-        path: model.name,
-        defaultDirectory: this._defaultDirectory,
-        openChatCommand: this._openChatCommand
-      })
-    );
+    const section = new ChatSection({
+      widget,
+      path: model.name,
+      defaultDirectory: this._defaultDirectory,
+      openChat: this._openChat,
+      closeChat: this._closeChat,
+      moveToMain: this._moveToMain,
+      renameChat: this._renameChat
+    });
+
+    this.addWidget(section);
+    content.expand(this.widgets.length - 1);
 
     return widget;
   }
@@ -175,19 +168,12 @@ export class MultiChatPanel extends SidePanel {
    * Update the list of available chats in the default directory.
    */
   updateChatList = async (): Promise<void> => {
-    const extension = this._chatFileExtension;
-    this._contentsManager
-      .get(this._defaultDirectory)
-      .then((contentModel: Contents.IModel) => {
-        const chatsNames: { [name: string]: string } = {};
-        (contentModel.content as any[])
-          .filter(f => f.type === 'file' && f.name.endsWith(extension))
-          .forEach(f => {
-            chatsNames[PathExt.basename(f.name, extension)] = f.path;
-          });
-        this._chatNamesChanged.emit(chatsNames);
-      })
-      .catch(e => console.error('Error getting chat files from drive', e));
+    try {
+      const chatsNames = await this._getChatNames();
+      this._chatNamesChanged.emit(chatsNames);
+    } catch (e) {
+      console.error('Error getting chat files', e);
+    }
   };
 
   /**
@@ -208,7 +194,7 @@ export class MultiChatPanel extends SidePanel {
    * A message handler invoked on an `'after-attach'` message.
    */
   protected onAfterAttach(): void {
-    this._openChat.renderPromise?.then(() => this.updateChatList());
+    this._openChatWidget.renderPromise?.then(() => this.updateChatList());
   }
 
   /**
@@ -232,20 +218,44 @@ export class MultiChatPanel extends SidePanel {
   /**
    * Handle `change` events for the HTMLSelect component.
    */
-  private _chatSelected = (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ): void => {
-    const select = event.target;
-    const path = select.value;
-    const name = select.options[select.selectedIndex].textContent;
-    if (name === '-') {
+  private _chatSelected(event: React.ChangeEvent<HTMLSelectElement>): void {
+    const path = event.target.value;
+    if (path === '-') {
       return;
     }
-    this._commands.execute(this._openChatCommand, {
-      filepath: path,
-      inSidePanel: true
-    });
+    this._openChat(path);
     event.target.selectedIndex = 0;
+  }
+
+  /**
+   * Rename a chat.
+   */
+  private _renameChat = async (
+    section: ChatSection,
+    path: string,
+    newName: string
+  ) => {
+    try {
+      const oldPath = path;
+      const newPath = PathExt.join(this.defaultDirectory, newName);
+
+      const ext = '.chat';
+      if (!newName.endsWith(ext)) {
+        newName += ext;
+      }
+
+      const contentsManager = new ContentsManager();
+      await contentsManager.rename(oldPath, newPath);
+
+      // Now update UI after backend rename
+      section.updateDisplayName(newName);
+      section.updatePath(newPath);
+      this.updateChatList();
+
+      console.log(`Renamed chat ${oldPath} to ${newPath}`);
+    } catch (e) {
+      console.error('Error renaming chat', e);
+    }
   };
 
   /**
@@ -266,13 +276,8 @@ export class MultiChatPanel extends SidePanel {
   private _chatNamesChanged = new Signal<this, { [name: string]: string }>(
     this
   );
-  private _commands: CommandRegistry;
+
   private _defaultDirectory: string;
-  private _chatFileExtension: string;
-  private _createChatCommand: string;
-  private _openChatCommand: string;
-  private _contentsManager: Contents.IManager;
-  private _openChat: ReactWidget;
   private _rmRegistry: IRenderMimeRegistry;
   private _themeManager: IThemeManager | null;
   private _chatCommandRegistry?: IChatCommandRegistry;
@@ -280,6 +285,16 @@ export class MultiChatPanel extends SidePanel {
   private _inputToolbarFactory?: ChatPanel.IInputToolbarRegistryFactory;
   private _messageFooterRegistry?: IMessageFooterRegistry;
   private _welcomeMessage?: string;
+  private _getChatNames: () => Promise<{ [name: string]: string }>;
+
+  // Replaced command strings with callback functions:
+  private _openChat: (path: string) => void;
+  private _createChat: () => void;
+  private _closeChat: (path: string) => void;
+  private _moveToMain: (path: string) => void;
+
+  private _onChatsChanged?: (cb: () => void) => void;
+  private _openChatWidget: ReactWidget;
 }
 
 /**
@@ -290,20 +305,31 @@ export namespace ChatPanel {
    * Options of the constructor of the chat panel.
    */
   export interface IOptions extends SidePanel.IOptions {
-    commands: CommandRegistry;
-    contentsManager: Contents.IManager;
     rmRegistry: IRenderMimeRegistry;
     themeManager: IThemeManager | null;
     defaultDirectory: string;
     chatFileExtension: string;
-    createChatCommand: string;
-    openChatCommand: string;
+    getChatNames: () => Promise<{ [name: string]: string }>;
+    onChatsChanged?: (cb: () => void) => void;
+
+    // Callback functions instead of command strings
+    openChat: (path: string) => void;
+    createChat: () => void;
+    closeChat: (path: string) => void;
+    moveToMain: (path: string) => void;
+    renameChat: (
+      section: ChatSection.IOptions,
+      path: string,
+      newName: string
+    ) => void;
+
     chatCommandRegistry?: IChatCommandRegistry;
     attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
     inputToolbarFactory?: IInputToolbarRegistryFactory;
     messageFooterRegistry?: IMessageFooterRegistry;
     welcomeMessage?: string;
   }
+
   export interface IInputToolbarRegistryFactory {
     create(): IInputToolbarRegistry;
   }
@@ -323,9 +349,11 @@ class ChatSection extends PanelWithToolbar {
     this.addClass(SECTION_CLASS);
     this._defaultDirectory = options.defaultDirectory;
     this._path = options.path;
-    this._openChatCommand = options.openChatCommand;
-    this._updateTitle();
+    this._closeChat = options.closeChat;
+    this._renameChat = options.renameChat;
     this.toolbar.addClass(TOOLBAR_CLASS);
+    this._displayName = PathExt.basename(this._path);
+    this._updateTitle();
 
     this._markAsRead = new ToolbarButton({
       icon: readIcon,
@@ -334,15 +362,25 @@ class ChatSection extends PanelWithToolbar {
       onClick: () => (this.model.unreadMessages = [])
     });
 
+    const renameButton = new ToolbarButton({
+      iconClass: 'jp-EditIcon',
+      iconLabel: 'Rename chat',
+      className: 'jp-mod-styled',
+      onClick: async () => {
+        const newName = await showRenameDialog(this.title.label);
+        if (newName && newName.trim() && newName !== this.title.label) {
+          this._renameChat(this, this._path, newName.trim());
+        }
+      }
+    });
+
     const moveToMain = new ToolbarButton({
       icon: launchIcon,
       iconLabel: 'Move the chat to the main area',
       className: 'jp-mod-styled',
       onClick: () => {
-        this.model.dispose();
-        options.commands.execute(this._openChatCommand, {
-          filepath: this._path
-        });
+        options.openChat(this._path);
+        options.renameChat(this, this._path, this._displayName);
         this.dispose();
       }
     });
@@ -353,22 +391,29 @@ class ChatSection extends PanelWithToolbar {
       className: 'jp-mod-styled',
       onClick: () => {
         this.model.dispose();
+        this._closeChat(this._path);
         this.dispose();
       }
     });
 
     this.toolbar.addItem('markRead', this._markAsRead);
+    this.toolbar.addItem('rename', renameButton);
     this.toolbar.addItem('moveMain', moveToMain);
     this.toolbar.addItem('close', closeButton);
+
+    this.toolbar.node.style.backgroundColor = 'js-toolbar-background';
+    this.toolbar.node.style.minHeight = '32px';
+    this.toolbar.node.style.display = 'flex';
 
     this.model.unreadChanged?.connect(this._unreadChanged);
     this._markAsRead.enabled = this.model.unreadMessages.length > 0;
 
     options.widget.node.style.height = '100%';
+
     /**
      * Remove the spinner when the chat is ready.
      */
-    (this.model as any).ready?.then?.(() => {
+    this.model.ready.then(() => {
       this._spinner.dispose();
     });
   }
@@ -378,6 +423,13 @@ class ChatSection extends PanelWithToolbar {
    */
   get path(): string {
     return this._path;
+  }
+
+  /**
+   * The default directory of the chat.
+   */
+  get defaultDirectory(): string {
+    return this._defaultDirectory;
   }
 
   /**
@@ -409,18 +461,20 @@ class ChatSection extends PanelWithToolbar {
    * path to that default directory. Otherwise, it is it absolute path.
    */
   private _updateTitle(): void {
-    const inDefault = this._defaultDirectory
-      ? !PathExt.relative(this._defaultDirectory, this._path).startsWith('..')
-      : true;
-    const pattern = new RegExp(`${this._path.split('.').pop()}$`, 'g');
-    this.title.label = (
-      inDefault
-        ? this._defaultDirectory
-          ? PathExt.relative(this._defaultDirectory, this._path)
-          : this._path
-        : '/' + this._path
-    ).replace(pattern, '');
+    console.log('Updating title label:', this._displayName);
+    this.title.label = this._displayName;
     this.title.caption = this._path;
+  }
+
+  public updateDisplayName(newName: string) {
+    this._path = PathExt.join(this.defaultDirectory, newName);
+    this._displayName = newName;
+    this._updateTitle();
+  }
+
+  public updatePath(newPath: string) {
+    this._path = newPath;
+    this._updateTitle();
   }
 
   /**
@@ -436,10 +490,17 @@ class ChatSection extends PanelWithToolbar {
   };
 
   private _defaultDirectory: string;
-  private _markAsRead: ToolbarButton;
   private _path: string;
-  private _openChatCommand: string;
+  private _markAsRead: ToolbarButton;
   private _spinner = new Spinner();
+  private _displayName: string;
+
+  private _closeChat: (path: string) => void;
+  private _renameChat: (
+    section: ChatSection,
+    path: string,
+    newName: string
+  ) => void;
 }
 
 /**
@@ -450,11 +511,13 @@ export namespace ChatSection {
    * Options to build a chat section.
    */
   export interface IOptions extends Panel.IOptions {
-    commands: CommandRegistry;
-    defaultDirectory: string;
     widget: ChatWidget;
     path: string;
-    openChatCommand: string;
+    defaultDirectory: string;
+    openChat: (path: string) => void;
+    closeChat: (path: string) => void;
+    moveToMain: (path: string) => void;
+    renameChat: (section: ChatSection, path: string, newName: string) => void;
   }
 }
 
