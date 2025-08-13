@@ -79,7 +79,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(41, 41, 41, 0.4);
+  background-color: rgb(41 41 41 / 40%);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -91,7 +91,7 @@
   padding: 1rem 1.5rem;
   border-radius: 8px;
   min-width: 300px;
-  box-shadow: 0 4px 8px rgba(24, 23, 23, 0.26);
+  box-shadow: 0 4px 8px rgb(24 23 23 / 26%);
   color: var(--jp-ui-font-color1);
   border: 1px solid var(--jp-border-color0);
 }
@@ -101,7 +101,7 @@
   color: var(--jp-ui-font-color1);
 }
 
-.rename-dialog input[type="text"] {
+.rename-dialog input[type='text'] {
   width: 100%;
   padding: 0.4rem 0.6rem;
   margin-bottom: 1rem;
@@ -112,7 +112,7 @@
   color: var(--jp-ui-font-color1);
 }
 
-.rename-dialog input[type="text"]::placeholder {
+.rename-dialog input[type='text']::placeholder {
   color: var(--jp-ui-font-color2);
 }
 
@@ -122,6 +122,7 @@
   gap: 0.5rem;
 }
 
+/* stylelint-disable-next-line no-descending-specificity */
 .rename-buttons button {
   cursor: pointer;
   padding: 0.3rem 0.7rem;
