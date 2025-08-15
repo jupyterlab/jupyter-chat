@@ -33,7 +33,7 @@ import {
   ToolbarButton
 } from '@jupyterlab/ui-components';
 import { ISignal, Signal } from '@lumino/signaling';
-import { AccordionPanel, Panel } from '@lumino/widgets';
+import { AccordionPanel, Panel, Widget } from '@lumino/widgets';
 import React, { useState } from 'react';
 import { showRenameDialog } from './utils/renameDialog';
 
@@ -169,8 +169,9 @@ export class MultiChatPanel extends SidePanel {
    */
   updateChatList = async (): Promise<void> => {
     try {
-      const chatsNames = await this._getChatNames();
-      this._chatNamesChanged.emit(chatsNames);
+      const chatNames = await this._getChatNames();
+      console.log('updateChatList emits:', chatNames);
+      this._chatNamesChanged.emit(chatNames);
     } catch (e) {
       console.error('Error getting chat files', e);
     }
@@ -352,7 +353,7 @@ class ChatSection extends PanelWithToolbar {
     this._closeChat = options.closeChat;
     this._renameChat = options.renameChat;
     this.toolbar.addClass(TOOLBAR_CLASS);
-    this._displayName = PathExt.basename(this._path);
+    this._displayName = this._path.replace(/\.chat$/, '');
     this._updateTitle();
 
     this._markAsRead = new ToolbarButton({
@@ -379,9 +380,13 @@ class ChatSection extends PanelWithToolbar {
       iconLabel: 'Move the chat to the main area',
       className: 'jp-mod-styled',
       onClick: () => {
-        options.openChat(this._path);
-        options.renameChat(this, this._path, this._displayName);
-        this.dispose();
+        const mainWidget = options.openChat(this._path) as Widget | undefined;
+
+        if (mainWidget) {
+          mainWidget.disposed.connect(() => {
+            this.dispose();
+          });
+        }
       }
     });
 
@@ -461,13 +466,12 @@ class ChatSection extends PanelWithToolbar {
    * path to that default directory. Otherwise, it is it absolute path.
    */
   private _updateTitle(): void {
-    console.log('Updating title label:', this._displayName);
     this.title.label = this._displayName;
     this.title.caption = this._path;
   }
 
   public updateDisplayName(newName: string) {
-    this._path = PathExt.join(this.defaultDirectory, newName);
+    this._path = PathExt.join(this.defaultDirectory, `${newName}.chat`);
     this._displayName = newName;
     this._updateTitle();
   }
@@ -536,16 +540,18 @@ function ChatSelect({
   // An object associating a chat name to its path. Both are purely indicative, the name
   // is the section title and the path is used as caption.
   const [chatNames, setChatNames] = useState<{ [name: string]: string }>({});
+
   // Update the chat list.
-  chatNamesChanged.connect((_, names) => setChatNames(names));
+  chatNamesChanged.connect((_, chatNames) => {
+    setChatNames(chatNames);
+  });
+
   return (
-    <HTMLSelect onChange={handleChange}>
-      <option value="-">Open a chat</option>
+    <HTMLSelect onChange={handleChange} value="-">
       {Object.keys(chatNames).map(name => (
-        <option key={name} value={chatNames[name]}>
-          {name}
-        </option>
+        <option value={chatNames[name]}>{name}</option>
       ))}
+      <option value="-">Open a chat</option>
     </HTMLSelect>
   );
 }
