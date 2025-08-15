@@ -49,7 +49,7 @@ test.describe('#commandPalette', () => {
       .click();
     await fillModal(page, name);
     await page.waitForCondition(
-      async () => await page.filebrowser.contents.fileExists(FILENAME)
+      async () => await page.filebrowser.contents.fileExists(`tests-commands--commandPal-bb324-h-name-from-command-palette/${FILENAME}`)
     );
     await expect(page.activity.getTabLocator(FILENAME)).toBeVisible();
   });

@@ -90,7 +90,7 @@ export const openChatToSide = async (
   filename: string,
   content?: any
 ): Promise<Locator> => {
-  const panel = page.locator('.jp-SidePanel.jp-lab-chat-sidepanel');
+  const panel = page.locator('.jp-SidePanel.jp-chat-sidepanel');
   await page.evaluate(async filepath => {
     const inSidePanel = true;
     await window.jupyterapp.commands.execute('jupyterlab-chat:open', {
@@ -175,7 +175,7 @@ export const openSettings = async (
 export const openSidePanel = async (
   page: IJupyterLabPageFixture
 ): Promise<Locator> => {
-  const panel = page.locator('.jp-SidePanel.jp-lab-chat-sidepanel');
+  const panel = page.locator('.jp-SidePanel.jp-chat-sidepanel');
 
   if (!(await panel?.isVisible())) {
     const chatIcon = page.locator('.jp-SideBar').getByTitle('Jupyter Chat');
