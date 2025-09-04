@@ -249,7 +249,6 @@ export abstract class AbstractChatModel implements IChatModel {
     this._documentManager = options.documentManager ?? null;
 
     this._readyDelegate = new PromiseDelegate<void>();
-    this.ready = this._readyDelegate.promise;
   }
 
   /**
@@ -340,7 +339,9 @@ export abstract class AbstractChatModel implements IChatModel {
   /**
    * Promise that resolves when the model is ready.
    */
-  readonly ready: Promise<void>;
+  get ready(): Promise<void> {
+    return this._readyDelegate.promise;
+  }
 
   /**
    * Mark the model as ready.
@@ -698,7 +699,7 @@ export abstract class AbstractChatModel implements IChatModel {
   private _id: string | undefined;
   private _name: string = '';
   private _config: IConfig;
-  private _readyDelegate: PromiseDelegate<void>;
+  private _readyDelegate = new PromiseDelegate<void>();
   private _inputModel: IInputModel;
   private _isDisposed = false;
   private _commands?: CommandRegistry;

@@ -64,7 +64,7 @@ import {
   YChat,
   chatFileType
 } from 'jupyterlab-chat';
-import { MultiChatPanel as ChatPanel, ChatSection } from '@jupyter/chat';
+import { MultiChatPanel as ChatPanel } from '@jupyter/chat';
 import { chatCommandRegistryPlugin } from './chat-commands/plugins';
 import { emojiCommandsPlugin } from './chat-commands/providers/emoji';
 import { mentionCommandsPlugin } from './chat-commands/providers/user-mention';
@@ -670,6 +670,87 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         console.error('The command to open a chat is not initialized\n', e)
       );
 
+    // Command to rename a chat
+    commands.addCommand(CommandIDs.renameChat, {
+      label: 'Rename chat',
+      execute: async (args: any) => {
+        const oldPath = args.oldPath as string;
+        let newPath = args.newPath as string | null;
+
+        if (!oldPath) {
+          showErrorMessage('Error renaming chat', 'Missing old path');
+          return;
+        }
+
+        // Ask user if new name not passed in args
+        if (!newPath) {
+          const result = await InputDialog.getText({
+            title: 'Rename Chat',
+            text: PathExt.basename(oldPath).replace(/\.chat$/, ''), // strip extension
+            placeholder: 'new-name'
+          });
+          if (!result.button.accept) {
+            return; // user cancelled
+          }
+          newPath = result.value;
+        }
+
+        if (!newPath) {
+          return;
+        }
+
+        // Ensure `.chat` extension
+        if (!newPath.endsWith(chatFileType.extensions[0])) {
+          newPath = `${newPath}${chatFileType.extensions[0]}`;
+        }
+
+        // Join with same directory
+        const targetDir = PathExt.dirname(oldPath);
+        const fullNewPath = PathExt.join(targetDir, newPath);
+
+        try {
+          await app.serviceManager.contents.rename(oldPath, fullNewPath);
+          console.log(`Renamed chat ${oldPath} → ${fullNewPath}`);
+        } catch (err) {
+          console.error('Error renaming chat', err);
+          showErrorMessage('Error renaming chat', `${err}`);
+        }
+      }
+    });
+
+    // Command to close a chat
+    commands.addCommand(CommandIDs.closeChat, {
+      label: 'Close chat',
+      execute: async (args: any) => {
+        const filepath = args.filepath as string;
+        if (!filepath) {
+          console.warn('No filepath provided to closeChat');
+          return;
+        }
+
+        // Find widget in tracker
+        const widget = tracker.find(w => w.model?.name === filepath);
+        if (widget) {
+          widget.close(); // triggers dispose
+          console.log(`Closed chat ${filepath}`);
+        } else {
+          console.warn(`No open chat widget found for ${filepath}`);
+        }
+      }
+    });
+
+    // Optional: add to palette
+    if (commandPalette) {
+      commandPalette.addItem({
+        category: 'Chat',
+        command: CommandIDs.renameChat
+      });
+      commandPalette.addItem({
+        category: 'Chat',
+        command: CommandIDs.closeChat
+      });
+    }
+
     // The command to focus the input of the current chat widget.
     commands.addCommand(CommandIDs.focusInput, {
       caption: 'Focus the input of the current chat widget',
@@ -763,7 +844,6 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
       getChatNames,
       onChatsChanged,
       themeManager,
-      defaultDirectory,
       chatCommandRegistry,
       attachmentOpenerRegistry,
       inputToolbarFactory,
@@ -782,29 +862,16 @@ const chatPanel: JupyterFrontEndPlugin<ChatPanel> = {
       moveToMain: (path: string) => {
         commands.execute(CommandIDs.moveToMain, { filepath: path });
       },
-      renameChat: (
-        section: ChatSection.IOptions,
-        path: string,
-        newName: string
-      ) => {
-        if (section.widget.title.label !== newName) {
-          const newPath = `${defaultDirectory}/${newName}${chatFileExtension}`;
-          serviceManager.contents
-            .rename(path, newPath)
-            .catch(err => console.error('Rename failed:', err));
-          section.widget.title.label = newName;
-        }
+      renameChat: (oldPath, newPath) => {
+        return commands.execute(CommandIDs.renameChat, {
+          oldPath,
+          newPath
+        }) as Promise<void>;
       }
     });
     chatPanel.id = 'JupyterlabChat:sidepanel';
     chatPanel.title.icon = chatIcon;
     chatPanel.title.caption = 'Jupyter Chat'; // TODO: i18n/
-
-    factory.widgetConfig.configChanged.connect((_, config) => {
-      if (config.defaultDirectory !== undefined) {
-        chatPanel.defaultDirectory = config.defaultDirectory;
-      }
-    });
 
     app.shell.add(chatPanel, 'left', {
       rank: 2000

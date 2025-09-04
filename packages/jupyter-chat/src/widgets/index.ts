@@ -6,3 +6,4 @@
 export * from './chat-error';
 export * from './chat-sidebar';
 export * from './chat-widget';
+export * from './multiChatPanel';

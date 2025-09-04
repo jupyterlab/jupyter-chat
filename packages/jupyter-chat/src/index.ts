@@ -13,5 +13,5 @@ export * from './registers';
 export * from './selection-watcher';
 export * from './types';
 export * from './widgets';
-export * from './multiChatPanel';
+export * from './widgets/multiChatPanel';
 export * from './token';

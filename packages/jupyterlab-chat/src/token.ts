@@ -113,7 +113,11 @@ export const CommandIDs = {
   /**
    * Move a main widget to the main area.
    */
-  moveToMain: 'jupyterlab-chat:moveToMain'
+  moveToMain: 'jupyterlab-chat:moveToMain',
+  /**
+   * Rename the current chat.
+   */
+  renameChat: 'jupyterlab-chat:renameChat'
 };
 
 /**

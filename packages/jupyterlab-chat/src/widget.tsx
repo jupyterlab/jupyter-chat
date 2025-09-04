@@ -11,7 +11,7 @@ import {
   IMessageFooterRegistry,
   IInputToolbarRegistryFactory
 } from '@jupyter/chat';
-import { MultiChatPanel, ChatSection } from '@jupyter/chat';
+import { MultiChatPanel } from '@jupyter/chat';
 import { Contents } from '@jupyterlab/services';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { DocumentWidget } from '@jupyterlab/docregistry';
@@ -114,7 +114,6 @@ export function createMultiChatPanel(options: {
   return new MultiChatPanel({
     rmRegistry: options.rmRegistry,
     themeManager: options.themeManager,
-    defaultDirectory: options.defaultDirectory,
     chatFileExtension: chatFileType.extensions[0],
     getChatNames,
     onChatsChanged,
@@ -130,18 +129,11 @@ export function createMultiChatPanel(options: {
     moveToMain: path => {
       options.commands.execute(CommandIDs.moveToMain, { filepath: path });
     },
-    renameChat: (
-      section: ChatSection.IOptions,
-      path: string,
-      newName: string
-    ) => {
-      if (section.widget.title.label !== newName) {
-        const newPath = `${defaultDirectory}/${newName}${chatFileExtension}`;
-        contentsManager
-          .rename(path, newPath)
-          .catch(err => console.error('Rename failed:', err));
-        section.widget.title.label = newName;
-      }
+    renameChat: (oldPath, newPath) => {
+      return options.commands.execute(CommandIDs.renameChat, {
+        oldPath,
+        newPath
+      }) as Promise<void>;
     },
     chatCommandRegistry: options.chatCommandRegistry,
     attachmentOpenerRegistry: options.attachmentOpenerRegistry,

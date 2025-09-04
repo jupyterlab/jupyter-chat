@@ -16,10 +16,8 @@ import {
   IInputToolbarRegistry,
   IMessageFooterRegistry,
   readIcon
-} from './index';
+} from '../index';
 import { IThemeManager } from '@jupyterlab/apputils';
-import { PathExt } from '@jupyterlab/coreutils';
-import { ContentsManager } from '@jupyterlab/services';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import {
   addIcon,
@@ -33,9 +31,9 @@ import {
   ToolbarButton
 } from '@jupyterlab/ui-components';
 import { ISignal, Signal } from '@lumino/signaling';
+import { showRenameDialog } from '../utils/renameDialog';
 import { AccordionPanel, Panel, Widget } from '@lumino/widgets';
 import React, { useState } from 'react';
-import { showRenameDialog } from './utils/renameDialog';
 
 const SIDEPANEL_CLASS = 'jp-chat-sidepanel';
 const ADD_BUTTON_CLASS = 'jp-chat-add';
@@ -51,7 +49,6 @@ export class MultiChatPanel extends SidePanel {
     super(options);
     this.addClass(SIDEPANEL_CLASS);
 
-    this._defaultDirectory = options.defaultDirectory;
     this._rmRegistry = options.rmRegistry;
     this._themeManager = options.themeManager;
     this._chatCommandRegistry = options.chatCommandRegistry;
@@ -66,7 +63,7 @@ export class MultiChatPanel extends SidePanel {
     this._openChat = options.openChat ?? (() => {});
     this._createChat = options.createChat ?? (() => {});
     this._closeChat = options.closeChat ?? (() => {});
-    this._moveToMain = options.moveToMain ?? (() => {});
+    this._renameChatCallback = options.renameChat ?? (() => {});
 
     // Add chat button calls the createChat callback
     const addChat = new ToolbarButton({
@@ -96,25 +93,6 @@ export class MultiChatPanel extends SidePanel {
         this.updateChatList();
       });
     }
-  }
-
-  /**
-   * Getter and setter of the defaultDirectory.
-   */
-  get defaultDirectory(): string {
-    return this._defaultDirectory;
-  }
-  set defaultDirectory(value: string) {
-    if (value === this._defaultDirectory) {
-      return;
-    }
-    this._defaultDirectory = value;
-    // Update the list of discoverable chat (in default directory)
-    this.updateChatList();
-    // Update the sections names.
-    this.widgets.forEach(w => {
-      (w as ChatSection).defaultDirectory = value;
-    });
   }
 
   /**
@@ -150,11 +128,8 @@ export class MultiChatPanel extends SidePanel {
 
     const section = new ChatSection({
       widget,
-      path: model.name,
-      defaultDirectory: this._defaultDirectory,
       openChat: this._openChat,
       closeChat: this._closeChat,
-      moveToMain: this._moveToMain,
       renameChat: this._renameChat
     });
 
@@ -183,8 +158,8 @@ export class MultiChatPanel extends SidePanel {
    * @param path - the path of the chat.
    * @returns a boolean, whether the chat existed in the side panel or not.
    */
-  openIfExists(path: string): boolean {
-    const index = this._getChatIndex(path);
+  openIfExists(name: string): boolean {
+    const index = this._getChatIndex(name);
     if (index > -1) {
       this._expandChat(index);
     }
@@ -199,12 +174,25 @@ export class MultiChatPanel extends SidePanel {
   }
 
   /**
+   * Rename a chat.
+   */
+  private _renameChat = async (oldName: string, newName: string) => {
+    try {
+      await this._renameChatCallback?.(oldName, newName);
+      this.updateChatList();
+      console.log(`Renamed chat ${oldName} → ${newName}`);
+    } catch (e) {
+      console.error('Error renaming chat', e);
+    }
+  };
+
+  /**
    * Return the index of the chat in the list (-1 if not opened).
    *
    * @param name - the chat name.
    */
-  private _getChatIndex(path: string) {
-    return this.widgets.findIndex(w => (w as ChatSection).path === path);
+  private _getChatIndex(name: string) {
+    return this.widgets.findIndex(w => (w as ChatSection).model?.name === name);
   }
 
   /**
@@ -229,37 +217,6 @@ export class MultiChatPanel extends SidePanel {
   }
 
   /**
-   * Rename a chat.
-   */
-  private _renameChat = async (
-    section: ChatSection,
-    path: string,
-    newName: string
-  ) => {
-    try {
-      const oldPath = path;
-      const newPath = PathExt.join(this.defaultDirectory, newName);
-
-      const ext = '.chat';
-      if (!newName.endsWith(ext)) {
-        newName += ext;
-      }
-
-      const contentsManager = new ContentsManager();
-      await contentsManager.rename(oldPath, newPath);
-
-      // Now update UI after backend rename
-      section.updateDisplayName(newName);
-      section.updatePath(newPath);
-      this.updateChatList();
-
-      console.log(`Renamed chat ${oldPath} to ${newPath}`);
-    } catch (e) {
-      console.error('Error renaming chat', e);
-    }
-  };
-
-  /**
    * Triggered when a section is toogled. If the section is opened, all others
    * sections are closed.
    */
@@ -278,7 +235,6 @@ export class MultiChatPanel extends SidePanel {
     this
   );
 
-  private _defaultDirectory: string;
   private _rmRegistry: IRenderMimeRegistry;
   private _themeManager: IThemeManager | null;
   private _chatCommandRegistry?: IChatCommandRegistry;
@@ -289,10 +245,13 @@ export class MultiChatPanel extends SidePanel {
   private _getChatNames: () => Promise<{ [name: string]: string }>;
 
   // Replaced command strings with callback functions:
-  private _openChat: (path: string) => void;
+  private _openChat: (name: string) => void;
   private _createChat: () => void;
-  private _closeChat: (path: string) => void;
-  private _moveToMain: (path: string) => void;
+  private _closeChat: (name: string) => void;
+  private _renameChatCallback: (
+    oldName: string,
+    newName: string
+  ) => Promise<void>;
 
   private _onChatsChanged?: (cb: () => void) => void;
   private _openChatWidget: ReactWidget;
@@ -308,21 +267,16 @@ export namespace ChatPanel {
   export interface IOptions extends SidePanel.IOptions {
     rmRegistry: IRenderMimeRegistry;
     themeManager: IThemeManager | null;
-    defaultDirectory: string;
     chatFileExtension: string;
     getChatNames: () => Promise<{ [name: string]: string }>;
     onChatsChanged?: (cb: () => void) => void;
 
     // Callback functions instead of command strings
-    openChat: (path: string) => void;
+    openChat: (name: string) => void;
     createChat: () => void;
-    closeChat: (path: string) => void;
-    moveToMain: (path: string) => void;
-    renameChat: (
-      section: ChatSection.IOptions,
-      path: string,
-      newName: string
-    ) => void;
+    closeChat: (name: string) => void;
+    moveToMain: (name: string) => void;
+    renameChat: (oldName: string, newName: string) => Promise<void>;
 
     chatCommandRegistry?: IChatCommandRegistry;
     attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
@@ -348,19 +302,20 @@ class ChatSection extends PanelWithToolbar {
     this.addWidget(options.widget);
     this.addWidget(this._spinner);
     this.addClass(SECTION_CLASS);
-    this._defaultDirectory = options.defaultDirectory;
-    this._path = options.path;
     this._closeChat = options.closeChat;
-    this._renameChat = options.renameChat;
     this.toolbar.addClass(TOOLBAR_CLASS);
-    this._displayName = this._path.replace(/\.chat$/, '');
+    this._displayName = options.widget.model.name ?? 'Chat';
     this._updateTitle();
 
     this._markAsRead = new ToolbarButton({
       icon: readIcon,
       iconLabel: 'Mark chat as read',
       className: 'jp-mod-styled',
-      onClick: () => (this.model.unreadMessages = [])
+      onClick: () => {
+        if (this.model) {
+          this.model.unreadMessages = [];
+        }
+      }
     });
 
     const renameButton = new ToolbarButton({
@@ -368,9 +323,13 @@ class ChatSection extends PanelWithToolbar {
       iconLabel: 'Rename chat',
       className: 'jp-mod-styled',
       onClick: async () => {
-        const newName = await showRenameDialog(this.title.label);
-        if (newName && newName.trim() && newName !== this.title.label) {
-          this._renameChat(this, this._path, newName.trim());
+        const oldName = this.model?.name ?? 'Chat';
+        const newName = await showRenameDialog(oldName);
+        if (this.model && newName && newName !== oldName) {
+          this.model.name = newName;
+          this._displayName = newName;
+          this._updateTitle();
+          options.renameChat(oldName, newName);
         }
       }
     });
@@ -380,7 +339,9 @@ class ChatSection extends PanelWithToolbar {
       iconLabel: 'Move the chat to the main area',
       className: 'jp-mod-styled',
       onClick: () => {
-        const mainWidget = options.openChat(this._path) as Widget | undefined;
+        const mainWidget = options.openChat(options.widget.model.name) as
+          | Widget
+          | undefined;
 
         if (mainWidget) {
           mainWidget.disposed.connect(() => {
@@ -395,90 +356,60 @@ class ChatSection extends PanelWithToolbar {
       iconLabel: 'Close the chat',
       className: 'jp-mod-styled',
       onClick: () => {
-        this.model.dispose();
-        this._closeChat(this._path);
+        this.model?.dispose();
+        this._closeChat(options.widget.model.name ?? '');
         this.dispose();
       }
     });
 
     this.toolbar.addItem('markRead', this._markAsRead);
-    this.toolbar.addItem('rename', renameButton);
     this.toolbar.addItem('moveMain', moveToMain);
+    this.toolbar.addItem('rename', renameButton);
     this.toolbar.addItem('close', closeButton);
 
     this.toolbar.node.style.backgroundColor = 'js-toolbar-background';
     this.toolbar.node.style.minHeight = '32px';
     this.toolbar.node.style.display = 'flex';
 
-    this.model.unreadChanged?.connect(this._unreadChanged);
-    this._markAsRead.enabled = this.model.unreadMessages.length > 0;
+    this.model?.unreadChanged?.connect(this._unreadChanged);
+    this._markAsRead.enabled = (this.model?.unreadMessages.length ?? 0) > 0;
 
     options.widget.node.style.height = '100%';
 
     /**
      * Remove the spinner when the chat is ready.
      */
-    this.model.ready.then(() => {
+    this.model?.ready.then(() => {
       this._spinner.dispose();
     });
   }
 
   /**
-   * The path of the chat.
-   */
-  get path(): string {
-    return this._path;
-  }
-
-  /**
-   * The default directory of the chat.
-   */
-  get defaultDirectory(): string {
-    return this._defaultDirectory;
-  }
-
-  /**
-   * Set the default directory property.
-   */
-  set defaultDirectory(value: string) {
-    this._defaultDirectory = value;
-    this._updateTitle();
-  }
-
-  /**
    * The model of the widget.
    */
-  get model(): IChatModel {
-    return (this.widgets[0] as ChatWidget).model;
+  get model(): IChatModel | null {
+    const first = this.widgets[0] as ChatWidget | undefined;
+    return first ? first.model : null;
   }
 
   /**
    * Dispose of the resources held by the widget.
    */
   dispose(): void {
-    this.model.unreadChanged?.disconnect(this._unreadChanged);
+    const model = this.model;
+    if (model) {
+      model.unreadChanged?.disconnect(this._unreadChanged);
+    }
     super.dispose();
   }
 
   /**
-   * Update the section's title, depending on the default directory and chat file name.
-   * If the chat file is in the default directory, the section's name is its relative
-   * path to that default directory. Otherwise, it is it absolute path.
-   */
+   *  * Update the section’s title based on the chat name.
+   * */
+
   private _updateTitle(): void {
     this.title.label = this._displayName;
-    this.title.caption = this._path;
-  }
-
-  public updateDisplayName(newName: string) {
-    this._path = PathExt.join(this.defaultDirectory, `${newName}.chat`);
-    this._displayName = newName;
-    this._updateTitle();
-  }
-
-  public updatePath(newPath: string) {
-    this._path = newPath;
-    this._updateTitle();
+    this.title.caption = this._displayName;
   }
 
   /**
@@ -493,18 +424,11 @@ class ChatSection extends PanelWithToolbar {
     this._markAsRead.enabled = unread.length > 0;
   };
 
-  private _defaultDirectory: string;
-  private _path: string;
   private _markAsRead: ToolbarButton;
   private _spinner = new Spinner();
   private _displayName: string;
 
-  private _closeChat: (path: string) => void;
-  private _renameChat: (
-    section: ChatSection,
-    path: string,
-    newName: string
-  ) => void;
+  private _closeChat: (name: string) => void;
 }
 
 /**
@@ -516,12 +440,9 @@ export namespace ChatSection {
    */
   export interface IOptions extends Panel.IOptions {
     widget: ChatWidget;
-    path: string;
-    defaultDirectory: string;
-    openChat: (path: string) => void;
-    closeChat: (path: string) => void;
-    moveToMain: (path: string) => void;
-    renameChat: (section: ChatSection, path: string, newName: string) => void;
+    openChat: (name: string) => void;
+    closeChat: (name: string) => void;
+    renameChat: (oldName: string, newName: string) => void;
   }
 }
 
