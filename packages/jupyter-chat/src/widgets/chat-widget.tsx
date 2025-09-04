@@ -30,6 +30,7 @@ const NOTEBOOK_CELL_MIME = 'application/vnd.jupyter.cells';
 // CSS class constants
 const INPUT_CONTAINER_CLASS = 'jp-chat-input-container';
 const DRAG_HOVER_CLASS = 'jp-chat-drag-hover';
+const MESSAGE_CLASS = 'jp-chat-message';
 
 export class ChatWidget extends ReactWidget {
   constructor(options: Chat.IOptions) {
@@ -40,7 +41,12 @@ export class ChatWidget extends ReactWidget {
 
     this._chatOptions = options;
     this.id = `jupyter-chat::widget::${options.model.name}`;
-    this.node.onclick = () => this.model.input.focus();
+    this.node.addEventListener('click', (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest(`.${MESSAGE_CLASS}`)) {
+        this.model.input.focus();
+      }
+    });
   }
 
   /**
