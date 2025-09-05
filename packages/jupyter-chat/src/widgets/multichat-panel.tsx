@@ -194,7 +194,7 @@ export class MultiChatPanel extends SidePanel {
   }
 
   /**
-   * Triggered when a section is toogled. If the section is opened, all others
+   * Triggered when a section is toggled. If the section is opened, all others
    * sections are closed.
    */
   private _onExpansionToggled(panel: AccordionPanel, index: number) {
