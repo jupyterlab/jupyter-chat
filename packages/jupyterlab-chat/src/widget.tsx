@@ -3,23 +3,10 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import {
-  ChatWidget,
-  IAttachmentOpenerRegistry,
-  IChatCommandRegistry,
-  IChatModel,
-  IMessageFooterRegistry,
-  IInputToolbarRegistryFactory
-} from '@jupyter/chat';
-import { MultiChatPanel } from '@jupyter/chat';
-import { Contents } from '@jupyterlab/services';
-import { IThemeManager } from '@jupyterlab/apputils';
+import { ChatWidget, IChatModel } from '@jupyter/chat';
 import { DocumentWidget } from '@jupyterlab/docregistry';
-import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
-import { CommandRegistry } from '@lumino/commands';
 
 import { LabChatModel } from './model';
-import { CommandIDs, chatFileType } from './token';
 
 const MAIN_PANEL_CLASS = 'jp-lab-chat-main-panel';
 const TITLE_UNREAD_CLASS = 'jp-lab-chat-title-unread';
@@ -67,78 +54,4 @@ export class LabChatPanel extends DocumentWidget<ChatWidget, LabChatModel> {
       );
     }
   };
-}
-
-export function createMultiChatPanel(options: {
-  commands: CommandRegistry;
-  contentsManager: Contents.IManager;
-  rmRegistry: IRenderMimeRegistry;
-  themeManager: IThemeManager | null;
-  defaultDirectory: string;
-  chatCommandRegistry?: IChatCommandRegistry;
-  attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
-  inputToolbarFactory?: IInputToolbarRegistryFactory;
-  messageFooterRegistry?: IMessageFooterRegistry;
-  welcomeMessage?: string;
-}): MultiChatPanel {
-  const { contentsManager, defaultDirectory } = options;
-  const chatFileExtension = chatFileType.extensions[0];
-
-  // This function replaces updateChatList's file lookup
-  const getChatNames = async () => {
-    const dirContents = await contentsManager.get(defaultDirectory);
-    const names: { [name: string]: string } = {};
-    for (const file of dirContents.content) {
-      if (file.type === 'file' && file.name.endsWith(chatFileExtension)) {
-        const nameWithoutExt = file.name.replace(chatFileExtension, '');
-        names[nameWithoutExt] = file.path;
-      }
-    }
-    return names;
-  };
-
-  // Hook that fires when files change
-  const onChatsChanged = (cb: () => void) => {
-    contentsManager.fileChanged.connect((_sender, change) => {
-      if (
-        change.type === 'new' ||
-        change.type === 'delete' ||
-        (change.type === 'rename' &&
-          change.oldValue?.path !== change.newValue?.path)
-      ) {
-        cb();
-      }
-    });
-  };
-
-  return new MultiChatPanel({
-    rmRegistry: options.rmRegistry,
-    themeManager: options.themeManager,
-    chatFileExtension: chatFileType.extensions[0],
-    getChatNames,
-    onChatsChanged,
-    createChat: () => {
-      options.commands.execute(CommandIDs.createChat);
-    },
-    openChat: path => {
-      options.commands.execute(CommandIDs.openChat, { filepath: path });
-    },
-    closeChat: path => {
-      options.commands.execute(CommandIDs.closeChat, { filepath: path });
-    },
-    moveToMain: path => {
-      options.commands.execute(CommandIDs.moveToMain, { filepath: path });
-    },
-    renameChat: (oldPath, newPath) => {
-      return options.commands.execute(CommandIDs.renameChat, {
-        oldPath,
-        newPath
-      }) as Promise<void>;
-    },
-    chatCommandRegistry: options.chatCommandRegistry,
-    attachmentOpenerRegistry: options.attachmentOpenerRegistry,
-    inputToolbarFactory: options.inputToolbarFactory,
-    messageFooterRegistry: options.messageFooterRegistry,
-    welcomeMessage: options.welcomeMessage
-  });
 }

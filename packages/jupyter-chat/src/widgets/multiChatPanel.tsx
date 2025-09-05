@@ -39,7 +39,7 @@ const SIDEPANEL_CLASS = 'jp-chat-sidepanel';
 const ADD_BUTTON_CLASS = 'jp-chat-add';
 const OPEN_SELECT_CLASS = 'jp-chat-open';
 const SECTION_CLASS = 'jp-chat-section';
-const TOOLBAR_CLASS = 'jp-chat-toolbar';
+const TOOLBAR_CLASS = 'jp-chat-section-toolbar';
 
 /**
  * Generic sidepanel widget including multiple chats and the add chat button.
@@ -145,7 +145,6 @@ export class MultiChatPanel extends SidePanel {
   updateChatList = async (): Promise<void> => {
     try {
       const chatNames = await this._getChatNames();
-      console.log('updateChatList emits:', chatNames);
       this._chatNamesChanged.emit(chatNames);
     } catch (e) {
       console.error('Error getting chat files', e);
@@ -367,10 +366,6 @@ class ChatSection extends PanelWithToolbar {
     this.toolbar.addItem('rename', renameButton);
     this.toolbar.addItem('close', closeButton);
 
-    this.toolbar.node.style.backgroundColor = 'js-toolbar-background';
-    this.toolbar.node.style.minHeight = '32px';
-    this.toolbar.node.style.display = 'flex';
-
     this.model?.unreadChanged?.connect(this._unreadChanged);
     this._markAsRead.enabled = (this.model?.unreadMessages.length ?? 0) > 0;
 
@@ -469,10 +464,10 @@ function ChatSelect({
 
   return (
     <HTMLSelect onChange={handleChange} value="-">
+      <option value="-">Open a chat</option>
       {Object.keys(chatNames).map(name => (
         <option value={chatNames[name]}>{name}</option>
       ))}
-      <option value="-">Open a chat</option>
     </HTMLSelect>
   );
 }
