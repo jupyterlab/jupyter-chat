@@ -57,7 +57,6 @@ export class MultiChatPanel extends SidePanel {
     this._messageFooterRegistry = options.messageFooterRegistry;
     this._welcomeMessage = options.welcomeMessage;
     this._getChatNames = options.getChatNames;
-    this._onChatsChanged = options.onChatsChanged;
 
     // Use the passed callback functions
     this._openChat = options.openChat ?? (() => {});
@@ -87,12 +86,6 @@ export class MultiChatPanel extends SidePanel {
 
     const content = this.content as AccordionPanel;
     content.expansionToggled.connect(this._onExpansionToggled, this);
-
-    if (this._onChatsChanged) {
-      this._onChatsChanged(() => {
-        this.updateChatList();
-      });
-    }
   }
 
   /**
@@ -252,7 +245,6 @@ export class MultiChatPanel extends SidePanel {
     newName: string
   ) => Promise<void>;
 
-  private _onChatsChanged?: (cb: () => void) => void;
   private _openChatWidget: ReactWidget;
 }
 
@@ -266,9 +258,7 @@ export namespace ChatPanel {
   export interface IOptions extends SidePanel.IOptions {
     rmRegistry: IRenderMimeRegistry;
     themeManager: IThemeManager | null;
-    chatFileExtension: string;
     getChatNames: () => Promise<{ [name: string]: string }>;
-    onChatsChanged?: (cb: () => void) => void;
 
     // Callback functions instead of command strings
     openChat: (name: string) => void;
