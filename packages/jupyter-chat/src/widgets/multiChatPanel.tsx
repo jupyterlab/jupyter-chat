@@ -17,7 +17,7 @@ import {
   IMessageFooterRegistry,
   readIcon
 } from '../index';
-import { IThemeManager } from '@jupyterlab/apputils';
+import { InputDialog, IThemeManager } from '@jupyterlab/apputils';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import {
   addIcon,
@@ -31,7 +31,6 @@ import {
   ToolbarButton
 } from '@jupyterlab/ui-components';
 import { ISignal, Signal } from '@lumino/signaling';
-import { showRenameDialog } from '../utils/renameDialog';
 import { AccordionPanel, Panel } from '@lumino/widgets';
 import React, { useState } from 'react';
 
@@ -62,7 +61,7 @@ export class MultiChatPanel extends SidePanel {
     this._openChat = options.openChat;
     this._openInMain = options.openInMain;
     this._createChat = options.createChat ?? (() => {});
-    this._renameChatCallback = options.renameChat ?? (() => {});
+    this._renameChat = options.renameChat;
 
     // Add chat button calls the createChat callback
     const addChat = new ToolbarButton({
@@ -165,19 +164,6 @@ export class MultiChatPanel extends SidePanel {
   }
 
   /**
-   * Rename a chat.
-   */
-  private _renameChat = async (oldName: string, newName: string) => {
-    try {
-      await this._renameChatCallback?.(oldName, newName);
-      this.updateChatList();
-      console.log(`Renamed chat ${oldName} → ${newName}`);
-    } catch (e) {
-      console.error('Error renaming chat', e);
-    }
-  };
-
-  /**
    * Return the index of the chat in the list (-1 if not opened).
    *
    * @param name - the chat name.
@@ -238,10 +224,7 @@ export class MultiChatPanel extends SidePanel {
   private _createChat: () => void;
   private _openChat: (name: string) => void;
   private _openInMain?: (name: string) => void;
-  private _renameChatCallback: (
-    oldName: string,
-    newName: string
-  ) => Promise<void>;
+  private _renameChat?: (oldName: string, newName: string) => Promise<boolean>;
 
   private _openChatWidget: ReactWidget;
 }
@@ -262,7 +245,7 @@ export namespace ChatPanel {
     openChat: (name: string) => void;
     createChat: () => void;
     openInMain?: (name: string) => void;
-    renameChat: (oldName: string, newName: string) => Promise<void>;
+    renameChat?: (oldName: string, newName: string) => Promise<boolean>;
 
     chatCommandRegistry?: IChatCommandRegistry;
     attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
@@ -304,22 +287,33 @@ class ChatSection extends PanelWithToolbar {
     });
     this.toolbar.addItem('markRead', this._markAsRead);
 
-    const renameButton = new ToolbarButton({
-      iconClass: 'jp-EditIcon',
-      iconLabel: 'Rename chat',
-      className: 'jp-mod-styled',
-      onClick: async () => {
-        const oldName = this.model?.name ?? 'Chat';
-        const newName = await showRenameDialog(oldName);
-        if (this.model && newName && newName !== oldName) {
-          this.model.name = newName;
-          this._displayName = newName;
-          this._updateTitle();
-          options.renameChat(oldName, newName);
+    if (options.renameChat) {
+      const renameButton = new ToolbarButton({
+        iconClass: 'jp-EditIcon',
+        iconLabel: 'Rename chat',
+        className: 'jp-mod-styled',
+        onClick: async () => {
+          const oldName = this.model.name ?? 'Chat';
+          const result = await InputDialog.getText({
+            title: 'Rename Chat',
+            text: this.model.name,
+            placeholder: 'new-name'
+          });
+          if (!result.button.accept) {
+            return; // user cancelled
+          }
+          const newName = result.value;
+          if (this.model && newName && newName !== oldName) {
+            if (await options.renameChat?.(oldName, newName)) {
+              this.model.name = newName;
+              this._displayName = newName;
+              this._updateTitle();
+            }
+          }
         }
-      }
-    });
-    this.toolbar.addItem('rename', renameButton);
+      });
+      this.toolbar.addItem('rename', renameButton);
+    }
 
     if (options.openInMain) {
       const moveToMain = new ToolbarButton({
@@ -415,7 +409,7 @@ export namespace ChatSection {
   export interface IOptions extends Panel.IOptions {
     widget: ChatWidget;
     openInMain?: (name: string) => void;
-    renameChat: (oldName: string, newName: string) => void;
+    renameChat?: (oldName: string, newName: string) => Promise<boolean>;
   }
 }
 

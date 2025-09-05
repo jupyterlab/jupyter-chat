@@ -673,13 +673,12 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     // Command to rename a chat
     commands.addCommand(CommandIDs.renameChat, {
       label: 'Rename chat',
-      execute: async (args: any) => {
+      execute: async (args: any): Promise<boolean> => {
         const oldPath = args.oldPath as string;
         let newPath = args.newPath as string | null;
-
         if (!oldPath) {
           showErrorMessage('Error renaming chat', 'Missing old path');
-          return;
+          return false;
         }
 
         // Ask user if new name not passed in args
@@ -690,13 +689,13 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
             placeholder: 'new-name'
           });
           if (!result.button.accept) {
-            return; // user cancelled
+            return false; // user cancelled
           }
           newPath = result.value;
         }
 
         if (!newPath) {
-          return;
+          return false;
         }
 
         // Ensure `.chat` extension
@@ -704,17 +703,14 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           newPath = `${newPath}${chatFileType.extensions[0]}`;
         }
 
-        // Join with same directory
-        const targetDir = PathExt.dirname(oldPath);
-        const fullNewPath = PathExt.join(targetDir, newPath);
-
         try {
-          await app.serviceManager.contents.rename(oldPath, fullNewPath);
-          console.log(`Renamed chat ${oldPath} → ${fullNewPath}`);
+          await app.serviceManager.contents.rename(oldPath, newPath);
+          return true;
         } catch (err) {
           console.error('Error renaming chat', err);
           showErrorMessage('Error renaming chat', `${err}`);
         }
+        return false;
       }
     });
 
@@ -818,7 +814,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
         return commands.execute(CommandIDs.renameChat, {
           oldPath,
           newPath
-        }) as Promise<void>;
+        }) as Promise<boolean>;
       },
       chatCommandRegistry,
       attachmentOpenerRegistry,
