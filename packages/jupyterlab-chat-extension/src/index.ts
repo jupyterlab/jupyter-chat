@@ -63,7 +63,8 @@ import {
   LabChatPanel,
   WidgetConfig,
   YChat,
-  chatFileType
+  chatFileType,
+  getDisplayName
 } from 'jupyterlab-chat';
 import { chatCommandRegistryPlugin } from './chat-commands/plugins';
 import { emojiCommandsPlugin } from './chat-commands/providers/emoji';
@@ -644,8 +645,13 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
               // Set the name of the model.
               chatModel.name = model.path;
 
+              const displayName = getDisplayName(
+                model.path,
+                widgetConfig.config.defaultDirectory
+              );
+
               // Add a chat widget to the side panel and to the tracker.
-              const widget = chatPanel.addChat(chatModel);
+              const widget = chatPanel.addChat(chatModel, displayName);
               factory.tracker.add(widget);
             } else {
               // The chat is opened in the main area
@@ -777,13 +783,13 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
   ): MultiChatPanel => {
     const { commands, serviceManager } = app;
 
-    const defaultDirectory = factory.widgetConfig.config.defaultDirectory || '';
-
     const chatFileExtension = chatFileType.extensions[0];
 
     // Get the chat in default directory
     const getChatNames = async () => {
-      const dirContents = await serviceManager.contents.get(defaultDirectory);
+      const dirContents = await serviceManager.contents.get(
+        factory.widgetConfig.config.defaultDirectory ?? ''
+      );
       const names: { [name: string]: string } = {};
       for (const file of dirContents.content) {
         if (file.type === 'file' && file.name.endsWith(chatFileExtension)) {
@@ -822,6 +828,22 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
       messageFooterRegistry,
       welcomeMessage
     });
+    chatPanel.id = 'JupyterlabChat:sidepanel';
+    chatPanel.title.icon = chatIcon;
+    chatPanel.title.caption = 'Jupyter Chat'; // TODO: i18n/
+
+    // Update available chats and section title when default directory changed.
+    factory.widgetConfig.configChanged.connect((_, config) => {
+      if (config.defaultDirectory !== undefined) {
+        chatPanel.updateChatList();
+        chatPanel.sections.forEach(section => {
+          section.displayName = getDisplayName(
+            section.model.name,
+            config.defaultDirectory
+          );
+        });
+      }
+    });
 
     // Listen for the file changes to update the chat list.
     serviceManager.contents.fileChanged.connect((_sender, change) => {
@@ -834,10 +856,6 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
         chatPanel.updateChatList();
       }
     });
-
-    chatPanel.id = 'JupyterlabChat:sidepanel';
-    chatPanel.title.icon = chatIcon;
-    chatPanel.title.caption = 'Jupyter Chat'; // TODO: i18n/
 
     app.shell.add(chatPanel, 'left', {
       rank: 2000

@@ -216,7 +216,6 @@ test.describe('#sidepanel', () => {
         'input[label="defaultDirectory"]'
       );
       await defaultDirectory.pressSequentially(NEW_DIR);
-
       // wait for the settings to be saved
       await expect(page.activity.getTabLocator('Settings')).toHaveAttribute(
         'class',
@@ -227,7 +226,7 @@ test.describe('#sidepanel', () => {
         /jp-mod-dirty/
       );
 
-      await expect(select.locator('option')).toHaveCount(2);
+      await expect(select.locator('option')).toHaveCount(1);
       await expect(select.locator('option').last()).toHaveText('Open a chat');
 
       // creating a chat should populate the list.
@@ -256,8 +255,8 @@ test.describe('#sidepanel', () => {
         /jp-mod-dirty/
       );
 
-      await expect(select.locator('option')).toHaveCount(3);
-      await expect(select.locator('option').nth(1)).toHaveText(name);
+      await expect(select.locator('option')).toHaveCount(2);
+      await expect(select.locator('option').last()).toHaveText(name);
     });
   });
 

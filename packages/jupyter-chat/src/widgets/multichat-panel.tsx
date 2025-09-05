@@ -88,13 +88,20 @@ export class MultiChatPanel extends SidePanel {
   }
 
   /**
+   * The sections of the side panel.
+   */
+  get sections(): ChatSection[] {
+    return this.widgets as ChatSection[];
+  }
+
+  /**
    * Add a new widget to the chat panel.
    *
    * @param model - the model of the chat widget
-   * @param name - the name of the chat.
+   * @param displayName - the name of the chat.
    */
 
-  addChat(model: IChatModel): ChatWidget {
+  addChat(model: IChatModel, displayName?: string): ChatWidget {
     const content = this.content as AccordionPanel;
     for (let i = 0; i < this.widgets.length; i++) {
       content.collapse(i);
@@ -121,7 +128,8 @@ export class MultiChatPanel extends SidePanel {
     const section = new ChatSection({
       widget,
       openInMain: this._openInMain,
-      renameChat: this._renameChat
+      renameChat: this._renameChat,
+      displayName
     });
 
     this.addWidget(section);
@@ -131,7 +139,7 @@ export class MultiChatPanel extends SidePanel {
   }
 
   /**
-   * Update the list of available chats in the default directory.
+   * Update the list of available chats.
    */
   updateChatList = async (): Promise<void> => {
     try {
@@ -185,11 +193,11 @@ export class MultiChatPanel extends SidePanel {
    * Handle `change` events for the HTMLSelect component.
    */
   private _chatSelected(event: React.ChangeEvent<HTMLSelectElement>): void {
-    const path = event.target.value;
-    if (path === '-') {
+    const selection = event.target.value;
+    if (selection === '-') {
       return;
     }
-    this._openChat(path);
+    this._openChat(selection);
     event.target.selectedIndex = 0;
   }
 
@@ -262,7 +270,7 @@ export namespace ChatPanel {
 /**
  * The chat section containing a chat widget.
  */
-class ChatSection extends PanelWithToolbar {
+export class ChatSection extends PanelWithToolbar {
   /**
    * Constructor of the chat section.
    */
@@ -272,7 +280,8 @@ class ChatSection extends PanelWithToolbar {
     this.addWidget(this._spinner);
     this.addClass(SECTION_CLASS);
     this.toolbar.addClass(TOOLBAR_CLASS);
-    this._displayName = options.widget.model.name ?? 'Chat';
+    this._displayName =
+      options.displayName ?? options.widget.model.name ?? 'Chat';
     this._updateTitle();
 
     this._markAsRead = new ToolbarButton({
@@ -356,6 +365,17 @@ class ChatSection extends PanelWithToolbar {
   }
 
   /**
+   * The display name.
+   */
+  get displayName(): string {
+    return this._displayName;
+  }
+  set displayName(value: string) {
+    this._displayName = value;
+    this._updateTitle();
+  }
+
+  /**
    * The model of the widget.
    */
   get model(): IChatModel {
@@ -410,6 +430,7 @@ export namespace ChatSection {
     widget: ChatWidget;
     openInMain?: (name: string) => void;
     renameChat?: (oldName: string, newName: string) => Promise<boolean>;
+    displayName?: string;
   }
 }
 

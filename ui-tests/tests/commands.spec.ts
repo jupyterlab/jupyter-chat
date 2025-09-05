@@ -50,7 +50,8 @@ test.describe('#commandPalette', () => {
       .click();
     await fillModal(page, name);
     await page.waitForCondition(
-      async () => await page.filebrowser.contents.fileExists(`${tmpPath}/${FILENAME}`)
+      async () =>
+        await page.filebrowser.contents.fileExists(`${tmpPath}/${FILENAME}`)
     );
     await expect(page.activity.getTabLocator(FILENAME)).toBeVisible();
   });
