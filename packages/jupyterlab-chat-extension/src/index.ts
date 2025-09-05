@@ -718,36 +718,11 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
       }
     });
 
-    // Command to close a chat
-    commands.addCommand(CommandIDs.closeChat, {
-      label: 'Close chat',
-      execute: async (args: any) => {
-        const filepath = args.filepath as string;
-        if (!filepath) {
-          console.warn('No filepath provided to closeChat');
-          return;
-        }
-
-        // Find widget in tracker
-        const widget = tracker.find(w => w.model?.name === filepath);
-        if (widget) {
-          widget.close(); // triggers dispose
-          console.log(`Closed chat ${filepath}`);
-        } else {
-          console.warn(`No open chat widget found for ${filepath}`);
-        }
-      }
-    });
-
     // Optional: add to palette
     if (commandPalette) {
       commandPalette.addItem({
         category: 'Chat',
         command: CommandIDs.renameChat
-      });
-      commandPalette.addItem({
-        category: 'Chat',
-        command: CommandIDs.closeChat
       });
     }
 
@@ -836,11 +811,8 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
           inSidePanel: true
         });
       },
-      closeChat: path => {
-        commands.execute(CommandIDs.closeChat, { filepath: path });
-      },
-      moveToMain: path => {
-        commands.execute(CommandIDs.moveToMain, { filepath: path });
+      openInMain: path => {
+        commands.execute(CommandIDs.openChat, { filepath: path });
       },
       renameChat: (oldPath, newPath) => {
         return commands.execute(CommandIDs.renameChat, {

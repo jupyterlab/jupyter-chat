@@ -32,7 +32,7 @@ import {
 } from '@jupyterlab/ui-components';
 import { ISignal, Signal } from '@lumino/signaling';
 import { showRenameDialog } from '../utils/renameDialog';
-import { AccordionPanel, Panel, Widget } from '@lumino/widgets';
+import { AccordionPanel, Panel } from '@lumino/widgets';
 import React, { useState } from 'react';
 
 const SIDEPANEL_CLASS = 'jp-chat-sidepanel';
@@ -59,9 +59,9 @@ export class MultiChatPanel extends SidePanel {
     this._getChatNames = options.getChatNames;
 
     // Use the passed callback functions
-    this._openChat = options.openChat ?? (() => {});
+    this._openChat = options.openChat;
+    this._openInMain = options.openInMain;
     this._createChat = options.createChat ?? (() => {});
-    this._closeChat = options.closeChat ?? (() => {});
     this._renameChatCallback = options.renameChat ?? (() => {});
 
     // Add chat button calls the createChat callback
@@ -121,8 +121,7 @@ export class MultiChatPanel extends SidePanel {
 
     const section = new ChatSection({
       widget,
-      openChat: this._openChat,
-      closeChat: this._closeChat,
+      openInMain: this._openInMain,
       renameChat: this._renameChat
     });
 
@@ -236,10 +235,9 @@ export class MultiChatPanel extends SidePanel {
   private _welcomeMessage?: string;
   private _getChatNames: () => Promise<{ [name: string]: string }>;
 
-  // Replaced command strings with callback functions:
-  private _openChat: (name: string) => void;
   private _createChat: () => void;
-  private _closeChat: (name: string) => void;
+  private _openChat: (name: string) => void;
+  private _openInMain?: (name: string) => void;
   private _renameChatCallback: (
     oldName: string,
     newName: string
@@ -263,8 +261,7 @@ export namespace ChatPanel {
     // Callback functions instead of command strings
     openChat: (name: string) => void;
     createChat: () => void;
-    closeChat: (name: string) => void;
-    moveToMain: (name: string) => void;
+    openInMain?: (name: string) => void;
     renameChat: (oldName: string, newName: string) => Promise<void>;
 
     chatCommandRegistry?: IChatCommandRegistry;
@@ -291,7 +288,6 @@ class ChatSection extends PanelWithToolbar {
     this.addWidget(options.widget);
     this.addWidget(this._spinner);
     this.addClass(SECTION_CLASS);
-    this._closeChat = options.closeChat;
     this.toolbar.addClass(TOOLBAR_CLASS);
     this._displayName = options.widget.model.name ?? 'Chat';
     this._updateTitle();
@@ -306,6 +302,7 @@ class ChatSection extends PanelWithToolbar {
         }
       }
     });
+    this.toolbar.addItem('markRead', this._markAsRead);
 
     const renameButton = new ToolbarButton({
       iconClass: 'jp-EditIcon',
@@ -322,41 +319,36 @@ class ChatSection extends PanelWithToolbar {
         }
       }
     });
+    this.toolbar.addItem('rename', renameButton);
 
-    const moveToMain = new ToolbarButton({
-      icon: launchIcon,
-      iconLabel: 'Move the chat to the main area',
-      className: 'jp-mod-styled',
-      onClick: () => {
-        const mainWidget = options.openChat(options.widget.model.name) as
-          | Widget
-          | undefined;
-
-        if (mainWidget) {
-          mainWidget.disposed.connect(() => {
-            this.dispose();
-          });
+    if (options.openInMain) {
+      const moveToMain = new ToolbarButton({
+        icon: launchIcon,
+        iconLabel: 'Move the chat to the main area',
+        className: 'jp-mod-styled',
+        onClick: () => {
+          const name = this.model.name;
+          this.model.dispose();
+          options.openInMain?.(name);
+          this.dispose();
         }
-      }
-    });
+      });
+      this.toolbar.addItem('moveMain', moveToMain);
+    }
 
     const closeButton = new ToolbarButton({
       icon: closeIcon,
       iconLabel: 'Close the chat',
       className: 'jp-mod-styled',
       onClick: () => {
-        this.model?.dispose();
-        this._closeChat(options.widget.model.name ?? '');
+        this.model.dispose();
         this.dispose();
       }
     });
 
-    this.toolbar.addItem('markRead', this._markAsRead);
-    this.toolbar.addItem('moveMain', moveToMain);
-    this.toolbar.addItem('rename', renameButton);
     this.toolbar.addItem('close', closeButton);
 
-    this.model?.unreadChanged?.connect(this._unreadChanged);
+    this.model.unreadChanged?.connect(this._unreadChanged);
     this._markAsRead.enabled = (this.model?.unreadMessages.length ?? 0) > 0;
 
     options.widget.node.style.height = '100%';
@@ -364,7 +356,7 @@ class ChatSection extends PanelWithToolbar {
     /**
      * Remove the spinner when the chat is ready.
      */
-    this.model?.ready.then(() => {
+    this.model.ready.then(() => {
       this._spinner.dispose();
     });
   }
@@ -372,9 +364,8 @@ class ChatSection extends PanelWithToolbar {
   /**
    * The model of the widget.
    */
-  get model(): IChatModel | null {
-    const first = this.widgets[0] as ChatWidget | undefined;
-    return first ? first.model : null;
+  get model(): IChatModel {
+    return (this.widgets[0] as ChatWidget).model;
   }
 
   /**
@@ -412,8 +403,6 @@ class ChatSection extends PanelWithToolbar {
   private _markAsRead: ToolbarButton;
   private _spinner = new Spinner();
   private _displayName: string;
-
-  private _closeChat: (name: string) => void;
 }
 
 /**
@@ -425,8 +414,7 @@ export namespace ChatSection {
    */
   export interface IOptions extends Panel.IOptions {
     widget: ChatWidget;
-    openChat: (name: string) => void;
-    closeChat: (name: string) => void;
+    openInMain?: (name: string) => void;
     renameChat: (oldName: string, newName: string) => void;
   }
 }

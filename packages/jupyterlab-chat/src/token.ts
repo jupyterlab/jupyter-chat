@@ -107,14 +107,6 @@ export const CommandIDs = {
    */
   focusInput: 'jupyterlab-chat:focusInput',
   /**
-   * Close the current chat.
-   */
-  closeChat: 'jupyterlab-chat:closeChat',
-  /**
-   * Move a main widget to the main area.
-   */
-  moveToMain: 'jupyterlab-chat:moveToMain',
-  /**
    * Rename the current chat.
    */
   renameChat: 'jupyterlab-chat:renameChat'
