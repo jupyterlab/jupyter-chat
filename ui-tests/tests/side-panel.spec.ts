@@ -73,11 +73,6 @@ test.describe('#sidepanel', () => {
         async () => await page.filebrowser.contents.fileExists(FILENAME)
       );
 
-
-      const chatPanel = await openChat(page, FILENAME);
-      const button = chatPanel.getByTitle('Move the chat to the side panel');
-      await button.click();
-      
       const chatTitle = panel.locator(
         '.jp-SidePanel-content .jp-AccordionPanel-title'
       );
@@ -95,10 +90,6 @@ test.describe('#sidepanel', () => {
       await page.waitForCondition(
         async () => await page.filebrowser.contents.fileExists('untitled.chat')
       );
-
-      const chatPanel = await openChat(page, FILENAME);
-      const button = chatPanel.getByTitle('Move the chat to the side panel');
-      await button.click();
 
       const chatTitle = panel.locator(
         '.jp-SidePanel-content .jp-AccordionPanel-title'
@@ -124,10 +115,6 @@ test.describe('#sidepanel', () => {
       await page.waitForCondition(
         async () => await page.filebrowser.contents.fileExists(FILENAME)
       );
-
-      const chatPanel = await openChat(page, FILENAME);
-      const button = chatPanel.getByTitle('Move the chat to the side panel');
-      await button.click();
 
       const chatTitle = panel.locator(
         '.jp-SidePanel-content .jp-AccordionPanel-title'
@@ -205,10 +192,6 @@ test.describe('#sidepanel', () => {
 
       await select.selectOption(name);
 
-      const chatPanel = await openChat(page, FILENAME);
-      const button = chatPanel.getByTitle('Move the chat to the side panel');
-      await button.click();
-
       const chatTitle = panel.locator(
         '.jp-SidePanel-content .jp-AccordionPanel-title'
       );
@@ -258,17 +241,11 @@ test.describe('#sidepanel', () => {
       await dialog.getByRole('button').getByText('Ok').click();
 
       await expect(select.locator('option')).toHaveCount(2);
-      await expect(select.locator('option', { hasText: 'new-chat' })).toHaveCount(1);
-
-      // Refresh the locator in case the old one is stale
-      const settings2 = await openSettings(page);
-      const defaultDirectory2 = settings2.locator(
-        'input[label="defaultDirectory"]'
-      );
+      await expect(select.locator('option').last()).toHaveText('new-chat');
 
       // Changing the default directory (to root) should update the chat list.
-      await defaultDirectory2.clear();
-      
+      await defaultDirectory.clear();
+
       // wait for the settings to be saved
       await expect(page.activity.getTabLocator('Settings')).toHaveAttribute(
         'class',

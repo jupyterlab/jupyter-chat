@@ -33,14 +33,15 @@ test.describe('#commandPalette', () => {
     }
   });
 
-  test('should have 2 commands in palette', async ({ page }) => {
+  test('should have 3 commands in palette', async ({ page }) => {
     await expect(
       page.locator('#modal-command-palette li[data-command^="jupyterlab-chat"]')
-    ).toHaveCount(2);
+    ).toHaveCount(3);
   });
 
   test('should create a chat with name from command palette', async ({
-    page
+    page,
+    tmpPath
   }) => {
     await page
       .locator(
@@ -49,7 +50,7 @@ test.describe('#commandPalette', () => {
       .click();
     await fillModal(page, name);
     await page.waitForCondition(
-      async () => await page.filebrowser.contents.fileExists(`tests-commands--commandPal-bb324-h-name-from-command-palette/${FILENAME}`)
+      async () => await page.filebrowser.contents.fileExists(`${tmpPath}/${FILENAME}`)
     );
     await expect(page.activity.getTabLocator(FILENAME)).toBeVisible();
   });
