@@ -845,15 +845,31 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
       }
     });
 
-    // Listen for the file changes to update the chat list.
+    // Listen for the file changes to update the chat list and the sections.
     serviceManager.contents.fileChanged.connect((_sender, change) => {
+      if (change.type === 'delete') {
+        chatPanel.updateChatList();
+        // Dispose of the section if the chat is opened in the side panel.
+        chatPanel.sections
+          .find(section => section.model.name === change.oldValue?.path)
+          ?.dispose();
+      }
+      const updateActions = ['new', 'rename'];
       if (
-        change.type === 'new' ||
-        change.type === 'delete' ||
-        (change.type === 'rename' &&
-          change.oldValue?.path !== change.newValue?.path)
+        updateActions.includes(change.type) &&
+        change.newValue?.path?.endsWith(chatFileType.extensions[0])
       ) {
         chatPanel.updateChatList();
+        // Rename the section if the chat is opened in the side panel.
+        const currentSection = chatPanel.sections.find(
+          section => section.model.name === change.oldValue?.path
+        );
+        if (currentSection) {
+          currentSection.displayName = getDisplayName(
+            change.newValue.path,
+            factory.widgetConfig.config.defaultDirectory
+          );
+        }
       }
     });
 

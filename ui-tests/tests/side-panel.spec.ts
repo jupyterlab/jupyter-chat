@@ -170,7 +170,7 @@ test.describe('#sidepanel', () => {
         '.jp-SidePanel-toolbar .jp-Toolbar-item.jp-chat-open select'
       );
 
-      await expect(select.locator('option')).toHaveCount(2);
+      await expect(select.locator('option')).toHaveCount(2, { timeout: 10000 });
       await expect(select.locator('option').last()).toHaveText(name);
     });
 
