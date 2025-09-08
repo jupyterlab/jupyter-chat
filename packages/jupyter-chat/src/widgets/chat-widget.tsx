@@ -20,6 +20,7 @@ import {
   INotebookAttachmentCell
 } from '../types';
 import { ActiveCellManager } from '../active-cell-manager';
+import { MESSAGE_CLASS } from '../components/messages/messages';
 
 // MIME type constant for file browser drag events
 const FILE_BROWSER_MIME = 'application/x-jupyter-icontentsrich';
@@ -30,7 +31,6 @@ const NOTEBOOK_CELL_MIME = 'application/vnd.jupyter.cells';
 // CSS class constants
 const INPUT_CONTAINER_CLASS = 'jp-chat-input-container';
 const DRAG_HOVER_CLASS = 'jp-chat-drag-hover';
-const MESSAGE_CLASS = 'jp-chat-message';
 
 export class ChatWidget extends ReactWidget {
   constructor(options: Chat.IOptions) {
@@ -43,7 +43,13 @@ export class ChatWidget extends ReactWidget {
     this.id = `jupyter-chat::widget::${options.model.name}`;
     this.node.addEventListener('click', (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      if (!target.closest(`.${MESSAGE_CLASS}`)) {
+      const selection = window.getSelection();
+      const hasTextSelected =
+        selection &&
+        selection.toString().length > 0 &&
+        target.closest(`.${MESSAGE_CLASS}`);
+
+      if (!hasTextSelected && !target.closest(`.${MESSAGE_CLASS}`)) {
         this.model.input.focus();
       }
     });
