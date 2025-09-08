@@ -2282,6 +2282,7 @@ __metadata:
     "@lumino/commands": ^2.0.0
     "@lumino/coreutils": ^2.0.0
     "@lumino/disposable": ^2.0.0
+    "@lumino/polling": ^2.0.0
     "@lumino/signaling": ^2.0.0
     "@mui/icons-material": ^5.11.0
     "@mui/material": ^5.11.0
@@ -3403,7 +3404,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lumino/polling@npm:^2.1.4":
+"@lumino/polling@npm:^2.0.0, @lumino/polling@npm:^2.1.4":
   version: 2.1.4
   resolution: "@lumino/polling@npm:2.1.4"
   dependencies:

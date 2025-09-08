@@ -30,6 +30,7 @@ import {
   Spinner,
   ToolbarButton
 } from '@jupyterlab/ui-components';
+import { Throttler } from '@lumino/polling';
 import { ISignal, Signal } from '@lumino/signaling';
 import { AccordionPanel, Panel } from '@lumino/widgets';
 import React, { useState } from 'react';
@@ -55,9 +56,9 @@ export class MultiChatPanel extends SidePanel {
     this._inputToolbarFactory = options.inputToolbarFactory;
     this._messageFooterRegistry = options.messageFooterRegistry;
     this._welcomeMessage = options.welcomeMessage;
-    this._getChatNames = options.getChatNames;
 
     // Use the passed callback functions
+    this._getChatNames = options.getChatNames;
     this._openChat = options.openChat;
     this._openInMain = options.openInMain;
     this._createChat = options.createChat ?? (() => {});
@@ -85,6 +86,8 @@ export class MultiChatPanel extends SidePanel {
 
     const content = this.content as AccordionPanel;
     content.expansionToggled.connect(this._onExpansionToggled, this);
+
+    this._updateChatListThrottler = new Throttler(this._updateChatList, 200);
   }
 
   /**
@@ -139,9 +142,16 @@ export class MultiChatPanel extends SidePanel {
   }
 
   /**
+   * Invoke the update of the list of available chats.
+   */
+  updateChatList = () => {
+    this._updateChatListThrottler.invoke();
+  };
+
+  /**
    * Update the list of available chats.
    */
-  updateChatList = async (): Promise<void> => {
+  _updateChatList = async (): Promise<void> => {
     try {
       const chatNames = await this._getChatNames();
       this._chatNamesChanged.emit(chatNames);
@@ -168,7 +178,7 @@ export class MultiChatPanel extends SidePanel {
    * A message handler invoked on an `'after-attach'` message.
    */
   protected onAfterAttach(): void {
-    this._openChatWidget.renderPromise?.then(() => this.updateChatList());
+    this._openChatWidget.renderPromise?.then(() => this._updateChatList());
   }
 
   /**
@@ -227,8 +237,9 @@ export class MultiChatPanel extends SidePanel {
   private _inputToolbarFactory?: ChatPanel.IInputToolbarRegistryFactory;
   private _messageFooterRegistry?: IMessageFooterRegistry;
   private _welcomeMessage?: string;
-  private _getChatNames: () => Promise<{ [name: string]: string }>;
+  private _updateChatListThrottler: Throttler;
 
+  private _getChatNames: () => Promise<{ [name: string]: string }>;
   private _createChat: () => void;
   private _openChat: (name: string) => void;
   private _openInMain?: (name: string) => void;
