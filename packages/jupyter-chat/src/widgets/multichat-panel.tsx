@@ -30,7 +30,7 @@ import {
   Spinner,
   ToolbarButton
 } from '@jupyterlab/ui-components';
-import { Throttler } from '@lumino/polling';
+import { Debouncer } from '@lumino/polling';
 import { ISignal, Signal } from '@lumino/signaling';
 import { AccordionPanel, Panel } from '@lumino/widgets';
 import React, { useState } from 'react';
@@ -87,7 +87,7 @@ export class MultiChatPanel extends SidePanel {
     const content = this.content as AccordionPanel;
     content.expansionToggled.connect(this._onExpansionToggled, this);
 
-    this._updateChatListThrottler = new Throttler(this._updateChatList, 200);
+    this._updateChatListDebouncer = new Debouncer(this._updateChatList, 200);
   }
 
   /**
@@ -145,13 +145,13 @@ export class MultiChatPanel extends SidePanel {
    * Invoke the update of the list of available chats.
    */
   updateChatList = () => {
-    this._updateChatListThrottler.invoke();
+    this._updateChatListDebouncer.invoke();
   };
 
   /**
    * Update the list of available chats.
    */
-  _updateChatList = async (): Promise<void> => {
+  private _updateChatList = async (): Promise<void> => {
     try {
       const chatNames = await this._getChatNames();
       this._chatNamesChanged.emit(chatNames);
@@ -178,7 +178,7 @@ export class MultiChatPanel extends SidePanel {
    * A message handler invoked on an `'after-attach'` message.
    */
   protected onAfterAttach(): void {
-    this._openChatWidget.renderPromise?.then(() => this._updateChatList());
+    this._openChatWidget.renderPromise?.then(() => this.updateChatList());
   }
 
   /**
@@ -237,7 +237,7 @@ export class MultiChatPanel extends SidePanel {
   private _inputToolbarFactory?: ChatPanel.IInputToolbarRegistryFactory;
   private _messageFooterRegistry?: IMessageFooterRegistry;
   private _welcomeMessage?: string;
-  private _updateChatListThrottler: Throttler;
+  private _updateChatListDebouncer: Debouncer;
 
   private _getChatNames: () => Promise<{ [name: string]: string }>;
   private _createChat: () => void;
