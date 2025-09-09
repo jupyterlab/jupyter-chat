@@ -43,15 +43,26 @@ export class ChatWidget extends ReactWidget {
     this.id = `jupyter-chat::widget::${options.model.name}`;
     this.node.addEventListener('click', (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      const selection = window.getSelection();
-      const hasTextSelected =
-        selection &&
-        selection.toString().length > 0 &&
-        target.closest(`.${MESSAGE_CLASS}`);
-
-      if (!hasTextSelected && !target.closest(`.${MESSAGE_CLASS}`)) {
-        this.model.input.focus();
+      if (
+        target.closest('button, a, input, textarea, select, summary, details')
+      ) {
+        return;
       }
+
+      const message = target.closest(`.${MESSAGE_CLASS}`);
+      if (message) {
+        const selection = window.getSelection();
+
+        if (
+          selection &&
+          selection.toString().trim() !== '' &&
+          message.contains(selection.anchorNode)
+        ) {
+          return;
+        }
+      }
+
+      this.model.input.focus();
     });
   }
 
