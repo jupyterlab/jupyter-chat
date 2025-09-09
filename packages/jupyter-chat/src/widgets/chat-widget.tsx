@@ -11,7 +11,7 @@ import React from 'react';
 import { Message } from '@lumino/messaging';
 import { Drag } from '@lumino/dragdrop';
 
-import { Chat, IInputToolbarRegistry } from '../components';
+import { Chat, IInputToolbarRegistry, MESSAGE_CLASS } from '../components';
 import { chatIcon } from '../icons';
 import { IChatModel } from '../model';
 import {
@@ -20,7 +20,6 @@ import {
   INotebookAttachmentCell
 } from '../types';
 import { ActiveCellManager } from '../active-cell-manager';
-import { MESSAGE_CLASS } from '../components/messages/messages';
 
 // MIME type constant for file browser drag events
 const FILE_BROWSER_MIME = 'application/x-jupyter-icontentsrich';
