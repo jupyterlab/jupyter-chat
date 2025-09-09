@@ -14,12 +14,12 @@ import { ChatMessageHeader } from './header';
 import { ChatMessage } from './message';
 import { Navigation } from './navigation';
 import { WelcomeMessage } from './welcome';
-import { WritingUsersList } from './writers';
+import { WriterComponent, WritingUsersList } from './writers';
 import { IInputToolbarRegistry } from '../input';
 import { ScrollContainer } from '../scroll-container';
 import { IChatCommandRegistry, IMessageFooterRegistry } from '../../registers';
 import { IChatModel } from '../../model';
-import { IChatMessage, IUser } from '../../types';
+import { IChatMessage } from '../../types';
 
 const MESSAGES_BOX_CLASS = 'jp-chat-messages-container';
 const MESSAGE_CLASS = 'jp-chat-message';
@@ -53,6 +53,10 @@ export type BaseMessageProps = {
    * The welcome message.
    */
   welcomeMessage?: string;
+  /**
+   * The typing notification widget.
+   */
+  writerComponent?: WriterComponent;
 };
 
 /**
@@ -62,7 +66,9 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
   const { model } = props;
   const [messages, setMessages] = useState<IChatMessage[]>(model.messages);
   const refMsgBox = useRef<HTMLDivElement>(null);
-  const [currentWriters, setCurrentWriters] = useState<IUser[]>([]);
+  const [currentWriters, setCurrentWriters] = useState<IChatModel.IWriter[]>(
+    []
+  );
   const [allRendered, setAllRendered] = useState<boolean>(false);
 
   // The list of message DOM and their rendered promises.
@@ -96,7 +102,7 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
     }
 
     function handleWritersChange(_: IChatModel, writers: IChatModel.IWriter[]) {
-      setCurrentWriters(writers.map(writer => writer.user));
+      setCurrentWriters([...writers]);
     }
 
     model.messagesUpdated.connect(handleChatEvents);
@@ -211,7 +217,10 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
           })}
         </Box>
       </ScrollContainer>
-      <WritingUsersList writers={currentWriters}></WritingUsersList>
+      <WritingUsersList
+        writers={currentWriters}
+        writerComponent={props.writerComponent}
+      ></WritingUsersList>
       <Navigation {...props} refMsgBox={refMsgBox} allRendered={allRendered} />
     </>
   );
