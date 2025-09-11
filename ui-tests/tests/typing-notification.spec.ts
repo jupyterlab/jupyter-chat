@@ -12,8 +12,6 @@ import {
 import { User } from '@jupyterlab/services';
 
 import {
-  exposeDepsJs,
-  getPlugin,
   openChat,
   openSettings,
   sendMessage,
