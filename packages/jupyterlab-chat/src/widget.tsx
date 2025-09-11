@@ -3,23 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-<<<<<<< HEAD
 import { ChatWidget, IChatModel } from '@jupyter/chat';
-=======
-import {
-  ChatWidget,
-  IAttachmentOpenerRegistry,
-  IChatCommandRegistry,
-  IChatModel,
-  IInputToolbarRegistry,
-  IMessageFooterRegistry,
-  readIcon,
-  WriterComponent
-} from '@jupyter/chat';
-import { Contents } from '@jupyterlab/services';
-import { IThemeManager } from '@jupyterlab/apputils';
-import { PathExt } from '@jupyterlab/coreutils';
->>>>>>> 04982b7 (Add the writer component plugin to alow third party extension to provide it)
 import { DocumentWidget } from '@jupyterlab/docregistry';
 
 import { LabChatModel } from './model';

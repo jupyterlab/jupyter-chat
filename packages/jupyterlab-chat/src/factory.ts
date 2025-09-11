@@ -11,7 +11,7 @@ import {
   IInputToolbarRegistry,
   IMessageFooterRegistry,
   ISelectionWatcher,
-  IInputToolbarRegistryFactory
+  IInputToolbarRegistryFactory,
   WriterComponent
 } from '@jupyter/chat';
 import { IThemeManager } from '@jupyterlab/apputils';

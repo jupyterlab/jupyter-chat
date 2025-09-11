@@ -11,12 +11,7 @@ import {
 } from '@jupyterlab/galata';
 import { User } from '@jupyterlab/services';
 
-import {
-  openChat,
-  openSettings,
-  sendMessage,
-  USER
-} from './test-utils';
+import { openChat, openSettings, sendMessage, USER } from './test-utils';
 
 const FILENAME = 'my-chat.chat';
 
