@@ -603,7 +603,6 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         commands.addCommand(CommandIDs.openChat, {
           label: 'Open a chat',
           execute: async args => {
-            console.log('ARG', args);
             const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
             const startup: boolean = (args.startup as boolean) ?? false;
             let filepath: string | null = (args.filepath as string) ?? null;
