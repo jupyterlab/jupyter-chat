@@ -12,6 +12,7 @@ import {
   IMessageFooterRegistry,
   ISelectionWatcher,
   IInputToolbarRegistryFactory
+  WriterComponent
 } from '@jupyter/chat';
 import { IThemeManager } from '@jupyterlab/apputils';
 import { IDocumentManager } from '@jupyterlab/docmanager';
@@ -84,6 +85,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
     this._inputToolbarFactory = options.inputToolbarFactory;
     this._messageFooterRegistry = options.messageFooterRegistry;
     this._welcomeMessage = options.welcomeMessage;
+    this._writerComponent = options.writerComponent;
   }
 
   /**
@@ -99,6 +101,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
     context.attachmentOpenerRegistry = this._attachmentOpenerRegistry;
     context.messageFooterRegistry = this._messageFooterRegistry;
     context.welcomeMessage = this._welcomeMessage;
+    context.writerComponent = this._writerComponent;
     if (this._inputToolbarFactory) {
       context.inputToolbarRegistry = this._inputToolbarFactory.create();
     }
@@ -125,6 +128,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
   private _inputToolbarFactory?: IInputToolbarRegistryFactory;
   private _messageFooterRegistry?: IMessageFooterRegistry;
   private _welcomeMessage?: string;
+  private _writerComponent?: WriterComponent;
 }
 
 export namespace ChatWidgetFactory {
@@ -137,6 +141,7 @@ export namespace ChatWidgetFactory {
     inputToolbarRegistry?: IInputToolbarRegistry;
     messageFooterRegistry?: IMessageFooterRegistry;
     welcomeMessage?: string;
+    writerComponent?: WriterComponent;
   }
 
   export interface IOptions<T extends LabChatPanel>
@@ -148,6 +153,7 @@ export namespace ChatWidgetFactory {
     inputToolbarFactory?: IInputToolbarRegistryFactory;
     messageFooterRegistry?: IMessageFooterRegistry;
     welcomeMessage?: string;
+    writerComponent?: WriterComponent;
   }
 }
 

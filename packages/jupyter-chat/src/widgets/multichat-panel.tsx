@@ -30,7 +30,8 @@ import { ChatWidget } from './chat-widget';
 import {
   Chat,
   IInputToolbarRegistry,
-  IInputToolbarRegistryFactory
+  IInputToolbarRegistryFactory,
+  WriterComponent
 } from '../components';
 import { chatIcon, readIcon } from '../icons';
 import { IChatModel } from '../model';
@@ -65,6 +66,7 @@ export class MultiChatPanel extends SidePanel {
     this._inputToolbarFactory = options.inputToolbarFactory;
     this._messageFooterRegistry = options.messageFooterRegistry;
     this._welcomeMessage = options.welcomeMessage;
+    this._writerComponent = options.writerComponent;
 
     this._getChatNames = options.getChatNames;
     this._createModel = options.createModel;
@@ -155,7 +157,8 @@ export class MultiChatPanel extends SidePanel {
       attachmentOpenerRegistry: this._attachmentOpenerRegistry,
       inputToolbarRegistry,
       messageFooterRegistry: this._messageFooterRegistry,
-      welcomeMessage: this._welcomeMessage
+      welcomeMessage: this._welcomeMessage,
+      writerComponent: this._writerComponent
     });
 
     const section = new ChatSection({
@@ -273,6 +276,7 @@ export class MultiChatPanel extends SidePanel {
   private _inputToolbarFactory?: IInputToolbarRegistryFactory;
   private _messageFooterRegistry?: IMessageFooterRegistry;
   private _welcomeMessage?: string;
+  private _writerComponent?: WriterComponent;
   private _updateChatListDebouncer: Debouncer;
 
   private _createModel?: (

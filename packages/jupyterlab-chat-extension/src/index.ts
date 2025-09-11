@@ -17,6 +17,7 @@ import {
   InputToolbarRegistry,
   MessageFooterRegistry,
   SelectionWatcher,
+  WriterComponent,
   chatIcon,
   readIcon,
   IInputToolbarRegistryFactory,
@@ -58,6 +59,7 @@ import {
   IChatPanel,
   ISelectionWatcherToken,
   IWelcomeMessage,
+  IWriterComponent,
   LabChatModelFactory,
   LabChatPanel,
   WidgetConfig,
@@ -77,8 +79,10 @@ const pluginIds = {
   chatCommands: 'jupyterlab-chat-extension:commands',
   chatPanel: 'jupyterlab-chat-extension:chat-panel',
   docFactories: 'jupyterlab-chat-extension:factory',
+  footerRegistry: 'jupyterlab-chat/footerRegistry',
   inputToolbarFactory: 'jupyterlab-chat-extension:inputToolbarFactory',
-  selectionWatcher: 'jupyterlab-chat-extension:selectionWatcher'
+  selectionWatcher: 'jupyterlab-chat-extension:selectionWatcher',
+  writerComponentRegistry: 'jupyterlab-chat-extension:writerComponent'
 };
 
 /**
@@ -178,7 +182,8 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     IThemeManager,
     IToolbarWidgetRegistry,
     ITranslator,
-    IWelcomeMessage
+    IWelcomeMessage,
+    IWriterComponent
   ],
   provides: IChatFactory,
   activate: (
@@ -197,7 +202,8 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     themeManager: IThemeManager | null,
     toolbarRegistry: IToolbarWidgetRegistry | null,
     translator_: ITranslator | null,
-    welcomeMessage: string
+    welcomeMessage: string,
+    writerComponent: WriterComponent
   ): IChatFactory => {
     const translator = translator_ ?? nullTranslator;
 
@@ -362,7 +368,8 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
       attachmentOpenerRegistry,
       inputToolbarFactory,
       messageFooterRegistry,
-      welcomeMessage
+      welcomeMessage,
+      writerComponent
     });
 
     // Add the widget to the tracker when it's created
@@ -596,6 +603,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         commands.addCommand(CommandIDs.openChat, {
           label: 'Open a chat',
           execute: async args => {
+            console.log('ARG', args);
             const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
             const startup: boolean = (args.startup as boolean) ?? false;
             let filepath: string | null = (args.filepath as string) ?? null;
@@ -788,7 +796,8 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     ILayoutRestorer,
     IMessageFooterRegistry,
     IThemeManager,
-    IWelcomeMessage
+    IWelcomeMessage,
+    IWriterComponent
   ],
   activate: (
     app: JupyterFrontEnd,
@@ -801,7 +810,8 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     restorer: ILayoutRestorer | null,
     messageFooterRegistry: IMessageFooterRegistry,
     themeManager: IThemeManager | null,
-    welcomeMessage: string
+    welcomeMessage: string,
+    writerComponent: WriterComponent
   ): MultiChatPanel => {
     const { commands, serviceManager } = app;
 
@@ -847,7 +857,8 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
       attachmentOpenerRegistry,
       inputToolbarFactory,
       messageFooterRegistry,
-      welcomeMessage
+      welcomeMessage,
+      writerComponent
     });
     chatPanel.id = 'JupyterlabChat:sidepanel';
 
@@ -1002,12 +1013,25 @@ const inputToolbarFactory: JupyterFrontEndPlugin<IInputToolbarRegistryFactory> =
  * Extension providing the message footer registry.
  */
 const footerRegistry: JupyterFrontEndPlugin<IMessageFooterRegistry> = {
-  id: 'jupyterlab-chat/footerRegistry',
+  id: pluginIds.footerRegistry,
   description: 'The footer registry plugin.',
   autoStart: true,
   provides: IMessageFooterRegistry,
   activate: (app: JupyterFrontEnd): IMessageFooterRegistry => {
     return new MessageFooterRegistry();
+  }
+};
+
+/**
+ * Plugin providing a writer component.
+ */
+const writerComponent: JupyterFrontEndPlugin<WriterComponent> = {
+  id: pluginIds.writerComponentRegistry,
+  description: 'The writer component registry plugin.',
+  autoStart: true,
+  provides: IWriterComponent,
+  activate: (): WriterComponent => {
+    return new WriterComponent();
   }
 };
 
@@ -1022,5 +1046,6 @@ export default [
   inputToolbarFactory,
   selectionWatcher,
   emojiCommandsPlugin,
-  mentionCommandsPlugin
+  mentionCommandsPlugin,
+  writerComponent
 ];

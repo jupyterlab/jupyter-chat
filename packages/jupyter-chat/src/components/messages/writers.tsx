@@ -183,6 +183,10 @@ export type WriterComponentProps = {
   writer: IChatModel.IWriter;
 };
 
+/**
+ * The writer component class containing a react component to display with the user
+ * writing notification.
+ */
 export class WriterComponent {
   /**
    * The react component.
