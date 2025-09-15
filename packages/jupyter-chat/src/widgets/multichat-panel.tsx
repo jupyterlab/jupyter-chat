@@ -162,8 +162,8 @@ export class MultiChatPanel extends SidePanel {
    */
   private _updateChatList = async (): Promise<void> => {
     try {
-      const chatNames = await this._getChatNames!();
-      this._chatNamesChanged.emit(chatNames);
+      const chatNames = await this._getChatNames?.();
+      this._chatNamesChanged.emit(chatNames ?? {});
     } catch (e) {
       console.error('Error getting chat files', e);
     }
