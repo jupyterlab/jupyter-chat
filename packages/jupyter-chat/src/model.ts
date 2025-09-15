@@ -274,6 +274,10 @@ export abstract class AbstractChatModel implements IChatModel {
     this._name = value;
   }
 
+  get disposed(): ISignal<AbstractChatModel, void> {
+    return this._disposed;
+  }
+
   /**
    * The chat messages list.
    */
@@ -509,6 +513,7 @@ export abstract class AbstractChatModel implements IChatModel {
       return;
     }
     this._isDisposed = true;
+    this._disposed.emit();
   }
 
   /**
@@ -704,6 +709,7 @@ export abstract class AbstractChatModel implements IChatModel {
   private _config: IConfig;
   private _readyDelegate = new PromiseDelegate<void>();
   private _inputModel: IInputModel;
+  private _disposed = new Signal<this, void>(this);
   private _isDisposed = false;
   private _commands?: CommandRegistry;
   private _activeCellManager: IActiveCellManager | null;

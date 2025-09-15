@@ -829,8 +829,6 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
       welcomeMessage
     });
     chatPanel.id = 'JupyterlabChat:sidepanel';
-    chatPanel.title.icon = chatIcon;
-    chatPanel.title.caption = 'Jupyter Chat'; // TODO: i18n/
 
     // Update available chats and section title when default directory changed.
     factory.widgetConfig.configChanged.connect((_, config) => {

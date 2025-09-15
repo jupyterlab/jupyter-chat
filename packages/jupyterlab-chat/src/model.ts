@@ -151,10 +151,6 @@ export class LabChatModel
     this._readOnly = value;
   }
 
-  get disposed(): ISignal<LabChatModel, void> {
-    return this._disposed;
-  }
-
   set id(value: string | undefined) {
     super.id = value;
     if (value) {
@@ -168,7 +164,6 @@ export class LabChatModel
     }
     super.dispose();
     this._sharedModel.dispose();
-    this._disposed.emit();
     Signal.clearData(this);
   }
 
@@ -489,7 +484,6 @@ export class LabChatModel
 
   private _dirty = false;
   private _readOnly = false;
-  private _disposed = new Signal<this, void>(this);
   private _contentChanged = new Signal<this, void>(this);
   private _stateChanged = new Signal<this, IChangedArgs<any>>(this);
   private _timeoutWriting: number | null = null;

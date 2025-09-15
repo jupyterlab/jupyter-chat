@@ -9,6 +9,7 @@
  */
 
 import {
+  chatIcon,
   ChatWidget,
   IAttachmentOpenerRegistry,
   IChatCommandRegistry,
@@ -45,8 +46,12 @@ const TOOLBAR_CLASS = 'jp-chat-section-toolbar';
  * Generic sidepanel widget including multiple chats and the add chat button.
  */
 export class MultiChatPanel extends SidePanel {
-  constructor(options: ChatPanel.IOptions) {
+  constructor(options: MultiChatPanel.IOptions) {
     super(options);
+    this.id = 'jupyter-chat::multi-chat-panel';
+    this.title.icon = chatIcon;
+    this.title.caption = 'Jupyter Chat'; // TODO: i18n/
+
     this.addClass(SIDEPANEL_CLASS);
 
     this._rmRegistry = options.rmRegistry;
@@ -61,7 +66,7 @@ export class MultiChatPanel extends SidePanel {
     this._getChatNames = options.getChatNames;
     this._openChat = options.openChat;
     this._openInMain = options.openInMain;
-    this._createChat = options.createChat ?? (() => {});
+    this._createChat = options.createChat;
     this._renameChat = options.renameChat;
 
     if (this._createChat) {
@@ -238,7 +243,7 @@ export class MultiChatPanel extends SidePanel {
   private _themeManager: IThemeManager | null;
   private _chatCommandRegistry?: IChatCommandRegistry;
   private _attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
-  private _inputToolbarFactory?: ChatPanel.IInputToolbarRegistryFactory;
+  private _inputToolbarFactory?: MultiChatPanel.IInputToolbarRegistryFactory;
   private _messageFooterRegistry?: IMessageFooterRegistry;
   private _welcomeMessage?: string;
   private _updateChatListDebouncer: Debouncer;
@@ -255,7 +260,7 @@ export class MultiChatPanel extends SidePanel {
 /**
  * The chat panel namespace.
  */
-export namespace ChatPanel {
+export namespace MultiChatPanel {
   /**
    * Options of the constructor of the chat panel.
    */
