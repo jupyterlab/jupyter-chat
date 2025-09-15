@@ -30,8 +30,8 @@ test.describe('#sidepanel', () => {
 
       const items = toolbar.locator('.jp-Toolbar-item');
       await expect(items).toHaveCount(2);
-      await expect(items.first()).toHaveClass(/.jp-lab-chat-add/);
-      await expect(items.last()).toHaveClass(/.jp-lab-chat-open/);
+      await expect(items.first()).toHaveClass(/.jp-chat-add/);
+      await expect(items.last()).toHaveClass(/.jp-chat-open/);
     });
 
     test('chat panel should not contain a chat at init', async ({ page }) => {
@@ -50,7 +50,7 @@ test.describe('#sidepanel', () => {
     test.beforeEach(async ({ page }) => {
       panel = await openSidePanel(page);
       addButton = panel.locator(
-        '.jp-SidePanel-toolbar .jp-Toolbar-item.jp-lab-chat-add'
+        '.jp-SidePanel-toolbar .jp-Toolbar-item.jp-chat-add'
       );
       await addButton.click();
 
@@ -167,17 +167,17 @@ test.describe('#sidepanel', () => {
     test('should list existing chat', async ({ page }) => {
       panel = await openSidePanel(page);
       select = panel.locator(
-        '.jp-SidePanel-toolbar .jp-Toolbar-item.jp-lab-chat-open select'
+        '.jp-SidePanel-toolbar .jp-Toolbar-item.jp-chat-open select'
       );
 
-      await expect(select.locator('option')).toHaveCount(2);
+      await expect(select.locator('option')).toHaveCount(2, { timeout: 10000 });
       await expect(select.locator('option').last()).toHaveText(name);
     });
 
     test('should attach a spinner while loading the chat', async ({ page }) => {
       panel = await openSidePanel(page);
       select = panel.locator(
-        '.jp-SidePanel-toolbar .jp-Toolbar-item.jp-lab-chat-open select'
+        '.jp-SidePanel-toolbar .jp-Toolbar-item.jp-chat-open select'
       );
       await select.selectOption(name);
       await expect(panel.locator('.jp-Spinner')).toBeAttached();
@@ -187,7 +187,7 @@ test.describe('#sidepanel', () => {
     test('should open an existing chat and close it', async ({ page }) => {
       panel = await openSidePanel(page);
       select = panel.locator(
-        '.jp-SidePanel-toolbar .jp-Toolbar-item.jp-lab-chat-open select'
+        '.jp-SidePanel-toolbar .jp-Toolbar-item.jp-chat-open select'
       );
 
       await select.selectOption(name);
@@ -207,7 +207,7 @@ test.describe('#sidepanel', () => {
     test('should list existing chat in default directory', async ({ page }) => {
       panel = await openSidePanel(page);
       select = panel.locator(
-        '.jp-SidePanel-toolbar .jp-Toolbar-item.jp-lab-chat-open select'
+        '.jp-SidePanel-toolbar .jp-Toolbar-item.jp-chat-open select'
       );
 
       // changing the default directory to an empty one should empty the list.
@@ -216,7 +216,6 @@ test.describe('#sidepanel', () => {
         'input[label="defaultDirectory"]'
       );
       await defaultDirectory.pressSequentially(NEW_DIR);
-
       // wait for the settings to be saved
       await expect(page.activity.getTabLocator('Settings')).toHaveAttribute(
         'class',
@@ -232,7 +231,7 @@ test.describe('#sidepanel', () => {
 
       // creating a chat should populate the list.
       const addButton = panel.locator(
-        '.jp-SidePanel-toolbar .jp-Toolbar-item.jp-lab-chat-add'
+        '.jp-SidePanel-toolbar .jp-Toolbar-item.jp-chat-add'
       );
       await addButton.click();
       const dialog = page.locator('.jp-Dialog');
@@ -288,7 +287,7 @@ test.describe('#sidepanel', () => {
       await button.click();
       await expect(chatPanel).not.toBeAttached();
 
-      const sidePanel = page.locator('.jp-SidePanel.jp-lab-chat-sidepanel');
+      const sidePanel = page.locator('.jp-SidePanel.jp-chat-sidepanel');
       await expect(sidePanel).toBeVisible();
       const chatTitle = sidePanel.locator(
         '.jp-SidePanel-content .jp-AccordionPanel-title'
@@ -307,7 +306,7 @@ test.describe('#sidepanel', () => {
       await button.click();
       await expect(chatPanel).not.toBeAttached();
 
-      const sidePanel = page.locator('.jp-SidePanel.jp-lab-chat-sidepanel');
+      const sidePanel = page.locator('.jp-SidePanel.jp-chat-sidepanel');
       await expect(sidePanel).toBeVisible();
       const chatTitle = sidePanel.locator(
         '.jp-SidePanel-content .jp-AccordionPanel-title'
@@ -339,7 +338,7 @@ test.describe('#sidepanel', () => {
       await expect(chatPanel).not.toBeAttached();
 
       // Move the chat to the side panel.
-      const sidePanel = page.locator('.jp-SidePanel.jp-lab-chat-sidepanel');
+      const sidePanel = page.locator('.jp-SidePanel.jp-chat-sidepanel');
       await expect(sidePanel).toBeVisible();
       const chatTitle = sidePanel.locator(
         '.jp-SidePanel-content .jp-AccordionPanel-title'

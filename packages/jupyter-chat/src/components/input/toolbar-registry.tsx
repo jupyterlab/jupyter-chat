@@ -2,11 +2,12 @@
  * Copyright (c) Jupyter Development Team.
  * Distributed under the terms of the Modified BSD License.
  */
+import { Token } from '@lumino/coreutils';
+import { ISignal, Signal } from '@lumino/signaling';
 import * as React from 'react';
 
 import { AttachButton, CancelButton, SendButton } from './buttons';
 import { IInputModel } from '../../input-model';
-import { ISignal, Signal } from '@lumino/signaling';
 import { IChatCommandRegistry } from '../../registers';
 
 /**
@@ -166,3 +167,22 @@ export namespace InputToolbarRegistry {
     return registry;
   }
 }
+
+/**
+ * A factory interface for creating a new Input Toolbar Registry
+ * for each Chat Panel.
+ */
+export interface IInputToolbarRegistryFactory {
+  /**
+   * Create a new input toolbar registry instance.
+   */
+  create: () => IInputToolbarRegistry;
+}
+
+/**
+ * The token of the factory to create an input toolbar registry.
+ */
+export const IInputToolbarRegistryFactory =
+  new Token<IInputToolbarRegistryFactory>(
+    '@jupyter/chat:IInputToolbarRegistryFactory'
+  );

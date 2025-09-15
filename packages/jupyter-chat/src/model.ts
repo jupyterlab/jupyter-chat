@@ -20,6 +20,7 @@ import {
   IUser
 } from './types';
 import { replaceMentionToSpan } from './utils';
+import { PromiseDelegate } from '@lumino/coreutils';
 
 /**
  * The chat model interface.
@@ -39,6 +40,11 @@ export interface IChatModel extends IDisposable {
    * The indexes list of the unread messages.
    */
   unreadMessages: number[];
+
+  /**
+   * The promise resolving when the model is ready.
+   */
+  readonly ready: Promise<void>;
 
   /**
    * The indexes list of the messages currently in the viewport.
@@ -226,7 +232,6 @@ export abstract class AbstractChatModel implements IChatModel {
     };
 
     this._inputModel = new InputModel({
-      chatContext: this.createChatContext(),
       activeCellManager: options.activeCellManager,
       selectionWatcher: options.selectionWatcher,
       documentManager: options.documentManager,
@@ -241,6 +246,12 @@ export abstract class AbstractChatModel implements IChatModel {
     this._activeCellManager = options.activeCellManager ?? null;
     this._selectionWatcher = options.selectionWatcher ?? null;
     this._documentManager = options.documentManager ?? null;
+
+    this._readyDelegate = new PromiseDelegate<void>();
+
+    this.ready.then(() => {
+      this._inputModel.chatContext = this.createChatContext();
+    });
   }
 
   /**
@@ -261,6 +272,10 @@ export abstract class AbstractChatModel implements IChatModel {
   }
   set name(value: string) {
     this._name = value;
+  }
+
+  get disposed(): ISignal<AbstractChatModel, void> {
+    return this._disposed;
   }
 
   /**
@@ -326,6 +341,20 @@ export abstract class AbstractChatModel implements IChatModel {
     );
     storage.lastRead = value;
     localStorage.setItem(`@jupyter/chat:${this._id}`, JSON.stringify(storage));
+  }
+
+  /**
+   * Promise that resolves when the model is ready.
+   */
+  get ready(): Promise<void> {
+    return this._readyDelegate.promise;
+  }
+
+  /**
+   * Set the model as ready.
+   */
+  protected setReady(): void {
+    this._readyDelegate.resolve();
   }
 
   /**
@@ -484,6 +513,7 @@ export abstract class AbstractChatModel implements IChatModel {
       return;
     }
     this._isDisposed = true;
+    this._disposed.emit();
   }
 
   /**
@@ -677,7 +707,9 @@ export abstract class AbstractChatModel implements IChatModel {
   private _id: string | undefined;
   private _name: string = '';
   private _config: IConfig;
+  private _readyDelegate = new PromiseDelegate<void>();
   private _inputModel: IInputModel;
+  private _disposed = new Signal<this, void>(this);
   private _isDisposed = false;
   private _commands?: CommandRegistry;
   private _activeCellManager: IActiveCellManager | null;

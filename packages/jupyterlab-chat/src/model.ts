@@ -17,7 +17,7 @@ import {
 import { IChangedArgs } from '@jupyterlab/coreutils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { User } from '@jupyterlab/services';
-import { PartialJSONObject, PromiseDelegate, UUID } from '@lumino/coreutils';
+import { PartialJSONObject, UUID } from '@lumino/coreutils';
 import { ISignal, Signal } from '@lumino/signaling';
 
 import { IWidgetConfig } from './token';
@@ -137,10 +137,6 @@ export class LabChatModel
     return this._stateChanged;
   }
 
-  get ready(): Promise<void> {
-    return this._ready.promise;
-  }
-
   get dirty(): boolean {
     return this._dirty;
   }
@@ -155,14 +151,10 @@ export class LabChatModel
     this._readOnly = value;
   }
 
-  get disposed(): ISignal<LabChatModel, void> {
-    return this._disposed;
-  }
-
   set id(value: string | undefined) {
     super.id = value;
     if (value) {
-      this._ready.resolve();
+      this.setReady();
     }
   }
 
@@ -172,7 +164,6 @@ export class LabChatModel
     }
     super.dispose();
     this._sharedModel.dispose();
-    this._disposed.emit();
     Signal.clearData(this);
   }
 
@@ -202,7 +193,7 @@ export class LabChatModel
   ): Promise<void> {
     // Ensure the chat has an ID before inserting the messages, to properly catch the
     // unread messages (the last read message is saved using the chat ID).
-    return this._ready.promise.then(() => {
+    return this.ready.then(() => {
       super.messagesInserted(index, messages);
     });
   }
@@ -489,12 +480,10 @@ export class LabChatModel
   readonly defaultKernelName: string = '';
   readonly defaultKernelLanguage: string = '';
 
-  private _ready = new PromiseDelegate<void>();
   private _sharedModel: YChat;
 
   private _dirty = false;
   private _readOnly = false;
-  private _disposed = new Signal<this, void>(this);
   private _contentChanged = new Signal<this, void>(this);
   private _stateChanged = new Signal<this, IChangedArgs<any>>(this);
   private _timeoutWriting: number | null = null;

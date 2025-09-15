@@ -4,16 +4,18 @@
  */
 
 import {
+  AbstractChatContext,
+  AbstractChatModel,
   ActiveCellManager,
   AttachmentOpenerRegistry,
-  buildChatSidebar,
-  AbstractChatModel,
   IAttachment,
   IChatMessage,
-  INewMessage,
-  SelectionWatcher,
   IChatContext,
-  AbstractChatContext
+  IConfig,
+  INewMessage,
+  MultiChatPanel,
+  SelectionWatcher,
+  IChatModel
 } from '@jupyter/chat';
 import {
   JupyterFrontEnd,
@@ -48,6 +50,11 @@ class ChatContext extends AbstractChatContext {
 }
 
 class MyChatModel extends AbstractChatModel {
+  constructor(options: IChatModel.IOptions) {
+    super(options);
+    this.setReady();
+  }
+
   sendMessage(
     newMessage: INewMessage
   ): Promise<boolean | void> | boolean | void {
@@ -104,23 +111,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
       shell: app.shell
     });
 
-    const model = new MyChatModel({
-      activeCellManager,
-      selectionWatcher,
-      documentManager: filebrowser?.model.manager
-    });
-
-    // Update the settings when they change.
-    function loadSetting(setting: ISettingRegistry.ISettings): void {
-      model.config = {
-        sendWithShiftEnter: setting.get('sendWithShiftEnter')
-          .composite as boolean,
-        stackMessages: setting.get('stackMessages').composite as boolean,
-        unreadNotifications: setting.get('unreadNotifications')
-          .composite as boolean,
-        enableCodeToolbar: setting.get('enableCodeToolbar').composite as boolean
-      };
-    }
+    let config: IConfig = {};
 
     // Init the settings.
     if (settingRegistry) {
@@ -130,6 +121,21 @@ const plugin: JupyterFrontEndPlugin<void> = {
         settingRegistry.load('jupyter-chat-example:plugin')
       ])
         .then(([, setting]) => {
+          function loadSetting(setting: ISettingRegistry.ISettings) {
+            config = {
+              sendWithShiftEnter: setting.get('sendWithShiftEnter')
+                .composite as boolean,
+              stackMessages: setting.get('stackMessages').composite as boolean,
+              unreadNotifications: setting.get('unreadNotifications')
+                .composite as boolean,
+              enableCodeToolbar: setting.get('enableCodeToolbar')
+                .composite as boolean
+            };
+
+            panel.sections.forEach(section => {
+              section.model.config = config;
+            });
+          }
           // Read the settings
           loadSetting(setting);
 
@@ -149,12 +155,26 @@ const plugin: JupyterFrontEndPlugin<void> = {
       app.commands.execute('docmanager:open', { path: attachment.value });
     });
 
-    const panel = buildChatSidebar({
-      model,
+    app.commands.addCommand('chat-example:openChat', {
+      execute: async () => {
+        const model = new MyChatModel({
+          activeCellManager,
+          selectionWatcher,
+          documentManager: filebrowser?.model.manager,
+          config
+        });
+        model.name = UUID.uuid4();
+        panel.addChat(model);
+      }
+    });
+
+    const panel = new MultiChatPanel({
       rmRegistry,
       themeManager,
       attachmentOpenerRegistry,
-      welcomeMessage
+      welcomeMessage,
+      createChat: () => app.commands.execute('chat-example:openChat'),
+      renameChat: async (oldName: string, newName: string) => true
     });
     app.shell.add(panel, 'left');
   }

@@ -40,10 +40,10 @@ test.describe('#NotebookApp', () => {
     await page.menu.clickMenuItem('View>Left Sidebar>Show Jupyter Chat');
     const panel = page.locator('#jp-left-stack');
     await expect(panel).toBeVisible();
-    await expect(panel.locator('.jp-lab-chat-sidepanel')).toBeVisible();
+    await expect(panel.locator('.jp-chat-sidepanel')).toBeVisible();
 
     const select = panel.locator(
-      '.jp-SidePanel-toolbar .jp-Toolbar-item.jp-lab-chat-open select'
+      '.jp-SidePanel-toolbar .jp-Toolbar-item.jp-chat-open select'
     );
 
     await expect(select.locator('option')).toHaveCount(2);

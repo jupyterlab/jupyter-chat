@@ -126,6 +126,9 @@ class MentionCommandProvider implements IChatCommandProvider {
    */
   _getUsers(inputModel: IInputModel): Map<string, Private.CommandUser> {
     const users = new Map();
+    if (!inputModel.chatContext) {
+      return users;
+    }
     // chatContext should be of type `LabChatContext`, so `users` should be of
     // type `LabChatUser[]`, where `mention_name` is always defined.
     const { user: currentUser, users: userList } = inputModel.chatContext;
