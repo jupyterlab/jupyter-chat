@@ -16,9 +16,9 @@ import { IAttachment, INotebookAttachment, IUser } from './types';
  */
 export interface IInputModel extends IDisposable {
   /**
-   * The chat context (a readonly subset of the chat model).
+   * The chat context (a subset of the chat model).
    */
-  readonly chatContext: IChatContext;
+  chatContext?: IChatContext;
 
   /**
    * Function to send a message.
@@ -175,8 +175,12 @@ export class InputModel implements IInputModel {
   /**
    * The chat context (a readonly subset of the chat model);
    */
-  get chatContext(): IChatContext {
+  get chatContext(): IChatContext | undefined {
     return this._chatContext;
+  }
+
+  set chatContext(value: IChatContext | undefined) {
+    this._chatContext = value;
   }
 
   /**
@@ -468,7 +472,7 @@ export class InputModel implements IInputModel {
   }
 
   private _onSend: (input: string, model?: InputModel) => void;
-  private _chatContext: IChatContext;
+  private _chatContext?: IChatContext;
   private _value: string;
   private _cursorIndex: number | null = null;
   private _currentWord: string | null = null;
@@ -491,9 +495,9 @@ export class InputModel implements IInputModel {
 export namespace InputModel {
   export interface IOptions {
     /**
-     * The chat context (a readonly subset of the chat model).
+     * The chat context (a subset of the chat model).
      */
-    chatContext: IChatContext;
+    chatContext?: IChatContext;
 
     /**
      * The function that should send the message.

@@ -232,7 +232,6 @@ export abstract class AbstractChatModel implements IChatModel {
     };
 
     this._inputModel = new InputModel({
-      chatContext: this.createChatContext(),
       activeCellManager: options.activeCellManager,
       selectionWatcher: options.selectionWatcher,
       documentManager: options.documentManager,
@@ -249,6 +248,10 @@ export abstract class AbstractChatModel implements IChatModel {
     this._documentManager = options.documentManager ?? null;
 
     this._readyDelegate = new PromiseDelegate<void>();
+
+    this.ready.then(() => {
+      this._inputModel.chatContext = this.createChatContext();
+    });
   }
 
   /**
