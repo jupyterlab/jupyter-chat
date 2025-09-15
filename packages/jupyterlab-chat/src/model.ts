@@ -158,7 +158,7 @@ export class LabChatModel
   set id(value: string | undefined) {
     super.id = value;
     if (value) {
-      this.markReady();
+      this.setReady();
     }
   }
 

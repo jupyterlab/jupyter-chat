@@ -344,9 +344,9 @@ export abstract class AbstractChatModel implements IChatModel {
   }
 
   /**
-   * Mark the model as ready.
+   * Set the model as ready.
    */
-  protected markReady(): void {
+  protected setReady(): void {
     this._readyDelegate.resolve();
   }
 

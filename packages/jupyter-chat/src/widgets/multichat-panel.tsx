@@ -64,25 +64,29 @@ export class MultiChatPanel extends SidePanel {
     this._createChat = options.createChat ?? (() => {});
     this._renameChat = options.renameChat;
 
-    // Add chat button calls the createChat callback
-    const addChat = new ToolbarButton({
-      onClick: () => this._createChat(),
-      icon: addIcon,
-      label: 'Chat',
-      tooltip: 'Add a new chat'
-    });
-    addChat.addClass(ADD_BUTTON_CLASS);
-    this.toolbar.addItem('createChat', addChat);
+    if (this._createChat) {
+      // Add chat button calls the createChat callback
+      const addChat = new ToolbarButton({
+        onClick: () => this._createChat?.(),
+        icon: addIcon,
+        label: 'Chat',
+        tooltip: 'Add a new chat'
+      });
+      addChat.addClass(ADD_BUTTON_CLASS);
+      this.toolbar.addItem('createChat', addChat);
+    }
 
-    // Chat select dropdown
-    this._openChatWidget = ReactWidget.create(
-      <ChatSelect
-        chatNamesChanged={this._chatNamesChanged}
-        handleChange={this._chatSelected.bind(this)}
-      />
-    );
-    this._openChatWidget.addClass(OPEN_SELECT_CLASS);
-    this.toolbar.addItem('openChat', this._openChatWidget);
+    if (this._getChatNames && this._openChat) {
+      // Chat select dropdown
+      this._openChatWidget = ReactWidget.create(
+        <ChatSelect
+          chatNamesChanged={this._chatNamesChanged}
+          handleChange={this._chatSelected.bind(this)}
+        />
+      );
+      this._openChatWidget.addClass(OPEN_SELECT_CLASS);
+      this.toolbar.addItem('openChat', this._openChatWidget);
+    }
 
     const content = this.content as AccordionPanel;
     content.expansionToggled.connect(this._onExpansionToggled, this);
@@ -153,7 +157,7 @@ export class MultiChatPanel extends SidePanel {
    */
   private _updateChatList = async (): Promise<void> => {
     try {
-      const chatNames = await this._getChatNames();
+      const chatNames = await this._getChatNames!();
       this._chatNamesChanged.emit(chatNames);
     } catch (e) {
       console.error('Error getting chat files', e);
@@ -178,7 +182,7 @@ export class MultiChatPanel extends SidePanel {
    * A message handler invoked on an `'after-attach'` message.
    */
   protected onAfterAttach(): void {
-    this._openChatWidget.renderPromise?.then(() => this.updateChatList());
+    this._openChatWidget?.renderPromise?.then(() => this.updateChatList());
   }
 
   /**
@@ -207,7 +211,7 @@ export class MultiChatPanel extends SidePanel {
     if (selection === '-') {
       return;
     }
-    this._openChat(selection);
+    this._openChat?.(selection);
     event.target.selectedIndex = 0;
   }
 
@@ -239,13 +243,13 @@ export class MultiChatPanel extends SidePanel {
   private _welcomeMessage?: string;
   private _updateChatListDebouncer: Debouncer;
 
-  private _getChatNames: () => Promise<{ [name: string]: string }>;
-  private _createChat: () => void;
-  private _openChat: (name: string) => void;
+  private _getChatNames?: () => Promise<{ [name: string]: string }>;
+  private _createChat?: () => void;
+  private _openChat?: (name: string) => void;
   private _openInMain?: (name: string) => void;
   private _renameChat?: (oldName: string, newName: string) => Promise<boolean>;
 
-  private _openChatWidget: ReactWidget;
+  private _openChatWidget?: ReactWidget;
 }
 
 /**
@@ -258,11 +262,10 @@ export namespace ChatPanel {
   export interface IOptions extends SidePanel.IOptions {
     rmRegistry: IRenderMimeRegistry;
     themeManager: IThemeManager | null;
-    getChatNames: () => Promise<{ [name: string]: string }>;
 
-    // Callback functions instead of command strings
-    openChat: (name: string) => void;
-    createChat: () => void;
+    getChatNames?: () => Promise<{ [name: string]: string }>;
+    openChat?: (name: string) => void;
+    createChat?: () => void;
     openInMain?: (name: string) => void;
     renameChat?: (oldName: string, newName: string) => Promise<boolean>;
 
