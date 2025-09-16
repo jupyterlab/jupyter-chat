@@ -58,7 +58,6 @@ import {
   IChatPanel,
   ISelectionWatcherToken,
   IWelcomeMessage,
-  LabChatModel,
   LabChatModelFactory,
   LabChatPanel,
   WidgetConfig,
@@ -81,6 +80,58 @@ const pluginIds = {
   inputToolbarFactory: 'jupyterlab-chat-extension:inputToolbarFactory',
   selectionWatcher: 'jupyterlab-chat-extension:selectionWatcher'
 };
+
+/**
+ * A function that create a LabChatModel model.
+ *
+ * @param app - the frontend application.
+ * @param contentProvider - the collaborative content provider.
+ * @param path - the path of the chat file (optional).
+ *   If not provided, a new file will be created.
+ * @param defaultDirectory - the default directory where to create chats.
+ * @returns
+ */
+async function createChatModel(
+  app: JupyterFrontEnd,
+  contentProvider: ICollaborativeContentProvider,
+  path?: string,
+  defaultDirectory?: string
+): Promise<MultiChatPanel.IAddChatArgs> {
+  const modelFactory = app.docRegistry.getModelFactory(
+    'Chat'
+  ) as LabChatModelFactory;
+
+  if (!path) {
+    path = (await app.commands.execute(CommandIDs.createChat, {
+      inSidePanel: true
+    })) as string | undefined;
+
+    if (!path) {
+      return {};
+    }
+  }
+
+  const model = await app.serviceManager.contents.get(path);
+  // Create a share model from the chat file
+  const sharedModel = contentProvider.sharedModelFactory.createNew({
+    path: model.path,
+    format: model.format,
+    contentType: chatFileType.contentType,
+    collaborative: true
+  }) as YChat;
+
+  const chatModel = modelFactory.createNew({
+    sharedModel
+  });
+
+  // Set the name of the model.
+  chatModel.name = model.path;
+
+  return {
+    model: chatModel,
+    displayName: getDisplayName(model.path, defaultDirectory)
+  };
+}
 
 /**
  * Extension providing the attachment opener registry.
@@ -367,24 +418,15 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
   description: 'The commands to create or open a chat.',
   autoStart: true,
   requires: [ICollaborativeContentProvider, IChatFactory],
-  optional: [
-    IActiveCellManagerToken,
-    IChatPanel,
-    ICommandPalette,
-    IDefaultFileBrowser,
-    ILauncher,
-    ISelectionWatcherToken
-  ],
+  optional: [IChatPanel, ICommandPalette, IDefaultFileBrowser, ILauncher],
   activate: (
     app: JupyterFrontEnd,
     drive: ICollaborativeContentProvider,
     factory: IChatFactory,
-    activeCellManager: IActiveCellManager | null,
     chatPanel: MultiChatPanel | null,
     commandPalette: ICommandPalette | null,
     filebrowser: IDefaultFileBrowser | null,
-    launcher: ILauncher | null,
-    selectionWatcher: ISelectionWatcher | null
+    launcher: ILauncher | null
   ) => {
     const { commands } = app;
     const { tracker, widgetConfig } = factory;
@@ -403,9 +445,10 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
       label: args => (args.isPalette ? 'Create a new chat' : 'Chat'),
       caption: 'Create a chat',
       icon: args => (args.isPalette ? undefined : chatIcon),
-      execute: async args => {
+      execute: async (args): Promise<string | undefined> => {
         const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
         const targetDirectory: string | undefined = args.path as string;
+
         let name: string | null = (args.name as string) ?? null;
         let filepath = '';
         if (!name) {
@@ -478,10 +521,22 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
               'Error creating a chat',
               'An error occurred while creating the chat'
             );
-            return '';
+            return;
           }
           filepath = model.path;
         }
+
+        return filepath;
+      }
+    });
+
+    commands.addCommand(CommandIDs.createAndOpen, {
+      label: args => (args.isPalette ? 'Create a new chat' : 'Chat'),
+      caption: 'Create a chat',
+      icon: args => (args.isPalette ? undefined : chatIcon),
+      execute: async args => {
+        const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
+        const filepath = await commands.execute(CommandIDs.createChat, args);
 
         if (commands.hasCommand(CommandIDs.openChat)) {
           return commands.execute(CommandIDs.openChat, {
@@ -497,23 +552,6 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         }
       }
     });
-
-    // Add the command to the palette
-    if (commandPalette) {
-      commandPalette.addItem({
-        category: 'Chat',
-        command: CommandIDs.createChat,
-        args: { isPalette: true }
-      });
-    }
-
-    // Add the create command to the launcher
-    if (launcher) {
-      launcher.add({
-        command: CommandIDs.createChat,
-        category: 'Other'
-      });
-    }
 
     // The command to mark the chat as read.
     commands.addCommand(CommandIDs.markAsRead, {
@@ -547,7 +585,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
 
     app.serviceManager.ready
       .then(() => {
-        const user = app.serviceManager.user.identity;
+        // const user = app.serviceManager.user.identity;
         /*
          * Command to open a chat.
          *
@@ -621,38 +659,13 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
                 return;
               }
 
-              const model = await app.serviceManager.contents.get(filepath);
-
-              // Create a share model from the chat file
-              const sharedModel = drive.sharedModelFactory.createNew({
-                path: model.path,
-                format: model.format,
-                contentType: chatFileType.contentType,
-                collaborative: true
-              }) as YChat;
-
-              // Initialize the chat model with the share model
-              const chatModel = new LabChatModel({
-                user,
-                sharedModel,
-                widgetConfig,
-                commands,
-                activeCellManager,
-                selectionWatcher,
-                documentManager: filebrowser?.model.manager
-              });
-
-              // Set the name of the model.
-              chatModel.name = model.path;
-
-              const displayName = getDisplayName(
-                model.path,
-                widgetConfig.config.defaultDirectory
-              );
+              const addChatArgs = await createChatModel(app, drive, filepath);
 
               // Add a chat widget to the side panel and to the tracker.
-              const widget = chatPanel.addChat(chatModel, displayName);
-              factory.tracker.add(widget);
+              const widget = chatPanel.addChat(addChatArgs);
+              if (widget) {
+                factory.tracker.add(widget);
+              }
             } else {
               // The chat is opened in the main area
               // TODO: support JCollab v3 by optionally prefixing 'RTC:'
@@ -720,14 +733,6 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
       }
     });
 
-    // Optional: add to palette
-    if (commandPalette) {
-      commandPalette.addItem({
-        category: 'Chat',
-        command: CommandIDs.renameChat
-      });
-    }
-
     // The command to focus the input of the current chat widget.
     commands.addCommand(CommandIDs.focusInput, {
       caption: 'Focus the input of the current chat widget',
@@ -747,6 +752,27 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         }
       }
     });
+
+    // Add the command to the palette
+    if (commandPalette) {
+      commandPalette.addItem({
+        category: 'Chat',
+        command: CommandIDs.createAndOpen,
+        args: { isPalette: true }
+      });
+      commandPalette.addItem({
+        category: 'Chat',
+        command: CommandIDs.renameChat
+      });
+    }
+
+    // Add the create command to the launcher
+    if (launcher) {
+      launcher.add({
+        command: CommandIDs.createAndOpen,
+        category: 'Other'
+      });
+    }
   }
 };
 
@@ -804,14 +830,13 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
       rmRegistry,
       themeManager,
       getChatNames,
-      createChat: () => {
-        commands.execute(CommandIDs.createChat, { inSidePanel: true });
-      },
-      openChat: path => {
-        commands.execute(CommandIDs.openChat, {
-          filepath: path,
-          inSidePanel: true
-        });
+      createModel: async (path?: string) => {
+        return createChatModel(
+          app,
+          drive,
+          path,
+          factory.widgetConfig.config.defaultDirectory
+        );
       },
       openInMain: path => {
         commands.execute(CommandIDs.openChat, { filepath: path });
