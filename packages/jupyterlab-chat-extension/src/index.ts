@@ -585,7 +585,6 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
 
     app.serviceManager.ready
       .then(() => {
-        // const user = app.serviceManager.user.identity;
         /*
          * Command to open a chat.
          *
