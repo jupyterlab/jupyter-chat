@@ -112,6 +112,13 @@ export class MultiChatPanel extends SidePanel {
   }
 
   /**
+   * A signal emitting when a section is added to the panel.
+   */
+  get sectionAdded(): ISignal<MultiChatPanel, ChatSection> {
+    return this._sectionAdded;
+  }
+
+  /**
    * Add a new widget to the chat panel.
    *
    * @param model - the model of the chat widget
@@ -157,6 +164,7 @@ export class MultiChatPanel extends SidePanel {
     this.addWidget(section);
     content.expand(this.widgets.length - 1);
 
+    this._sectionAdded.emit(section);
     return widget;
   }
 
@@ -253,7 +261,7 @@ export class MultiChatPanel extends SidePanel {
   private _chatNamesChanged = new Signal<this, { [name: string]: string }>(
     this
   );
-
+  private _sectionAdded = new Signal<MultiChatPanel, ChatSection>(this);
   private _rmRegistry: IRenderMimeRegistry;
   private _themeManager?: IThemeManager | null;
   private _chatCommandRegistry?: IChatCommandRegistry;
@@ -340,7 +348,8 @@ export class ChatSection extends PanelWithToolbar {
    */
   constructor(options: ChatSection.IOptions) {
     super(options);
-    this.addWidget(options.widget);
+    this._chatWidget = options.widget;
+    this.addWidget(this._chatWidget);
     this.addWidget(this._spinner);
     this.addClass(SECTION_CLASS);
     this.toolbar.addClass(TOOLBAR_CLASS);
@@ -440,10 +449,17 @@ export class ChatSection extends PanelWithToolbar {
   }
 
   /**
+   * The chat widget of the section.
+   */
+  get widget(): ChatWidget {
+    return this._chatWidget;
+  }
+
+  /**
    * The model of the widget.
    */
   get model(): IChatModel {
-    return (this.widgets[0] as ChatWidget).model;
+    return this._chatWidget.model;
   }
 
   /**
@@ -478,6 +494,7 @@ export class ChatSection extends PanelWithToolbar {
     this._markAsRead.enabled = unread.length > 0;
   };
 
+  private _chatWidget: ChatWidget;
   private _markAsRead: ToolbarButton;
   private _spinner = new Spinner();
   private _displayName: string;

@@ -661,11 +661,8 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
 
               const addChatArgs = await createChatModel(app, drive, filepath);
 
-              // Add a chat widget to the side panel and to the tracker.
-              const widget = chatPanel.addChat(addChatArgs);
-              if (widget) {
-                factory.tracker.add(widget);
-              }
+              // Add a chat widget to the side panel.
+              chatPanel.addChat(addChatArgs);
             } else {
               // The chat is opened in the main area
               // TODO: support JCollab v3 by optionally prefixing 'RTC:'
@@ -903,6 +900,11 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     if (restorer) {
       restorer.add(chatPanel, 'jupyter-chat');
     }
+
+    // Add the new opened chat in the tracker.
+    chatPanel.sectionAdded.connect((_, section) => {
+      factory.tracker.add(section.widget);
+    });
 
     /*
      * Command to move a chat from the main area to the side panel.
