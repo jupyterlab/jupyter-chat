@@ -131,6 +131,10 @@ export class MultiChatPanel extends SidePanel {
       return;
     }
 
+    if (this.openIfExists(model.name)) {
+      return;
+    }
+
     const content = this.content as AccordionPanel;
     for (let i = 0; i < this.widgets.length; i++) {
       content.collapse(i);
@@ -190,7 +194,7 @@ export class MultiChatPanel extends SidePanel {
   /**
    * Open a chat if it exists in the side panel.
    *
-   * @param path - the path of the chat.
+   * @param name - the name of the chat.
    * @returns a boolean, whether the chat existed in the side panel or not.
    */
   openIfExists(name: string): boolean {
@@ -214,7 +218,7 @@ export class MultiChatPanel extends SidePanel {
    * @param name - the chat name.
    */
   private _getChatIndex(name: string) {
-    return this.widgets.findIndex(w => (w as ChatSection).model?.name === name);
+    return this.sections.findIndex(section => section.model?.name === name);
   }
 
   /**

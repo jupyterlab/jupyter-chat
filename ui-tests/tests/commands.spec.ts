@@ -45,7 +45,7 @@ test.describe('#commandPalette', () => {
   }) => {
     await page
       .locator(
-        '#modal-command-palette li[data-command="jupyterlab-chat:create"]'
+        '#modal-command-palette li[data-command="jupyterlab-chat:createAndOpen"]'
       )
       .click();
     await fillModal(page, name);
@@ -61,7 +61,7 @@ test.describe('#commandPalette', () => {
   }) => {
     await page
       .locator(
-        '#modal-command-palette li[data-command="jupyterlab-chat:create"]'
+        '#modal-command-palette li[data-command="jupyterlab-chat:createAndOpen"]'
       )
       .click();
     await fillModal(page);
@@ -74,7 +74,7 @@ test.describe('#commandPalette', () => {
   test('should not create a chat if modal is cancelled', async ({ page }) => {
     await page
       .locator(
-        '#modal-command-palette li[data-command="jupyterlab-chat:create"]'
+        '#modal-command-palette li[data-command="jupyterlab-chat:createAndOpen"]'
       )
       .click();
     await fillModal(page, '', 'Cancel');
