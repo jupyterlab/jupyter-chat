@@ -532,7 +532,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
 
     commands.addCommand(CommandIDs.createAndOpen, {
       label: args => (args.isPalette ? 'Create a new chat' : 'Chat'),
-      caption: 'Create a chat',
+      caption: 'Create a chat and open it',
       icon: args => (args.isPalette ? undefined : chatIcon),
       execute: async args => {
         const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
