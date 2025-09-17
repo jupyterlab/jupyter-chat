@@ -74,7 +74,12 @@
   margin-top: 0;
 }
 
-.jp-chat-writers {
+.jp-chat-writer {
+  display: flex;
+  flex-direction: column;
+}
+
+.jp-chat-writers-row {
   display: flex;
   flex-wrap: wrap;
   position: sticky;
@@ -160,7 +165,7 @@
   }
 }
 
-.jp-chat-writers > div {
+.jp-chat-writers-row > div {
   display: flex;
   align-items: center;
   gap: 0.2em;
