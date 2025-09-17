@@ -155,25 +155,25 @@ const plugin: JupyterFrontEndPlugin<void> = {
       app.commands.execute('docmanager:open', { path: attachment.value });
     });
 
-    app.commands.addCommand('chat-example:openChat', {
-      execute: async () => {
-        const model = new MyChatModel({
-          activeCellManager,
-          selectionWatcher,
-          documentManager: filebrowser?.model.manager,
-          config
-        });
-        model.name = UUID.uuid4();
-        panel.addChat(model);
-      }
-    });
+    const createModel = async (): Promise<MultiChatPanel.IAddChatArgs> => {
+      const model = new MyChatModel({
+        activeCellManager,
+        selectionWatcher,
+        documentManager: filebrowser?.model.manager,
+        config
+      });
+      model.name = UUID.uuid4();
+      return { model };
+    };
 
     const panel = new MultiChatPanel({
       rmRegistry,
       themeManager,
       attachmentOpenerRegistry,
       welcomeMessage,
-      createChat: () => app.commands.execute('chat-example:openChat'),
+      createModel: createModel,
+      // No op, since the chat are transient, but it need to be provided to have the
+      // button in the toolbar.
       renameChat: async (oldName: string, newName: string) => true
     });
     app.shell.add(panel, 'left');

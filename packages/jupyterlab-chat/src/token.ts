@@ -95,6 +95,10 @@ export const CommandIDs = {
    */
   openChat: 'jupyterlab-chat:open',
   /**
+   * Create and open.
+   */
+  createAndOpen: 'jupyterlab-chat:createAndOpen',
+  /**
    * Move a main widget to the side panel.
    */
   moveToSide: 'jupyterlab-chat:moveToSide',
