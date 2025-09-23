@@ -7,10 +7,10 @@ import {
   Autocomplete,
   AutocompleteInputChangeReason,
   Box,
-  InputAdornment,
   SxProps,
   TextField,
-  Theme
+  Theme,
+  Toolbar
 } from '@mui/material';
 import clsx from 'clsx';
 import React, { useEffect, useRef, useState } from 'react';
@@ -26,6 +26,8 @@ import { IChatCommandRegistry } from '../../registers';
 import { IAttachment } from '../../types';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
+const INPUT_TEXTFIELD_CLASS = 'jp-chat-input-textfield';
+const INPUT_COMPONENT_CLASS = 'jp-chat-input-component';
 const INPUT_TOOLBAR_CLASS = 'jp-chat-input-toolbar';
 
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
@@ -206,7 +208,8 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
           <TextField
             {...params}
             fullWidth
-            variant="outlined"
+            variant="filled"
+            className={INPUT_TEXTFIELD_CLASS}
             multiline
             onKeyDown={handleKeyDown}
             placeholder="Start chatting"
@@ -217,21 +220,9 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
             }
             InputProps={{
               ...params.InputProps,
-              endAdornment: (
-                <InputAdornment position="end" className={INPUT_TOOLBAR_CLASS}>
-                  {toolbarElements.map(item => (
-                    <item.element
-                      model={model}
-                      chatCommandRegistry={props.chatCommandRegistry}
-                    />
-                  ))}
-                </InputAdornment>
-              )
+              className: INPUT_COMPONENT_CLASS
             }}
-            FormHelperTextProps={{
-              sx: { marginLeft: 'auto', marginRight: 0 }
-            }}
-            helperText={input.length > 2 ? helperText : ' '}
+            label={input.length > 2 ? helperText : ' '}
           />
         )}
         inputValue={input}
@@ -248,6 +239,14 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
           }
         }}
       />
+      <Toolbar className={INPUT_TOOLBAR_CLASS}>
+        {toolbarElements.map(item => (
+          <item.element
+            model={model}
+            chatCommandRegistry={props.chatCommandRegistry}
+          />
+        ))}
+      </Toolbar>
     </Box>
   );
 }
