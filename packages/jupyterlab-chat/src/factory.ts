@@ -4,20 +4,14 @@
  */
 
 import {
-  ChatArea,
+  Chat,
   ChatWidget,
   IActiveCellManager,
-  IAttachmentOpenerRegistry,
-  IChatCommandRegistry,
-  IInputToolbarRegistry,
-  IMessageFooterRegistry,
   ISelectionWatcher,
   IInputToolbarRegistryFactory
 } from '@jupyter/chat';
-import { IThemeManager } from '@jupyterlab/apputils';
 import { IDocumentManager } from '@jupyterlab/docmanager';
 import { ABCWidgetFactory, DocumentRegistry } from '@jupyterlab/docregistry';
-import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { Contents, User } from '@jupyterlab/services';
 import { CommandRegistry } from '@lumino/commands';
 import { ISignal, Signal } from '@lumino/signaling';
@@ -78,13 +72,8 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
    */
   constructor(options: ChatWidgetFactory.IOptions<LabChatPanel>) {
     super(options);
-    this._themeManager = options.themeManager;
-    this._rmRegistry = options.rmRegistry;
-    this._chatCommandRegistry = options.chatCommandRegistry;
-    this._attachmentOpenerRegistry = options.attachmentOpenerRegistry;
+    this._chatOptions = options;
     this._inputToolbarFactory = options.inputToolbarFactory;
-    this._messageFooterRegistry = options.messageFooterRegistry;
-    this._welcomeMessage = options.welcomeMessage;
   }
 
   /**
@@ -94,13 +83,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
    * @returns The widget
    */
   protected createNewWidget(context: ChatWidgetFactory.IContext): LabChatPanel {
-    context.rmRegistry = this._rmRegistry;
-    context.themeManager = this._themeManager;
-    context.chatCommandRegistry = this._chatCommandRegistry;
-    context.attachmentOpenerRegistry = this._attachmentOpenerRegistry;
-    context.messageFooterRegistry = this._messageFooterRegistry;
-    context.welcomeMessage = this._welcomeMessage;
-    context.area = 'main';
+    context = { ...context, area: 'main', ...this._chatOptions };
     if (this._inputToolbarFactory) {
       context.inputToolbarRegistry = this._inputToolbarFactory.create();
     }
@@ -120,37 +103,19 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
   }
   // Must override both getter and setter from ABCFactory for type compatibility.
   set contentProviderId(_value: string | undefined) {}
-  private _themeManager: IThemeManager | null;
-  private _rmRegistry: IRenderMimeRegistry;
-  private _chatCommandRegistry?: IChatCommandRegistry;
-  private _attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
+  private _chatOptions: Omit<Chat.IOptions, 'model'>;
   private _inputToolbarFactory?: IInputToolbarRegistryFactory;
-  private _messageFooterRegistry?: IMessageFooterRegistry;
-  private _welcomeMessage?: string;
 }
 
 export namespace ChatWidgetFactory {
-  export interface IContext extends DocumentRegistry.IContext<LabChatModel> {
-    themeManager: IThemeManager | null;
-    rmRegistry: IRenderMimeRegistry;
-    documentManager?: IDocumentManager;
-    chatCommandRegistry?: IChatCommandRegistry;
-    attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
-    inputToolbarRegistry?: IInputToolbarRegistry;
-    messageFooterRegistry?: IMessageFooterRegistry;
-    welcomeMessage?: string;
-    area?: ChatArea;
-  }
+  export interface IContext
+    extends DocumentRegistry.IContext<LabChatModel>,
+      Omit<Chat.IOptions, 'model'> {}
 
   export interface IOptions<T extends LabChatPanel>
-    extends DocumentRegistry.IWidgetFactoryOptions<T> {
-    themeManager: IThemeManager | null;
-    rmRegistry: IRenderMimeRegistry;
-    chatCommandRegistry?: IChatCommandRegistry;
-    attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
-    inputToolbarFactory?: IInputToolbarRegistryFactory;
-    messageFooterRegistry?: IMessageFooterRegistry;
-    welcomeMessage?: string;
+    extends DocumentRegistry.IWidgetFactoryOptions<T>,
+      Omit<Chat.IOptions, 'model' | 'inputToolbarRegistry'> {
+    inputToolbarFactory: IInputToolbarRegistryFactory;
   }
 }
 
