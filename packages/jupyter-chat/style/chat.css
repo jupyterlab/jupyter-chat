@@ -202,12 +202,7 @@
   gap: 4px;
   flex-wrap: wrap;
   min-height: 1.5em;
-  padding: 8px 0;
-}
-
-.jp-chat-attachments:empty {
-  padding: 8px 0;
-  min-height: 1.5em;
+  padding: 4px 0;
 }
 
 .jp-chat-attachment {
