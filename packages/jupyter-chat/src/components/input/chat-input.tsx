@@ -187,7 +187,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
       <Autocomplete
         {...chatCommands.autocompleteProps}
         // ensure the autocomplete popup always renders on top
-        componentsProps={{
+        slotProps={{
           popper: {
             placement: 'top'
           },
@@ -195,12 +195,12 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
             sx: {
               border: '1px solid lightgray'
             }
-          }
-        }}
-        ListboxProps={{
-          sx: {
-            '& .MuiAutocomplete-option': {
-              padding: 2
+          },
+          listbox: {
+            sx: {
+              '& .MuiAutocomplete-option': {
+                padding: 2
+              }
             }
           }
         }}
@@ -218,9 +218,11 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
             onSelect={() =>
               (model.cursorIndex = inputRef.current?.selectionStart ?? null)
             }
-            InputProps={{
-              ...params.InputProps,
-              className: INPUT_COMPONENT_CLASS
+            slotProps={{
+              input: {
+                ...params.InputProps,
+                className: INPUT_COMPONENT_CLASS
+              }
             }}
             label={input.length > 2 ? helperText : ' '}
           />
