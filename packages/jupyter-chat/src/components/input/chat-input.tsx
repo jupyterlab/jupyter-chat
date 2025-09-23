@@ -14,28 +14,28 @@ import {
 import clsx from 'clsx';
 import React, { useEffect, useRef, useState } from 'react';
 
+import { InputToolbarRegistry } from './toolbar-registry';
+import { useChatCommands } from './use-chat-commands';
 import { AttachmentPreviewList } from '../attachments';
-import {
-  IInputToolbarRegistry,
-  InputToolbarRegistry,
-  useChatCommands
-} from '.';
+import { useChatContext } from '../../context';
 import { IInputModel, InputModel } from '../../input-model';
-import { IChatCommandRegistry } from '../../registers';
-import { IAttachment, ChatArea } from '../../types';
 import { IChatModel } from '../../model';
 import { InputWritingIndicator } from './writing-indicator';
+import { ChatArea, IAttachment } from '../../types';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
 const INPUT_TEXTFIELD_CLASS = 'jp-chat-input-textfield';
 const INPUT_TOOLBAR_CLASS = 'jp-chat-input-toolbar';
 
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
-  const { model, toolbarRegistry } = props;
+  const { model } = props;
+  const { chatCommandRegistry, inputToolbarRegistry } = useChatContext();
+  const chatModel = useChatContext().model;
+
   const [input, setInput] = useState<string>(model.value);
   const inputRef = useRef<HTMLInputElement>();
 
-  const chatCommands = useChatCommands(model, props.chatCommandRegistry);
+  const chatCommands = useChatCommands(model, chatCommandRegistry);
 
   const [sendWithShiftEnter, setSendWithShiftEnter] = useState<boolean>(
     model.config.sendWithShiftEnter ?? false
@@ -99,22 +99,22 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
    */
   useEffect(() => {
     const updateToolbar = () => {
-      setToolbarElements(toolbarRegistry.getItems());
+      setToolbarElements(inputToolbarRegistry?.getItems() || []);
     };
 
-    toolbarRegistry.itemsChanged.connect(updateToolbar);
+    inputToolbarRegistry?.itemsChanged.connect(updateToolbar);
     updateToolbar();
 
     return () => {
-      toolbarRegistry.itemsChanged.disconnect(updateToolbar);
+      inputToolbarRegistry?.itemsChanged.disconnect(updateToolbar);
     };
-  }, [toolbarRegistry]);
+  }, [inputToolbarRegistry]);
 
   /**
    * Handle the changes in the writers list.
    */
   useEffect(() => {
-    if (!props.chatModel) {
+    if (!chatModel) {
       return;
     }
 
@@ -124,15 +124,15 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     };
 
     // Set initial writers state
-    const initialWriters = props.chatModel.writers;
+    const initialWriters = chatModel.writers;
     setWriters(initialWriters);
 
-    props.chatModel.writersChanged?.connect(updateWriters);
+    chatModel.writersChanged?.connect(updateWriters);
 
     return () => {
-      props.chatModel?.writersChanged?.disconnect(updateWriters);
+      chatModel?.writersChanged?.disconnect(updateWriters);
     };
-  }, [props.chatModel]);
+  }, [chatModel]);
 
   const inputExists = !!input.trim();
 
@@ -196,7 +196,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
       (!sendWithShiftEnter && !event.shiftKey)
     ) {
       // Run all command providers
-      await props.chatCommandRegistry?.onSubmit(model);
+      await chatCommandRegistry?.onSubmit(model);
       model.send(model.value);
       event.stopPropagation();
       event.preventDefault();
@@ -333,8 +333,8 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
             <item.element
               key={index}
               model={model}
-              chatCommandRegistry={props.chatCommandRegistry}
-              chatModel={props.chatModel}
+              chatCommandRegistry={chatCommandRegistry}
+              chatModel={chatModel}
               edit={props.edit}
             />
           ))}
@@ -358,10 +358,6 @@ export namespace ChatInput {
      */
     model: IInputModel;
     /**
-     * The toolbar registry.
-     */
-    toolbarRegistry: IInputToolbarRegistry;
-    /**
      * The function to be called to cancel editing.
      */
     onCancel?: () => unknown;
@@ -370,17 +366,9 @@ export namespace ChatInput {
      */
     sx?: SxProps<Theme>;
     /**
-     * Chat command registry.
-     */
-    chatCommandRegistry?: IChatCommandRegistry;
-    /**
      * The area where the chat is displayed.
      */
     area?: ChatArea;
-    /**
-     * The chat model.
-     */
-    chatModel?: IChatModel;
     /**
      * Whether the input is in edit mode (editing an existing message).
      * Defaults to false (new message mode).
