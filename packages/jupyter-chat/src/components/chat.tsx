@@ -59,7 +59,7 @@ export function ChatBody(props: Chat.IChatProps): JSX.Element {
 }
 
 export function Chat(props: Chat.IOptions): JSX.Element {
-  const [view, setView] = useState<Chat.View>(props.chatView || Chat.View.chat);
+  const [view, setView] = useState<Chat.View>(Chat.View.chat);
   return (
     <JlThemeProvider themeManager={props.themeManager ?? null}>
       <Box
@@ -154,10 +154,6 @@ export namespace Chat {
      * The theme manager.
      */
     themeManager?: IThemeManager | null;
-    /**
-     * The view to render.
-     */
-    chatView?: View;
     /**
      * A settings panel that can be used for dedicated settings (e.g. jupyter-ai)
      */
