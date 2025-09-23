@@ -6,19 +6,17 @@
 import { Box } from '@mui/material';
 import React from 'react';
 
-import {
-  IMessageFooterRegistry,
-  MessageFooterSectionProps
-} from '../../registers';
+import { useChatContext } from '../../context';
+import { IChatMessage } from '../../types';
 
 /**
  * The chat footer component properties.
  */
-export interface IMessageFootersProps extends MessageFooterSectionProps {
+export interface IMessageFootersProps {
   /**
-   * The chat footer registry.
+   * The chat model.
    */
-  registry: IMessageFooterRegistry;
+  message: IChatMessage;
 }
 
 /**
@@ -27,9 +25,13 @@ export interface IMessageFootersProps extends MessageFooterSectionProps {
  */
 export function MessageFooterComponent(
   props: IMessageFootersProps
-): JSX.Element {
-  const { message, model, registry } = props;
-  const footer = registry.getFooter();
+): JSX.Element | null {
+  const { message } = props;
+  const { model, messageFooterRegistry } = useChatContext();
+  if (!messageFooterRegistry) {
+    return null;
+  }
+  const footer = messageFooterRegistry.getFooter();
 
   return (
     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>

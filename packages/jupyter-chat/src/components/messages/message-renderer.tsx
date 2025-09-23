@@ -3,15 +3,14 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { PromiseDelegate } from '@lumino/coreutils';
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
-import { CodeToolbar, CodeToolbarProps } from '../code-blocks/code-toolbar';
 import { MessageToolbar } from './toolbar';
+import { CodeToolbar, CodeToolbarProps } from '../code-blocks/code-toolbar';
+import { useChatContext } from '../../context';
 import { MarkdownRenderer, MD_RENDERED_CLASS } from '../../markdown-renderer';
-import { IChatModel } from '../../model';
 
 /**
  * The type of the props for the MessageRenderer component.
@@ -21,14 +20,6 @@ type MessageRendererProps = {
    * The string to render.
    */
   markdownStr: string;
-  /**
-   * The rendermime registry.
-   */
-  rmRegistry: IRenderMimeRegistry;
-  /**
-   * The model of the chat.
-   */
-  model: IChatModel;
   /**
    * The promise to resolve when the message is rendered.
    */
@@ -51,7 +42,8 @@ type MessageRendererProps = {
  * The message renderer base component.
  */
 function MessageRendererBase(props: MessageRendererProps): JSX.Element {
-  const { markdownStr, rmRegistry } = props;
+  const { markdownStr } = props;
+  const { model, rmRegistry } = useChatContext();
   const appendContent = props.appendContent || false;
   const [renderedContent, setRenderedContent] = useState<HTMLElement | null>(
     null
@@ -81,7 +73,7 @@ function MessageRendererBase(props: MessageRendererProps): JSX.Element {
         );
         newCodeToolbarDefns.push([
           codeToolbarRoot,
-          { model: props.model, content: preBlock.textContent || '' }
+          { model: model, content: preBlock.textContent || '' }
         ]);
       });
 

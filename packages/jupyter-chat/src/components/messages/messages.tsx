@@ -3,7 +3,6 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { PromiseDelegate } from '@lumino/coreutils';
 import { Box } from '@mui/material';
 import clsx from 'clsx';
@@ -15,9 +14,8 @@ import { ChatMessage } from './message';
 import { Navigation } from './navigation';
 import { WelcomeMessage } from './welcome';
 import { WritingUsersList } from './writers';
-import { IInputToolbarRegistry } from '../input';
 import { ScrollContainer } from '../scroll-container';
-import { IChatCommandRegistry, IMessageFooterRegistry } from '../../registers';
+import { useChatContext } from '../../context';
 import { IChatModel } from '../../model';
 import { IChatMessage, IUser } from '../../types';
 
@@ -26,40 +24,11 @@ const MESSAGE_CLASS = 'jp-chat-message';
 const MESSAGE_STACKED_CLASS = 'jp-chat-message-stacked';
 
 /**
- * The base components props.
- */
-export type BaseMessageProps = {
-  /**
-   * The mime renderer registry.
-   */
-  rmRegistry: IRenderMimeRegistry;
-  /**
-   * The chat model.
-   */
-  model: IChatModel;
-  /**
-   * The chat commands registry.
-   */
-  chatCommandRegistry?: IChatCommandRegistry;
-  /**
-   * The input toolbar registry.
-   */
-  inputToolbarRegistry: IInputToolbarRegistry;
-  /**
-   * The footer registry.
-   */
-  messageFooterRegistry?: IMessageFooterRegistry;
-  /**
-   * The welcome message.
-   */
-  welcomeMessage?: string;
-};
-
-/**
  * The messages list component.
  */
-export function ChatMessages(props: BaseMessageProps): JSX.Element {
-  const { model } = props;
+export function ChatMessages(): JSX.Element {
+  const { messageFooterRegistry, model, welcomeMessage } = useChatContext();
+
   const [messages, setMessages] = useState<IChatMessage[]>(model.messages);
   const refMsgBox = useRef<HTMLDivElement>(null);
   const [currentWriters, setCurrentWriters] = useState<IUser[]>([]);
@@ -142,7 +111,7 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
         }
       });
 
-      props.model.messagesInViewport = inViewport;
+      model.messagesInViewport = inViewport;
 
       // Ensure that all messages are rendered before updating unread messages, otherwise
       // it can lead to wrong assumption , because more message are in the viewport
@@ -173,12 +142,7 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
   return (
     <>
       <ScrollContainer sx={{ flexGrow: 1 }}>
-        {props.welcomeMessage && (
-          <WelcomeMessage
-            rmRegistry={props.rmRegistry}
-            content={props.welcomeMessage}
-          />
-        )}
+        {welcomeMessage && <WelcomeMessage content={welcomeMessage} />}
         <Box ref={refMsgBox} className={clsx(MESSAGES_BOX_CLASS)}>
           {messages.map((message, i) => {
             renderedPromise.current[i] = new PromiseDelegate();
@@ -193,18 +157,13 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
               >
                 <ChatMessageHeader message={message} />
                 <ChatMessage
-                  {...props}
                   message={message}
                   index={i}
                   renderedPromise={renderedPromise.current[i]}
                   ref={el => (listRef.current[i] = el)}
                 />
-                {props.messageFooterRegistry && (
-                  <MessageFooterComponent
-                    registry={props.messageFooterRegistry}
-                    message={message}
-                    model={model}
-                  />
+                {messageFooterRegistry && (
+                  <MessageFooterComponent message={message} />
                 )}
               </Box>
             );
@@ -212,7 +171,7 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
         </Box>
       </ScrollContainer>
       <WritingUsersList writers={currentWriters}></WritingUsersList>
-      <Navigation {...props} refMsgBox={refMsgBox} allRendered={allRendered} />
+      <Navigation refMsgBox={refMsgBox} allRendered={allRendered} />
     </>
   );
 }

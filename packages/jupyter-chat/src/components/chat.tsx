@@ -18,7 +18,7 @@ import {
 } from './input';
 import { JlThemeProvider } from './jl-theme-provider';
 import { ChatMessages } from './messages';
-import { AttachmentOpenerContext } from '../context';
+import { ChatReactContext } from '../context';
 import { IChatModel } from '../model';
 import {
   IAttachmentOpenerRegistry,
@@ -26,23 +26,21 @@ import {
   IMessageFooterRegistry
 } from '../registers';
 
-export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
+export function ChatBody(props: Chat.IChatProps): JSX.Element {
   const { model } = props;
   let { inputToolbarRegistry } = props;
   if (!inputToolbarRegistry) {
     inputToolbarRegistry = InputToolbarRegistry.defaultToolbarRegistry();
   }
 
+  const contextValue: Chat.IChatProps = {
+    ...props,
+    inputToolbarRegistry
+  };
+
   return (
-    <AttachmentOpenerContext.Provider value={props.attachmentOpenerRegistry}>
-      <ChatMessages
-        rmRegistry={props.rmRegistry}
-        model={model}
-        chatCommandRegistry={props.chatCommandRegistry}
-        inputToolbarRegistry={inputToolbarRegistry}
-        messageFooterRegistry={props.messageFooterRegistry}
-        welcomeMessage={props.welcomeMessage}
-      />
+    <ChatReactContext.Provider value={contextValue}>
+      <ChatMessages />
       <ChatInput
         sx={{
           paddingLeft: 4,
@@ -52,10 +50,8 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
           borderTop: '1px solid var(--jp-border-color1)'
         }}
         model={model.input}
-        chatCommandRegistry={props.chatCommandRegistry}
-        toolbarRegistry={inputToolbarRegistry}
       />
-    </AttachmentOpenerContext.Provider>
+    </ChatReactContext.Provider>
   );
 }
 
@@ -112,7 +108,7 @@ export namespace Chat {
   /**
    * The props for the chat body component.
    */
-  export interface IChatBodyProps {
+  export interface IChatProps {
     /**
      * The chat model.
      */
@@ -146,7 +142,7 @@ export namespace Chat {
   /**
    * The options to build the Chat UI.
    */
-  export interface IOptions extends IChatBodyProps {
+  export interface IOptions extends IChatProps {
     /**
      * The theme manager.
      */
