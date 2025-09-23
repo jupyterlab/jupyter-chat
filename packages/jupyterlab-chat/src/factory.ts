@@ -3,17 +3,9 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import {
-  Chat,
-  ChatWidget,
-  IActiveCellManager,
-  ISelectionWatcher,
-  IInputToolbarRegistryFactory
-} from '@jupyter/chat';
-import { IDocumentManager } from '@jupyterlab/docmanager';
+import { Chat, ChatWidget, IInputToolbarRegistryFactory } from '@jupyter/chat';
 import { ABCWidgetFactory, DocumentRegistry } from '@jupyterlab/docregistry';
-import { Contents, User } from '@jupyterlab/services';
-import { CommandRegistry } from '@lumino/commands';
+import { Contents } from '@jupyterlab/services';
 import { ISignal, Signal } from '@lumino/signaling';
 
 import { LabChatModel } from './model';
@@ -123,12 +115,7 @@ export class LabChatModelFactory
   implements DocumentRegistry.IModelFactory<LabChatModel>
 {
   constructor(options: LabChatModel.IOptions) {
-    this._user = options.user;
-    this._widgetConfig = options.widgetConfig;
-    this._commands = options.commands;
-    this._activeCellManager = options.activeCellManager ?? null;
-    this._selectionWatcher = options.selectionWatcher ?? null;
-    this._documentManager = options.documentManager ?? null;
+    this._modelOptions = options;
   }
 
   collaborative = true;
@@ -197,20 +184,10 @@ export class LabChatModelFactory
   createNew(options: DocumentRegistry.IModelOptions<YChat>): LabChatModel {
     return new LabChatModel({
       ...options,
-      user: this._user,
-      widgetConfig: this._widgetConfig,
-      commands: this._commands,
-      activeCellManager: this._activeCellManager,
-      selectionWatcher: this._selectionWatcher,
-      documentManager: this._documentManager
+      ...this._modelOptions
     });
   }
 
   private _disposed = false;
-  private _user: User.IIdentity | null;
-  private _widgetConfig: IWidgetConfig;
-  private _commands?: CommandRegistry;
-  private _activeCellManager: IActiveCellManager | null;
-  private _selectionWatcher: ISelectionWatcher | null;
-  private _documentManager: IDocumentManager | null;
+  private _modelOptions: Omit<LabChatModel.IOptions, 'sharedModel'>;
 }
