@@ -75,7 +75,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
    * @returns The widget
    */
   protected createNewWidget(context: ChatWidgetFactory.IContext): LabChatPanel {
-    context = { ...context, ...this._chatOptions };
+    Object.assign(context, this._chatOptions);
     if (this._inputToolbarFactory) {
       context.inputToolbarRegistry = this._inputToolbarFactory.create();
     }
@@ -93,6 +93,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
   get contentProviderId(): string {
     return 'rtc';
   }
+
   // Must override both getter and setter from ABCFactory for type compatibility.
   set contentProviderId(_value: string | undefined) {}
   private _chatOptions: Omit<Chat.IOptions, 'model'>;
@@ -176,8 +177,6 @@ export class LabChatModelFactory
   /**
    * Create a new instance of LabChatModel.
    *
-   * @param languagePreference Language
-   * @param modelDB Model database
    * @returns The model
    */
 
