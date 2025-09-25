@@ -2,6 +2,38 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.18.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.17.0...e99b0b174f290a369e61e42b074949bb497d089e))
+
+### Enhancements made
+
+- Move the input toolbar below the input prompt [#278](https://github.com/jupyterlab/jupyter-chat/pull/278) ([@brichet](https://github.com/brichet))
+- Multichatpanel followup [#275](https://github.com/jupyterlab/jupyter-chat/pull/275) ([@brichet](https://github.com/brichet))
+- Adding multi chats panel in `@jupyter/chat` package [#262](https://github.com/jupyterlab/jupyter-chat/pull/262) ([@nakul-py](https://github.com/nakul-py))
+
+### Bugs fixed
+
+- Fix chat focus behavior to allow copy/paste from messages [#268](https://github.com/jupyterlab/jupyter-chat/pull/268) ([@nakul-py](https://github.com/nakul-py))
+
+### Maintenance and upkeep improvements
+
+- Ignore `www.npmjs.com` links [#280](https://github.com/jupyterlab/jupyter-chat/pull/280) ([@jtpio](https://github.com/jtpio))
+- Update Materiel UI v7 [#277](https://github.com/jupyterlab/jupyter-chat/pull/277) ([@brichet](https://github.com/brichet))
+- Require Python 3.9, test on 3.10 - 3.13 [#274](https://github.com/jupyterlab/jupyter-chat/pull/274) ([@jtpio](https://github.com/jtpio))
+
+### API and Breaking Changes
+
+- Update Materiel UI v7 [#277](https://github.com/jupyterlab/jupyter-chat/pull/277) ([@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2025-07-29&to=2025-09-25&type=c))
+
+[@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2025-07-29..2025-09-25&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2025-07-29..2025-09-25&type=Issues) | [@jtpio](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2025-07-29..2025-09-25&type=Issues) | [@nakul-py](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Anakul-py+updated%3A2025-07-29..2025-09-25&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.17.0
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.16.0...8a7005fbf7f03d0664611eca667aad2ed5da15ab))
@@ -25,8 +57,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2025-07-07&to=2025-07-29&type=c))
 
 [@3coins](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3A3coins+updated%3A2025-07-07..2025-07-29&type=Issues) | [@andrii-i](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Aandrii-i+updated%3A2025-07-07..2025-07-29&type=Issues) | [@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2025-07-07..2025-07-29&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adependabot+updated%3A2025-07-07..2025-07-29&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2025-07-07..2025-07-29&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.16.0
 
