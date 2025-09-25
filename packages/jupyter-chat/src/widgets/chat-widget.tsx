@@ -11,7 +11,7 @@ import React from 'react';
 import { Message } from '@lumino/messaging';
 import { Drag } from '@lumino/dragdrop';
 
-import { Chat, IInputToolbarRegistry } from '../components';
+import { Chat, IInputToolbarRegistry, MESSAGE_CLASS } from '../components';
 import { chatIcon } from '../icons';
 import { IChatModel } from '../model';
 import {
@@ -40,7 +40,27 @@ export class ChatWidget extends ReactWidget {
 
     this._chatOptions = options;
     this.id = `jupyter-chat::widget::${options.model.name}`;
-    this.node.onclick = () => this.model.input.focus();
+    this.node.addEventListener('click', (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (this.node.contains(document.activeElement)) {
+        return;
+      }
+
+      const message = target.closest(`.${MESSAGE_CLASS}`);
+      if (message) {
+        const selection = window.getSelection();
+
+        if (
+          selection &&
+          selection.toString().trim() !== '' &&
+          message.contains(selection.anchorNode)
+        ) {
+          return;
+        }
+      }
+
+      this.model.input.focus();
+    });
   }
 
   /**
