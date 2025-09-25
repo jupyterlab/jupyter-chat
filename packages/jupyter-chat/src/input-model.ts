@@ -117,6 +117,11 @@ export interface IInputModel extends IDisposable {
   clearAttachments(): void;
 
   /**
+   * If the user is editing a message, this points to the active edition input model.
+   */
+  currentEdition?: IInputModel;
+
+  /**
    * A signal emitting when the attachment list has changed.
    */
   readonly attachmentsChanged?: ISignal<IInputModel, IAttachment[]>;

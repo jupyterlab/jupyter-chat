@@ -20,6 +20,7 @@ import {
   INotebookAttachmentCell
 } from '../types';
 import { ActiveCellManager } from '../active-cell-manager';
+import { IInputModel } from '../input-model';
 
 // MIME type constant for file browser drag events
 const FILE_BROWSER_MIME = 'application/x-jupyter-icontentsrich';
@@ -183,6 +184,10 @@ export class ChatWidget extends ReactWidget {
     }
   }
 
+  private _getActiveInput(): IInputModel {
+    return this.model.input.currentEdition ?? this.model.input;
+  }
+
   /**
    * Process dropped files
    */
@@ -201,7 +206,8 @@ export class ChatWidget extends ReactWidget {
       value: data.model.path,
       mimetype: data.model.mimetype
     };
-    this.model.input.addAttachment?.(attachment);
+    const activeInput = this._getActiveInput();
+    activeInput.addAttachment?.(attachment);
   }
 
   /**
@@ -263,7 +269,8 @@ export class ChatWidget extends ReactWidget {
           value: notebookPath,
           cells: validCells
         };
-        this.model.input.addAttachment?.(attachment);
+        const activeInput = this._getActiveInput();
+        activeInput.addAttachment?.(attachment);
       }
     } catch (error) {
       console.error('Failed to process cell drop: ', error);

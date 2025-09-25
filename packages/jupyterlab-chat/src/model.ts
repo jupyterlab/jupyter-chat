@@ -335,6 +335,12 @@ export class LabChatModel
       };
 
       edition.model.valueChanged.connect(_onInputChanged);
+
+      this.input.currentEdition = edition.model;
+
+      edition.model.onDisposed.connect(() => {
+        this.input.currentEdition = undefined;
+      });
     }
   };
 
