@@ -5,13 +5,13 @@
 
 import CloseIcon from '@mui/icons-material/Close';
 import { Box } from '@mui/material';
-import React, { useContext } from 'react';
+import React from 'react';
 import { PathExt } from '@jupyterlab/coreutils';
 import { UUID } from '@lumino/coreutils';
 
 import { TooltippedButton } from './mui-extras/tooltipped-button';
+import { useChatContext } from '../context';
 import { IAttachment } from '../types';
-import { AttachmentOpenerContext } from '../context';
 
 const ATTACHMENTS_CLASS = 'jp-chat-attachments';
 const ATTACHMENT_CLASS = 'jp-chat-attachment';
@@ -81,7 +81,7 @@ export type AttachmentProps = AttachmentsProps & {
  */
 export function AttachmentPreview(props: AttachmentProps): JSX.Element {
   const remove_tooltip = 'Remove attachment';
-  const attachmentOpenerRegistry = useContext(AttachmentOpenerContext);
+  const { attachmentOpenerRegistry } = useChatContext();
 
   return (
     <Box className={ATTACHMENT_CLASS}>

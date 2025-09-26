@@ -2,9 +2,19 @@
  * Copyright (c) Jupyter Development Team.
  * Distributed under the terms of the Modified BSD License.
  */
-import { createContext } from 'react';
-import { IAttachmentOpenerRegistry } from './registers';
 
-export const AttachmentOpenerContext = createContext<
-  IAttachmentOpenerRegistry | undefined
->(undefined);
+import { createContext, useContext } from 'react';
+
+import { Chat } from './components';
+
+export const ChatReactContext = createContext<Chat.IChatProps | undefined>(
+  undefined
+);
+
+export function useChatContext(): Chat.IChatProps {
+  const context = useContext(ChatReactContext);
+  if (!context) {
+    throw new Error('The chat context is missing in the chat');
+  }
+  return context;
+}

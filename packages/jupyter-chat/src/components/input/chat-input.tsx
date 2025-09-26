@@ -15,14 +15,11 @@ import {
 import clsx from 'clsx';
 import React, { useEffect, useRef, useState } from 'react';
 
+import { InputToolbarRegistry } from './toolbar-registry';
+import { useChatCommands } from './use-chat-commands';
 import { AttachmentPreviewList } from '../attachments';
-import {
-  IInputToolbarRegistry,
-  InputToolbarRegistry,
-  useChatCommands
-} from '.';
+import { useChatContext } from '../../context';
 import { IInputModel, InputModel } from '../../input-model';
-import { IChatCommandRegistry } from '../../registers';
 import { IAttachment } from '../../types';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
@@ -31,11 +28,13 @@ const INPUT_COMPONENT_CLASS = 'jp-chat-input-component';
 const INPUT_TOOLBAR_CLASS = 'jp-chat-input-toolbar';
 
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
-  const { model, toolbarRegistry } = props;
+  const { model } = props;
+  const { chatCommandRegistry, inputToolbarRegistry } = useChatContext();
+
   const [input, setInput] = useState<string>(model.value);
   const inputRef = useRef<HTMLInputElement>();
 
-  const chatCommands = useChatCommands(model, props.chatCommandRegistry);
+  const chatCommands = useChatCommands(model, chatCommandRegistry);
 
   const [sendWithShiftEnter, setSendWithShiftEnter] = useState<boolean>(
     model.config.sendWithShiftEnter ?? false
@@ -88,16 +87,16 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
    */
   useEffect(() => {
     const updateToolbar = () => {
-      setToolbarElements(toolbarRegistry.getItems());
+      setToolbarElements(inputToolbarRegistry?.getItems() || []);
     };
 
-    toolbarRegistry.itemsChanged.connect(updateToolbar);
+    inputToolbarRegistry?.itemsChanged.connect(updateToolbar);
     updateToolbar();
 
     return () => {
-      toolbarRegistry.itemsChanged.disconnect(updateToolbar);
+      inputToolbarRegistry?.itemsChanged.disconnect(updateToolbar);
     };
-  }, [toolbarRegistry]);
+  }, [inputToolbarRegistry]);
 
   const inputExists = !!input.trim();
 
@@ -160,7 +159,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
       (!sendWithShiftEnter && !event.shiftKey)
     ) {
       // Run all command providers
-      await props.chatCommandRegistry?.onSubmit(model);
+      await chatCommandRegistry?.onSubmit(model);
       model.send(model.value);
       event.stopPropagation();
       event.preventDefault();
@@ -245,7 +244,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
         {toolbarElements.map(item => (
           <item.element
             model={model}
-            chatCommandRegistry={props.chatCommandRegistry}
+            chatCommandRegistry={chatCommandRegistry}
           />
         ))}
       </Toolbar>
@@ -266,10 +265,6 @@ export namespace ChatInput {
      */
     model: IInputModel;
     /**
-     * The toolbar registry.
-     */
-    toolbarRegistry: IInputToolbarRegistry;
-    /**
      * The function to be called to cancel editing.
      */
     onCancel?: () => unknown;
@@ -277,9 +272,5 @@ export namespace ChatInput {
      * Custom mui/material styles.
      */
     sx?: SxProps<Theme>;
-    /**
-     * Chat command registry.
-     */
-    chatCommandRegistry?: IChatCommandRegistry;
   }
 }
