@@ -791,9 +791,13 @@ export namespace IChatModel {
      */
     user: IUser;
     /**
-     * The message ID (optional)
+     * The message ID (optional).
      */
     messageID?: string;
+    /**
+     * The writer typing indicator (optional)
+     */
+    typingIndicator?: string;
   }
 }
 

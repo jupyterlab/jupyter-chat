@@ -17,7 +17,7 @@ import {
   InputToolbarRegistry
 } from './input';
 import { JlThemeProvider } from './jl-theme-provider';
-import { ChatMessages } from './messages';
+import { ChatMessages, WriterComponent } from './messages';
 import { AttachmentOpenerContext } from '../context';
 import { IChatModel } from '../model';
 import {
@@ -42,6 +42,7 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
         inputToolbarRegistry={inputToolbarRegistry}
         messageFooterRegistry={props.messageFooterRegistry}
         welcomeMessage={props.welcomeMessage}
+        writerComponent={props.writerComponent}
       />
       <ChatInput
         sx={{
@@ -141,6 +142,10 @@ export namespace Chat {
      * The welcome message.
      */
     welcomeMessage?: string;
+    /**
+     * The typing notification widget.
+     */
+    writerComponent?: WriterComponent;
   }
 
   /**

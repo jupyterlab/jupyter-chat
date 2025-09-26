@@ -353,7 +353,8 @@ export class LabChatModel
       if (state.isWriting !== undefined && state.isWriting !== false) {
         const writer: IChatModel.IWriter = {
           user: state.user,
-          messageID: state.isWriting === true ? undefined : state.isWriting
+          messageID: state.isWriting === true ? undefined : state.isWriting,
+          typingIndicator: state.typingIndicator
         };
         writers.push(writer);
       }
