@@ -122,12 +122,19 @@ export class ChatWidget extends ReactWidget {
    * Handle drag over events
    */
   private _handleDrag(event: Drag.Event): void {
-    const inputContainer = this.node.querySelector(`.${INPUT_CONTAINER_CLASS}`);
+    const inputContainers = this.node.querySelectorAll<HTMLElement>(
+      `.${INPUT_CONTAINER_CLASS}`
+    );
     const target = event.target as HTMLElement;
-    const isOverInput =
-      inputContainer?.contains(target) || inputContainer === target;
+    let overInput: HTMLElement | null = null;
+    for (const container of inputContainers) {
+      if (container.contains(target)) {
+        overInput = container;
+        break;
+      }
+    }
 
-    if (!isOverInput) {
+    if (!overInput) {
       this._removeDragHoverClass();
       return;
     }
@@ -140,12 +147,9 @@ export class ChatWidget extends ReactWidget {
     event.stopPropagation();
     event.dropAction = 'move';
 
-    if (
-      inputContainer &&
-      !inputContainer.classList.contains(DRAG_HOVER_CLASS)
-    ) {
-      inputContainer.classList.add(DRAG_HOVER_CLASS);
-      this._dragTarget = inputContainer as HTMLElement;
+    if (!overInput.classList.contains(DRAG_HOVER_CLASS)) {
+      overInput.classList.add(DRAG_HOVER_CLASS);
+      this._dragTarget = overInput;
     }
   }
 
