@@ -117,9 +117,9 @@ export interface IInputModel extends IDisposable {
   clearAttachments(): void;
 
   /**
-   * If the user is editing a message, this points to the active edition input model.
+   * Unique identifier for the input (needed for drag-and-drop).
    */
-  currentEdition?: IInputModel;
+  id: string;
 
   /**
    * A signal emitting when the attachment list has changed.
@@ -152,6 +152,16 @@ export interface IInputModel extends IDisposable {
   clearMentions(): void;
 
   /**
+   * Register the input model (for drag-and-drop support).
+   */
+  registerInput(inputModel: IInputModel): IInputModel;
+
+  /**
+   * Get the input model by id.
+   */
+  getInput(id: string): IInputModel | undefined;
+
+  /**
    * A signal emitting when disposing of the model.
    */
   readonly onDisposed: ISignal<InputModel, void>;
@@ -162,6 +172,7 @@ export interface IInputModel extends IDisposable {
  */
 export class InputModel implements IInputModel {
   constructor(options: InputModel.IOptions) {
+    this.id = options.id ?? `input-${Private.generateUniqueId()}`;
     this._onSend = options.onSend;
     this._chatContext = options.chatContext;
     this._value = options.value || '';
@@ -200,6 +211,11 @@ export class InputModel implements IInputModel {
    * Optional function to cancel edition.
    */
   cancel: (() => void) | undefined;
+
+  /**
+   * Unique identifier for the input (needed for drag-and-drop).
+   */
+  public id: string;
 
   /**
    * The entire input value.
@@ -452,6 +468,21 @@ export class InputModel implements IInputModel {
   };
 
   /**
+   * Register the input model.
+   */
+  registerInput(inputModel: IInputModel): IInputModel {
+    this._inputMap.set(inputModel.id, inputModel);
+    inputModel.onDisposed.connect(() => {
+      this._inputMap.delete(inputModel.id);
+    });
+    return inputModel;
+  }
+
+  getInput(id: string): IInputModel | undefined {
+    return this._inputMap.get(id);
+  }
+
+  /**
    * Dispose the input model.
    */
   dispose(): void {
@@ -487,6 +518,7 @@ export class InputModel implements IInputModel {
   private _selectionWatcher: ISelectionWatcher | null;
   private _documentManager: IDocumentManager | null;
   private _config: InputModel.IConfig;
+  private _inputMap: Map<string, IInputModel> = new Map();
   private _valueChanged = new Signal<IInputModel, string>(this);
   private _cursorIndexChanged = new Signal<IInputModel, number | null>(this);
   private _currentWordChanged = new Signal<IInputModel, string | null>(this);
@@ -536,6 +568,12 @@ export namespace InputModel {
      * This refers to the index of the character in front of the cursor.
      */
     cursorIndex?: number;
+
+    /**
+     * Optional unique identifier for this input model.
+     * If not provided, one will be generated automatically.
+     */
+    id?: string;
 
     /**
      * The configuration for the input component.
@@ -615,6 +653,12 @@ namespace Private {
     }
 
     return [start, end];
+  }
+
+  let _counter = 0;
+  export function generateUniqueId(): string {
+    _counter += 1;
+    return `${_counter}`;
   }
 
   /**

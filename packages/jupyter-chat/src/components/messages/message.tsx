@@ -129,12 +129,17 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
     ) : (
       <div ref={ref} data-index={props.index}>
         {edit && canEdit && model.getEditionModel(message.id) ? (
-          <ChatInput
-            onCancel={() => cancelEdition()}
-            model={model.getEditionModel(message.id)!}
-            chatCommandRegistry={props.chatCommandRegistry}
-            toolbarRegistry={props.inputToolbarRegistry}
-          />
+          <div
+            className="jp-chat-input-container"
+            data-input-id={model.getEditionModel(message.id)!.id}
+          >
+            <ChatInput
+              onCancel={() => cancelEdition()}
+              model={model.getEditionModel(message.id)!}
+              chatCommandRegistry={props.chatCommandRegistry}
+              toolbarRegistry={props.inputToolbarRegistry}
+            />
+          </div>
         ) : (
           <MessageRenderer
             rmRegistry={rmRegistry}

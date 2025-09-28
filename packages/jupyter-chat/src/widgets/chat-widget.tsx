@@ -188,8 +188,27 @@ export class ChatWidget extends ReactWidget {
     }
   }
 
-  private _getActiveInput(): IInputModel {
-    return this.model.input.currentEdition ?? this.model.input;
+  /**
+   * Get the input model associated with the event target and input ids.
+   */
+  private _getInputFromEvent(event: Drag.Event): IInputModel | null {
+    let element = event.target as HTMLElement | null;
+
+    while (element) {
+      if (
+        element.classList.contains(INPUT_CONTAINER_CLASS) &&
+        element.dataset.inputId
+      ) {
+        const inputId = element.dataset.inputId;
+        const inputModel =
+          this.model.input.getInput(inputId) ??
+          (inputId === this.model.input.id ? this.model.input : null);
+        return inputModel;
+      }
+      element = element.parentElement;
+    }
+
+    return null;
   }
 
   /**
@@ -210,8 +229,8 @@ export class ChatWidget extends ReactWidget {
       value: data.model.path,
       mimetype: data.model.mimetype
     };
-    const activeInput = this._getActiveInput();
-    activeInput.addAttachment?.(attachment);
+    const inputModel = this._getInputFromEvent(event);
+    inputModel?.addAttachment?.(attachment);
   }
 
   /**
@@ -273,8 +292,8 @@ export class ChatWidget extends ReactWidget {
           value: notebookPath,
           cells: validCells
         };
-        const activeInput = this._getActiveInput();
-        activeInput.addAttachment?.(attachment);
+        const inputModel = this._getInputFromEvent(event);
+        inputModel?.addAttachment?.(attachment);
       }
     } catch (error) {
       console.error('Failed to process cell drop: ', error);
