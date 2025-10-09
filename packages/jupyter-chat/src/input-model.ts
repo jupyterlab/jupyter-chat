@@ -4,6 +4,7 @@
  */
 
 import { IDocumentManager } from '@jupyterlab/docmanager';
+import { UUID } from '@lumino/coreutils';
 import { IDisposable } from '@lumino/disposable';
 import { ISignal, Signal } from '@lumino/signaling';
 import { IActiveCellManager } from './active-cell-manager';
@@ -119,7 +120,7 @@ export interface IInputModel extends IDisposable {
   /**
    * Unique identifier for the input (needed for drag-and-drop).
    */
-  id: string;
+  readonly id: string;
 
   /**
    * A signal emitting when the attachment list has changed.
@@ -152,16 +153,6 @@ export interface IInputModel extends IDisposable {
   clearMentions(): void;
 
   /**
-   * Register the input model (for drag-and-drop support).
-   */
-  registerInput(inputModel: IInputModel): IInputModel;
-
-  /**
-   * Get the input model by id.
-   */
-  getInput(id: string): IInputModel | undefined;
-
-  /**
    * A signal emitting when disposing of the model.
    */
   readonly onDisposed: ISignal<InputModel, void>;
@@ -172,7 +163,7 @@ export interface IInputModel extends IDisposable {
  */
 export class InputModel implements IInputModel {
   constructor(options: InputModel.IOptions) {
-    this.id = options.id ?? `input-${Private.generateUniqueId()}`;
+    this._id = options.id ?? `input-${UUID.uuid4()}`;
     this._onSend = options.onSend;
     this._chatContext = options.chatContext;
     this._value = options.value || '';
@@ -215,7 +206,9 @@ export class InputModel implements IInputModel {
   /**
    * Unique identifier for the input (needed for drag-and-drop).
    */
-  public id: string;
+  get id(): string {
+    return this._id;
+  }
 
   /**
    * The entire input value.
@@ -468,21 +461,6 @@ export class InputModel implements IInputModel {
   };
 
   /**
-   * Register the input model.
-   */
-  registerInput(inputModel: IInputModel): IInputModel {
-    this._inputMap.set(inputModel.id, inputModel);
-    inputModel.onDisposed.connect(() => {
-      this._inputMap.delete(inputModel.id);
-    });
-    return inputModel;
-  }
-
-  getInput(id: string): IInputModel | undefined {
-    return this._inputMap.get(id);
-  }
-
-  /**
    * Dispose the input model.
    */
   dispose(): void {
@@ -507,6 +485,7 @@ export class InputModel implements IInputModel {
     return this._isDisposed;
   }
 
+  private _id: string;
   private _onSend: (input: string, model?: InputModel) => void;
   private _chatContext?: IChatContext;
   private _value: string;
@@ -518,7 +497,6 @@ export class InputModel implements IInputModel {
   private _selectionWatcher: ISelectionWatcher | null;
   private _documentManager: IDocumentManager | null;
   private _config: InputModel.IConfig;
-  private _inputMap: Map<string, IInputModel> = new Map();
   private _valueChanged = new Signal<IInputModel, string>(this);
   private _cursorIndexChanged = new Signal<IInputModel, number | null>(this);
   private _currentWordChanged = new Signal<IInputModel, string | null>(this);
@@ -653,12 +631,6 @@ namespace Private {
     }
 
     return [start, end];
-  }
-
-  let _counter = 0;
-  export function generateUniqueId(): string {
-    _counter += 1;
-    return `${_counter}`;
   }
 
   /**

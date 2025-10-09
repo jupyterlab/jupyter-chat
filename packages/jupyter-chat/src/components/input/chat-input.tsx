@@ -177,7 +177,11 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   );
 
   return (
-    <Box sx={props.sx} className={clsx(INPUT_BOX_CLASS)}>
+    <Box
+      sx={props.sx}
+      className={clsx(INPUT_BOX_CLASS)}
+      data-input-id={model.id}
+    >
       <AttachmentPreviewList
         attachments={attachments}
         onRemove={model.removeAttachment}

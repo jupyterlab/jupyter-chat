@@ -334,11 +334,6 @@ export class LabChatModel
         this.onInputChanged(value, edition.id);
       };
 
-      edition.model.valueChanged.connect((_, value) => {
-        this.onInputChanged(value, edition.id);
-      });
-
-      this.input.registerInput(edition.model);
       edition.model.valueChanged.connect(_onInputChanged);
     }
   };
