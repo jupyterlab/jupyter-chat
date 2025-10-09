@@ -191,7 +191,7 @@ export class ChatWidget extends ReactWidget {
   /**
    * Get the input model associated with the event target and input ids.
    */
-  private _getInputFromEvent(event: Drag.Event): IInputModel | null {
+  private _getInputFromEvent(event: Drag.Event): IInputModel | undefined {
     let element = event.target as HTMLElement | null;
 
     while (element) {
@@ -201,14 +201,15 @@ export class ChatWidget extends ReactWidget {
       ) {
         const inputId = element.dataset.inputId;
         const inputModel =
-          this.model.input.getInput(inputId) ??
-          (inputId === this.model.input.id ? this.model.input : null);
+          this.model.input.id === inputId
+            ? this.model.input
+            : this.model.getEditionModels().find(model => model.id === inputId);
         return inputModel;
       }
       element = element.parentElement;
     }
 
-    return null;
+    return;
   }
 
   /**

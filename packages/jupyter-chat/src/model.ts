@@ -202,6 +202,11 @@ export interface IChatModel extends IDisposable {
   getEditionModel(messageID: string): IInputModel | undefined;
 
   /**
+   * Get the input models of all edited messages.
+   */
+  getEditionModels(): IInputModel[];
+
+  /**
    * Add an input model of the edited message.
    */
   addEditionModel(messageID: string, inputModel: IInputModel): void;
@@ -635,6 +640,13 @@ export abstract class AbstractChatModel implements IChatModel {
    */
   getEditionModel(messageID: string): IInputModel | undefined {
     return this._messageEditions.get(messageID);
+  }
+
+  /**
+   * Get the input models of all edited messages.
+   */
+  getEditionModels(): IInputModel[] {
+    return Array.from(this._messageEditions.values());
   }
 
   /**
