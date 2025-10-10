@@ -2,6 +2,23 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.18.2
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.18.1...b77c7147ae47102a7b9e92a1a144a9171a811723))
+
+### Bugs fixed
+
+- Multichat: wait for the chat to be opened in main before disposing of the widget [#287](https://github.com/jupyterlab/jupyter-chat/pull/287) ([@brichet](https://github.com/brichet))
+- Refactor `buildChatSidebar` to use `ChatWidget` class. [#285](https://github.com/jupyterlab/jupyter-chat/pull/285) ([@nakul-py](https://github.com/nakul-py))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2025-09-26&to=2025-10-10&type=c))
+
+[@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2025-09-26..2025-10-10&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2025-09-26..2025-10-10&type=Issues) | [@nakul-py](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Anakul-py+updated%3A2025-09-26..2025-10-10&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.18.1
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.18.0...6db821627f81a304e3a08daa0bded3f20df07648))
@@ -15,8 +32,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2025-09-25&to=2025-09-26&type=c))
 
 [@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2025-09-25..2025-09-26&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2025-09-25..2025-09-26&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.18.0
 
