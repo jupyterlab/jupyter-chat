@@ -279,7 +279,7 @@ export class MultiChatPanel extends SidePanel {
     name?: string
   ) => Promise<MultiChatPanel.IAddChatArgs>;
   private _getChatNames?: () => Promise<{ [name: string]: string }>;
-  private _openInMain?: (name: string) => void;
+  private _openInMain?: (name: string) => Promise<boolean>;
   private _renameChat?: (oldName: string, newName: string) => Promise<boolean>;
 
   private _openChatWidget?: ReactWidget;
@@ -317,7 +317,7 @@ export namespace MultiChatPanel {
      *
      * @param name - the name of the chat to move.
      */
-    openInMain?: (name: string) => void;
+    openInMain?: (name: string) => Promise<boolean>;
     /**
      * An optional callback to rename a chat.
      *
@@ -406,11 +406,12 @@ export class ChatSection extends PanelWithToolbar {
         icon: launchIcon,
         iconLabel: 'Move the chat to the main area',
         className: 'jp-mod-styled',
-        onClick: () => {
+        onClick: async () => {
           const name = this.model.name;
-          this.model.dispose();
-          options.openInMain?.(name);
-          this.dispose();
+          if (await options.openInMain?.(name)) {
+            this.model.dispose();
+            this.dispose();
+          }
         }
       });
       this.toolbar.addItem('moveMain', moveToMain);
@@ -521,7 +522,7 @@ export namespace ChatSection {
      *
      * @param name - the name of the chat to move.
      */
-    openInMain?: (name: string) => void;
+    openInMain?: (name: string) => Promise<boolean>;
     /**
      * An optional callback to rename a chat.
      *
