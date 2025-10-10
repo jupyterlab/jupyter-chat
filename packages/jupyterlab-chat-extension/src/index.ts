@@ -595,7 +595,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
          */
         commands.addCommand(CommandIDs.openChat, {
           label: 'Open a chat',
-          execute: async args => {
+          execute: async (args): Promise<any> => {
             const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
             const startup: boolean = (args.startup as boolean) ?? false;
             let filepath: string | null = (args.filepath as string) ?? null;
@@ -610,7 +610,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
             }
 
             if (!filepath) {
-              return;
+              return false;
             }
 
             let fileExist = true;
@@ -631,7 +631,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
                   `'${filepath}' is not a valid path`
                 );
               }
-              return;
+              return false;
             }
 
             if (inSidePanel && chatPanel) {
@@ -655,7 +655,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
               }
 
               if (chatPanel.openIfExists(filepath)) {
-                return;
+                return true;
               }
 
               const addChatArgs = await createChatModel(app, drive, filepath);
@@ -670,6 +670,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
                 factory: FACTORY
               });
             }
+            return false;
           }
         });
 
@@ -835,7 +836,9 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
         );
       },
       openInMain: path => {
-        commands.execute(CommandIDs.openChat, { filepath: path });
+        return commands.execute(CommandIDs.openChat, {
+          filepath: path
+        }) as Promise<boolean>;
       },
       renameChat: (oldPath, newPath) => {
         return commands.execute(CommandIDs.renameChat, {
