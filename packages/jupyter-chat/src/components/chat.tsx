@@ -43,20 +43,18 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
         messageFooterRegistry={props.messageFooterRegistry}
         welcomeMessage={props.welcomeMessage}
       />
-      <div className="jp-chat-input-container" data-input-id={model.input.id}>
-        <ChatInput
-          sx={{
-            paddingLeft: 4,
-            paddingRight: 4,
-            paddingTop: 0,
-            paddingBottom: 0,
-            borderTop: '1px solid var(--jp-border-color1)'
-          }}
-          model={model.input}
-          chatCommandRegistry={props.chatCommandRegistry}
-          toolbarRegistry={inputToolbarRegistry}
-        />
-      </div>
+      <ChatInput
+        sx={{
+          paddingLeft: 4,
+          paddingRight: 4,
+          paddingTop: 0,
+          paddingBottom: 0,
+          borderTop: '1px solid var(--jp-border-color1)'
+        }}
+        model={model.input}
+        chatCommandRegistry={props.chatCommandRegistry}
+        toolbarRegistry={inputToolbarRegistry}
+      />
     </AttachmentOpenerContext.Provider>
   );
 }
