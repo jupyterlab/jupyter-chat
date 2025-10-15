@@ -8,7 +8,8 @@ import {
   chatIcon,
   IActiveCellManager,
   ISelectionWatcher,
-  ChatWidget
+  ChatWidget,
+  WriterComponent
 } from '@jupyter/chat';
 import { WidgetTracker } from '@jupyterlab/apputils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
@@ -142,4 +143,11 @@ export const ISelectionWatcherToken = new Token<ISelectionWatcher>(
  */
 export const IWelcomeMessage = new Token<string>(
   'jupyterlab-chat:IWelcomeMessage'
+);
+
+/**
+ * The token to add a component to the writing notification.
+ */
+export const IWriterComponent = new Token<WriterComponent>(
+  'jupyterlab-chat:IWriterComponent'
 );
