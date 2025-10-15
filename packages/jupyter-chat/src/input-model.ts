@@ -4,6 +4,7 @@
  */
 
 import { IDocumentManager } from '@jupyterlab/docmanager';
+import { UUID } from '@lumino/coreutils';
 import { IDisposable } from '@lumino/disposable';
 import { ISignal, Signal } from '@lumino/signaling';
 import { IActiveCellManager } from './active-cell-manager';
@@ -117,6 +118,11 @@ export interface IInputModel extends IDisposable {
   clearAttachments(): void;
 
   /**
+   * Unique identifier for the input (needed for drag-and-drop).
+   */
+  readonly id: string;
+
+  /**
    * A signal emitting when the attachment list has changed.
    */
   readonly attachmentsChanged?: ISignal<IInputModel, IAttachment[]>;
@@ -157,6 +163,7 @@ export interface IInputModel extends IDisposable {
  */
 export class InputModel implements IInputModel {
   constructor(options: InputModel.IOptions) {
+    this._id = options.id ?? `input-${UUID.uuid4()}`;
     this._onSend = options.onSend;
     this._chatContext = options.chatContext;
     this._value = options.value || '';
@@ -195,6 +202,13 @@ export class InputModel implements IInputModel {
    * Optional function to cancel edition.
    */
   cancel: (() => void) | undefined;
+
+  /**
+   * Unique identifier for the input (needed for drag-and-drop).
+   */
+  get id(): string {
+    return this._id;
+  }
 
   /**
    * The entire input value.
@@ -471,6 +485,7 @@ export class InputModel implements IInputModel {
     return this._isDisposed;
   }
 
+  private _id: string;
   private _onSend: (input: string, model?: InputModel) => void;
   private _chatContext?: IChatContext;
   private _value: string;
@@ -531,6 +546,12 @@ export namespace InputModel {
      * This refers to the index of the character in front of the cursor.
      */
     cursorIndex?: number;
+
+    /**
+     * Optional unique identifier for this input model.
+     * If not provided, one will be generated automatically.
+     */
+    id?: string;
 
     /**
      * The configuration for the input component.

@@ -20,6 +20,7 @@ import {
   INotebookAttachmentCell
 } from '../types';
 import { ActiveCellManager } from '../active-cell-manager';
+import { IInputModel } from '../input-model';
 
 // MIME type constant for file browser drag events
 const FILE_BROWSER_MIME = 'application/x-jupyter-icontentsrich';
@@ -141,12 +142,19 @@ export class ChatWidget extends ReactWidget {
    * Handle drag over events
    */
   private _handleDrag(event: Drag.Event): void {
-    const inputContainer = this.node.querySelector(`.${INPUT_CONTAINER_CLASS}`);
+    const inputContainers = this.node.querySelectorAll<HTMLElement>(
+      `.${INPUT_CONTAINER_CLASS}`
+    );
     const target = event.target as HTMLElement;
-    const isOverInput =
-      inputContainer?.contains(target) || inputContainer === target;
+    let overInput: HTMLElement | null = null;
+    for (const container of inputContainers) {
+      if (container.contains(target)) {
+        overInput = container;
+        break;
+      }
+    }
 
-    if (!isOverInput) {
+    if (!overInput) {
       this._removeDragHoverClass();
       return;
     }
@@ -159,12 +167,9 @@ export class ChatWidget extends ReactWidget {
     event.stopPropagation();
     event.dropAction = 'move';
 
-    if (
-      inputContainer &&
-      !inputContainer.classList.contains(DRAG_HOVER_CLASS)
-    ) {
-      inputContainer.classList.add(DRAG_HOVER_CLASS);
-      this._dragTarget = inputContainer as HTMLElement;
+    if (!overInput.classList.contains(DRAG_HOVER_CLASS)) {
+      overInput.classList.add(DRAG_HOVER_CLASS);
+      this._dragTarget = overInput;
     }
   }
 
@@ -204,6 +209,30 @@ export class ChatWidget extends ReactWidget {
   }
 
   /**
+   * Get the input model associated with the event target and input ids.
+   */
+  private _getInputFromEvent(event: Drag.Event): IInputModel | undefined {
+    let element = event.target as HTMLElement | null;
+
+    while (element) {
+      if (
+        element.classList.contains(INPUT_CONTAINER_CLASS) &&
+        element.dataset.inputId
+      ) {
+        const inputId = element.dataset.inputId;
+        const inputModel =
+          this.model.input.id === inputId
+            ? this.model.input
+            : this.model.getEditionModels().find(model => model.id === inputId);
+        return inputModel;
+      }
+      element = element.parentElement;
+    }
+
+    return;
+  }
+
+  /**
    * Process dropped files
    */
   private _processFileDrop(event: Drag.Event): void {
@@ -221,7 +250,8 @@ export class ChatWidget extends ReactWidget {
       value: data.model.path,
       mimetype: data.model.mimetype
     };
-    this.model.input.addAttachment?.(attachment);
+    const inputModel = this._getInputFromEvent(event);
+    inputModel?.addAttachment?.(attachment);
   }
 
   /**
@@ -283,7 +313,8 @@ export class ChatWidget extends ReactWidget {
           value: notebookPath,
           cells: validCells
         };
-        this.model.input.addAttachment?.(attachment);
+        const inputModel = this._getInputFromEvent(event);
+        inputModel?.addAttachment?.(attachment);
       }
     } catch (error) {
       console.error('Failed to process cell drop: ', error);
