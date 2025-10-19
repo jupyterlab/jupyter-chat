@@ -239,6 +239,13 @@ export class ChatWidget extends ReactWidget {
         console.warn('No valid cells to process');
         return;
       }
+      const activeCellManager = this.model.input
+        .activeCellManager as ActiveCellManager;
+      const notebookTracker = (activeCellManager as any)._notebookTracker;
+      if (!notebookTracker) {
+        console.warn('No notebook tracker available');
+        return;
+      }
 
       const notebookPath = this._findNotebookPath(String(cells[0].id));
       if (!notebookPath) {
@@ -268,10 +275,25 @@ export class ChatWidget extends ReactWidget {
           console.warn(`Unknown cell type: ${cell.cell_type}, skipping`);
           continue;
         }
+        const currentNotebook = notebookTracker.currentWidget;
+        if (!currentNotebook) {
+          continue;
+        }
+
+        const cellWidget = currentNotebook.content.widgets.find(
+          (c: Cell) => c.model?.id === cell.id
+        );
+        if (!cellWidget?.model) {
+          console.warn(`Cell widget or model missing for ID: ${cell.id}`);
+          continue;
+        }
 
         const notebookCell: INotebookAttachmentCell = {
-          id: cell.id,
-          input_type: cellType
+          id: cellWidget.model.id,
+          input_type: cellType,
+          source: (cellWidget.model.value as any)?.text ?? '',
+          outputs: cellWidget.model.outputs?.toJSON?.() ?? [],
+          index: currentNotebook.content.widgets.indexOf(cellWidget)
         };
         validCells.push(notebookCell);
       }

@@ -29,9 +29,11 @@ function getAttachmentDisplayName(attachment: IAttachment): string {
 
     // Show info about attached cells if there are any
     if (attachment.cells?.length === 1) {
-      return `${notebookName}: ${attachment.cells[0].input_type} cell`;
+      const cell = attachment.cells[0];
+      return `${notebookName}: ${cell.input_type} cell[${cell.index + 1}]`;
     } else if (attachment.cells && attachment.cells.length > 1) {
-      return `${notebookName}: ${attachment.cells.length} cells`;
+      const cellNumbers = attachment.cells.map(c => c.index + 1).join(', ');
+      return `${notebookName}: ${attachment.cells.length} cells [${cellNumbers}]`;
     }
 
     return notebookName;

@@ -130,10 +130,22 @@ export interface INotebookAttachmentCell {
    */
   input_type: 'raw' | 'markdown' | 'code';
   /**
+   * The source code or content of the cell.
+   */
+  source: string;
+  /**
+   * (optional) The MIME type of the cell.
+   */
+  outputs?: string[];
+  /**
    * (optional) A selection range within the cell. See `IAttachmentSelection` for
    * more info.
    */
   selection?: IAttachmentSelection;
+  /**
+   * (optional) The index of the cell within the notebook.
+   */
+  index: number;
 }
 
 /**
