@@ -22,7 +22,7 @@ import {
 } from '.';
 import { IInputModel, InputModel } from '../../input-model';
 import { IChatCommandRegistry } from '../../registers';
-import { IAttachment } from '../../types';
+import { IAttachment, ChatArea } from '../../types';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
 const INPUT_TEXTFIELD_CLASS = 'jp-chat-input-textfield';
@@ -44,6 +44,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   const [toolbarElements, setToolbarElements] = useState<
     InputToolbarRegistry.IToolbarItem[]
   >([]);
+  const [isFocused, setIsFocused] = useState<boolean>(false);
 
   /**
    * Handle the changes on the model that affect the input.
@@ -165,80 +166,125 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     }
   }
 
+  const horizontalPadding = props.area === 'sidebar' ? 1.5 : 2;
+
   return (
     <Box
       sx={props.sx}
       className={clsx(INPUT_BOX_CLASS)}
       data-input-id={model.id}
     >
-      <AttachmentPreviewList
-        attachments={attachments}
-        onRemove={model.removeAttachment}
-      />
-      <Autocomplete
-        {...chatCommands.autocompleteProps}
-        // ensure the autocomplete popup always renders on top
-        slotProps={{
-          popper: {
-            placement: 'top'
-          },
-          paper: {
-            sx: {
-              border: '1px solid lightgray'
-            }
-          },
-          listbox: {
-            sx: {
-              '& .MuiAutocomplete-option': {
-                padding: 2
-              }
-            }
-          }
+      <Box
+        sx={{
+          border: '1px solid',
+          borderColor: isFocused
+            ? 'var(--jp-brand-color1)'
+            : 'var(--jp-border-color1)',
+          borderRadius: 2,
+          transition: 'border-color 0.2s ease',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden'
         }}
-        renderInput={params => (
-          <TextField
-            {...params}
-            fullWidth
-            variant="filled"
-            className={INPUT_TEXTFIELD_CLASS}
-            multiline
-            onKeyDown={handleKeyDown}
-            placeholder="Start chatting"
-            inputRef={inputRef}
-            sx={{ p: 1 }}
-            onSelect={() =>
-              (model.cursorIndex = inputRef.current?.selectionStart ?? null)
-            }
-            InputProps={{
-              ...params.InputProps,
-              disableUnderline: true
+      >
+        {attachments.length > 0 && (
+          <Box
+            sx={{
+              px: horizontalPadding,
+              pt: 1,
+              pb: 1
             }}
+          >
+            <AttachmentPreviewList
+              attachments={attachments}
+              onRemove={model.removeAttachment}
+            />
+          </Box>
+        )}
+        <Autocomplete
+          {...chatCommands.autocompleteProps}
+          // sx={{
+          //   '& .MuiFormController-root.MuiTextField-root': {
+          //     margin: 0
+          //   }
+          // }}
+          // ensure the autocomplete popup always renders on top
+          slotProps={{
+            popper: {
+              placement: 'top'
+            }
+          }}
+          renderInput={params => (
+            <TextField
+              {...params}
+              fullWidth
+              variant="standard"
+              className={INPUT_TEXTFIELD_CLASS}
+              multiline
+              onKeyDown={handleKeyDown}
+              placeholder="Ask a question or type / for commands"
+              inputRef={inputRef}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              onSelect={() =>
+                (model.cursorIndex = inputRef.current?.selectionStart ?? null)
+              }
+              sx={{
+                padding: 1.5,
+                margin: 0,
+                '& .MuiInputBase-root': {
+                  padding: 0,
+                  margin: 0,
+                  '&:before': {
+                    display: 'none'
+                  },
+                  '&:after': {
+                    display: 'none'
+                  }
+                }
+              }}
+              InputProps={{
+                ...params.InputProps,
+                disableUnderline: true
+              }}
             FormHelperTextProps={{
               sx: { display: 'none' }
             }}
-          />
-        )}
-        inputValue={input}
-        onInputChange={(
-          _,
-          newValue: string,
-          reason: AutocompleteInputChangeReason
-        ) => {
-          // Do not update the value if the reason is 'reset', which should occur only
-          // if an autocompletion command has been selected. In this case, the value is
-          // set in the 'onChange()' callback of the autocompletion (to avoid conflicts).
-          if (reason !== 'reset') {
-            model.value = newValue;
-          }
-        }}
-      />
-      <Box className={INPUT_TOOLBAR_CLASS} display="flex" justifyContent="flex-end">
-        {toolbarElements.map(item => (
-          <item.element
-            model={model}
-            chatCommandRegistry={props.chatCommandRegistry}
-          />
-        ))}
+            />
+          )}
+          inputValue={input}
+          onInputChange={(
+            _,
+            newValue: string,
+            reason: AutocompleteInputChangeReason
+          ) => {
+            // Do not update the value if the reason is 'reset', which should occur only
+            // if an autocompletion command has been selected. In this case, the value is
+            // set in the 'onChange()' callback of the autocompletion (to avoid conflicts).
+            if (reason !== 'reset') {
+              model.value = newValue;
+            }
+          }}
+        />
+        <Box
+          className={INPUT_TOOLBAR_CLASS}
+          sx={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: 2,
+            padding: 1.5,
+            borderTop: '1px solid',
+          borderColor: 'var(--jp-border-color1)'
+          }}
+        >
+          {toolbarElements.map((item, index) => (
+            <item.element
+              key={index}
+              model={model}
+              chatCommandRegistry={props.chatCommandRegistry}
+            />
+          ))}
+        </Box>
       </Box>
     </Box>
   );
@@ -272,5 +318,9 @@ export namespace ChatInput {
      * Chat command registry.
      */
     chatCommandRegistry?: IChatCommandRegistry;
+    /**
+     * The area where the chat is displayed.
+     */
+    area?: ChatArea;
   }
 }

@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import SendIcon from '@mui/icons-material/Send';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import React, { useEffect, useState } from 'react';
 
 import { InputToolbarRegistry } from '../toolbar-registry';
@@ -67,8 +67,25 @@ export function SendButton(
         variant: 'contained',
         className: SEND_BUTTON_CLASS
       }}
+      sx={{
+        backgroundColor: 'var(--jp-brand-color1)',
+        color: 'white',
+        minWidth: '24px',
+        width: '24px',
+        height: '24px',
+        borderRadius: '4px',
+        boxShadow: 'none',
+        '&:hover': {
+          backgroundColor: 'var(--jp-brand-color0)',
+          boxShadow: 'none'
+        },
+        '&.Mui-disabled': {
+          backgroundColor: 'var(--jp-border-color2)',
+          color: 'var(--jp-ui-font-color3)'
+        }
+      }}
     >
-      <SendIcon />
+      <ArrowUpwardIcon />
     </TooltippedButton>
   );
 }

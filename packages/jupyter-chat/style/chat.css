@@ -186,24 +186,6 @@
   bottom: 120px;
 }
 
-.jp-chat-attachments {
-  display: flex;
-}
-
-.jp-chat-attachment {
-  border: solid 1px;
-  border-radius: 10px;
-  margin: 0 0.2em;
-  padding: 0 0.3em;
-  align-content: center;
-  background-color: var(--jp-border-color3);
-  flex-shrink: 0;
-}
-
-.jp-chat-attachment .jp-chat-attachment-clickable:hover {
-  cursor: pointer;
-}
-
 .jp-chat-command-name {
   font-weight: normal;
   margin: 5px;

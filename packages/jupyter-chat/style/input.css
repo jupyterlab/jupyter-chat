@@ -42,64 +42,6 @@
   white-space: nowrap;
 }
 
-/*
- * INPUT TEXT FIELD
- */
-.jp-chat-input-component {
-  border: 1px solid var(--jp-ui-font-color3);
-  border-radius: 4px;
-}
-
-.jp-chat-input-textfield .jp-chat-input-component::before,
-.jp-chat-input-textfield .jp-chat-input-component::after {
-  border-bottom: unset !important;
-}
-
-/* Use the textfield label below the input. */
-.jp-chat-input-textfield .jp-chat-input-component {
-  padding-top: 8px !important;
-  padding-bottom: 15px !important;
-  background-color: unset !important;
-}
-
-.jp-chat-input-textfield label {
-  top: unset;
-  left: unset;
-  bottom: 0;
-  right: 0;
-  color: var(--jp-ui-font-color2) !important;
-}
-
-/*
- * INPUT TOOLBAR
- */
-.jp-chat-input-toolbar {
-  gap: 1px;
-  align-self: flex-end;
-  min-height: unset !important;
-  margin-bottom: 4px;
-}
-
-.jp-chat-input-toolbar .jp-chat-tooltipped-wrap button {
-  border-radius: 0;
-  min-width: unset;
-}
-
-.jp-chat-input-toolbar .jp-chat-tooltipped-wrap:first-child button {
-  border-top-left-radius: 2px;
-  border-bottom-left-radius: 2px;
-}
-
-.jp-chat-input-toolbar .jp-chat-tooltipped-wrap:last-child button {
-  border-top-right-radius: 2px;
-  border-bottom-right-radius: 2px;
-}
-
-.jp-chat-input-toolbar .jp-chat-attach-button,
-.jp-chat-input-toolbar .jp-chat-cancel-button {
-  padding: 4px;
-}
-
 .jp-chat-input-toolbar .jp-chat-send-include-opener {
   padding: 4px 0;
 }

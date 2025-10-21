@@ -9,13 +9,11 @@ import React, { useContext } from 'react';
 import { PathExt } from '@jupyterlab/coreutils';
 import { UUID } from '@lumino/coreutils';
 
+import { ContrastingTooltip } from './mui-extras/contrasting-tooltip';
 import { TooltippedButton } from './mui-extras/tooltipped-button';
 import { IAttachment } from '../types';
 import { AttachmentOpenerContext } from '../context';
 
-const ATTACHMENTS_CLASS = 'jp-chat-attachments';
-const ATTACHMENT_CLASS = 'jp-chat-attachment';
-const ATTACHMENT_CLICKABLE_CLASS = 'jp-chat-attachment-clickable';
 const REMOVE_BUTTON_CLASS = 'jp-chat-attachment-remove';
 
 /**
@@ -57,7 +55,15 @@ export type AttachmentsProps = {
  */
 export function AttachmentPreviewList(props: AttachmentsProps): JSX.Element {
   return (
-    <Box className={ATTACHMENTS_CLASS}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 1,
+        rowGap: 1,
+        columnGap: 2
+      }}
+    >
       {props.attachments.map(attachment => (
         <AttachmentPreview
           key={`${PathExt.basename(attachment.value)}-${UUID.uuid4()}`}
@@ -82,23 +88,42 @@ export type AttachmentProps = AttachmentsProps & {
 export function AttachmentPreview(props: AttachmentProps): JSX.Element {
   const remove_tooltip = 'Remove attachment';
   const attachmentOpenerRegistry = useContext(AttachmentOpenerContext);
+  const isClickable = !!attachmentOpenerRegistry?.get(props.attachment.type);
 
   return (
-    <Box className={ATTACHMENT_CLASS}>
-      <span
-        className={
-          attachmentOpenerRegistry?.get(props.attachment.type)
-            ? ATTACHMENT_CLICKABLE_CLASS
-            : ''
-        }
-        onClick={() =>
-          attachmentOpenerRegistry?.get(props.attachment.type)?.(
-            props.attachment
-          )
-        }
-      >
-        {getAttachmentDisplayName(props.attachment)}
-      </span>
+    <Box
+      sx={{
+        border: '1px solid var(--jp-border-color1)',
+        borderRadius: '2px',
+        px: 1,
+        py: 0.5,
+        backgroundColor: 'var(--jp-layout-color0)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 0.5,
+        fontSize: '0.8125rem'
+      }}
+    >
+      <ContrastingTooltip title={props.attachment.value} placement="top">
+        <Box
+          component="span"
+          onClick={() =>
+            attachmentOpenerRegistry?.get(props.attachment.type)?.(
+              props.attachment
+            )
+          }
+          sx={{
+            cursor: isClickable ? 'pointer' : 'default',
+            '&:hover': isClickable
+              ? {
+                  textDecoration: 'underline'
+                }
+              : {}
+          }}
+        >
+          {getAttachmentDisplayName(props.attachment)}
+        </Box>
+      </ContrastingTooltip>
       {props.onRemove && (
         <TooltippedButton
           onClick={() => props.onRemove!(props.attachment)}
@@ -110,11 +135,15 @@ export function AttachmentPreview(props: AttachmentProps): JSX.Element {
           }}
           sx={{
             minWidth: 'unset',
-            padding: '0',
-            color: 'inherit'
+            padding: 0,
+            color: 'var(--jp-ui-font-color2)',
+            '&:hover': {
+              color: 'var(--jp-ui-font-color0)',
+              backgroundColor: 'transparent'
+            }
           }}
         >
-          <CloseIcon />
+          <CloseIcon fontSize="small" />
         </TooltippedButton>
       )}
     </Box>
