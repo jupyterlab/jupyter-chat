@@ -25,6 +25,7 @@ import {
   IChatCommandRegistry,
   IMessageFooterRegistry
 } from '../registers';
+import { ChatArea } from '../types';
 
 export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
   const { model } = props;
@@ -42,6 +43,7 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
         inputToolbarRegistry={inputToolbarRegistry}
         messageFooterRegistry={props.messageFooterRegistry}
         welcomeMessage={props.welcomeMessage}
+        area={props.area}
       />
       <ChatInput
         sx={{
@@ -141,6 +143,10 @@ export namespace Chat {
      * The welcome message.
      */
     welcomeMessage?: string;
+    /**
+     * The area where the chat is displayed.
+     */
+    area?: ChatArea;
   }
 
   /**

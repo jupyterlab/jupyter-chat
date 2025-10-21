@@ -172,3 +172,8 @@ export interface IAttachmentSelection {
  * An empty interface to describe optional settings that could be fetched from server.
  */
 export interface ISettings {} /* eslint-disable-line @typescript-eslint/no-empty-object-type */
+
+/**
+ * The area where the chat is displayed.
+ */
+export type ChatArea = 'sidebar' | 'main';

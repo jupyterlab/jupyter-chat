@@ -19,7 +19,7 @@ import { IInputToolbarRegistry } from '../input';
 import { ScrollContainer } from '../scroll-container';
 import { IChatCommandRegistry, IMessageFooterRegistry } from '../../registers';
 import { IChatModel } from '../../model';
-import { IChatMessage, IUser } from '../../types';
+import { ChatArea, IChatMessage, IUser } from '../../types';
 
 export const MESSAGE_CLASS = 'jp-chat-message';
 const MESSAGES_BOX_CLASS = 'jp-chat-messages-container';
@@ -53,6 +53,10 @@ export type BaseMessageProps = {
    * The welcome message.
    */
   welcomeMessage?: string;
+  /**
+   * The area where the chat is displayed.
+   */
+  area?: ChatArea;
 };
 
 /**
@@ -192,13 +196,14 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
             const isFirstInStack = !message.stacked;
             const isLastInStack =
               i === messages.length - 1 || !messages[i + 1].stacked;
+            const horizontalPadding = props.area === 'main' ? 8 : 4;
             return (
               // extra div needed to ensure each bubble is on a new line
               <Box
                 key={i}
                 sx={{
-                  paddingLeft: 4,
-                  paddingRight: 4,
+                  paddingLeft: horizontalPadding,
+                  paddingRight: horizontalPadding,
                   paddingTop: isFirstInStack ? 2 : 0,
                   paddingBottom: isLastInStack ? 2 : 0
                 }}

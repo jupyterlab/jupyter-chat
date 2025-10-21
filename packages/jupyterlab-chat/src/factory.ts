@@ -4,6 +4,7 @@
  */
 
 import {
+  ChatArea,
   ChatWidget,
   IActiveCellManager,
   IAttachmentOpenerRegistry,
@@ -99,6 +100,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
     context.attachmentOpenerRegistry = this._attachmentOpenerRegistry;
     context.messageFooterRegistry = this._messageFooterRegistry;
     context.welcomeMessage = this._welcomeMessage;
+    context.area = 'main';
     if (this._inputToolbarFactory) {
       context.inputToolbarRegistry = this._inputToolbarFactory.create();
     }
@@ -137,6 +139,7 @@ export namespace ChatWidgetFactory {
     inputToolbarRegistry?: IInputToolbarRegistry;
     messageFooterRegistry?: IMessageFooterRegistry;
     welcomeMessage?: string;
+    area?: ChatArea;
   }
 
   export interface IOptions<T extends LabChatPanel>

@@ -155,7 +155,8 @@ export class MultiChatPanel extends SidePanel {
       attachmentOpenerRegistry: this._attachmentOpenerRegistry,
       inputToolbarRegistry,
       messageFooterRegistry: this._messageFooterRegistry,
-      welcomeMessage: this._welcomeMessage
+      welcomeMessage: this._welcomeMessage,
+      area: 'sidebar'
     });
 
     const section = new ChatSection({
