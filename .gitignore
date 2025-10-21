@@ -135,3 +135,6 @@ Untitled*.ipynb
 
 # Chat files
 *.chat
+
+# Ignore secrets in '.env'
+.env
