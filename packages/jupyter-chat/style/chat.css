@@ -2,17 +2,6 @@
  * Copyright (c) Jupyter Development Team.
  * Distributed under the terms of the Modified BSD License.
  */
-.jp-chat-message:not(.jp-chat-message-stacked) {
-  padding: 1em 1em 0;
-}
-
-.jp-chat-message:not(:first-child, .jp-chat-message-stacked) {
-  border-top: 1px solid var(--jp-border-color2);
-}
-
-.jp-chat-message.jp-chat-message-stacked {
-  padding: 0 1em;
-}
 
 .jp-chat-rendered-markdown {
   position: relative;
