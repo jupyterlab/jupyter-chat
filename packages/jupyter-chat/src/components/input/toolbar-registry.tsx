@@ -6,7 +6,7 @@ import { Token } from '@lumino/coreutils';
 import { ISignal, Signal } from '@lumino/signaling';
 import * as React from 'react';
 
-import { AttachButton, CancelButton, SendButton } from './buttons';
+import { CancelButton, SendButton } from './buttons';
 import { IInputModel } from '../../input-model';
 import { IChatCommandRegistry } from '../../registers';
 
@@ -155,10 +155,6 @@ export namespace InputToolbarRegistry {
     registry.addItem('send', {
       element: SendButton,
       position: 100
-    });
-    registry.addItem('attach', {
-      element: AttachButton,
-      position: 20
     });
     registry.addItem('cancel', {
       element: CancelButton,
