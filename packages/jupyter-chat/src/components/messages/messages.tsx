@@ -179,13 +179,29 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
             content={props.welcomeMessage}
           />
         )}
-        <Box ref={refMsgBox} className={clsx(MESSAGES_BOX_CLASS)}>
+        <Box
+          sx={{
+            paddingTop: 2,
+            paddingBottom: 15
+          }}
+          ref={refMsgBox}
+          className={clsx(MESSAGES_BOX_CLASS)}
+        >
           {messages.map((message, i) => {
             renderedPromise.current[i] = new PromiseDelegate();
+            const isFirstInStack = !message.stacked;
+            const isLastInStack =
+              i === messages.length - 1 || !messages[i + 1].stacked;
             return (
               // extra div needed to ensure each bubble is on a new line
               <Box
                 key={i}
+                sx={{
+                  paddingLeft: 4,
+                  paddingRight: 4,
+                  paddingTop: isFirstInStack ? 2 : 0,
+                  paddingBottom: isLastInStack ? 2 : 0
+                }}
                 className={clsx(
                   MESSAGE_CLASS,
                   message.stacked ? MESSAGE_STACKED_CLASS : ''
