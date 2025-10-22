@@ -6,9 +6,10 @@ import { Token } from '@lumino/coreutils';
 import { ISignal, Signal } from '@lumino/signaling';
 import * as React from 'react';
 
-import { CancelButton, SendButton } from './buttons';
+import { CancelButton, SendButton, StopButton } from './buttons';
 import { IInputModel } from '../../input-model';
 import { IChatCommandRegistry } from '../../registers';
+import { IChatModel } from '../../model';
 
 /**
  * The toolbar registry interface.
@@ -144,6 +145,10 @@ export namespace InputToolbarRegistry {
      * `onSubmit()` on all command providers before sending the message.
      */
     chatCommandRegistry?: IChatCommandRegistry;
+    /**
+     * The chat model. Provides access to messages, writers, and other chat state.
+     */
+    chatModel?: IChatModel;
   }
 
   /**
@@ -152,6 +157,10 @@ export namespace InputToolbarRegistry {
   export function defaultToolbarRegistry(): InputToolbarRegistry {
     const registry = new InputToolbarRegistry();
 
+    registry.addItem('stop', {
+      element: StopButton,
+      position: 90
+    });
     registry.addItem('send', {
       element: SendButton,
       position: 100

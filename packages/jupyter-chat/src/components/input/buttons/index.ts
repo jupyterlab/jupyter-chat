@@ -5,3 +5,4 @@
 
 export { CancelButton } from './cancel-button';
 export { SendButton } from './send-button';
+export { StopButton } from './stop-button';

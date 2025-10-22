@@ -33,7 +33,9 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
   if (!inputToolbarRegistry) {
     inputToolbarRegistry = InputToolbarRegistry.defaultToolbarRegistry();
   }
-  const horizontalPadding = props.area === 'main' ? 8 : 4;
+  // const horizontalPadding = props.area === 'main' ? 8 : 4;
+  const horizontalPadding = 4;
+
   return (
     <AttachmentOpenerContext.Provider value={props.attachmentOpenerRegistry}>
       <ChatMessages
@@ -56,6 +58,7 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
         chatCommandRegistry={props.chatCommandRegistry}
         toolbarRegistry={inputToolbarRegistry}
         area={props.area}
+        chatModel={model}
       />
     </AttachmentOpenerContext.Provider>
   );

@@ -23,6 +23,7 @@ import {
 import { IInputModel, InputModel } from '../../input-model';
 import { IChatCommandRegistry } from '../../registers';
 import { IAttachment, ChatArea } from '../../types';
+import { IChatModel } from '../../model';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
 const INPUT_TEXTFIELD_CLASS = 'jp-chat-input-textfield';
@@ -242,7 +243,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
                 padding: 1.5,
                 margin: 0,
                 backgroundColor: isFocused
-                  ? 'white'
+                  ? 'var(--jp-layout-color0)'
                   : 'var(--jp-cell-editor-background)',
                 transition: 'background-color 0.2s ease',
                 '& .MuiInputBase-root': {
@@ -289,7 +290,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
             borderTop: '1px solid',
             borderColor: 'var(--jp-border-color1)',
             backgroundColor: isFocused
-              ? 'white'
+              ? 'var(--jp-layout-color0)'
               : 'var(--jp-cell-editor-background)',
             transition: 'background-color 0.2s ease'
           }}
@@ -299,6 +300,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
               key={index}
               model={model}
               chatCommandRegistry={props.chatCommandRegistry}
+              chatModel={props.chatModel}
             />
           ))}
         </Box>
@@ -339,5 +341,9 @@ export namespace ChatInput {
      * The area where the chat is displayed.
      */
     area?: ChatArea;
+    /**
+     * The chat model.
+     */
+    chatModel?: IChatModel;
   }
 }

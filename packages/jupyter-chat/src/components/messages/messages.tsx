@@ -73,6 +73,32 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
   const listRef = useRef<(HTMLDivElement | null)[]>([]);
   const renderedPromise = useRef<PromiseDelegate<void>[]>([]);
 
+  // TEMPORARY: Static mock writers for visual design testing
+  const MOCK_WRITERS: IUser[] = [
+    {
+      username: 'alice_johnson',
+      name: 'Alice Johnson',
+      display_name: 'Dr. Alice Johnson',
+      initials: 'AJ',
+      color: '#9c27b0'
+    },
+    {
+      username: 'ai_assistant',
+      name: 'AI Assistant',
+      display_name: 'AI Assistant',
+      initials: 'AI',
+      color: '#2196f3',
+      bot: true
+    },
+    {
+      username: 'bob',
+      name: 'Bob',
+      display_name: 'Bob',
+      initials: 'B',
+      color: '#ff9800'
+    }
+  ];
+  console.log(MOCK_WRITERS)
   /**
    * Effect: fetch history and config on initial render
    */
@@ -173,7 +199,7 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
       });
     };
   }, [messages, allRendered]);
-
+  console.log(currentWriters)
   return (
     <>
       <ScrollContainer sx={{ flexGrow: 1 }}>
@@ -232,6 +258,7 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
           })}
         </Box>
       </ScrollContainer>
+      {/* <WritingUsersList writers={MOCK_WRITERS}></WritingUsersList> */}
       <WritingUsersList writers={currentWriters}></WritingUsersList>
       <Navigation {...props} refMsgBox={refMsgBox} allRendered={allRendered} />
     </>

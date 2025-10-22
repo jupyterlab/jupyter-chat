@@ -7,6 +7,11 @@
   position: relative;
 }
 
+.jp-chat-rendered-markdown hr {
+  color: #00000026;
+  background-color: transparent;
+}
+
 /*
  * Selectors must be nested in `.jp-ThemedContainer` to have a higher
  * specificity than selectors in rules provided by JupyterLab.
