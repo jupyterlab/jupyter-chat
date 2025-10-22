@@ -196,6 +196,7 @@ export function ChatMessages(): JSX.Element {
               >
                 <ChatMessageHeader
                   message={message}
+                  model={model}
                   isCurrentUser={isCurrentUser}
                 />
                 <ChatMessage

@@ -153,33 +153,35 @@ class YChat(YBaseDoc):
             index = len(self._ymessages) - next((i for i, v in enumerate(self._get_messages()[::-1]) if v["time"] < timestamp), len(self._ymessages))
             self._ymessages.insert(
                 index,
-                asdict(message, dict_factory=message_asdict_factory)
+                Map(asdict(message, dict_factory=message_asdict_factory))
             )
 
         return uid
 
-    def update_message(self, message: Message, append: bool = False, trigger_actions: list[Callable] | None = None):
+    def update_message(self, update: Message, append: bool = False, trigger_actions: list[Callable] | None = None):
         """
         Update a message of the document.
 
         Args:
-            message: The message to update
+            update: The updated message
             append: If True, the content will be appended to the previous content
             trigger_actions: List of callbacks to execute on the message. Each callback receives (message, chat) as arguments.
         """
         with self._ydoc.transaction():
-            index = self._indexes_by_id[message.id]
-            initial_message = self._ymessages[index]
-            message.time = initial_message["time"]  # type:ignore[index]
-            if append:
-                message.body = initial_message["body"] + message.body  # type:ignore[index]
+            index = self._indexes_by_id[update.id]
+            message = self._ymessages[index]
+            message.update({
+                "attachments": update.attachments,
+                "mentions": update.mentions,
+                "deleted": update.deleted,
+                "edited": update.edited,
+                "body": (message.get("body") if append else "") + update.body
+            })
 
             # Execute all trigger action callbacks
             if trigger_actions:
                 for callback in trigger_actions:
                     callback(message, self)
-
-            self._ymessages[index] = asdict(message, dict_factory=message_asdict_factory)
 
     def get_attachments(self) -> dict[str, Union[FileAttachment, NotebookAttachment]]:
         """
@@ -292,7 +294,7 @@ class YChat(YBaseDoc):
                     self._yattachments.update({k: v})
 
             if "messages" in contents.keys():
-                self._ymessages.extend(contents["messages"])
+                self._ymessages.extend([Map(message) for message in contents["messages"]])
 
             if "metadata" in contents.keys():
                 for k, v in contents["metadata"].items():
@@ -304,7 +306,7 @@ class YChat(YBaseDoc):
         self._subscriptions[self._ymetadata] = self._ymetadata.observe(
             partial(callback, "metadata")
         )
-        self._subscriptions[self._ymessages] = self._ymessages.observe(
+        self._subscriptions[self._ymessages] = self._ymessages.observe_deep(
             partial(callback, "messages")
         )
         self._subscriptions[self._yusers] = self._yusers.observe(partial(callback, "users"))
@@ -370,19 +372,17 @@ class YChat(YBaseDoc):
         with self._ydoc.transaction():
             # Remove the message from the list and modify the timestamp
             try:
-                message_dict = self._ymessages[msg_idx]
+                message = self._ymessages[msg_idx]
             except IndexError:
                 return
 
-            message_dict["time"] = timestamp  # type:ignore[index]
-            message_dict["raw_time"] = False  # type:ignore[index]
-            self._ymessages[msg_idx] = message_dict
+            message.update({"time": timestamp, "raw_time": False})  # type:ignore[index]
 
             # Move the message at the correct position in the list, looking first at the end, since the message
             # should be the last one.
             # The next() function below return the index of the first message with a timestamp inferior of the
             # current one, starting from the end of the list.
-            new_idx = len(self._ymessages) - next((i for i, v in enumerate(self._get_messages()[::-1]) if v["time"] < timestamp), len(self._ymessages))
+            new_idx = len(self._ymessages) - next((i for i, v in enumerate(self._get_messages()[::-1]) if v.get("time") < timestamp), len(self._ymessages))
             if msg_idx != new_idx:
-                message_dict = self._ymessages.pop(msg_idx)
-                self._ymessages.insert(new_idx, message_dict)
+                message = self._ymessages.pop(msg_idx)
+                self._ymessages.insert(new_idx, message)

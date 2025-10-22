@@ -92,6 +92,11 @@ export interface IChatModel extends IDisposable {
   readonly messagesUpdated: ISignal<IChatModel, void>;
 
   /**
+   * A signal emitting when a single message is updated.
+   */
+  readonly messageChanged: ISignal<IChatModel, IChatMessage>;
+
+  /**
    * A signal emitting when the messages list is updated.
    */
   readonly configChanged: ISignal<IChatModel, IConfig>;
@@ -450,10 +455,17 @@ export abstract class AbstractChatModel implements IChatModel {
   }
 
   /**
-   * A signal emitting when the messages list is updated.
+   * A signal emitting when the message list is updated.
    */
   get messagesUpdated(): ISignal<IChatModel, void> {
     return this._messagesUpdated;
+  }
+
+  /**
+   * A signal emitting when a single message is updated.
+   */
+  get messageChanged(): ISignal<IChatModel, IChatMessage> {
+    return this._messageChanged;
   }
 
   /**
@@ -613,6 +625,14 @@ export abstract class AbstractChatModel implements IChatModel {
   }
 
   /**
+   * Function to call when a message is updated
+   */
+  messageUpdated(index: number, message: IChatMessage): void {
+    this.messages[index] = message;
+    this._messageChanged.emit(message);
+  }
+
+  /**
    * Update the current writers list.
    * This implementation only propagate the list via a signal.
    */
@@ -731,6 +751,7 @@ export abstract class AbstractChatModel implements IChatModel {
   private _writers: IChatModel.IWriter[] = [];
   private _messageEditions = new Map<string, IInputModel>();
   private _messagesUpdated = new Signal<IChatModel, void>(this);
+  private _messageChanged = new Signal<IChatModel, IChatMessage>(this);
   private _configChanged = new Signal<IChatModel, IConfig>(this);
   private _unreadChanged = new Signal<IChatModel, number[]>(this);
   private _viewportChanged = new Signal<IChatModel, number[]>(this);
