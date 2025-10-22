@@ -47,6 +47,15 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   const [isFocused, setIsFocused] = useState<boolean>(false);
 
   /**
+   * Auto-focus the input when the component is first mounted.
+   */
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
+
+  /**
    * Handle the changes on the model that affect the input.
    * - focus requested
    * - config changed
@@ -232,6 +241,10 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
               sx={{
                 padding: 1.5,
                 margin: 0,
+                backgroundColor: isFocused
+                  ? 'white'
+                  : 'var(--jp-cell-editor-background)',
+                transition: 'background-color 0.2s ease',
                 '& .MuiInputBase-root': {
                   padding: 0,
                   margin: 0,
@@ -274,7 +287,11 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
             gap: 2,
             padding: 1.5,
             borderTop: '1px solid',
-          borderColor: 'var(--jp-border-color1)'
+            borderColor: 'var(--jp-border-color1)',
+            backgroundColor: isFocused
+              ? 'white'
+              : 'var(--jp-cell-editor-background)',
+            transition: 'background-color 0.2s ease'
           }}
         >
           {toolbarElements.map((item, index) => (
