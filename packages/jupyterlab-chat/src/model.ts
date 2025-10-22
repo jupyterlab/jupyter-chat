@@ -398,8 +398,8 @@ export class LabChatModel
   }
 
   private _onchange = async (_: YChat, changes: IChatChanges) => {
-    if (changes.messageChanges) {
-      const msgDelta = changes.messageChanges;
+    if (changes.messageListChanges) {
+      const msgDelta = changes.messageListChanges;
       let index = 0;
       for (const delta of msgDelta) {
         if (delta.retain) {
@@ -411,7 +411,7 @@ export class LabChatModel
               attachments: attachmentIds,
               mentions: mentionsIds,
               ...baseMessage
-            } = ymessage;
+            } = ymessage.toJSON() as IYmessage;
 
             // Build the base message with sender.
             const msg: IChatMessage = {
@@ -455,6 +455,53 @@ export class LabChatModel
           this.messagesDeleted(index, delta.delete);
         }
       }
+    }
+
+    if (changes.messageChanges) {
+      // Update change in the message.
+      changes.messageChanges.forEach(change => {
+        const message = this.messages[change.index];
+        if (change.type === 'remove') {
+          delete message[change.key as keyof IChatMessage];
+        } else if (change.newValue !== undefined) {
+          const key = change.key;
+          const value = change.newValue;
+          if (key === 'attachments') {
+            const attachments: IAttachment[] = [];
+            (value as string[]).forEach(attachmentId => {
+              const attachment = this.sharedModel.getAttachment(attachmentId);
+              if (attachment) {
+                attachments.push(attachment);
+              }
+            });
+            if (attachments.length) {
+              message.attachments = attachments;
+            } else {
+              delete message.attachments;
+            }
+          } else if (key === 'mentions') {
+            const mentions: IUser[] = (value as string[]).map(
+              user =>
+                this.sharedModel.getUser(user) || {
+                  username: 'User undefined',
+                  mention_name: 'User-undefined'
+                }
+            );
+            if (mentions?.length) {
+              message.mentions = mentions;
+            }
+          } else if (
+            ['body', 'time', 'raw_time', 'deleted', 'edited'].includes(key)
+          ) {
+            (message as any)[key] = value;
+          } else {
+            console.error(
+              `The attribute '${key}' of message cannot be updated`
+            );
+          }
+        }
+        this.messageUpdated(change.index, message);
+      });
     }
 
     if (changes.metadataChanges) {
