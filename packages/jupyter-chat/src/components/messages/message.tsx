@@ -37,7 +37,8 @@ type ChatMessageProps = BaseMessageProps & {
  */
 export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
   (props, ref): JSX.Element => {
-    const { message, model, rmRegistry } = props;
+    const { model, rmRegistry } = props;
+    const [message, setMessage] = useState<IChatMessage>(props.message);
     const [edit, setEdit] = useState<boolean>(false);
     const [deleted, setDeleted] = useState<boolean>(false);
     const [canEdit, setCanEdit] = useState<boolean>(false);
@@ -61,6 +62,19 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
         setCanDelete(false);
       }
     }, [model, message]);
+
+    // Listen for changes in the current message.
+    useEffect(() => {
+      function messageChanged(_: any, msg: IChatMessage) {
+        if (msg.id === message.id) {
+          setMessage({ ...msg });
+        }
+      }
+      model.messageChanged.connect(messageChanged);
+      return () => {
+        model.messageChanged.disconnect(messageChanged);
+      };
+    }, [model]);
 
     // Create an input model only if the message is edited.
     const startEdition = (): void => {

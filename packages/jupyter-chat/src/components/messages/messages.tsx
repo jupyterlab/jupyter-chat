@@ -215,6 +215,7 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
                 >
                   <ChatMessageHeader
                     message={message}
+                    model={model}
                     isCurrentUser={isCurrentUser}
                   />
                   <ChatMessage
