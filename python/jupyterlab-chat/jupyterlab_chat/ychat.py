@@ -382,7 +382,7 @@ class YChat(YBaseDoc):
             # should be the last one.
             # The next() function below return the index of the first message with a timestamp inferior of the
             # current one, starting from the end of the list.
-            new_idx = len(self._ymessages) - next((i for i, v in enumerate(self._get_messages()[::-1]) if v.get("time") < timestamp), len(self._ymessages))
+            new_idx = len(self._ymessages) - next((i for i, v in enumerate(self._get_messages()[::-1]) if v.get("time", 0) < timestamp), len(self._ymessages))
             if msg_idx != new_idx:
                 message = self._ymessages.pop(msg_idx)
                 self._ymessages.insert(new_idx, message)
