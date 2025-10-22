@@ -49,7 +49,7 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
         sx={{
           paddingLeft: horizontalPadding,
           paddingRight: horizontalPadding,
-          paddingTop: 4,
+          paddingTop: 0,
           paddingBottom: 4
         }}
         model={model.input}
