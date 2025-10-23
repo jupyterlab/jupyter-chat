@@ -52,7 +52,7 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
           paddingLeft: horizontalPadding,
           paddingRight: horizontalPadding,
           paddingTop: 0,
-          paddingBottom: 4
+          paddingBottom: 0
         }}
         model={model.input}
         chatCommandRegistry={props.chatCommandRegistry}

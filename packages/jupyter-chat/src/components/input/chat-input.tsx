@@ -24,6 +24,7 @@ import { IInputModel, InputModel } from '../../input-model';
 import { IChatCommandRegistry } from '../../registers';
 import { IAttachment, ChatArea } from '../../types';
 import { IChatModel } from '../../model';
+import { InputWritingIndicator } from './writing-indicator';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
 const INPUT_TEXTFIELD_CLASS = 'jp-chat-input-textfield';
@@ -46,6 +47,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     InputToolbarRegistry.IToolbarItem[]
   >([]);
   const [isFocused, setIsFocused] = useState<boolean>(false);
+  const [writers, setWriters] = useState<IChatModel.IWriter[]>([]);
 
   /**
    * Auto-focus the input when the component is first mounted.
@@ -107,6 +109,30 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
       toolbarRegistry.itemsChanged.disconnect(updateToolbar);
     };
   }, [toolbarRegistry]);
+
+  /**
+   * Handle the changes in the writers list.
+   */
+  useEffect(() => {
+    if (!props.chatModel) {
+      return;
+    }
+
+    const updateWriters = (_: IChatModel, writers: IChatModel.IWriter[]) => {
+      // Show all writers for now - AI generating responses will have messageID
+      setWriters(writers);
+    };
+
+    // Set initial writers state
+    const initialWriters = props.chatModel.writers;
+    setWriters(initialWriters);
+
+    props.chatModel.writersChanged?.connect(updateWriters);
+
+    return () => {
+      props.chatModel?.writersChanged?.disconnect(updateWriters);
+    };
+  }, [props.chatModel]);
 
   const inputExists = !!input.trim();
 
@@ -242,9 +268,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
               sx={{
                 padding: 1.5,
                 margin: 0,
-                backgroundColor: isFocused
-                  ? 'var(--jp-layout-color0)'
-                  : 'var(--jp-cell-editor-background)',
+                backgroundColor: 'var(--jp-layout-color0)',
                 transition: 'background-color 0.2s ease',
                 '& .MuiInputBase-root': {
                   padding: 0,
@@ -289,9 +313,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
             padding: 1.5,
             borderTop: '1px solid',
             borderColor: 'var(--jp-border-color1)',
-            backgroundColor: isFocused
-              ? 'var(--jp-layout-color0)'
-              : 'var(--jp-cell-editor-background)',
+            backgroundColor: 'var(--jp-layout-color0)',
             transition: 'background-color 0.2s ease'
           }}
         >
@@ -305,6 +327,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
           ))}
         </Box>
       </Box>
+      <InputWritingIndicator writers={writers} />
     </Box>
   );
 }
