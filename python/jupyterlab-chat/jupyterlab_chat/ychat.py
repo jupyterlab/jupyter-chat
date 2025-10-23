@@ -161,15 +161,16 @@ class YChat(YBaseDoc):
         If append is True, the content will be append to the previous content.
         """
         with self._ydoc.transaction():
-            index = self._indexes_by_id[update.id]
-            message = self._ymessages[index]
-            message.update({
-                "attachments": update.attachments,
-                "mentions": update.mentions,
-                "deleted": update.deleted,
-                "edited": update.edited,
-                "body": (message.get("body") if append else "") + update.body
-            })
+            try:
+                index = self._indexes_by_id[update.id]
+                message = self._ymessages[index]
+            except (KeyError, IndexError) as e:
+                print(e)
+                return
+            update_dict = asdict(update)
+            if (update.body and append):
+                update_dict["body"] = message.get("body") + update.body
+            message.update(update_dict)
 
     def get_attachments(self) -> dict[str, Union[FileAttachment, NotebookAttachment]]:
         """
