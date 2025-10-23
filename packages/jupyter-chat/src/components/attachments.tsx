@@ -97,7 +97,7 @@ export function AttachmentPreview(props: AttachmentProps): JSX.Element {
         borderRadius: '2px',
         px: 1,
         py: 0.5,
-        backgroundColor: 'var(--jp-layout-color0)',
+        backgroundColor: 'var(--jp-layout-color2)',
         display: 'flex',
         alignItems: 'center',
         gap: 0.5,
