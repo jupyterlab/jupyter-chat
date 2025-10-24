@@ -15,7 +15,8 @@ import { Navigation } from './navigation';
 import { WelcomeMessage } from './welcome';
 import { ScrollContainer } from '../scroll-container';
 import { useChatContext } from '../../context';
-import { IChatMessage } from '../../types';
+import { Message } from '../../message';
+import { IMessage } from '../../types';
 
 export const MESSAGE_CLASS = 'jp-chat-message';
 const MESSAGES_BOX_CLASS = 'jp-chat-messages-container';
@@ -28,7 +29,7 @@ export function ChatMessages(): JSX.Element {
   const { area, messageFooterRegistry, model, welcomeMessage } =
     useChatContext();
 
-  const [messages, setMessages] = useState<IChatMessage[]>(model.messages);
+  const [messages, setMessages] = useState<IMessage[]>(model.messages);
   const refMsgBox = useRef<HTMLDivElement>(null);
   const [allRendered, setAllRendered] = useState<boolean>(false);
 
@@ -46,7 +47,11 @@ export function ChatMessages(): JSX.Element {
       }
       model
         .getHistory()
-        .then(history => setMessages(history.messages))
+        .then(history =>
+          setMessages(
+            history.messages.map(message => new Message({ ...message }))
+          )
+        )
         .catch(e => console.error(e));
     }
 
@@ -175,7 +180,6 @@ export function ChatMessages(): JSX.Element {
                 >
                   <ChatMessageHeader
                     message={message}
-                    model={model}
                     isCurrentUser={isCurrentUser}
                   />
                   <ChatMessage

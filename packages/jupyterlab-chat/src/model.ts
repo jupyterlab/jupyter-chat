@@ -8,9 +8,9 @@ import {
   AbstractChatContext,
   IAttachment,
   IChatContext,
-  IChatMessage,
   IChatModel,
   IInputModel,
+  IMessageContent,
   INewMessage,
   IUser
 } from '@jupyter/chat';
@@ -189,7 +189,7 @@ export class LabChatModel
 
   async messagesInserted(
     index: number,
-    messages: IChatMessage[]
+    messages: IMessageContent[]
   ): Promise<void> {
     // Ensure the chat has an ID before inserting the messages, to properly catch the
     // unread messages (the last read message is saved using the chat ID).
@@ -246,7 +246,7 @@ export class LabChatModel
 
   updateMessage(
     id: string,
-    updatedMessage: IChatMessage
+    updatedMessage: IMessageContent
   ): Promise<boolean | void> | boolean | void {
     const index = this.sharedModel.getMessageIndex(id);
     let message = this.sharedModel.getMessage(index);
@@ -414,7 +414,7 @@ export class LabChatModel
             } = ymessage.toJSON() as IYmessage;
 
             // Build the base message with sender.
-            const msg: IChatMessage = {
+            const msg: IMessageContent = {
               ...baseMessage,
               sender: this.sharedModel.getUser(sender) || {
                 username: 'User undefined',
@@ -462,7 +462,7 @@ export class LabChatModel
       changes.messageChanges.forEach(change => {
         const message = this.messages[change.index];
         if (change.type === 'remove') {
-          delete message[change.key as keyof IChatMessage];
+          delete message[change.key as keyof IMessageContent];
         } else if (change.newValue !== undefined) {
           const key = change.key;
           const value = change.newValue;
@@ -475,9 +475,9 @@ export class LabChatModel
               }
             });
             if (attachments.length) {
-              message.attachments = attachments;
+              message.update({ attachments });
             } else {
-              delete message.attachments;
+              message.update({ attachments: undefined });
             }
           } else if (key === 'mentions') {
             const mentions: IUser[] = (value as string[]).map(
@@ -488,19 +488,20 @@ export class LabChatModel
                 }
             );
             if (mentions?.length) {
-              message.mentions = mentions;
+              message.update({ mentions });
             }
           } else if (
             ['body', 'time', 'raw_time', 'deleted', 'edited'].includes(key)
           ) {
-            (message as any)[key] = value;
+            const update: Partial<IMessageContent> = {};
+            update[key as keyof IMessageContent] = value;
+            message.update(update);
           } else {
             console.error(
               `The attribute '${key}' of message cannot be updated`
             );
           }
         }
-        this.messageUpdated(change.index, message);
       });
     }
 

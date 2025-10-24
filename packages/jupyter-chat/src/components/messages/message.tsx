@@ -11,7 +11,7 @@ import { AttachmentPreviewList } from '../attachments';
 import { ChatInput } from '../input';
 import { useChatContext } from '../../context';
 import { IInputModel, InputModel } from '../../input-model';
-import { IChatMessage } from '../../types';
+import { IMessageContent, IMessage } from '../../types';
 import { replaceSpanToMention } from '../../utils';
 
 /**
@@ -21,7 +21,7 @@ type ChatMessageProps = {
   /**
    * The message to display.
    */
-  message: IChatMessage;
+  message: IMessage;
   /**
    * The index of the message in the list.
    */
@@ -38,7 +38,9 @@ type ChatMessageProps = {
 export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
   (props, ref): JSX.Element => {
     const { model } = useChatContext();
-    const [message, setMessage] = useState<IChatMessage>(props.message);
+    const [message, setMessage] = useState<IMessageContent>(
+      props.message.content
+    );
     const [edit, setEdit] = useState<boolean>(false);
     const [deleted, setDeleted] = useState<boolean>(false);
     const [canEdit, setCanEdit] = useState<boolean>(false);
@@ -65,16 +67,14 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
 
     // Listen for changes in the current message.
     useEffect(() => {
-      function messageChanged(_: any, msg: IChatMessage) {
-        if (msg.id === message.id) {
-          setMessage({ ...msg });
-        }
+      function messageChanged() {
+        setMessage(props.message.content);
       }
-      model.messageChanged.connect(messageChanged);
+      props.message.changed.connect(messageChanged);
       return () => {
-        model.messageChanged.disconnect(messageChanged);
+        props.message.changed.disconnect(messageChanged);
       };
-    }, [model]);
+    }, [props.message]);
 
     // Create an input model only if the message is edited.
     const startEdition = (): void => {

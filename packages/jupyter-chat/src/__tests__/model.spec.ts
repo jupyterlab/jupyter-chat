@@ -8,7 +8,7 @@
  */
 
 import { AbstractChatModel, IChatContext, IChatModel } from '../model';
-import { IChatMessage, INewMessage } from '../types';
+import { IMessageContent, INewMessage } from '../types';
 import { MockChatModel, MockChatContext } from './mocks';
 
 describe('test chat model', () => {
@@ -27,7 +27,7 @@ describe('test chat model', () => {
 
   describe('incoming message', () => {
     class TestChat extends AbstractChatModel implements IChatModel {
-      protected formatChatMessage(message: IChatMessage): IChatMessage {
+      protected formatChatMessage(message: IMessageContent): IMessageContent {
         message.body = 'formatted msg';
         return message;
       }
@@ -43,14 +43,14 @@ describe('test chat model', () => {
     }
 
     let model: IChatModel;
-    let messages: IChatMessage[];
+    let messages: IMessageContent[];
     const msg = {
       type: 'msg',
       id: 'message1',
       time: Date.now() / 1000,
       body: 'message test',
       sender: { username: 'user' }
-    } as IChatMessage;
+    } as IMessageContent;
 
     beforeEach(() => {
       messages = [];
@@ -76,7 +76,7 @@ describe('test chat model', () => {
       model.messageAdded({ ...msg });
       expect(messages).toHaveLength(1);
       expect(messages[0]).not.toBe(msg);
-      expect((messages[0] as IChatMessage).body).toBe('formatted msg');
+      expect((messages[0] as IMessageContent).body).toBe('formatted msg');
     });
   });
 
