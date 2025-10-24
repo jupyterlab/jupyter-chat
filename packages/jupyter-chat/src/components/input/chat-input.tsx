@@ -162,14 +162,13 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
 
     /**
      * IMPORTANT: This statement ensures that when the chat commands menu is
-     * open, the "Enter" key should select/run a command instead of sending
-     * the message.
+     * open with a highlighted command, the "Enter" key should run that command
+     * instead of sending the message.
      *
      * This is done by returning early and letting the event propagate to the
-     * `Autocomplete` component. With autoSelect: true, MUI will automatically
-     * select the first option if nothing is explicitly highlighted.
+     * `Autocomplete` component.
      */
-    if (chatCommands.menu.open) {
+    if (chatCommands.menu.highlighted) {
       return;
     }
 
