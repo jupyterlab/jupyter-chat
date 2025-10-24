@@ -323,6 +323,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
               model={model}
               chatCommandRegistry={props.chatCommandRegistry}
               chatModel={props.chatModel}
+              edit={props.edit}
             />
           ))}
         </Box>
@@ -368,5 +369,10 @@ export namespace ChatInput {
      * The chat model.
      */
     chatModel?: IChatModel;
+    /**
+     * Whether the input is in edit mode (editing an existing message).
+     * Defaults to false (new message mode).
+     */
+    edit?: boolean;
   }
 }

@@ -134,6 +134,7 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
             model={model.getEditionModel(message.id)!}
             chatCommandRegistry={props.chatCommandRegistry}
             toolbarRegistry={props.inputToolbarRegistry}
+            edit={true}
           />
         ) : (
           <MessageRenderer

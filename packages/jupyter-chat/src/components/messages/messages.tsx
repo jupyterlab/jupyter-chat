@@ -14,12 +14,11 @@ import { ChatMessageHeader } from './header';
 import { ChatMessage } from './message';
 import { Navigation } from './navigation';
 import { WelcomeMessage } from './welcome';
-// import { WritingUsersList } from './writers';
 import { IInputToolbarRegistry } from '../input';
 import { ScrollContainer } from '../scroll-container';
 import { IChatCommandRegistry, IMessageFooterRegistry } from '../../registers';
 import { IChatModel } from '../../model';
-import { ChatArea, IChatMessage, IUser } from '../../types';
+import { ChatArea, IChatMessage } from '../../types';
 
 export const MESSAGE_CLASS = 'jp-chat-message';
 const MESSAGES_BOX_CLASS = 'jp-chat-messages-container';
@@ -66,39 +65,12 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
   const { model } = props;
   const [messages, setMessages] = useState<IChatMessage[]>(model.messages);
   const refMsgBox = useRef<HTMLDivElement>(null);
-  const [currentWriters, setCurrentWriters] = useState<IUser[]>([]);
   const [allRendered, setAllRendered] = useState<boolean>(false);
 
   // The list of message DOM and their rendered promises.
   const listRef = useRef<(HTMLDivElement | null)[]>([]);
   const renderedPromise = useRef<PromiseDelegate<void>[]>([]);
 
-  // TEMPORARY: Static mock writers for visual design testing
-  // const MOCK_WRITERS: IUser[] = [
-  //   {
-  //     username: 'alice_johnson',
-  //     name: 'Alice Johnson',
-  //     display_name: 'Dr. Alice Johnson',
-  //     initials: 'AJ',
-  //     color: '#9c27b0'
-  //   },
-  //   {
-  //     username: 'ai_assistant',
-  //     name: 'AI Assistant',
-  //     display_name: 'AI Assistant',
-  //     initials: 'AI',
-  //     color: '#2196f3',
-  //     bot: true
-  //   },
-  //   {
-  //     username: 'bob',
-  //     name: 'Bob',
-  //     display_name: 'Bob',
-  //     initials: 'B',
-  //     color: '#ff9800'
-  //   }
-  // ];
-  // console.log(MOCK_WRITERS)
   /**
    * Effect: fetch history and config on initial render
    */
@@ -114,7 +86,6 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
     }
 
     fetchHistory();
-    setCurrentWriters([]);
   }, [model]);
 
   /**
@@ -125,16 +96,10 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
       setMessages([...model.messages]);
     }
 
-    function handleWritersChange(_: IChatModel, writers: IChatModel.IWriter[]) {
-      setCurrentWriters(writers.map(writer => writer.user));
-    }
-
     model.messagesUpdated.connect(handleChatEvents);
-    model.writersChanged?.connect(handleWritersChange);
 
     return function cleanup() {
       model.messagesUpdated.disconnect(handleChatEvents);
-      model.writersChanged?.disconnect(handleChatEvents);
     };
   }, [model]);
 
@@ -199,7 +164,7 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
       });
     };
   }, [messages, allRendered]);
-  console.log(currentWriters)
+
   return (
     <>
       <ScrollContainer sx={{ flexGrow: 1 }}>
@@ -258,8 +223,6 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
           })}
         </Box>
       </ScrollContainer>
-      {/* <WritingUsersList writers={MOCK_WRITERS}></WritingUsersList> */}
-      {/* <WritingUsersList writers={currentWriters}></WritingUsersList> */}
       <Navigation {...props} refMsgBox={refMsgBox} allRendered={allRendered} />
     </>
   );

@@ -18,7 +18,13 @@ const SEND_BUTTON_CLASS = 'jp-chat-send-button';
 export function SendButton(
   props: InputToolbarRegistry.IToolbarItemProps
 ): JSX.Element {
-  const { model, chatCommandRegistry } = props;
+  const { model, chatCommandRegistry, edit } = props;
+
+  // Don't show this button when in edit mode
+  if (edit) {
+    return <></>;
+  }
+
   const [disabled, setDisabled] = useState(false);
   const [tooltip, setTooltip] = useState<string>('');
 

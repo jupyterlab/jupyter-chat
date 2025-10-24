@@ -3,11 +3,11 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import CancelIcon from '@mui/icons-material/Cancel';
+import { closeIcon } from '@jupyterlab/ui-components';
 import React from 'react';
 
 import { InputToolbarRegistry } from '../toolbar-registry';
-import { TooltippedButton } from '../../mui-extras/tooltipped-button';
+import { TooltippedIconButton } from '../../mui-extras/tooltipped-icon-button';
 
 const CANCEL_BUTTON_CLASS = 'jp-chat-cancel-button';
 
@@ -20,19 +20,23 @@ export function CancelButton(
   if (!props.model.cancel) {
     return <></>;
   }
-  const tooltip = 'Cancel edition';
+  const tooltip = 'Cancel editing';
   return (
-    <TooltippedButton
-      onClick={props.model.cancel}
+    <TooltippedIconButton
+      className={CANCEL_BUTTON_CLASS}
       tooltip={tooltip}
-      buttonProps={{
-        size: 'small',
-        variant: 'contained',
-        title: tooltip,
-        className: CANCEL_BUTTON_CLASS
+      onClick={props.model.cancel}
+      iconButtonProps={{
+        sx: {
+          marginLeft: 0,
+          minWidth: '24px',
+          width: '24px',
+          height: '24px',
+          padding: 0
+        }
       }}
     >
-      <CancelIcon />
-    </TooltippedButton>
+      <closeIcon.react height="16px" width="16px" />
+    </TooltippedIconButton>
   );
 }
