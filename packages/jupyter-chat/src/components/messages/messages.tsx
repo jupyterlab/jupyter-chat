@@ -16,9 +16,10 @@ import { Navigation } from './navigation';
 import { WelcomeMessage } from './welcome';
 import { IInputToolbarRegistry } from '../input';
 import { ScrollContainer } from '../scroll-container';
-import { IChatCommandRegistry, IMessageFooterRegistry } from '../../registers';
+import { Message } from '../../message';
 import { IChatModel } from '../../model';
-import { ChatArea, IChatMessage } from '../../types';
+import { IChatCommandRegistry, IMessageFooterRegistry } from '../../registers';
+import { ChatArea, IMessage } from '../../types';
 
 export const MESSAGE_CLASS = 'jp-chat-message';
 const MESSAGES_BOX_CLASS = 'jp-chat-messages-container';
@@ -63,7 +64,7 @@ export type BaseMessageProps = {
  */
 export function ChatMessages(props: BaseMessageProps): JSX.Element {
   const { model } = props;
-  const [messages, setMessages] = useState<IChatMessage[]>(model.messages);
+  const [messages, setMessages] = useState<IMessage[]>(model.messages);
   const refMsgBox = useRef<HTMLDivElement>(null);
   const [allRendered, setAllRendered] = useState<boolean>(false);
 
@@ -81,7 +82,11 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
       }
       model
         .getHistory()
-        .then(history => setMessages(history.messages))
+        .then(history =>
+          setMessages(
+            history.messages.map(message => new Message({ ...message }))
+          )
+        )
         .catch(e => console.error(e));
     }
 
@@ -215,7 +220,6 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
                 >
                   <ChatMessageHeader
                     message={message}
-                    model={model}
                     isCurrentUser={isCurrentUser}
                   />
                   <ChatMessage

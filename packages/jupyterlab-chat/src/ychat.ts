@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { IAttachment, IChatMessage, IUser } from '@jupyter/chat';
+import { IAttachment, IMessageContent, IUser } from '@jupyter/chat';
 import { Delta, DocumentChange, IMapChange, YDocument } from '@jupyter/ydoc';
 import { JSONExt, JSONObject, PartialJSONValue, UUID } from '@lumino/coreutils';
 import * as Y from 'yjs';
@@ -11,7 +11,7 @@ import * as Y from 'yjs';
 /**
  * The type for a YMessage.
  */
-export type IYmessage = IChatMessage<string, string>;
+export type IYmessage = IMessageContent<string, string>;
 
 /**
  * The type for a YMessage.
@@ -285,8 +285,7 @@ export class YChat extends YDocument<IChatChanges> {
   };
 
   private _messagesObserver = (
-    events: (Y.YArrayEvent<Y.Map<any>> | Y.YMapEvent<any>)[],
-    transaction: Y.Transaction
+    events: (Y.YArrayEvent<Y.Map<any>> | Y.YMapEvent<any>)[]
   ): void => {
     events.forEach(event => {
       if (event instanceof Y.YArrayEvent) {

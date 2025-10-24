@@ -7,8 +7,7 @@ import { Box, Typography } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
 import { Avatar } from '../avatar';
-import { IChatModel } from '../../model';
-import { IChatMessage } from '../../types';
+import { IMessageContent, IMessage } from '../../types';
 
 const MESSAGE_HEADER_CLASS = 'jp-chat-message-header';
 const MESSAGE_TIME_CLASS = 'jp-chat-message-time';
@@ -20,11 +19,7 @@ type ChatMessageHeaderProps = {
   /**
    * The chat message.
    */
-  message: IChatMessage;
-  /**
-   * The chat model.
-   */
-  model: IChatModel;
+  message: IMessage;
   /**
    * Whether this message is from the current user.
    */
@@ -40,8 +35,9 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
     return <></>;
   }
   const [datetime, setDatetime] = useState<Record<number, string>>({});
-  const model = props.model;
-  const [message, setMessage] = useState<IChatMessage>(props.message);
+  const [message, setMessage] = useState<IMessageContent>(
+    props.message.content
+  );
   const sender = message.sender;
   /**
    * Effect: update cached datetime strings upon receiving a new message.
@@ -82,16 +78,14 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
 
   // Listen for changes in the current message.
   useEffect(() => {
-    function messageChanged(_: any, msg: IChatMessage) {
-      if (msg.id === message.id) {
-        setMessage({ ...msg });
-      }
+    function messageChanged() {
+      setMessage(props.message.content);
     }
-    model.messageChanged.connect(messageChanged);
+    props.message.changed.connect(messageChanged);
     return () => {
-      model.messageChanged.disconnect(messageChanged);
+      props.message.changed.disconnect(messageChanged);
     };
-  }, [model]);
+  }, [props.message]);
 
   const avatar = message.stacked ? null : Avatar({ user: sender });
 
