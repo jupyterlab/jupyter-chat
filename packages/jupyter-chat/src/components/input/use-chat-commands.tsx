@@ -185,6 +185,7 @@ export function useChatCommands(
       filterOptions: (commands: ChatCommand[]) => commands,
       value: null,
       autoHighlight: true,
+      autoSelect: true,
       freeSolo: true,
       disableClearable: true,
       onChange,
