@@ -279,6 +279,10 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
                   '&:after': {
                     display: 'none'
                   }
+                },
+                '& .MuiInputBase-input': {
+                  overflowWrap: 'break-word',
+                  wordBreak: 'break-word'
                 }
               }}
               InputProps={{
