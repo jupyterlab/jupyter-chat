@@ -184,7 +184,7 @@ export function ChatMessages(): JSX.Element {
             return (
               // extra div needed to ensure each bubble is on a new line
               <Box
-                key={i}
+                key={message.id}
                 sx={{
                   ...(isCurrentUser && {
                     marginLeft: area === 'main' ? '25%' : '10%',

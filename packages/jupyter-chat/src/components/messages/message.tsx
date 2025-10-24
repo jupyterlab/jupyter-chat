@@ -70,7 +70,14 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
       function messageChanged() {
         setMessage(props.message.content);
       }
+
       props.message.changed.connect(messageChanged);
+
+      // Initialize the message when the message is re-rendered.
+      // FIX ? This seems to be required for outofband change, to get the new value,
+      // even if when an outofband change occurs, all the messages are deleted and
+      // recreated.
+      setMessage(props.message.content);
       return () => {
         props.message.changed.disconnect(messageChanged);
       };
