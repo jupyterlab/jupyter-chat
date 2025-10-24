@@ -9,5 +9,4 @@ export * from './code-blocks';
 export * from './input';
 export * from './jl-theme-provider';
 export * from './messages';
-export * from './mui-extras';
 export * from './scroll-container';

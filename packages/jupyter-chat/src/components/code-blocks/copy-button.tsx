@@ -6,8 +6,7 @@
 import React, { useState, useCallback, useRef } from 'react';
 
 import { copyIcon } from '@jupyterlab/ui-components';
-
-import { TooltippedIconButton } from '../mui-extras/tooltipped-icon-button';
+import { IconButton, Tooltip } from '@mui/material';
 
 enum CopyStatus {
   None,
@@ -59,16 +58,26 @@ export function CopyButton(props: CopyButtonProps): JSX.Element {
     );
   }, [copyStatus, props.value]);
 
+  const tooltip = COPYBTN_TEXT_BY_STATUS[copyStatus];
+
   return (
-    <TooltippedIconButton
-      disabled={isCopyDisabled}
-      className={props.className}
-      tooltip={COPYBTN_TEXT_BY_STATUS[copyStatus]}
-      placement="top"
-      onClick={copy}
-      aria-label="Copy to clipboard"
-    >
-      <copyIcon.react height="16px" width="16px" />
-    </TooltippedIconButton>
+    <Tooltip title={tooltip} placement="top" arrow>
+      <span>
+        <IconButton
+          disabled={isCopyDisabled}
+          className={props.className}
+          onClick={copy}
+          aria-label="Copy to clipboard"
+          sx={{
+            lineHeight: 0,
+            '&.Mui-disabled': {
+              opacity: 0.5
+            }
+          }}
+        >
+          <copyIcon.react height="16px" width="16px" />
+        </IconButton>
+      </span>
+    </Tooltip>
   );
 }

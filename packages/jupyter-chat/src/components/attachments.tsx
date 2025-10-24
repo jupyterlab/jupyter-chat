@@ -4,13 +4,11 @@
  */
 
 import CloseIcon from '@mui/icons-material/Close';
-import { Box } from '@mui/material';
+import { Box, Button, Tooltip } from '@mui/material';
 import React, { useContext } from 'react';
 import { PathExt } from '@jupyterlab/coreutils';
 import { UUID } from '@lumino/coreutils';
 
-import { ContrastingTooltip } from './mui-extras/contrasting-tooltip';
-import { TooltippedButton } from './mui-extras/tooltipped-button';
 import { IAttachment } from '../types';
 import { AttachmentOpenerContext } from '../context';
 
@@ -104,7 +102,7 @@ export function AttachmentPreview(props: AttachmentProps): JSX.Element {
         fontSize: '0.8125rem'
       }}
     >
-      <ContrastingTooltip title={props.attachment.value} placement="top">
+      <Tooltip title={props.attachment.value} placement="top" arrow>
         <Box
           component="span"
           onClick={() =>
@@ -123,28 +121,30 @@ export function AttachmentPreview(props: AttachmentProps): JSX.Element {
         >
           {getAttachmentDisplayName(props.attachment)}
         </Box>
-      </ContrastingTooltip>
+      </Tooltip>
       {props.onRemove && (
-        <TooltippedButton
-          onClick={() => props.onRemove!(props.attachment)}
-          tooltip={remove_tooltip}
-          buttonProps={{
-            size: 'small',
-            title: remove_tooltip,
-            className: REMOVE_BUTTON_CLASS
-          }}
-          sx={{
-            minWidth: 'unset',
-            padding: 0,
-            color: 'var(--jp-ui-font-color2)',
-            '&:hover': {
-              color: 'var(--jp-ui-font-color0)',
-              backgroundColor: 'transparent'
-            }
-          }}
-        >
-          <CloseIcon fontSize="small" />
-        </TooltippedButton>
+        <Tooltip title={remove_tooltip} placement="top" arrow>
+          <span>
+            <Button
+              onClick={() => props.onRemove!(props.attachment)}
+              size="small"
+              className={REMOVE_BUTTON_CLASS}
+              aria-label={remove_tooltip}
+              sx={{
+                minWidth: 'unset',
+                padding: 0,
+                lineHeight: 0,
+                color: 'var(--jp-ui-font-color2)',
+                '&:hover': {
+                  color: 'var(--jp-ui-font-color0)',
+                  backgroundColor: 'transparent'
+                }
+              }}
+            >
+              <CloseIcon fontSize="small" />
+            </Button>
+          </span>
+        </Tooltip>
       )}
     </Box>
   );

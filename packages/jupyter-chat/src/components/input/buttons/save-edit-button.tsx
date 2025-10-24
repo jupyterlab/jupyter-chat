@@ -3,11 +3,11 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { checkIcon } from '@jupyterlab/ui-components';
+import CheckIcon from '@mui/icons-material/Check';
+import { IconButton, Tooltip } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
 import { InputToolbarRegistry } from '../toolbar-registry';
-import { TooltippedIconButton } from '../../mui-extras/tooltipped-icon-button';
 
 const SAVE_EDIT_BUTTON_CLASS = 'jp-chat-save-edit-button';
 
@@ -52,22 +52,26 @@ export function SaveEditButton(
 
 
   return (
-    <TooltippedIconButton
-      className={SAVE_EDIT_BUTTON_CLASS}
-      tooltip={tooltip}
-      onClick={save}
-      disabled={disabled}
-      iconButtonProps={{
-        sx: {
-          marginLeft: 0,
-          minWidth: '24px',
-          width: '24px',
-          height: '24px',
-          padding: 0
-        }
-      }}
-    >
-      <checkIcon.react height="16px" width="16px" />
-    </TooltippedIconButton>
+    <Tooltip title={tooltip} placement="top" arrow>
+      <span>
+        <IconButton
+          onClick={save}
+          disabled={disabled}
+          className={SAVE_EDIT_BUTTON_CLASS}
+          aria-label={tooltip}
+          sx={{
+            width: '24px',
+            height: '24px',
+            padding: 0,
+            lineHeight: 0,
+            '&.Mui-disabled': {
+              opacity: 0.5
+            }
+          }}
+        >
+          <CheckIcon sx={{ fontSize: '16px' }} />
+        </IconButton>
+      </span>
+    </Tooltip>
   );
 }
