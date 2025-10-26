@@ -301,12 +301,14 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
             newValue: string,
             reason: AutocompleteInputChangeReason
           ) => {
-            // Do not update the value if the reason is 'reset', which should occur only
-            // if an autocompletion command has been selected. In this case, the value is
-            // set in the 'onChange()' callback of the autocompletion (to avoid conflicts).
-            if (reason !== 'reset') {
-              model.value = newValue;
+            // Skip value updates when an autocomplete option is selected.
+            // The 'onChange' callback handles the replacement via replaceCurrentWord.
+            // 'selectOption' - user selected an option (newValue is just the option label)
+            // 'reset' - autocomplete is resetting after selection
+            if (reason === 'selectOption' || reason === 'reset') {
+              return;
             }
+            model.value = newValue;
           }}
         />
         <Box
