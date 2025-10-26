@@ -99,12 +99,16 @@
 
 .jp-chat-command-name {
   font-weight: normal;
-  margin: 5px;
+  margin: 0;
+  font-size: 13px;
+  display: inline;
 }
 
 .jp-chat-command-description {
   color: gray;
-  margin: 5px;
+  margin: 0;
+  font-size: 12px;
+  display: inline;
 }
 
 .jp-chat-mention {

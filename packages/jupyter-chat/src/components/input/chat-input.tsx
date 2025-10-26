@@ -162,13 +162,14 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
 
     /**
      * IMPORTANT: This statement ensures that when the chat commands menu is
-     * open with a highlighted command, the "Enter" key should run that command
+     * open, the "Enter" key should select the command (handled by Autocomplete)
      * instead of sending the message.
      *
      * This is done by returning early and letting the event propagate to the
-     * `Autocomplete` component.
+     * `Autocomplete` component, which will select the auto-highlighted option
+     * thanks to autoSelect: true.
      */
-    if (chatCommands.menu.highlighted) {
+    if (chatCommands.menu.open) {
       return;
     }
 
@@ -239,15 +240,15 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
         )}
         <Autocomplete
           {...chatCommands.autocompleteProps}
-          // sx={{
-          //   '& .MuiFormController-root.MuiTextField-root': {
-          //     margin: 0
-          //   }
-          // }}
-          // ensure the autocomplete popup always renders on top
           slotProps={{
+            ...(chatCommands.autocompleteProps.slotProps || {}),
             popper: {
-              placement: 'top'
+              placement: 'top-start'
+            },
+            listbox: {
+              sx: {
+                padding: 0
+              }
             }
           }}
           renderInput={params => (

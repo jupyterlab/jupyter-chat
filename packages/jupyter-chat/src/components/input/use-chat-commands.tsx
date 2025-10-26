@@ -166,15 +166,24 @@ export function useChatCommands(
           </span>
         );
         return (
-          <Box key={key} component="li" {...listItemProps}>
+          <Box
+            key={key}
+            component="li"
+            {...listItemProps}
+            sx={{
+              ...((listItemProps as any).sx || {}),
+              padding: '4px 8px !important',
+              gap: 2
+            }}
+          >
             {commandIcon}
-            <p className="jp-chat-command-name">{command.name}</p>
+            <span className="jp-chat-command-name">{command.name}</span>
             {command.description && (
               <>
                 <span> - </span>
-                <p className="jp-chat-command-description">
+                <span className="jp-chat-command-description">
                   {command.description}
-                </p>
+                </span>
               </>
             )}
           </Box>
