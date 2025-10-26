@@ -8,7 +8,7 @@ import type {
   AutocompleteChangeReason,
   AutocompleteProps as GenericAutocompleteProps
 } from '@mui/material';
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
 import { ChatCommand, IChatCommandRegistry } from '../../registers';
@@ -177,13 +177,19 @@ export function useChatCommands(
             }}
           >
             {commandIcon}
-            <span className="jp-chat-command-name">{command.name}</span>
+            <Typography variant="body2" component="span">
+              {command.name}
+            </Typography>
             {command.description && (
               <>
                 <span> - </span>
-                <span className="jp-chat-command-description">
+                <Typography
+                  variant="caption"
+                  component="span"
+                  color="text.secondary"
+                >
                   {command.description}
-                </span>
+                </Typography>
               </>
             )}
           </Box>
