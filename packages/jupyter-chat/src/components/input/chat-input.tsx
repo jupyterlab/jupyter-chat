@@ -259,7 +259,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
               className={INPUT_TEXTFIELD_CLASS}
               multiline
               onKeyDown={handleKeyDown}
-              placeholder="Ask a question or type / for commands"
+              placeholder="Type a chat message, @ to mention..."
               inputRef={inputRef}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
