@@ -44,12 +44,10 @@ export function SaveEditButton(
     };
   }, [model]);
 
-
   async function save() {
     await chatCommandRegistry?.onSubmit(model);
     model.send(model.value);
   }
-
 
   return (
     <Tooltip title={tooltip} placement="top" arrow>

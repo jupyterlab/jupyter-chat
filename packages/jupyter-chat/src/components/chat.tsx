@@ -38,28 +38,28 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
 
   return (
     <AttachmentOpenerContext.Provider value={props.attachmentOpenerRegistry}>
-        <ChatMessages
-          rmRegistry={props.rmRegistry}
-          model={model}
-          chatCommandRegistry={props.chatCommandRegistry}
-          inputToolbarRegistry={inputToolbarRegistry}
-          messageFooterRegistry={props.messageFooterRegistry}
-          welcomeMessage={props.welcomeMessage}
-          area={props.area}
-        />
-        <ChatInput
+      <ChatMessages
+        rmRegistry={props.rmRegistry}
+        model={model}
+        chatCommandRegistry={props.chatCommandRegistry}
+        inputToolbarRegistry={inputToolbarRegistry}
+        messageFooterRegistry={props.messageFooterRegistry}
+        welcomeMessage={props.welcomeMessage}
+        area={props.area}
+      />
+      <ChatInput
         sx={{
           paddingLeft: horizontalPadding,
           paddingRight: horizontalPadding,
           paddingTop: 0,
           paddingBottom: 0
         }}
-          model={model.input}
-          chatCommandRegistry={props.chatCommandRegistry}
-          toolbarRegistry={inputToolbarRegistry}
-          area={props.area}
-          chatModel={model}
-        />
+        model={model.input}
+        chatCommandRegistry={props.chatCommandRegistry}
+        toolbarRegistry={inputToolbarRegistry}
+        area={props.area}
+        chatModel={model}
+      />
     </AttachmentOpenerContext.Provider>
   );
 }

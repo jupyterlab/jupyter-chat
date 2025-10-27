@@ -55,12 +55,10 @@ export function SendButton(
     };
   }, [model]);
 
-
   async function send() {
     await chatCommandRegistry?.onSubmit(model);
     model.send(model.value);
   }
-
 
   return (
     <Tooltip title={tooltip} placement="top" arrow>

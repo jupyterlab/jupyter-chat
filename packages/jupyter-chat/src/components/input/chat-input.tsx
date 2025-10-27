@@ -290,9 +290,9 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
                 ...params.InputProps,
                 disableUnderline: true
               }}
-            FormHelperTextProps={{
-              sx: { display: 'none' }
-            }}
+              FormHelperTextProps={{
+                sx: { display: 'none' }
+              }}
             />
           )}
           inputValue={input}
