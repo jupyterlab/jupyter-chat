@@ -81,8 +81,7 @@ export function CodeToolbar(props: CodeToolbarProps): JSX.Element {
         alignItems: 'center',
         padding: '2px 2px',
         marginBottom: '1em',
-        border: '1px solid var(--jp-cell-editor-border-color)',
-        borderTop: 'none'
+        border: 'none'
       }}
       className={CODE_TOOLBAR_CLASS}
     >
