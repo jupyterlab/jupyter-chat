@@ -12,6 +12,10 @@
   background-color: transparent;
 }
 
+.jp-chat-rendered-markdown .jp-RenderedHTMLCommon > :last-child {
+  margin-bottom: 0;
+}
+
 /*
  * Selectors must be nested in `.jp-ThemedContainer` to have a higher
  * specificity than selectors in rules provided by JupyterLab.
@@ -32,7 +36,7 @@
   overflow-x: auto;
   white-space: pre;
   margin: 0;
-  padding: 4px 2px 0 6px;
+  padding: 4px 6px;
   border: var(--jp-border-width) solid var(--jp-cell-editor-border-color);
 }
 
@@ -98,7 +102,7 @@
 }
 
 .jp-chat-mention {
-  border-radius: 10px;
-  padding: 0 0.2em;
-  background-color: var(--jp-brand-color4);
+  border-radius: 4px;
+  padding: 2px 0px;
+  font-weight: bold;
 }

@@ -165,6 +165,8 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
     };
   }, [messages, allRendered]);
 
+
+  const horizontalPadding = props.area === 'main' ? 8 : 4;
   return (
     <>
       <ScrollContainer sx={{ flexGrow: 1 }}>
@@ -176,34 +178,43 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
         )}
         <Box
           sx={{
-            paddingTop: 2,
-            paddingBottom: 15
+            paddingLeft: horizontalPadding,
+            paddingRight: horizontalPadding,
+            paddingTop: 4,
+            paddingBottom: 16,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 4,
           }}
           ref={refMsgBox}
           className={clsx(MESSAGES_BOX_CLASS)}
         >
-          {messages.map((message, i) => {
+          {messages
+            .filter(message => !message.deleted)
+            .map((message, i) => {
             renderedPromise.current[i] = new PromiseDelegate();
-            const isFirstInStack = !message.stacked;
-            const isLastInStack =
-              i === messages.length - 1 || !messages[i + 1].stacked;
-            const horizontalPadding = props.area === 'main' ? 8 : 4;
+            const isCurrentUser =
+              model.user !== undefined &&
+              model.user.username === message.sender.username;
             return (
               // extra div needed to ensure each bubble is on a new line
               <Box
                 key={i}
                 sx={{
-                  paddingLeft: horizontalPadding,
-                  paddingRight: horizontalPadding,
-                  paddingTop: isFirstInStack ? 2 : 0,
-                  paddingBottom: isLastInStack ? 2 : 0
+                  ...(isCurrentUser && {
+                    marginLeft: props.area === 'main' ? '25%' : '10%',
+                    backgroundColor: 'var(--jp-layout-color2)',
+                    border: 'none',
+                    borderRadius: 2,
+                    padding: 2
+                  })
                 }}
                 className={clsx(
                   MESSAGE_CLASS,
                   message.stacked ? MESSAGE_STACKED_CLASS : ''
                 )}
               >
-                <ChatMessageHeader message={message} />
+                <ChatMessageHeader message={message} isCurrentUser={isCurrentUser} />
                 <ChatMessage
                   {...props}
                   message={message}
