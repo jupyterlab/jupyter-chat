@@ -172,12 +172,19 @@ class YChat(YBaseDoc):
                 index = self._indexes_by_id[update.id]
                 message = self._ymessages[index]
             except (KeyError, IndexError) as e:
-                print(e)
+                print(f"Error while updating the message:\n{e}")
                 return
             update_dict = asdict(update)
             if (update.body and append):
                 update_dict["body"] = message.get("body") + update.body
-            message.update(update_dict)
+
+            # Only update the changed values.
+            for key in update_dict:
+                if key in message:
+                    if message[key] != update_dict[key]:
+                        message.update({ key: update_dict[key] })
+                elif update_dict[key] is not None:
+                    message.update({ key: update_dict[key] })
 
             # Execute all trigger action callbacks
             if trigger_actions:
