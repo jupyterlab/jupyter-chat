@@ -52,12 +52,18 @@ export function AttachButton(
       tooltip={tooltip}
       buttonProps={{
         size: 'small',
-        variant: 'contained',
+        variant: 'text',
         title: tooltip,
         className: ATTACH_BUTTON_CLASS
       }}
+      sx={{
+        width: '24px',
+        height: '24px',
+        minWidth: '24px',
+        color: 'gray'
+      }}
     >
-      <AttachFileIcon />
+      <AttachFileIcon sx={{ fontSize: '16px ' }} />
     </TooltippedButton>
   );
 }
