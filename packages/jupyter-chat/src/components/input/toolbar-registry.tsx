@@ -6,7 +6,12 @@ import { Token } from '@lumino/coreutils';
 import { ISignal, Signal } from '@lumino/signaling';
 import * as React from 'react';
 
-import { CancelButton, SaveEditButton, SendButton } from './buttons';
+import {
+  AttachButton,
+  CancelButton,
+  SaveEditButton,
+  SendButton
+} from './buttons';
 import { IInputModel } from '../../input-model';
 import { IChatCommandRegistry } from '../../registers';
 import { IChatModel } from '../../model';
@@ -174,6 +179,10 @@ export namespace InputToolbarRegistry {
     registry.addItem('saveEdit', {
       element: SaveEditButton,
       position: 95
+    });
+    registry.addItem('attach', {
+      element: AttachButton,
+      position: 20
     });
     registry.addItem('cancel', {
       element: CancelButton,
