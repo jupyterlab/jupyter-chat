@@ -167,6 +167,70 @@ def test_update_message_should_append_content():
     assert message_dict["sender"] == msg.sender
 
 
+def test_update_message_includes_mentions():
+    chat = YChat()
+    chat.set_user(USER)
+    chat.set_user(USER2)
+    chat.set_user(USER3)
+
+    # Add a message with one mention
+    new_msg = create_new_message(f"@{USER2.mention_name} Hello!")
+    msg_id = chat.add_message(new_msg)
+    msg = chat.get_message(msg_id)
+    assert msg
+    assert set(msg.mentions) == set([USER2.username])
+
+    # Update the message to mention a different user
+    msg.body = f"@{USER3.mention_name} Goodbye!"
+    chat.update_message(msg)
+    updated_msg = chat.get_message(msg_id)
+    assert updated_msg
+    assert set(updated_msg.mentions) == set([USER3.username])
+
+
+def test_update_message_append_includes_mentions():
+    chat = YChat()
+    chat.set_user(USER)
+    chat.set_user(USER2)
+    chat.set_user(USER3)
+
+    # Add a message with one mention
+    new_msg = create_new_message(f"@{USER2.mention_name} Hello!")
+    msg_id = chat.add_message(new_msg)
+    msg = chat.get_message(msg_id)
+    assert msg
+    assert set(msg.mentions) == set([USER2.username])
+
+    # Append content with another mention
+    msg.body = f" and @{USER3.mention_name}!"
+    chat.update_message(msg, append=True)
+    updated_msg = chat.get_message(msg_id)
+    assert updated_msg
+    # Should now mention both users
+    assert set(updated_msg.mentions) == set([USER2.username, USER3.username])
+
+
+def test_update_message_append_no_duplicate_mentions():
+    chat = YChat()
+    chat.set_user(USER)
+    chat.set_user(USER2)
+
+    # Add a message with a mention
+    new_msg = create_new_message(f"@{USER2.mention_name} Hello!")
+    msg_id = chat.add_message(new_msg)
+    msg = chat.get_message(msg_id)
+    assert msg
+    assert set(msg.mentions) == set([USER2.username])
+
+    # Append content that mentions the same user again
+    msg.body = f" @{USER2.mention_name} again!"
+    chat.update_message(msg, append=True)
+    updated_msg = chat.get_message(msg_id)
+    assert updated_msg
+    # Should only have one mention despite appearing twice
+    assert set(updated_msg.mentions) == set([USER2.username])
+
+
 def test_indexes_by_id():
     chat = YChat()
     msg = create_new_message()
