@@ -68,7 +68,7 @@ test.describe('#messageToolbar', () => {
 
     // Should display the message toolbar
     await messageContent.hover({ position: { x: 5, y: 5 } });
-    await messageContent.locator('.jp-chat-toolbar jp-button').last().click();
+    await messageContent.locator('.jp-chat-toolbar button').last().click();
 
     await expect(messageContent).not.toBeVisible();
   });
