@@ -9,6 +9,11 @@ import React from 'react';
 import { IChatModel } from '../../model';
 
 /**
+ * Classname on the root element. Used in E2E tests.
+ */
+const WRITERS_ELEMENT_CLASSNAME = 'jp-chat-writers';
+
+/**
  * The input writing indicator component props.
  */
 export interface IInputWritingIndicatorProps {
@@ -55,6 +60,7 @@ export function InputWritingIndicator(
 
   return (
     <Box
+      className={WRITERS_ELEMENT_CLASSNAME}
       sx={{
         minHeight: '16px'
       }}
