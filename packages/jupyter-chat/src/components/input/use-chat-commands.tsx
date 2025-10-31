@@ -177,7 +177,11 @@ export function useChatCommands(
             }}
           >
             {commandIcon}
-            <Typography variant="body2" component="span">
+            <Typography
+              variant="body2"
+              component="span"
+              className="jp-chat-command-name"
+            >
               {command.name}
             </Typography>
             {command.description && (
