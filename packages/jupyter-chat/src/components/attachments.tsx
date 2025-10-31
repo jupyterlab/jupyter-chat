@@ -12,6 +12,8 @@ import { UUID } from '@lumino/coreutils';
 import { IAttachment } from '../types';
 import { AttachmentOpenerContext } from '../context';
 
+const ATTACHMENT_CLASS = 'jp-chat-attachment';
+const ATTACHMENT_CLICKABLE_CLASS = 'jp-chat-attachment-clickable';
 const REMOVE_BUTTON_CLASS = 'jp-chat-attachment-remove';
 
 /**
@@ -90,6 +92,7 @@ export function AttachmentPreview(props: AttachmentProps): JSX.Element {
 
   return (
     <Box
+      className={ATTACHMENT_CLASS}
       sx={{
         border: '1px solid var(--jp-border-color1)',
         borderRadius: '2px',
@@ -104,6 +107,11 @@ export function AttachmentPreview(props: AttachmentProps): JSX.Element {
     >
       <Tooltip title={props.attachment.value} placement="top" arrow>
         <Box
+          className={
+            attachmentOpenerRegistry?.get(props.attachment.type)
+              ? ATTACHMENT_CLICKABLE_CLASS
+              : ''
+          }
           component="span"
           onClick={() =>
             attachmentOpenerRegistry?.get(props.attachment.type)?.(
