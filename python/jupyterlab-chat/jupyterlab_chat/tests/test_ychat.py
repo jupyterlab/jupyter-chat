@@ -182,7 +182,7 @@ def test_update_message_includes_mentions():
 
     # Update the message to mention a different user
     msg.body = f"@{USER3.mention_name} Goodbye!"
-    chat.update_message(msg)
+    chat.update_message(msg, is_done=True)
     updated_msg = chat.get_message(msg_id)
     assert updated_msg
     assert set(updated_msg.mentions) == set([USER3.username])
@@ -203,7 +203,7 @@ def test_update_message_append_includes_mentions():
 
     # Append content with another mention
     msg.body = f" and @{USER3.mention_name}!"
-    chat.update_message(msg, append=True)
+    chat.update_message(msg, append=True, is_done=True)
     updated_msg = chat.get_message(msg_id)
     assert updated_msg
     # Should now mention both users
@@ -224,7 +224,7 @@ def test_update_message_append_no_duplicate_mentions():
 
     # Append content that mentions the same user again
     msg.body = f" @{USER2.mention_name} again!"
-    chat.update_message(msg, append=True)
+    chat.update_message(msg, append=True, is_done=True)
     updated_msg = chat.get_message(msg_id)
     assert updated_msg
     # Should only have one mention despite appearing twice
