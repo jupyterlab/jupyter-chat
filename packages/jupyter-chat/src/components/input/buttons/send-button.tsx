@@ -18,7 +18,7 @@ const SEND_BUTTON_CLASS = 'jp-chat-send-button';
 export function SendButton(
   props: InputToolbarRegistry.IToolbarItemProps
 ): JSX.Element {
-  const { model, chatCommandRegistry, edit } = props;
+  const { model, chatModel, edit } = props;
 
   // Don't show this button when in edit mode
   if (edit) {
@@ -56,8 +56,13 @@ export function SendButton(
   }, [model]);
 
   async function send() {
-    await chatCommandRegistry?.onSubmit(model);
-    model.send(model.value);
+    // send message through chat model
+    await chatModel?.sendMessage({
+      body: model.value
+    });
+    // clear input model value & re-focus
+    model.value = '';
+    model.focus();
   }
 
   return (
