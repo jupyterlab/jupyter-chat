@@ -305,7 +305,12 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
             // The 'onChange' callback handles the replacement via replaceCurrentWord.
             // 'selectOption' - user selected an option (newValue is just the option label)
             // 'reset' - autocomplete is resetting after selection
-            if (reason === 'selectOption' || reason === 'reset') {
+            // 'blur' - when user blurs the input (newValue is set to empty string)
+            if (
+              reason === 'selectOption' ||
+              reason === 'reset' ||
+              reason === 'blur'
+            ) {
               return;
             }
             model.value = newValue;
