@@ -58,7 +58,7 @@ test.describe('#codeToolbar', () => {
   test('buttons should be disabled without notebook', async ({ page }) => {
     const chatPanel = await openChat(page, FILENAME);
     const message = chatPanel.locator('.jp-chat-message');
-    const toolbarButtons = message.locator('.jp-chat-code-toolbar-item button');
+    const toolbarButtons = message.locator('.jp-chat-code-toolbar-item');
 
     await sendMessage(page, FILENAME, MESSAGE);
     await expect(toolbarButtons).toHaveCount(4);
@@ -73,7 +73,7 @@ test.describe('#codeToolbar', () => {
   }) => {
     const chatPanel = await openChat(page, FILENAME);
     const message = chatPanel.locator('.jp-chat-message');
-    const toolbarButtons = message.locator('.jp-chat-code-toolbar-item button');
+    const toolbarButtons = message.locator('.jp-chat-code-toolbar-item');
 
     await page.notebook.createNew();
 
@@ -88,7 +88,7 @@ test.describe('#codeToolbar', () => {
   }) => {
     const chatPanel = await openChat(page, FILENAME);
     const message = chatPanel.locator('.jp-chat-message');
-    const toolbarButtons = message.locator('.jp-chat-code-toolbar-item button');
+    const toolbarButtons = message.locator('.jp-chat-code-toolbar-item');
 
     const notebook = await page.notebook.createNew();
 
@@ -102,7 +102,7 @@ test.describe('#codeToolbar', () => {
   test('insert code above', async ({ page }) => {
     const chatPanel = await openChat(page, FILENAME);
     const message = chatPanel.locator('.jp-chat-message');
-    const toolbarButtons = message.locator('.jp-chat-code-toolbar-item button');
+    const toolbarButtons = message.locator('.jp-chat-code-toolbar-item');
 
     const notebook = await page.notebook.createNew();
 
@@ -123,7 +123,7 @@ test.describe('#codeToolbar', () => {
   test('insert code below', async ({ page }) => {
     const chatPanel = await openChat(page, FILENAME);
     const message = chatPanel.locator('.jp-chat-message');
-    const toolbarButtons = message.locator('.jp-chat-code-toolbar-item button');
+    const toolbarButtons = message.locator('.jp-chat-code-toolbar-item');
 
     const notebook = await page.notebook.createNew();
 
