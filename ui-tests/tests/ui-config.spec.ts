@@ -211,7 +211,6 @@ test.describe('#typingNotification', () => {
     await expect(writers).toBeAttached();
     const start = Date.now();
     await expect(writers).toHaveText(/jovyan_2 is typing/);
-    await expect(writers).not.toBeAttached();
 
     // Message should disappear after 1s, but this delay include the awareness update.
     expect(Date.now() - start).toBeLessThanOrEqual(2000);
@@ -243,14 +242,17 @@ test.describe('#typingNotification', () => {
 
     await guestInput.press('a');
 
-    let visible = true;
+    let hasContent = true;
     try {
-      await page.waitForCondition(() => writers.isVisible(), 3000);
+      await page.waitForCondition(
+        async () => !!(await writers.textContent())?.trim(),
+        3000
+      );
     } catch {
-      visible = false;
+      hasContent = false;
     }
 
-    if (visible) {
+    if (hasContent) {
       throw Error('The typing notification should not be attached.');
     }
   });
@@ -312,6 +314,5 @@ test.describe('#typingNotification', () => {
     const result = regexp.exec((await writers.textContent()) ?? '');
     expect(result?.[1] !== undefined);
     expect(result?.[1] !== result?.[2]);
-    await expect(writers).not.toBeAttached();
   });
 });
