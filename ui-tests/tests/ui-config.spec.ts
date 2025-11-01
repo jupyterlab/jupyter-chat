@@ -306,7 +306,7 @@ test.describe('#typingNotification', () => {
     await guest2Input.press('a');
 
     await expect(writers).toBeAttached();
-    const regexp = /JP(jovyan_[2|3]) and JP(jovyan_[2|3]) are typing/;
+    const regexp = /jovyan_[2|3] and jovyan_[2|3] are typing/;
     await expect(writers).toHaveText(regexp);
 
     const result = regexp.exec((await writers.textContent()) ?? '');
