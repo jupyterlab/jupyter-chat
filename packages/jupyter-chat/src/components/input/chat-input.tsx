@@ -9,8 +9,7 @@ import {
   Box,
   SxProps,
   TextField,
-  Theme,
-  Toolbar
+  Theme
 } from '@mui/material';
 import clsx from 'clsx';
 import React, { useEffect, useRef, useState } from 'react';
@@ -23,11 +22,12 @@ import {
 } from '.';
 import { IInputModel, InputModel } from '../../input-model';
 import { IChatCommandRegistry } from '../../registers';
-import { IAttachment } from '../../types';
+import { IAttachment, ChatArea } from '../../types';
+import { IChatModel } from '../../model';
+import { InputWritingIndicator } from './writing-indicator';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
 const INPUT_TEXTFIELD_CLASS = 'jp-chat-input-textfield';
-const INPUT_COMPONENT_CLASS = 'jp-chat-input-component';
 const INPUT_TOOLBAR_CLASS = 'jp-chat-input-toolbar';
 
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
@@ -46,6 +46,17 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   const [toolbarElements, setToolbarElements] = useState<
     InputToolbarRegistry.IToolbarItem[]
   >([]);
+  const [isFocused, setIsFocused] = useState<boolean>(false);
+  const [writers, setWriters] = useState<IChatModel.IWriter[]>([]);
+
+  /**
+   * Auto-focus the input when the component is first mounted.
+   */
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, []);
 
   /**
    * Handle the changes on the model that affect the input.
@@ -99,6 +110,30 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     };
   }, [toolbarRegistry]);
 
+  /**
+   * Handle the changes in the writers list.
+   */
+  useEffect(() => {
+    if (!props.chatModel) {
+      return;
+    }
+
+    const updateWriters = (_: IChatModel, writers: IChatModel.IWriter[]) => {
+      // Show all writers for now - AI generating responses will have messageID
+      setWriters(writers);
+    };
+
+    // Set initial writers state
+    const initialWriters = props.chatModel.writers;
+    setWriters(initialWriters);
+
+    props.chatModel.writersChanged?.connect(updateWriters);
+
+    return () => {
+      props.chatModel?.writersChanged?.disconnect(updateWriters);
+    };
+  }, [props.chatModel]);
+
   const inputExists = !!input.trim();
 
   /**
@@ -127,13 +162,14 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
 
     /**
      * IMPORTANT: This statement ensures that when the chat commands menu is
-     * open with a highlighted command, the "Enter" key should run that command
+     * open, the "Enter" key should select the command (handled by Autocomplete)
      * instead of sending the message.
      *
      * This is done by returning early and letting the event propagate to the
-     * `Autocomplete` component.
+     * `Autocomplete` component, which will select the auto-highlighted option
+     * thanks to autoSelect: true.
      */
-    if (chatCommands.menu.highlighted) {
+    if (chatCommands.menu.open) {
       return;
     }
 
@@ -167,16 +203,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     }
   }
 
-  // Set the helper text based on whether Shift+Enter is used for sending.
-  const helperText = sendWithShiftEnter ? (
-    <span>
-      Press <b>Shift</b>+<b>Enter</b> to send message
-    </span>
-  ) : (
-    <span>
-      Press <b>Shift</b>+<b>Enter</b> to add a new line
-    </span>
-  );
+  const horizontalPadding = props.area === 'sidebar' ? 1.5 : 2;
 
   return (
     <Box
@@ -184,75 +211,136 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
       className={clsx(INPUT_BOX_CLASS)}
       data-input-id={model.id}
     >
-      <AttachmentPreviewList
-        attachments={attachments}
-        onRemove={model.removeAttachment}
-      />
-      <Autocomplete
-        {...chatCommands.autocompleteProps}
-        // ensure the autocomplete popup always renders on top
-        slotProps={{
-          popper: {
-            placement: 'top'
-          },
-          paper: {
-            sx: {
-              border: '1px solid lightgray'
-            }
-          },
-          listbox: {
-            sx: {
-              '& .MuiAutocomplete-option': {
-                padding: 2
-              }
-            }
-          }
+      <Box
+        sx={{
+          border: '1px solid',
+          borderColor: isFocused
+            ? 'var(--jp-brand-color1)'
+            : 'var(--jp-border-color1)',
+          borderRadius: 2,
+          transition: 'border-color 0.2s ease',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden'
         }}
-        renderInput={params => (
-          <TextField
-            {...params}
-            fullWidth
-            variant="filled"
-            className={INPUT_TEXTFIELD_CLASS}
-            multiline
-            onKeyDown={handleKeyDown}
-            placeholder="Start chatting"
-            inputRef={inputRef}
-            sx={{ marginTop: '1px' }}
-            onSelect={() =>
-              (model.cursorIndex = inputRef.current?.selectionStart ?? null)
-            }
-            slotProps={{
-              input: {
-                ...params.InputProps,
-                className: INPUT_COMPONENT_CLASS
-              }
+      >
+        {attachments.length > 0 && (
+          <Box
+            sx={{
+              px: horizontalPadding,
+              pt: 1,
+              pb: 1
             }}
-            label={input.length > 2 ? helperText : ' '}
-          />
+          >
+            <AttachmentPreviewList
+              attachments={attachments}
+              onRemove={model.removeAttachment}
+            />
+          </Box>
         )}
-        inputValue={input}
-        onInputChange={(
-          _,
-          newValue: string,
-          reason: AutocompleteInputChangeReason
-        ) => {
-          // Do not update the value if the reason is 'reset', which should occur only
-          // if an autocompletion command has been selected. In this case, the value is
-          // set in the 'onChange()' callback of the autocompletion (to avoid conflicts).
-          if (reason !== 'reset') {
+        <Autocomplete
+          {...chatCommands.autocompleteProps}
+          slotProps={{
+            ...(chatCommands.autocompleteProps.slotProps || {}),
+            popper: {
+              placement: 'top-start'
+            },
+            listbox: {
+              sx: {
+                padding: 0
+              }
+            }
+          }}
+          renderInput={params => (
+            <TextField
+              {...params}
+              fullWidth
+              variant="standard"
+              className={INPUT_TEXTFIELD_CLASS}
+              multiline
+              onKeyDown={handleKeyDown}
+              placeholder="Type a chat message, @ to mention..."
+              inputRef={inputRef}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              onSelect={() =>
+                (model.cursorIndex = inputRef.current?.selectionStart ?? null)
+              }
+              sx={{
+                padding: 1.5,
+                margin: 0,
+                backgroundColor: 'var(--jp-layout-color0)',
+                transition: 'background-color 0.2s ease',
+                '& .MuiInputBase-root': {
+                  padding: 0,
+                  margin: 0,
+                  '&:before': {
+                    display: 'none'
+                  },
+                  '&:after': {
+                    display: 'none'
+                  }
+                },
+                '& .MuiInputBase-input': {
+                  overflowWrap: 'break-word',
+                  wordBreak: 'break-word'
+                }
+              }}
+              InputProps={{
+                ...params.InputProps,
+                disableUnderline: true
+              }}
+              FormHelperTextProps={{
+                sx: { display: 'none' }
+              }}
+            />
+          )}
+          inputValue={input}
+          onInputChange={(
+            _,
+            newValue: string,
+            reason: AutocompleteInputChangeReason
+          ) => {
+            // Skip value updates when an autocomplete option is selected.
+            // The 'onChange' callback handles the replacement via replaceCurrentWord.
+            // 'selectOption' - user selected an option (newValue is just the option label)
+            // 'reset' - autocomplete is resetting after selection
+            // 'blur' - when user blurs the input (newValue is set to empty string)
+            if (
+              reason === 'selectOption' ||
+              reason === 'reset' ||
+              reason === 'blur'
+            ) {
+              return;
+            }
             model.value = newValue;
-          }
-        }}
-      />
-      <Toolbar className={INPUT_TOOLBAR_CLASS}>
-        {toolbarElements.map(item => (
-          <item.element
-            model={model}
-            chatCommandRegistry={props.chatCommandRegistry}
-          />
-        ))}
-      </Toolbar>
+          }}
+        />
+        <Box
+          className={INPUT_TOOLBAR_CLASS}
+          sx={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            gap: 2,
+            padding: 1.5,
+            borderTop: '1px solid',
+            borderColor: 'var(--jp-border-color1)',
+            backgroundColor: 'var(--jp-layout-color0)',
+            transition: 'background-color 0.2s ease'
+          }}
+        >
+          {toolbarElements.map((item, index) => (
+            <item.element
+              key={index}
+              model={model}
+              chatCommandRegistry={props.chatCommandRegistry}
+              chatModel={props.chatModel}
+              edit={props.edit}
+            />
+          ))}
+        </Box>
+      </Box>
+      <InputWritingIndicator writers={writers} />
     </Box>
   );
 }
@@ -285,5 +373,18 @@ export namespace ChatInput {
      * Chat command registry.
      */
     chatCommandRegistry?: IChatCommandRegistry;
+    /**
+     * The area where the chat is displayed.
+     */
+    area?: ChatArea;
+    /**
+     * The chat model.
+     */
+    chatModel?: IChatModel;
+    /**
+     * Whether the input is in edit mode (editing an existing message).
+     * Defaults to false (new message mode).
+     */
+    edit?: boolean;
   }
 }

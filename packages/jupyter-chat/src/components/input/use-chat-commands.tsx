@@ -8,7 +8,7 @@ import type {
   AutocompleteChangeReason,
   AutocompleteProps as GenericAutocompleteProps
 } from '@mui/material';
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
 import { ChatCommand, IChatCommandRegistry } from '../../registers';
@@ -166,15 +166,34 @@ export function useChatCommands(
           </span>
         );
         return (
-          <Box key={key} component="li" {...listItemProps}>
+          <Box
+            key={key}
+            component="li"
+            {...listItemProps}
+            sx={{
+              ...((listItemProps as any).sx || {}),
+              padding: '4px 8px !important',
+              gap: 2
+            }}
+          >
             {commandIcon}
-            <p className="jp-chat-command-name">{command.name}</p>
+            <Typography
+              variant="body2"
+              component="span"
+              className="jp-chat-command-name"
+            >
+              {command.name}
+            </Typography>
             {command.description && (
               <>
                 <span> - </span>
-                <p className="jp-chat-command-description">
+                <Typography
+                  variant="caption"
+                  component="span"
+                  color="text.secondary"
+                >
                   {command.description}
-                </p>
+                </Typography>
               </>
             )}
           </Box>
@@ -185,6 +204,7 @@ export function useChatCommands(
       filterOptions: (commands: ChatCommand[]) => commands,
       value: null,
       autoHighlight: true,
+      autoSelect: true,
       freeSolo: true,
       disableClearable: true,
       onChange,

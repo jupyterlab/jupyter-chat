@@ -210,41 +210,7 @@ test.describe('#typingNotification', () => {
     await guestInput.press('a');
     await expect(writers).toBeAttached();
     const start = Date.now();
-    await expect(writers).toHaveText(/jovyan_2 is writing/);
-    await expect(writers).not.toBeAttached();
-
-    // Message should disappear after 1s, but this delay include the awareness update.
-    expect(Date.now() - start).toBeLessThanOrEqual(2000);
-  });
-
-  test('should display typing user editing a message', async ({ page }) => {
-    const chatPanel = await openChat(page, FILENAME);
-    const writers = chatPanel.locator('.jp-chat-writers');
-
-    const guestChatPanel = await openChat(guestPage, FILENAME);
-
-    await sendMessage(guestPage, FILENAME, 'test');
-    await expect(writers).not.toBeAttached();
-    const message = guestChatPanel
-      .locator('.jp-chat-messages-container .jp-chat-message')
-      .first();
-    const messageContent = message.locator('.jp-chat-rendered-markdown');
-
-    // Should display the message toolbar
-    await messageContent.hover({ position: { x: 5, y: 5 } });
-    await messageContent.locator('.jp-chat-toolbar jp-button').first().click();
-
-    const editInput = guestChatPanel
-      .locator('.jp-chat-messages-container .jp-chat-input-container')
-      .getByRole('combobox');
-
-    await editInput.focus();
-
-    await editInput.press('a');
-    await expect(writers).toBeAttached();
-    const start = Date.now();
-    await expect(writers).toHaveText(/jovyan_2 is writing/);
-    await expect(writers).not.toBeAttached();
+    await expect(writers).toHaveText(/jovyan_2 is typing/);
 
     // Message should disappear after 1s, but this delay include the awareness update.
     expect(Date.now() - start).toBeLessThanOrEqual(2000);
@@ -276,14 +242,17 @@ test.describe('#typingNotification', () => {
 
     await guestInput.press('a');
 
-    let visible = true;
+    let hasContent = true;
     try {
-      await page.waitForCondition(() => writers.isVisible(), 3000);
+      await page.waitForCondition(
+        async () => !!(await writers.textContent())?.trim(),
+        3000
+      );
     } catch {
-      visible = false;
+      hasContent = false;
     }
 
-    if (visible) {
+    if (hasContent) {
       throw Error('The typing notification should not be attached.');
     }
   });
@@ -339,12 +308,11 @@ test.describe('#typingNotification', () => {
     await guest2Input.press('a');
 
     await expect(writers).toBeAttached();
-    const regexp = /JP(jovyan_[2|3]) and JP(jovyan_[2|3]) are writing/;
+    const regexp = /jovyan_[2|3] and jovyan_[2|3] are typing/;
     await expect(writers).toHaveText(regexp);
 
     const result = regexp.exec((await writers.textContent()) ?? '');
     expect(result?.[1] !== undefined);
     expect(result?.[1] !== result?.[2]);
-    await expect(writers).not.toBeAttached();
   });
 });

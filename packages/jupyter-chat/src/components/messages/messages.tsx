@@ -14,12 +14,11 @@ import { ChatMessageHeader } from './header';
 import { ChatMessage } from './message';
 import { Navigation } from './navigation';
 import { WelcomeMessage } from './welcome';
-import { WritingUsersList } from './writers';
 import { IInputToolbarRegistry } from '../input';
 import { ScrollContainer } from '../scroll-container';
 import { IChatCommandRegistry, IMessageFooterRegistry } from '../../registers';
 import { IChatModel } from '../../model';
-import { IChatMessage, IUser } from '../../types';
+import { ChatArea, IChatMessage } from '../../types';
 
 export const MESSAGE_CLASS = 'jp-chat-message';
 const MESSAGES_BOX_CLASS = 'jp-chat-messages-container';
@@ -53,6 +52,10 @@ export type BaseMessageProps = {
    * The welcome message.
    */
   welcomeMessage?: string;
+  /**
+   * The area where the chat is displayed.
+   */
+  area?: ChatArea;
 };
 
 /**
@@ -62,7 +65,6 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
   const { model } = props;
   const [messages, setMessages] = useState<IChatMessage[]>(model.messages);
   const refMsgBox = useRef<HTMLDivElement>(null);
-  const [currentWriters, setCurrentWriters] = useState<IUser[]>([]);
   const [allRendered, setAllRendered] = useState<boolean>(false);
 
   // The list of message DOM and their rendered promises.
@@ -84,7 +86,6 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
     }
 
     fetchHistory();
-    setCurrentWriters([]);
   }, [model]);
 
   /**
@@ -95,16 +96,10 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
       setMessages([...model.messages]);
     }
 
-    function handleWritersChange(_: IChatModel, writers: IChatModel.IWriter[]) {
-      setCurrentWriters(writers.map(writer => writer.user));
-    }
-
     model.messagesUpdated.connect(handleChatEvents);
-    model.writersChanged?.connect(handleWritersChange);
 
     return function cleanup() {
       model.messagesUpdated.disconnect(handleChatEvents);
-      model.writersChanged?.disconnect(handleChatEvents);
     };
   }, [model]);
 
@@ -170,6 +165,7 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
     };
   }, [messages, allRendered]);
 
+  const horizontalPadding = props.area === 'main' ? 8 : 4;
   return (
     <>
       <ScrollContainer sx={{ flexGrow: 1 }}>
@@ -179,39 +175,67 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
             content={props.welcomeMessage}
           />
         )}
-        <Box ref={refMsgBox} className={clsx(MESSAGES_BOX_CLASS)}>
-          {messages.map((message, i) => {
-            renderedPromise.current[i] = new PromiseDelegate();
-            return (
-              // extra div needed to ensure each bubble is on a new line
-              <Box
-                key={i}
-                className={clsx(
-                  MESSAGE_CLASS,
-                  message.stacked ? MESSAGE_STACKED_CLASS : ''
-                )}
-              >
-                <ChatMessageHeader message={message} />
-                <ChatMessage
-                  {...props}
-                  message={message}
-                  index={i}
-                  renderedPromise={renderedPromise.current[i]}
-                  ref={el => (listRef.current[i] = el)}
-                />
-                {props.messageFooterRegistry && (
-                  <MessageFooterComponent
-                    registry={props.messageFooterRegistry}
+        <Box
+          sx={{
+            paddingLeft: horizontalPadding,
+            paddingRight: horizontalPadding,
+            paddingTop: 4,
+            paddingBottom: 16,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 4
+          }}
+          ref={refMsgBox}
+          className={clsx(MESSAGES_BOX_CLASS)}
+        >
+          {messages
+            .filter(message => !message.deleted)
+            .map((message, i) => {
+              renderedPromise.current[i] = new PromiseDelegate();
+              const isCurrentUser =
+                model.user !== undefined &&
+                model.user.username === message.sender.username;
+              return (
+                // extra div needed to ensure each bubble is on a new line
+                <Box
+                  key={i}
+                  sx={{
+                    ...(isCurrentUser && {
+                      marginLeft: props.area === 'main' ? '25%' : '10%',
+                      backgroundColor: 'var(--jp-layout-color2)',
+                      border: 'none',
+                      borderRadius: 2,
+                      padding: 2
+                    })
+                  }}
+                  className={clsx(
+                    MESSAGE_CLASS,
+                    message.stacked ? MESSAGE_STACKED_CLASS : ''
+                  )}
+                >
+                  <ChatMessageHeader
                     message={message}
-                    model={model}
+                    isCurrentUser={isCurrentUser}
                   />
-                )}
-              </Box>
-            );
-          })}
+                  <ChatMessage
+                    {...props}
+                    message={message}
+                    index={i}
+                    renderedPromise={renderedPromise.current[i]}
+                    ref={el => (listRef.current[i] = el)}
+                  />
+                  {props.messageFooterRegistry && (
+                    <MessageFooterComponent
+                      registry={props.messageFooterRegistry}
+                      message={message}
+                      model={model}
+                    />
+                  )}
+                </Box>
+              );
+            })}
         </Box>
       </ScrollContainer>
-      <WritingUsersList writers={currentWriters}></WritingUsersList>
       <Navigation {...props} refMsgBox={refMsgBox} allRendered={allRendered} />
     </>
   );

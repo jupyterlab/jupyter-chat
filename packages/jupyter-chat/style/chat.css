@@ -2,20 +2,18 @@
  * Copyright (c) Jupyter Development Team.
  * Distributed under the terms of the Modified BSD License.
  */
-.jp-chat-message:not(.jp-chat-message-stacked) {
-  padding: 1em 1em 0;
-}
-
-.jp-chat-message:not(:first-child, .jp-chat-message-stacked) {
-  border-top: 1px solid var(--jp-border-color2);
-}
-
-.jp-chat-message.jp-chat-message-stacked {
-  padding: 0 1em;
-}
 
 .jp-chat-rendered-markdown {
   position: relative;
+}
+
+.jp-chat-rendered-markdown hr {
+  color: #00000026;
+  background-color: transparent;
+}
+
+.jp-chat-rendered-markdown .jp-RenderedHTMLCommon > :last-child {
+  margin-bottom: 0;
 }
 
 /*
@@ -38,7 +36,7 @@
   overflow-x: auto;
   white-space: pre;
   margin: 0;
-  padding: 4px 2px 0 6px;
+  padding: 4px 6px;
   border: var(--jp-border-width) solid var(--jp-cell-editor-border-color);
 }
 
@@ -53,7 +51,7 @@
 }
 
 .jp-chat-toolbar {
-  display: none;
+  visibility: hidden;
   position: absolute;
   right: 2px;
   top: 2px;
@@ -67,105 +65,11 @@
 }
 
 .jp-chat-rendered-markdown:hover .jp-chat-toolbar {
-  display: inherit;
+  visibility: visible;
 }
 
 .jp-chat-toolbar > .jp-ToolbarButtonComponent {
   margin-top: 0;
-}
-
-.jp-chat-writers {
-  display: flex;
-  flex-wrap: wrap;
-  position: sticky;
-  bottom: 0;
-  padding: 8px;
-  background-color: var(--jp-layout-color0);
-  border-top: 1px solid var(--jp-border-color2);
-  z-index: 1;
-}
-
-.jp-chat-writers-content {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-wrap: wrap;
-}
-
-.jp-chat-writer-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.jp-chat-writer-name {
-  color: var(--jp-ui-font-color1);
-  font-weight: 500;
-}
-
-.jp-chat-writer-separator {
-  color: var(--jp-ui-font-color2);
-}
-
-.jp-chat-writing-status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.jp-chat-writing-text {
-  color: var(--jp-ui-font-color2);
-}
-
-/* Animated typing indicator */
-.jp-chat-typing-indicator {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 2px 4px;
-}
-
-.jp-chat-typing-dot {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background-color: var(--jp-brand-color1);
-  animation: jp-chat-typing-bounce 1.4s infinite ease-in-out;
-}
-
-.jp-chat-typing-dot:nth-child(1) {
-  animation-delay: -0.32s;
-}
-
-.jp-chat-typing-dot:nth-child(2) {
-  animation-delay: -0.16s;
-}
-
-.jp-chat-typing-dot:nth-child(3) {
-  animation-delay: 0s;
-}
-
-/* Keyframe animations */
-@keyframes jp-chat-typing-bounce {
-  0%,
-  80%,
-  100% {
-    transform: scale(0.8);
-    opacity: 0.5;
-  }
-
-  40% {
-    transform: scale(1.2);
-    opacity: 1;
-  }
-}
-
-.jp-chat-writers > div {
-  display: flex;
-  align-items: center;
-  gap: 0.2em;
-  white-space: pre;
-  padding-left: 0.5em;
 }
 
 .jp-chat-navigation {
@@ -197,40 +101,8 @@
   bottom: 120px;
 }
 
-.jp-chat-attachments {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-  min-height: 1.5em;
-  padding: 4px 0;
-}
-
-.jp-chat-attachment {
-  border: solid 1px;
-  border-radius: 10px;
-  margin: 0 0.2em;
-  padding: 0 0.3em;
-  align-content: center;
-  background-color: var(--jp-border-color3);
-  flex-shrink: 0;
-}
-
-.jp-chat-attachment .jp-chat-attachment-clickable:hover {
-  cursor: pointer;
-}
-
-.jp-chat-command-name {
-  font-weight: normal;
-  margin: 5px;
-}
-
-.jp-chat-command-description {
-  color: gray;
-  margin: 5px;
-}
-
 .jp-chat-mention {
-  border-radius: 10px;
-  padding: 0 0.2em;
-  background-color: var(--jp-brand-color4);
+  border-radius: 4px;
+  padding: 2px 0;
+  font-weight: bold;
 }

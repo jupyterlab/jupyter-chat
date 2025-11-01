@@ -25,6 +25,7 @@ import {
   IChatCommandRegistry,
   IMessageFooterRegistry
 } from '../registers';
+import { ChatArea } from '../types';
 
 export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
   const { model } = props;
@@ -32,6 +33,8 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
   if (!inputToolbarRegistry) {
     inputToolbarRegistry = InputToolbarRegistry.defaultToolbarRegistry();
   }
+  // const horizontalPadding = props.area === 'main' ? 8 : 4;
+  const horizontalPadding = 4;
 
   return (
     <AttachmentOpenerContext.Provider value={props.attachmentOpenerRegistry}>
@@ -42,18 +45,20 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
         inputToolbarRegistry={inputToolbarRegistry}
         messageFooterRegistry={props.messageFooterRegistry}
         welcomeMessage={props.welcomeMessage}
+        area={props.area}
       />
       <ChatInput
         sx={{
-          paddingLeft: 4,
-          paddingRight: 4,
+          paddingLeft: horizontalPadding,
+          paddingRight: horizontalPadding,
           paddingTop: 0,
-          paddingBottom: 0,
-          borderTop: '1px solid var(--jp-border-color1)'
+          paddingBottom: 0
         }}
         model={model.input}
         chatCommandRegistry={props.chatCommandRegistry}
         toolbarRegistry={inputToolbarRegistry}
+        area={props.area}
+        chatModel={model}
       />
     </AttachmentOpenerContext.Provider>
   );
@@ -141,6 +146,10 @@ export namespace Chat {
      * The welcome message.
      */
     welcomeMessage?: string;
+    /**
+     * The area where the chat is displayed.
+     */
+    area?: ChatArea;
   }
 
   /**

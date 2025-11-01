@@ -4,16 +4,14 @@
  */
 
 import CloseIcon from '@mui/icons-material/Close';
-import { Box } from '@mui/material';
+import { Box, Button, Tooltip } from '@mui/material';
 import React, { useContext } from 'react';
 import { PathExt } from '@jupyterlab/coreutils';
 import { UUID } from '@lumino/coreutils';
 
-import { TooltippedButton } from './mui-extras/tooltipped-button';
 import { IAttachment } from '../types';
 import { AttachmentOpenerContext } from '../context';
 
-const ATTACHMENTS_CLASS = 'jp-chat-attachments';
 const ATTACHMENT_CLASS = 'jp-chat-attachment';
 const ATTACHMENT_CLICKABLE_CLASS = 'jp-chat-attachment-clickable';
 const REMOVE_BUTTON_CLASS = 'jp-chat-attachment-remove';
@@ -57,7 +55,15 @@ export type AttachmentsProps = {
  */
 export function AttachmentPreviewList(props: AttachmentsProps): JSX.Element {
   return (
-    <Box className={ATTACHMENTS_CLASS}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 1,
+        rowGap: 1,
+        columnGap: 2
+      }}
+    >
       {props.attachments.map(attachment => (
         <AttachmentPreview
           key={`${PathExt.basename(attachment.value)}-${UUID.uuid4()}`}
@@ -82,40 +88,71 @@ export type AttachmentProps = AttachmentsProps & {
 export function AttachmentPreview(props: AttachmentProps): JSX.Element {
   const remove_tooltip = 'Remove attachment';
   const attachmentOpenerRegistry = useContext(AttachmentOpenerContext);
+  const isClickable = !!attachmentOpenerRegistry?.get(props.attachment.type);
 
   return (
-    <Box className={ATTACHMENT_CLASS}>
-      <span
-        className={
-          attachmentOpenerRegistry?.get(props.attachment.type)
-            ? ATTACHMENT_CLICKABLE_CLASS
-            : ''
-        }
-        onClick={() =>
-          attachmentOpenerRegistry?.get(props.attachment.type)?.(
-            props.attachment
-          )
-        }
-      >
-        {getAttachmentDisplayName(props.attachment)}
-      </span>
-      {props.onRemove && (
-        <TooltippedButton
-          onClick={() => props.onRemove!(props.attachment)}
-          tooltip={remove_tooltip}
-          buttonProps={{
-            size: 'small',
-            title: remove_tooltip,
-            className: REMOVE_BUTTON_CLASS
-          }}
+    <Box
+      className={ATTACHMENT_CLASS}
+      sx={{
+        border: '1px solid var(--jp-border-color1)',
+        borderRadius: '2px',
+        px: 1,
+        py: 0.5,
+        backgroundColor: 'var(--jp-layout-color2)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 0.5,
+        fontSize: '0.8125rem'
+      }}
+    >
+      <Tooltip title={props.attachment.value} placement="top" arrow>
+        <Box
+          className={
+            attachmentOpenerRegistry?.get(props.attachment.type)
+              ? ATTACHMENT_CLICKABLE_CLASS
+              : ''
+          }
+          component="span"
+          onClick={() =>
+            attachmentOpenerRegistry?.get(props.attachment.type)?.(
+              props.attachment
+            )
+          }
           sx={{
-            minWidth: 'unset',
-            padding: '0',
-            color: 'inherit'
+            cursor: isClickable ? 'pointer' : 'default',
+            '&:hover': isClickable
+              ? {
+                  textDecoration: 'underline'
+                }
+              : {}
           }}
         >
-          <CloseIcon />
-        </TooltippedButton>
+          {getAttachmentDisplayName(props.attachment)}
+        </Box>
+      </Tooltip>
+      {props.onRemove && (
+        <Tooltip title={remove_tooltip} placement="top" arrow>
+          <span>
+            <Button
+              onClick={() => props.onRemove!(props.attachment)}
+              size="small"
+              className={REMOVE_BUTTON_CLASS}
+              aria-label={remove_tooltip}
+              sx={{
+                minWidth: 'unset',
+                padding: 0,
+                lineHeight: 0,
+                color: 'var(--jp-ui-font-color2)',
+                '&:hover': {
+                  color: 'var(--jp-ui-font-color0)',
+                  backgroundColor: 'transparent'
+                }
+              }}
+            >
+              <CloseIcon fontSize="small" />
+            </Button>
+          </span>
+        </Tooltip>
       )}
     </Box>
   );

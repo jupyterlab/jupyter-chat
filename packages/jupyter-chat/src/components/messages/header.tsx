@@ -20,12 +20,20 @@ type ChatMessageHeaderProps = {
    * The chat message.
    */
   message: IChatMessage;
+  /**
+   * Whether this message is from the current user.
+   */
+  isCurrentUser?: boolean;
 };
 
 /**
  * The message header component.
  */
 export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
+  // Don't render header for stacked messages or current user messages
+  if (props.message.stacked || props.isCurrentUser) {
+    return <></>;
+  }
   const [datetime, setDatetime] = useState<Record<number, string>>({});
   const message = props.message;
   const sender = message.sender;
