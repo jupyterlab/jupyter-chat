@@ -2,6 +2,26 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.19.0alpha0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.18.2...d5a8ef8f244676a72058588965e221cccb18914d))
+
+### Enhancements made
+
+- UX Improvements for Jupyter Chat Interface [#298](https://github.com/jupyterlab/jupyter-chat/pull/298) ([@ellisonbg](https://github.com/ellisonbg))
+
+### Bugs fixed
+
+- Add support for drag and drop while editing message. [#282](https://github.com/jupyterlab/jupyter-chat/pull/282) ([@nakul-py](https://github.com/nakul-py))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2025-10-10&to=2025-11-01&type=c))
+
+[@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2025-10-10..2025-11-01&type=Issues) | [@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2025-10-10..2025-11-01&type=Issues) | [@ellisonbg](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Aellisonbg+updated%3A2025-10-10..2025-11-01&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2025-10-10..2025-11-01&type=Issues) | [@nakul-py](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Anakul-py+updated%3A2025-10-10..2025-11-01&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.18.2
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.18.1...b77c7147ae47102a7b9e92a1a144a9171a811723))
@@ -16,8 +36,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2025-09-26&to=2025-10-10&type=c))
 
 [@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2025-09-26..2025-10-10&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2025-09-26..2025-10-10&type=Issues) | [@nakul-py](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Anakul-py+updated%3A2025-09-26..2025-10-10&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.18.1
 
