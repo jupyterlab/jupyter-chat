@@ -118,7 +118,7 @@ class YChat(YBaseDoc):
         message_dicts = self._get_messages()
         return [Message(**message_dict) for message_dict in message_dicts]
 
-    def _extract_mentions(self, body: str) -> list[str]:
+    def _find_mentions(self, body: str) -> list[str]:
         """
         Extract mentioned usernames from a message body.
         Finds all @mentions in the body and returns the corresponding usernames.
@@ -151,7 +151,7 @@ class YChat(YBaseDoc):
         )
 
         # find all mentioned users and add them as message mentions
-        message.mentions = self._extract_mentions(message.body)
+        message.mentions = self._find_mentions(message.body)
 
         with self._ydoc.transaction():
             index = len(self._ymessages) - next((i for i, v in enumerate(self._get_messages()[::-1]) if v["time"] < timestamp), len(self._ymessages))
@@ -162,11 +162,11 @@ class YChat(YBaseDoc):
 
         return uid
 
-    def update_message(self, message: Message, append: bool = False, is_done: bool = False):
+    def update_message(self, message: Message, append: bool = False, find_mentions: bool = False):
         """
         Update a message of the document.
         If append is True, the content will be appended to the previous content.
-        If is_done is True, mentions will be extracted and notifications triggered (use for streaming completion).
+        If find_mentions is True, mentions will be extracted and notifications triggered (use for streaming completion).
         """
         with self._ydoc.transaction():
             index = self._indexes_by_id[message.id]
@@ -176,8 +176,8 @@ class YChat(YBaseDoc):
                 message.body = initial_message["body"] + message.body  # type:ignore[index]
 
             # Extract and update mentions from the message body
-            if is_done:
-                message.mentions = self._extract_mentions(message.body)
+            if find_mentions:
+                message.mentions = self._find_mentions(message.body)
 
             self._ymessages[index] = asdict(message, dict_factory=message_asdict_factory)
 
