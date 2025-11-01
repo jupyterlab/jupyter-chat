@@ -210,7 +210,7 @@ test.describe('#typingNotification', () => {
     await guestInput.press('a');
     await expect(writers).toBeAttached();
     const start = Date.now();
-    await expect(writers).toHaveText(/jovyan_2 is writing/);
+    await expect(writers).toHaveText(/jovyan_2 is typing/);
     await expect(writers).not.toBeAttached();
 
     // Message should disappear after 1s, but this delay include the awareness update.
@@ -306,7 +306,7 @@ test.describe('#typingNotification', () => {
     await guest2Input.press('a');
 
     await expect(writers).toBeAttached();
-    const regexp = /JP(jovyan_[2|3]) and JP(jovyan_[2|3]) are writing/;
+    const regexp = /JP(jovyan_[2|3]) and JP(jovyan_[2|3]) are typing/;
     await expect(writers).toHaveText(regexp);
 
     const result = regexp.exec((await writers.textContent()) ?? '');
