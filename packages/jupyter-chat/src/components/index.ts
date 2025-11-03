@@ -10,3 +10,4 @@ export * from './input';
 export * from './jl-theme-provider';
 export * from './messages';
 export * from './scroll-container';
+export * from './writing-indicator';
