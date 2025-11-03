@@ -43,7 +43,7 @@ export function ChatBody(props: Chat.IChatProps): JSX.Element {
 
   return (
     <ChatReactContext.Provider value={contextValue}>
-      <ChatMessages area={props.area} />
+      <ChatMessages />
       <ChatInput
         sx={{
           paddingLeft: horizontalPadding,
@@ -52,7 +52,6 @@ export function ChatBody(props: Chat.IChatProps): JSX.Element {
           paddingBottom: 0
         }}
         model={model.input}
-        area={props.area}
       />
     </ChatReactContext.Provider>
   );

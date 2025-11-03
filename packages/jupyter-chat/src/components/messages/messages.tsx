@@ -15,27 +15,18 @@ import { Navigation } from './navigation';
 import { WelcomeMessage } from './welcome';
 import { ScrollContainer } from '../scroll-container';
 import { useChatContext } from '../../context';
-import { ChatArea, IChatMessage } from '../../types';
+import { IChatMessage } from '../../types';
 
 export const MESSAGE_CLASS = 'jp-chat-message';
 const MESSAGES_BOX_CLASS = 'jp-chat-messages-container';
 const MESSAGE_STACKED_CLASS = 'jp-chat-message-stacked';
 
 /**
- * The base components props.
- */
-export type IMessagesProps = {
-  /**
-   * The area where the chat is displayed.
-   */
-  area?: ChatArea;
-};
-
-/**
  * The messages list component.
  */
-export function ChatMessages(props: IMessagesProps): JSX.Element {
-  const { messageFooterRegistry, model, welcomeMessage } = useChatContext();
+export function ChatMessages(): JSX.Element {
+  const { area, messageFooterRegistry, model, welcomeMessage } =
+    useChatContext();
 
   const [messages, setMessages] = useState<IChatMessage[]>(model.messages);
   const refMsgBox = useRef<HTMLDivElement>(null);
@@ -139,7 +130,7 @@ export function ChatMessages(props: IMessagesProps): JSX.Element {
     };
   }, [messages, allRendered]);
 
-  const horizontalPadding = props.area === 'main' ? 8 : 4;
+  const horizontalPadding = area === 'main' ? 8 : 4;
   return (
     <>
       <ScrollContainer sx={{ flexGrow: 1 }}>
@@ -170,7 +161,7 @@ export function ChatMessages(props: IMessagesProps): JSX.Element {
                   key={i}
                   sx={{
                     ...(isCurrentUser && {
-                      marginLeft: props.area === 'main' ? '25%' : '10%',
+                      marginLeft: area === 'main' ? '25%' : '10%',
                       backgroundColor: 'var(--jp-layout-color2)',
                       border: 'none',
                       borderRadius: 2,
@@ -187,7 +178,6 @@ export function ChatMessages(props: IMessagesProps): JSX.Element {
                     isCurrentUser={isCurrentUser}
                   />
                   <ChatMessage
-                    {...props}
                     message={message}
                     index={i}
                     renderedPromise={renderedPromise.current[i]}
@@ -201,7 +191,7 @@ export function ChatMessages(props: IMessagesProps): JSX.Element {
             })}
         </Box>
       </ScrollContainer>
-      <Navigation {...props} refMsgBox={refMsgBox} allRendered={allRendered} />
+      <Navigation refMsgBox={refMsgBox} allRendered={allRendered} />
     </>
   );
 }

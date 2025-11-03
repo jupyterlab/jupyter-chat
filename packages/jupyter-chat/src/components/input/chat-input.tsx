@@ -21,7 +21,7 @@ import { useChatContext } from '../../context';
 import { IInputModel, InputModel } from '../../input-model';
 import { IChatModel } from '../../model';
 import { InputWritingIndicator } from './writing-indicator';
-import { ChatArea, IAttachment } from '../../types';
+import { IAttachment } from '../../types';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
 const INPUT_TEXTFIELD_CLASS = 'jp-chat-input-textfield';
@@ -29,7 +29,7 @@ const INPUT_TOOLBAR_CLASS = 'jp-chat-input-toolbar';
 
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
   const { model } = props;
-  const { chatCommandRegistry, inputToolbarRegistry } = useChatContext();
+  const { area, chatCommandRegistry, inputToolbarRegistry } = useChatContext();
   const chatModel = useChatContext().model;
 
   const [input, setInput] = useState<string>(model.value);
@@ -203,7 +203,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     }
   }
 
-  const horizontalPadding = props.area === 'sidebar' ? 1.5 : 2;
+  const horizontalPadding = area === 'sidebar' ? 1.5 : 2;
 
   return (
     <Box
@@ -365,10 +365,6 @@ export namespace ChatInput {
      * Custom mui/material styles.
      */
     sx?: SxProps<Theme>;
-    /**
-     * The area where the chat is displayed.
-     */
-    area?: ChatArea;
     /**
      * Whether the input is in edit mode (editing an existing message).
      * Defaults to false (new message mode).
