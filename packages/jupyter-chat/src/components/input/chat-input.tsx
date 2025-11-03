@@ -19,8 +19,6 @@ import { useChatCommands } from './use-chat-commands';
 import { AttachmentPreviewList } from '../attachments';
 import { useChatContext } from '../../context';
 import { IInputModel, InputModel } from '../../input-model';
-import { IChatModel } from '../../model';
-import { InputWritingIndicator } from './writing-indicator';
 import { IAttachment } from '../../types';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
@@ -46,7 +44,6 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   const [toolbarElements, setToolbarElements] = useState<
     InputToolbarRegistry.IToolbarItem[]
   >([]);
-  const [writers, setWriters] = useState<IChatModel.IWriter[]>([]);
 
   /**
    * Auto-focus the input when the component is first mounted.
@@ -108,30 +105,6 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
       inputToolbarRegistry?.itemsChanged.disconnect(updateToolbar);
     };
   }, [inputToolbarRegistry]);
-
-  /**
-   * Handle the changes in the writers list.
-   */
-  useEffect(() => {
-    if (!chatModel) {
-      return;
-    }
-
-    const updateWriters = (_: IChatModel, writers: IChatModel.IWriter[]) => {
-      // Show all writers for now - AI generating responses will have messageID
-      setWriters(writers);
-    };
-
-    // Set initial writers state
-    const initialWriters = chatModel.writers;
-    setWriters(initialWriters);
-
-    chatModel.writersChanged?.connect(updateWriters);
-
-    return () => {
-      chatModel?.writersChanged?.disconnect(updateWriters);
-    };
-  }, [chatModel]);
 
   const inputExists = !!input.trim();
 
@@ -337,7 +310,6 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
           ))}
         </Box>
       </Box>
-      <InputWritingIndicator writers={writers} />
     </Box>
   );
 }

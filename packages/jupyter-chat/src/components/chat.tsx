@@ -9,7 +9,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { IconButton } from '@mui/material';
 import { Box } from '@mui/system';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import {
   ChatInput,
@@ -18,6 +18,7 @@ import {
 } from './input';
 import { JlThemeProvider } from './jl-theme-provider';
 import { ChatMessages } from './messages';
+import { WritingIndicator } from './writing-indicator';
 import { ChatReactContext } from '../context';
 import { IChatModel } from '../model';
 import {
@@ -29,10 +30,36 @@ import { ChatArea } from '../types';
 
 export function ChatBody(props: Chat.IChatProps): JSX.Element {
   const { model } = props;
+  const [writers, setWriters] = useState<IChatModel.IWriter[]>([]);
   let { inputToolbarRegistry } = props;
   if (!inputToolbarRegistry) {
     inputToolbarRegistry = InputToolbarRegistry.defaultToolbarRegistry();
   }
+
+  /**
+   * Handle the changes in the writers list.
+   */
+  useEffect(() => {
+    if (!model) {
+      return;
+    }
+
+    const updateWriters = (_: IChatModel, writers: IChatModel.IWriter[]) => {
+      // Show all writers for now - AI generating responses will have messageID
+      setWriters(writers);
+    };
+
+    // Set initial writers state
+    const initialWriters = model.writers;
+    setWriters(initialWriters);
+
+    model.writersChanged?.connect(updateWriters);
+
+    return () => {
+      model?.writersChanged?.disconnect(updateWriters);
+    };
+  }, [model]);
+
   // const horizontalPadding = props.area === 'main' ? 8 : 4;
   const horizontalPadding = 4;
 
@@ -52,6 +79,13 @@ export function ChatBody(props: Chat.IChatProps): JSX.Element {
           paddingBottom: 0
         }}
         model={model.input}
+      />
+      <WritingIndicator
+        sx={{
+          paddingLeft: horizontalPadding,
+          paddingRight: horizontalPadding
+        }}
+        writers={writers}
       />
     </ChatReactContext.Provider>
   );

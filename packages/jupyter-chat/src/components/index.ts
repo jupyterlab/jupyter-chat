@@ -11,3 +11,4 @@ export * from './jl-theme-provider';
 export * from './messages';
 export * from './mui-extras';
 export * from './scroll-container';
+export * from './writing-indicator';
