@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { IWidgetTracker } from '@jupyterlab/apputils';
+import { IWidgetTracker, MainAreaWidget } from '@jupyterlab/apputils';
 import { Token } from '@lumino/coreutils';
 
 import { ChatWidget } from './widgets';
@@ -11,7 +11,9 @@ import { ChatWidget } from './widgets';
 /**
  * the chat tracker type.
  */
-export type IChatTracker = IWidgetTracker<ChatWidget>;
+export type IChatTracker = IWidgetTracker<
+  ChatWidget | MainAreaWidget<ChatWidget>
+>;
 
 /**
  * A chat tracker token.

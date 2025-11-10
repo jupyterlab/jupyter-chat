@@ -410,15 +410,17 @@ const chatTracker: JupyterFrontEndPlugin<IChatTracker> = {
     const namespace = 'chat';
 
     // Creating the tracker for the chat widgets.
-    const tracker = new WidgetTracker<ChatWidget>({ namespace });
+    const tracker = new WidgetTracker<ChatWidget | LabChatPanel>({
+      namespace
+    });
 
     // Add the widget to the tracker when it's created
     factory.widgetCreated.connect((sender, widget) => {
       // Notify the instance tracker if restore data needs to update.
       widget.context.pathChanged.connect(() => {
-        tracker.save(widget.content);
+        tracker.save(widget);
       });
-      tracker.add(widget.content);
+      tracker.add(widget);
 
       // Update the 'markAsRead' command status when the unread changed.
       widget.model.unreadChanged.connect(() =>
@@ -450,7 +452,10 @@ const chatTracker: JupyterFrontEndPlugin<IChatTracker> = {
           inSidePanel: widget.area === 'sidebar',
           startup: true
         }),
-        name: widget => widget.model.name,
+        name: widget => {
+          const area = widget.area ?? 'main';
+          return `${area}:${widget.model.name}`;
+        },
         when: openCommandReady.promise
       });
     }

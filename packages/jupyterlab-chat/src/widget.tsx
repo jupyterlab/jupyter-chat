@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { ChatWidget, IChatModel } from '@jupyter/chat';
+import { ChatArea, ChatWidget, IChatModel } from '@jupyter/chat';
 import { DocumentWidget } from '@jupyterlab/docregistry';
 
 import { LabChatModel } from './model';
@@ -37,6 +37,13 @@ export class LabChatPanel extends DocumentWidget<ChatWidget, LabChatModel> {
    */
   get model(): LabChatModel {
     return this.context.model;
+  }
+
+  /**
+   * The area of the widget.
+   */
+  get area(): ChatArea | undefined {
+    return this.content.area;
   }
 
   /**
