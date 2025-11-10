@@ -7,14 +7,13 @@ import {
   IConfig,
   chatIcon,
   IActiveCellManager,
-  ISelectionWatcher,
-  ChatWidget
+  ISelectionWatcher
 } from '@jupyter/chat';
-import { WidgetTracker } from '@jupyterlab/apputils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { Token } from '@lumino/coreutils';
 import { ISignal } from '@lumino/signaling';
-import { MultiChatPanel as ChatPanel } from '@jupyter/chat';
+import { MultiChatPanel } from '@jupyter/chat';
+import { ChatWidgetFactory } from './factory';
 
 /**
  * The file type for a chat document.
@@ -32,7 +31,7 @@ export const chatFileType: DocumentRegistry.IFileType = {
 /**
  * The token for the chat widget factory.
  */
-export const IChatFactory = new Token<IChatFactory>(
+export const IChatFactory = new Token<ChatWidgetFactory>(
   'jupyterlab-chat:IChatFactory'
 );
 
@@ -44,20 +43,6 @@ export interface ILabChatConfig extends IConfig {
    * The default directory where to create and look for chat.
    */
   defaultDirectory?: string;
-}
-
-/**
- * The interface for the chat factory objects.
- */
-export interface IChatFactory {
-  /**
-   * The chat widget config.
-   */
-  widgetConfig: IWidgetConfig;
-  /**
-   * The chat panel tracker.
-   */
-  tracker: WidgetTracker<ChatWidget>;
 }
 
 /**
@@ -74,6 +59,13 @@ export interface IWidgetConfig {
    */
   configChanged: IConfigChanged;
 }
+
+/**
+ * The token providing the chat widget config.
+ */
+export const IWidgetConfig = new Token<IWidgetConfig>(
+  'jupyterlab-chat:IWidgetConfig'
+);
 
 /**
  * A signal emitting when the configuration for the chats has changed.
@@ -118,7 +110,9 @@ export const CommandIDs = {
 /**
  * The chat panel token.
  */
-export const IChatPanel = new Token<ChatPanel>('jupyterlab-chat:IChatPanel');
+export const IChatPanel = new Token<MultiChatPanel>(
+  'jupyterlab-chat:IChatPanel'
+);
 
 /**
  * The active cell manager plugin.
