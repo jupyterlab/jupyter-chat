@@ -14,7 +14,6 @@ import { WidgetTracker } from '@jupyterlab/apputils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { Token } from '@lumino/coreutils';
 import { ISignal } from '@lumino/signaling';
-import { LabChatPanel } from './widget';
 import { MultiChatPanel as ChatPanel } from '@jupyter/chat';
 
 /**
@@ -58,7 +57,7 @@ export interface IChatFactory {
   /**
    * The chat panel tracker.
    */
-  tracker: WidgetTracker<LabChatPanel | ChatWidget>;
+  tracker: WidgetTracker<ChatWidget>;
 }
 
 /**

@@ -12,6 +12,7 @@ import {
   IAttachment,
   IAttachmentOpenerRegistry,
   IChatCommandRegistry,
+  IChatTracker,
   IMessageFooterRegistry,
   ISelectionWatcher,
   InputToolbarRegistry,
@@ -76,6 +77,7 @@ const pluginIds = {
   attachmentOpenerRegistry: 'jupyterlab-chat-extension:attachmentOpener',
   chatCommands: 'jupyterlab-chat-extension:commands',
   chatPanel: 'jupyterlab-chat-extension:chat-panel',
+  chatTracker: 'jupyterlab-chat-extension:tracker',
   docFactories: 'jupyterlab-chat-extension:factory',
   inputToolbarFactory: 'jupyterlab-chat-extension:inputToolbarFactory',
   selectionWatcher: 'jupyterlab-chat-extension:selectionWatcher'
@@ -163,7 +165,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
   id: pluginIds.docFactories,
   description: 'Document factories for chat.',
   autoStart: true,
-  requires: [IRenderMimeRegistry],
+  requires: [IChatTracker, IRenderMimeRegistry],
   optional: [
     IActiveCellManagerToken,
     IAttachmentOpenerRegistry,
@@ -183,6 +185,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
   provides: IChatFactory,
   activate: (
     app: JupyterFrontEnd,
+    tracker: WidgetTracker<ChatWidget>,
     rmRegistry: IRenderMimeRegistry,
     activeCellManager: IActiveCellManager | null,
     attachmentOpenerRegistry: IAttachmentOpenerRegistry,
@@ -316,11 +319,6 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
         });
     }
 
-    // Namespace for the tracker
-    const namespace = 'chat';
-
-    // Creating the tracker for the document
-    const tracker = new WidgetTracker<LabChatPanel | ChatWidget>({ namespace });
     app.docRegistry.addFileType(chatFileType);
 
     if (drive) {
@@ -369,9 +367,9 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     widgetFactory.widgetCreated.connect((sender, widget) => {
       // Notify the instance tracker if restore data needs to update.
       widget.context.pathChanged.connect(() => {
-        tracker.save(widget);
+        tracker.save(widget.content);
       });
-      tracker.add(widget);
+      tracker.add(widget.content);
 
       // Update the 'markAsRead' command status when the unread changed.
       widget.model.unreadChanged.connect(() =>
@@ -398,7 +396,7 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
         command: CommandIDs.openChat,
         args: widget => ({
           filepath: widget.model.name ?? '',
-          inSidePanel: widget instanceof ChatWidget,
+          inSidePanel: widget.area === 'sidebar',
           startup: true
         }),
         name: widget => widget.model.name,
@@ -407,6 +405,20 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     }
 
     return { widgetConfig, tracker };
+  }
+};
+
+const chatTracker: JupyterFrontEndPlugin<WidgetTracker<ChatWidget>> = {
+  id: pluginIds.chatTracker,
+  description: 'The commands to create or open a chat.',
+  autoStart: true,
+  provides: IChatTracker,
+  activate: (app: JupyterFrontEnd): WidgetTracker<ChatWidget> => {
+    // Namespace for the tracker
+    const namespace = 'chat';
+
+    // Creating the tracker for the document
+    return new WidgetTracker<ChatWidget>({ namespace });
   }
 };
 
@@ -1020,6 +1032,7 @@ export default [
   chatCommands,
   chatCommandRegistryPlugin,
   chatPanel,
+  chatTracker,
   docFactories,
   footerRegistry,
   inputToolbarFactory,
