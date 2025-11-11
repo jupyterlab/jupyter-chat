@@ -115,7 +115,7 @@ def test_add_message_includes_mentions():
     msg = chat.get_message(msg_id)
     assert msg
 
-    assert sorted(msg.mentions) == sorted([USER2.username, USER3.username])
+    assert set(msg.mentions) == set([USER2.username, USER3.username])
 
 
 def test_get_message_should_return_the_message():
