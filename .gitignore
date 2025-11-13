@@ -138,3 +138,5 @@ Untitled*.ipynb
 
 # Ignore secrets in '.env'
 .env
+
+.idea/
