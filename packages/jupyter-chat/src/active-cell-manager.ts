@@ -267,7 +267,9 @@ export class ActiveCellManager implements IActiveCellManager {
     activeCell: Cell<ICellModel> | null
   ): void => {
     if (this._activeCell !== activeCell) {
-      this._activeCell?.model.stateChanged.disconnect(this._cellStateChange);
+      if (!this._activeCell?.disposed) {
+        this._activeCell?.model.stateChanged.disconnect(this._cellStateChange);
+      }
       this._activeCell = activeCell;
 
       activeCell?.ready.then(() => {
