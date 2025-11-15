@@ -2,6 +2,27 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.19.0alpha1
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.19.0-alpha.0...c0676b189b1b8112f1d5db24978096e9aeafdbdc))
+
+### Bugs fixed
+
+- Fix the active cell manager when closing all notebooks [#311](https://github.com/jupyterlab/jupyter-chat/pull/311) ([@brichet](https://github.com/brichet))
+
+### Maintenance and upkeep improvements
+
+- Export of mui-extra module [#313](https://github.com/jupyterlab/jupyter-chat/pull/313) ([@brichet](https://github.com/brichet))
+- Bump vega-expression from 5.1.0 to 5.1.2 in /ui-tests in the npm_and_yarn group across 1 directory [#310](https://github.com/jupyterlab/jupyter-chat/pull/310) ([@dependabot](https://github.com/dependabot))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2025-11-01&to=2025-11-15&type=c))
+
+[@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2025-11-01..2025-11-15&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adependabot+updated%3A2025-11-01..2025-11-15&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2025-11-01..2025-11-15&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.19.0alpha0
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.18.2...d5a8ef8f244676a72058588965e221cccb18914d))
@@ -19,8 +40,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2025-10-10&to=2025-11-01&type=c))
 
 [@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2025-10-10..2025-11-01&type=Issues) | [@dlqqq](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2025-10-10..2025-11-01&type=Issues) | [@ellisonbg](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Aellisonbg+updated%3A2025-10-10..2025-11-01&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2025-10-10..2025-11-01&type=Issues) | [@nakul-py](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Anakul-py+updated%3A2025-10-10..2025-11-01&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.18.2
 
