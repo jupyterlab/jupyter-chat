@@ -11,7 +11,7 @@ import {
 } from '@jupyterlab/ui-components';
 import React, { useEffect, useState } from 'react';
 
-import { BaseMessageProps } from './messages';
+import { useChatContext } from '../../context';
 import { IChatModel } from '../../model';
 
 const NAVIGATION_BUTTON_CLASS = 'jp-chat-navigation';
@@ -22,7 +22,7 @@ const NAVIGATION_BOTTOM_CLASS = 'jp-chat-navigation-bottom';
 /**
  * The navigation component props.
  */
-type NavigationProps = BaseMessageProps & {
+type NavigationProps = {
   /**
    * The reference to the messages container.
    */
@@ -37,7 +37,7 @@ type NavigationProps = BaseMessageProps & {
  * The navigation component, to navigate to unread messages.
  */
 export function Navigation(props: NavigationProps): JSX.Element {
-  const { model } = props;
+  const { model } = useChatContext();
   const [lastInViewport, setLastInViewport] = useState<boolean>(true);
   const [unreadBefore, setUnreadBefore] = useState<number | null>(null);
   const [unreadAfter, setUnreadAfter] = useState<number | null>(null);
