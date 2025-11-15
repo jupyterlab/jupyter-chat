@@ -8,6 +8,7 @@ import * as React from 'react';
 
 import {
   AttachButton,
+  AttachCodeCellButton,
   CancelButton,
   SaveEditButton,
   SendButton
@@ -183,6 +184,10 @@ export namespace InputToolbarRegistry {
     registry.addItem('attach', {
       element: AttachButton,
       position: 20
+    });
+    registry.addItem('attachCodeCell', {
+      element: AttachCodeCellButton,
+      position: 50
     });
     registry.addItem('cancel', {
       element: CancelButton,
