@@ -167,6 +167,63 @@ def test_update_message_should_append_content():
     assert message_dict["sender"] == msg.sender
 
 
+def test_update_message_includes_mentions():
+    chat = YChat()
+    chat.set_user(USER)
+    chat.set_user(USER2)
+    chat.set_user(USER3)
+
+    new_msg = create_new_message(f"@{USER2.mention_name} Hello!")
+    msg_id = chat.add_message(new_msg)
+    msg = chat.get_message(msg_id)
+    assert msg
+    assert msg.mentions == [USER2.username]
+
+    msg.body = f"@{USER3.mention_name} Goodbye!"
+    chat.update_message(msg, find_mentions=True)
+    updated_msg = chat.get_message(msg_id)
+    assert updated_msg
+    assert updated_msg.mentions == [USER3.username]
+
+
+def test_update_message_append_includes_mentions():
+    chat = YChat()
+    chat.set_user(USER)
+    chat.set_user(USER2)
+    chat.set_user(USER3)
+
+    new_msg = create_new_message(f"@{USER2.mention_name} Hello!")
+    msg_id = chat.add_message(new_msg)
+    msg = chat.get_message(msg_id)
+    assert msg
+    assert msg.mentions == [USER2.username]
+
+    msg.body = f" and @{USER3.mention_name}!"
+    chat.update_message(msg, append=True, find_mentions=True)
+    updated_msg = chat.get_message(msg_id)
+    assert updated_msg
+    assert sorted(updated_msg.mentions) == sorted([USER2.username, USER3.username])
+
+
+def test_update_message_append_no_duplicate_mentions():
+    chat = YChat()
+    chat.set_user(USER)
+    chat.set_user(USER2)
+
+    new_msg = create_new_message(f"@{USER2.mention_name} Hello!")
+    msg_id = chat.add_message(new_msg)
+    msg = chat.get_message(msg_id)
+    assert msg
+    assert msg.mentions == [USER2.username]
+
+    msg.body = f" @{USER2.mention_name} again!"
+    chat.update_message(msg, append=True, find_mentions=True)
+    updated_msg = chat.get_message(msg_id)
+    assert updated_msg
+    assert updated_msg.mentions == [USER2.username]
+    assert len(updated_msg.mentions) == 1
+
+
 def test_indexes_by_id():
     chat = YChat()
     msg = create_new_message()
