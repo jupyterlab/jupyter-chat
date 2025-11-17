@@ -258,6 +258,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
               variant="standard"
               className={INPUT_TEXTFIELD_CLASS}
               multiline
+              maxRows={10}
               onKeyDown={handleKeyDown}
               placeholder="Type a chat message, @ to mention..."
               inputRef={inputRef}
@@ -269,6 +270,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
               sx={{
                 padding: 1.5,
                 margin: 0,
+                boxSizing: 'border-box',
                 backgroundColor: 'var(--jp-layout-color0)',
                 transition: 'background-color 0.2s ease',
                 '& .MuiInputBase-root': {
