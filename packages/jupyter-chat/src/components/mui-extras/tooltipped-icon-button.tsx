@@ -4,7 +4,12 @@
  */
 
 import { classes } from '@jupyterlab/ui-components';
-import { IconButton, IconButtonProps, TooltipProps } from '@mui/material';
+import {
+  IconButton,
+  IconButtonProps,
+  SvgIconOwnProps,
+  TooltipProps
+} from '@mui/material';
 import React from 'react';
 
 import { ContrastingTooltip } from './contrasting-tooltip';
@@ -21,6 +26,10 @@ export type TooltippedIconButtonProps = {
   className?: string;
   disabled?: boolean;
   placement?: TooltipProps['placement'];
+  /**
+   * The font size of the icon. By default it will be set to 'small'.
+   */
+  fontSize?: SvgIconOwnProps['fontSize'];
   /**
    * The offset of the tooltip popup.
    *
@@ -50,6 +59,8 @@ export type TooltippedIconButtonProps = {
 export function TooltippedIconButton(
   props: TooltippedIconButtonProps
 ): JSX.Element {
+  // Override the default icon font size from 'medium' to 'small'
+  props.children.props.fontSize = props.fontSize ?? 'small';
   return (
     <ContrastingTooltip
       title={props.tooltip}

@@ -7,7 +7,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import React from 'react';
 
 import { InputToolbarRegistry } from '../toolbar-registry';
-import { TooltippedButton } from '../../mui-extras';
+import { TooltippedIconButton } from '../../mui-extras';
 
 const CANCEL_BUTTON_CLASS = 'jp-chat-cancel-button';
 
@@ -22,15 +22,15 @@ export function CancelButton(
   }
   const tooltip = 'Cancel edition';
   return (
-    <TooltippedButton
+    <TooltippedIconButton
       onClick={props.model.cancel}
       tooltip={tooltip}
-      buttonProps={{
+      iconButtonProps={{
         title: tooltip,
         className: CANCEL_BUTTON_CLASS
       }}
     >
-      <CloseIcon sx={{ fontSize: '16px' }} />
-    </TooltippedButton>
+      <CloseIcon />
+    </TooltippedIconButton>
   );
 }

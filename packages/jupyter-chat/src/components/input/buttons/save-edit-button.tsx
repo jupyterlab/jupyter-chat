@@ -4,10 +4,10 @@
  */
 
 import CheckIcon from '@mui/icons-material/Check';
-import { IconButton, Tooltip } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
 import { InputToolbarRegistry } from '../toolbar-registry';
+import { TooltippedIconButton } from '../../mui-extras';
 
 const SAVE_EDIT_BUTTON_CLASS = 'jp-chat-save-edit-button';
 
@@ -50,26 +50,17 @@ export function SaveEditButton(
   }
 
   return (
-    <Tooltip title={tooltip} placement="top" arrow>
-      <span>
-        <IconButton
-          onClick={save}
-          disabled={disabled}
-          className={SAVE_EDIT_BUTTON_CLASS}
-          aria-label={tooltip}
-          sx={{
-            width: '24px',
-            height: '24px',
-            padding: 0,
-            lineHeight: 0,
-            '&.Mui-disabled': {
-              opacity: 0.5
-            }
-          }}
-        >
-          <CheckIcon sx={{ fontSize: '16px' }} />
-        </IconButton>
-      </span>
-    </Tooltip>
+    <TooltippedIconButton
+      onClick={save}
+      tooltip={tooltip}
+      disabled={disabled}
+      iconButtonProps={{
+        title: tooltip,
+        className: SAVE_EDIT_BUTTON_CLASS
+      }}
+      aria-label={tooltip}
+    >
+      <CheckIcon />
+    </TooltippedIconButton>
   );
 }
