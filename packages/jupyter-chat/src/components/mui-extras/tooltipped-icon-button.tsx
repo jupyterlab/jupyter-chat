@@ -16,6 +16,7 @@ import { ContrastingTooltip } from './contrasting-tooltip';
 import {
   DEFAULT_BUTTON_PROPS,
   DEFAULT_BUTTON_SX,
+  INPUT_TOOLBAR_BUTTON_SX,
   TOOLTIPPED_WRAP_CLASS
 } from './tooltipped-button';
 
@@ -24,6 +25,7 @@ export type TooltippedIconButtonProps = {
   tooltip: string;
   children: JSX.Element;
   className?: string;
+  inputToolbar?: boolean;
   disabled?: boolean;
   placement?: TooltipProps['placement'];
   /**
@@ -93,8 +95,7 @@ export function TooltippedIconButton(
           disabled={props.disabled}
           sx={{
             ...DEFAULT_BUTTON_SX,
-            marginLeft: '8px',
-            ...(props.disabled && { opacity: 0.5 })
+            ...((props.inputToolbar ?? true) && INPUT_TOOLBAR_BUTTON_SX)
           }}
           aria-label={props['aria-label']}
         >

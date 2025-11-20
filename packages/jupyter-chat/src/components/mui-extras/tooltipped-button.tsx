@@ -22,14 +22,17 @@ export const DEFAULT_BUTTON_PROPS: Partial<ButtonOwnProps> = {
 };
 
 export const DEFAULT_BUTTON_SX = {
-  backgroundColor: 'var(--jp-brand-color1)',
-  color: 'white',
   minWidth: '24px',
   width: '24px',
   height: '24px',
+  lineHeight: 0
+};
+
+export const INPUT_TOOLBAR_BUTTON_SX = {
+  backgroundColor: 'var(--jp-brand-color1)',
+  color: 'white',
   borderRadius: '4px',
   boxShadow: 'none',
-  lineHeight: 0,
   '&:hover': {
     backgroundColor: 'var(--jp-brand-color0)',
     boxShadow: 'none'
@@ -45,6 +48,7 @@ export type TooltippedButtonProps = {
   onClick: React.MouseEventHandler<HTMLButtonElement>;
   tooltip: string;
   children: JSX.Element;
+  inputToolbar?: boolean;
   disabled?: boolean;
   placement?: TooltipProps['placement'];
   /**
@@ -113,7 +117,7 @@ export function TooltippedButton(props: TooltippedButtonProps): JSX.Element {
           disabled={props.disabled}
           sx={{
             ...DEFAULT_BUTTON_SX,
-            ...(props.disabled && { opacity: 0.5 }),
+            ...((props.inputToolbar ?? true) && INPUT_TOOLBAR_BUTTON_SX),
             ...props.sx
           }}
           aria-label={props['aria-label'] ?? props.tooltip}
