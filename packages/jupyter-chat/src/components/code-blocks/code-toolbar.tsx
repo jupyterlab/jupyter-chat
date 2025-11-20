@@ -4,10 +4,11 @@
  */
 
 import { addAboveIcon, addBelowIcon } from '@jupyterlab/ui-components';
-import { Box, IconButton, Tooltip } from '@mui/material';
+import { Box } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
 import { CopyButton } from './copy-button';
+import { TooltippedIconButton } from '../mui-extras';
 import { IActiveCellManager } from '../../active-cell-manager';
 import { replaceCellIcon } from '../../icons';
 import { IChatModel } from '../../model';
@@ -114,24 +115,15 @@ function InsertAboveButton(props: ToolbarButtonProps) {
     : 'Insert above active cell (no active cell)';
 
   return (
-    <Tooltip title={tooltip} placement="top" arrow>
-      <span>
-        <IconButton
-          className={props.className}
-          onClick={() => props.activeCellManager?.insertAbove(props.content)}
-          disabled={!props.activeCellAvailable}
-          aria-label={tooltip}
-          sx={{
-            lineHeight: 0,
-            '&.Mui-disabled': {
-              opacity: 0.5
-            }
-          }}
-        >
-          <addAboveIcon.react height="16px" width="16px" />
-        </IconButton>
-      </span>
-    </Tooltip>
+    <TooltippedIconButton
+      className={props.className}
+      tooltip={tooltip}
+      onClick={() => props.activeCellManager?.insertAbove(props.content)}
+      disabled={!props.activeCellAvailable}
+      inputToolbar={false}
+    >
+      <addAboveIcon.react height="16px" width="16px" />
+    </TooltippedIconButton>
   );
 }
 
@@ -141,24 +133,15 @@ function InsertBelowButton(props: ToolbarButtonProps) {
     : 'Insert below active cell (no active cell)';
 
   return (
-    <Tooltip title={tooltip} placement="top" arrow>
-      <span>
-        <IconButton
-          className={props.className}
-          disabled={!props.activeCellAvailable}
-          onClick={() => props.activeCellManager?.insertBelow(props.content)}
-          aria-label={tooltip}
-          sx={{
-            lineHeight: 0,
-            '&.Mui-disabled': {
-              opacity: 0.5
-            }
-          }}
-        >
-          <addBelowIcon.react height="16px" width="16px" />
-        </IconButton>
-      </span>
-    </Tooltip>
+    <TooltippedIconButton
+      className={props.className}
+      tooltip={tooltip}
+      disabled={!props.activeCellAvailable}
+      onClick={() => props.activeCellManager?.insertBelow(props.content)}
+      inputToolbar={false}
+    >
+      <addBelowIcon.react height="16px" width="16px" />
+    </TooltippedIconButton>
   );
 }
 
@@ -187,23 +170,14 @@ function ReplaceButton(props: ToolbarButtonProps) {
   };
 
   return (
-    <Tooltip title={tooltip} placement="top" arrow>
-      <span>
-        <IconButton
-          className={props.className}
-          disabled={disabled}
-          onClick={replace}
-          aria-label={tooltip}
-          sx={{
-            lineHeight: 0,
-            '&.Mui-disabled': {
-              opacity: 0.5
-            }
-          }}
-        >
-          <replaceCellIcon.react height="16px" width="16px" />
-        </IconButton>
-      </span>
-    </Tooltip>
+    <TooltippedIconButton
+      className={props.className}
+      tooltip={tooltip}
+      disabled={disabled}
+      onClick={replace}
+      inputToolbar={false}
+    >
+      <replaceCellIcon.react height="16px" width="16px" />
+    </TooltippedIconButton>
   );
 }

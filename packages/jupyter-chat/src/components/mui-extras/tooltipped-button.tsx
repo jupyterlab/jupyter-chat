@@ -25,7 +25,10 @@ export const DEFAULT_BUTTON_SX = {
   minWidth: '24px',
   width: '24px',
   height: '24px',
-  lineHeight: 0
+  lineHeight: 0,
+  '&:disabled': {
+    opacity: 0.5
+  }
 };
 
 export const INPUT_TOOLBAR_BUTTON_SX = {
@@ -37,7 +40,7 @@ export const INPUT_TOOLBAR_BUTTON_SX = {
     backgroundColor: 'var(--jp-brand-color0)',
     boxShadow: 'none'
   },
-  '&disabled': {
+  '&:disabled': {
     backgroundColor: 'var(--jp-border-color2)',
     color: 'var(--jp-ui-font-color3)',
     opacity: 0.5
