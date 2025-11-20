@@ -8,8 +8,11 @@ import { IconButton, IconButtonProps, TooltipProps } from '@mui/material';
 import React from 'react';
 
 import { ContrastingTooltip } from './contrasting-tooltip';
-
-const TOOLTIPPED_WRAP_CLASS = 'jp-chat-tooltipped-wrap';
+import {
+  DEFAULT_BUTTON_PROPS,
+  DEFAULT_BUTTON_SX,
+  TOOLTIPPED_WRAP_CLASS
+} from './tooltipped-button';
 
 export type TooltippedIconButtonProps = {
   onClick: () => unknown;
@@ -73,12 +76,13 @@ export function TooltippedIconButton(
       */}
       <span className={classes(props.className, TOOLTIPPED_WRAP_CLASS)}>
         <IconButton
+          {...DEFAULT_BUTTON_PROPS}
           {...props.iconButtonProps}
           onClick={props.onClick}
           disabled={props.disabled}
           sx={{
+            ...DEFAULT_BUTTON_SX,
             marginLeft: '8px',
-            lineHeight: 0,
             ...(props.disabled && { opacity: 0.5 })
           }}
           aria-label={props['aria-label']}
