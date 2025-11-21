@@ -8,7 +8,7 @@ import AttachFileIcon from '@mui/icons-material/AttachFile';
 import React from 'react';
 
 import { InputToolbarRegistry } from '../toolbar-registry';
-import { TooltippedButton } from '../../mui-extras/tooltipped-button';
+import { TooltippedIconButton } from '../../mui-extras';
 
 const ATTACH_BUTTON_CLASS = 'jp-chat-attach-button';
 
@@ -47,23 +47,15 @@ export function AttachButton(
   };
 
   return (
-    <TooltippedButton
+    <TooltippedIconButton
       onClick={onclick}
       tooltip={tooltip}
-      buttonProps={{
-        size: 'small',
-        variant: 'text',
+      iconButtonProps={{
         title: tooltip,
         className: ATTACH_BUTTON_CLASS
       }}
-      sx={{
-        width: '24px',
-        height: '24px',
-        minWidth: '24px',
-        color: 'gray'
-      }}
     >
-      <AttachFileIcon sx={{ fontSize: '16px ' }} />
-    </TooltippedButton>
+      <AttachFileIcon />
+    </TooltippedIconButton>
   );
 }

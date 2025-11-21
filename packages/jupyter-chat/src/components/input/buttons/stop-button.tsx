@@ -4,10 +4,10 @@
  */
 
 import StopIcon from '@mui/icons-material/Stop';
-import { Button, Tooltip } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
 import { InputToolbarRegistry } from '../toolbar-registry';
+import { TooltippedIconButton } from '../../mui-extras';
 
 const STOP_BUTTON_CLASS = 'jp-chat-stop-button';
 
@@ -51,38 +51,17 @@ export function StopButton(
   }
 
   return (
-    <Tooltip title={tooltip} placement="top" arrow>
-      <span>
-        <Button
-          onClick={stop}
-          disabled={disabled}
-          size="small"
-          variant="contained"
-          className={STOP_BUTTON_CLASS}
-          aria-label={tooltip}
-          sx={{
-            backgroundColor: 'var(--jp-error-color1)',
-            color: 'white',
-            minWidth: '24px',
-            width: '24px',
-            height: '24px',
-            borderRadius: '4px',
-            boxShadow: 'none',
-            lineHeight: 0,
-            '&:hover': {
-              backgroundColor: 'var(--jp-error-color0)',
-              boxShadow: 'none'
-            },
-            '&.Mui-disabled': {
-              backgroundColor: 'var(--jp-border-color2)',
-              color: 'var(--jp-ui-font-color3)',
-              opacity: 0.5
-            }
-          }}
-        >
-          <StopIcon sx={{ fontSize: '16px' }} />
-        </Button>
-      </span>
-    </Tooltip>
+    <TooltippedIconButton
+      onClick={stop}
+      tooltip={tooltip}
+      disabled={disabled}
+      iconButtonProps={{
+        title: tooltip,
+        className: STOP_BUTTON_CLASS
+      }}
+      aria-label={tooltip}
+    >
+      <StopIcon />
+    </TooltippedIconButton>
   );
 }
