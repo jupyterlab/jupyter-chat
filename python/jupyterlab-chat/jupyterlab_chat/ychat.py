@@ -118,6 +118,20 @@ class YChat(YBaseDoc):
         message_dicts = self._get_messages()
         return [Message(**message_dict) for message_dict in message_dicts]
 
+    def _find_mentions(self, body: str) -> list[str]:
+        """
+        Extract mentioned usernames from a message body.
+        Finds all @mentions in the body and returns the corresponding usernames.
+        """
+        mention_pattern = re.compile(r"@([\w-]+):?")
+        mentioned_names: Set[str] = set(re.findall(mention_pattern, body))
+        users = self.get_users()
+        mentioned_usernames = []
+        for username, user in users.items():
+            if user.mention_name in mentioned_names and user.username not in mentioned_usernames:
+                mentioned_usernames.append(username)
+        return mentioned_usernames
+
     def _get_messages(self) -> list[dict]:
         """
         Returns the messages of the document as dict.
@@ -137,14 +151,7 @@ class YChat(YBaseDoc):
         )
 
         # find all mentioned users and add them as message mentions
-        mention_pattern = re.compile("@([\w-]+):?")
-        mentioned_names: Set[str] = set(re.findall(mention_pattern, message.body))
-        users = self.get_users()
-        mentioned_usernames = []
-        for username, user in users.items():
-            if user.mention_name in mentioned_names and user.username not in mentioned_usernames:
-                mentioned_usernames.append(username)
-        message.mentions = mentioned_usernames
+        message.mentions = self._find_mentions(message.body)
 
         with self._ydoc.transaction():
             index = len(self._ymessages) - next((i for i, v in enumerate(self._get_messages()[::-1]) if v["time"] < timestamp), len(self._ymessages))
@@ -155,10 +162,11 @@ class YChat(YBaseDoc):
 
         return uid
 
-    def update_message(self, message: Message, append: bool = False):
+    def update_message(self, message: Message, append: bool = False, find_mentions: bool = False):
         """
         Update a message of the document.
-        If append is True, the content will be append to the previous content.
+        If append is True, the content will be appended to the previous content.
+        If find_mentions is True, mentions will be extracted and notifications triggered (use for streaming completion).
         """
         with self._ydoc.transaction():
             index = self._indexes_by_id[message.id]
@@ -166,6 +174,11 @@ class YChat(YBaseDoc):
             message.time = initial_message["time"]  # type:ignore[index]
             if append:
                 message.body = initial_message["body"] + message.body  # type:ignore[index]
+
+            # Extract and update mentions from the message body
+            if find_mentions:
+                message.mentions = self._find_mentions(message.body)
+
             self._ymessages[index] = asdict(message, dict_factory=message_asdict_factory)
 
     def get_attachments(self) -> dict[str, Union[FileAttachment, NotebookAttachment]]:
