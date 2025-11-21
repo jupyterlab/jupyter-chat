@@ -6,17 +6,28 @@
 import { classes } from '@jupyterlab/ui-components';
 import React, { useEffect, useRef } from 'react';
 
+import { useChatContext } from '../../context';
 import { MarkdownRenderer, MD_RENDERED_CLASS } from '../../markdown-renderer';
 
 const WELCOME_MESSAGE_CLASS = 'jp-chat-welcome-message';
+
+/**
+ * The component props.
+ */
+export interface IWelcomeMessageProps {
+  /**
+   * The content of the welcome message (markdown).
+   */
+  content: string;
+}
 
 /**
  * The welcome message component.
  * This message is displayed on top of the chat messages, and is rendered using a
  * markdown renderer.
  */
-export function WelcomeMessage(props: MarkdownRenderer.IOptions): JSX.Element {
-  const { rmRegistry } = props;
+export function WelcomeMessage(props: IWelcomeMessageProps): JSX.Element {
+  const { rmRegistry } = useChatContext();
   const content = props.content + '\n----\n';
 
   // ref that tracks the content container to store the rendermime node in

@@ -103,6 +103,9 @@ celerybeat-schedule
 .spyderproject
 .spyproject
 
+# vscode project settings
+.vscode
+
 # Rope project settings
 .ropeproject
 

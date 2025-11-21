@@ -8,8 +8,7 @@
  * Originally adapted from jupyterlab-chat's ChatPanel
  */
 
-import { InputDialog, IThemeManager } from '@jupyterlab/apputils';
-import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
+import { InputDialog } from '@jupyterlab/apputils';
 import {
   addIcon,
   closeIcon,
@@ -34,11 +33,6 @@ import {
 } from '../components';
 import { chatIcon, readIcon } from '../icons';
 import { IChatModel } from '../model';
-import {
-  IAttachmentOpenerRegistry,
-  IChatCommandRegistry,
-  IMessageFooterRegistry
-} from '../registers';
 
 const SIDEPANEL_CLASS = 'jp-chat-sidepanel';
 const ADD_BUTTON_CLASS = 'jp-chat-add';
@@ -58,13 +52,8 @@ export class MultiChatPanel extends SidePanel {
 
     this.addClass(SIDEPANEL_CLASS);
 
-    this._rmRegistry = options.rmRegistry;
-    this._themeManager = options.themeManager;
-    this._chatCommandRegistry = options.chatCommandRegistry;
-    this._attachmentOpenerRegistry = options.attachmentOpenerRegistry;
+    this._chatOptions = options;
     this._inputToolbarFactory = options.inputToolbarFactory;
-    this._messageFooterRegistry = options.messageFooterRegistry;
-    this._welcomeMessage = options.welcomeMessage;
 
     this._getChatNames = options.getChatNames;
     this._createModel = options.createModel;
@@ -149,13 +138,8 @@ export class MultiChatPanel extends SidePanel {
     // Create a new widget.
     const widget = new ChatWidget({
       model,
-      rmRegistry: this._rmRegistry,
-      themeManager: this._themeManager,
-      chatCommandRegistry: this._chatCommandRegistry,
-      attachmentOpenerRegistry: this._attachmentOpenerRegistry,
+      ...this._chatOptions,
       inputToolbarRegistry,
-      messageFooterRegistry: this._messageFooterRegistry,
-      welcomeMessage: this._welcomeMessage,
       area: 'sidebar'
     });
 
@@ -267,13 +251,8 @@ export class MultiChatPanel extends SidePanel {
     this
   );
   private _sectionAdded = new Signal<MultiChatPanel, ChatSection>(this);
-  private _rmRegistry: IRenderMimeRegistry;
-  private _themeManager?: IThemeManager | null;
-  private _chatCommandRegistry?: IChatCommandRegistry;
-  private _attachmentOpenerRegistry?: IAttachmentOpenerRegistry;
+  private _chatOptions: Omit<Chat.IOptions, 'model' | 'inputToolbarRegistry'>;
   private _inputToolbarFactory?: IInputToolbarRegistryFactory;
-  private _messageFooterRegistry?: IMessageFooterRegistry;
-  private _welcomeMessage?: string;
   private _updateChatListDebouncer: Debouncer;
 
   private _createModel?: (
