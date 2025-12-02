@@ -166,7 +166,8 @@ class YChat(YBaseDoc):
         """
         Update a message of the document.
         If append is True, the content will be appended to the previous content.
-        If trigger_actions includes 'mentions', mentions will be extracted and notifications triggered (use for streaming completion).
+        If trigger_actions includes 'mentions', mentions will be extracted and notifications triggered.
+        In the future trigger_actions can be expanded to include other callbacks. 
         """
         actions_set = set(trigger_actions) if trigger_actions else set()
 
