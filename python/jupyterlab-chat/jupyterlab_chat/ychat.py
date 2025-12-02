@@ -162,12 +162,14 @@ class YChat(YBaseDoc):
 
         return uid
 
-    def update_message(self, message: Message, append: bool = False, find_mentions: bool = False):
+    def update_message(self, message: Message, append: bool = False, trigger_actions: list[str] | None = None):
         """
         Update a message of the document.
         If append is True, the content will be appended to the previous content.
-        If find_mentions is True, mentions will be extracted and notifications triggered (use for streaming completion).
+        If trigger_actions includes 'mentions', mentions will be extracted and notifications triggered (use for streaming completion).
         """
+        actions_set = set(trigger_actions) if trigger_actions else set()
+
         with self._ydoc.transaction():
             index = self._indexes_by_id[message.id]
             initial_message = self._ymessages[index]
@@ -176,7 +178,7 @@ class YChat(YBaseDoc):
                 message.body = initial_message["body"] + message.body  # type:ignore[index]
 
             # Extract and update mentions from the message body
-            if find_mentions:
+            if 'mentions' in actions_set:
                 message.mentions = self._find_mentions(message.body)
 
             self._ymessages[index] = asdict(message, dict_factory=message_asdict_factory)

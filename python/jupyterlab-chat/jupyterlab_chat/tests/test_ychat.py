@@ -180,7 +180,7 @@ def test_update_message_includes_mentions():
     assert msg.mentions == [USER2.username]
 
     msg.body = f"@{USER3.mention_name} Goodbye!"
-    chat.update_message(msg, find_mentions=True)
+    chat.update_message(msg, trigger_actions=['mentions'])
     updated_msg = chat.get_message(msg_id)
     assert updated_msg
     assert updated_msg.mentions == [USER3.username]
@@ -199,7 +199,7 @@ def test_update_message_append_includes_mentions():
     assert msg.mentions == [USER2.username]
 
     msg.body = f" and @{USER3.mention_name}!"
-    chat.update_message(msg, append=True, find_mentions=True)
+    chat.update_message(msg, append=True, trigger_actions=['mentions'])
     updated_msg = chat.get_message(msg_id)
     assert updated_msg
     assert sorted(updated_msg.mentions) == sorted([USER2.username, USER3.username])
@@ -217,7 +217,7 @@ def test_update_message_append_no_duplicate_mentions():
     assert msg.mentions == [USER2.username]
 
     msg.body = f" @{USER2.mention_name} again!"
-    chat.update_message(msg, append=True, find_mentions=True)
+    chat.update_message(msg, append=True, trigger_actions=['mentions'])
     updated_msg = chat.get_message(msg_id)
     assert updated_msg
     assert updated_msg.mentions == [USER2.username]
