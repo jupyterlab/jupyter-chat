@@ -15,7 +15,7 @@ from pycrdt import Array, ArrayEvent, Map, MapEvent
 import re
 
 from .models import message_asdict_factory, FileAttachment, NotebookAttachment, Message, NewMessage, User
-from .utils import find_mentions_callback
+from .utils import find_mentions
 
 
 class YChat(YBaseDoc):
@@ -131,11 +131,11 @@ class YChat(YBaseDoc):
 
         Args:
             new_message: The message to add
-            trigger_actions: List of callbacks to execute on the message. Defaults to [find_mentions_callback].
+            trigger_actions: List of callbacks to execute on the message. Defaults to [find_mentions].
                            Each callback receives (message, chat) as arguments.
         """
         if trigger_actions is None:
-            trigger_actions = [find_mentions_callback]
+            trigger_actions = [find_mentions]
 
         timestamp: float = time.time()
         uid = str(uuid4())
