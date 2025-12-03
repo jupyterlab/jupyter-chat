@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from .ychat import YChat
 
 
-def find_mentions_callback(message: "Message", chat: "YChat") -> None:
+def find_mentions(message: "Message", chat: "YChat") -> None:
     """
     Callback to extract and update mentions in a message.
 
