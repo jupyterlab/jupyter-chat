@@ -16,8 +16,8 @@ import { WelcomeMessage } from './welcome';
 import { ScrollContainer } from '../scroll-container';
 import { useChatContext } from '../../context';
 import { Message } from '../../message';
-import { IMessage, IConfig } from '../../types';
 import { IChatModel } from '../../model';
+import { IMessage, IConfig } from '../../types';
 
 export const MESSAGE_CLASS = 'jp-chat-message';
 const MESSAGES_BOX_CLASS = 'jp-chat-messages-container';
