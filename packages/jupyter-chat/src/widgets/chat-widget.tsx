@@ -28,6 +28,9 @@ const FILE_BROWSER_MIME = 'application/x-jupyter-icontentsrich';
 // MIME type constant for Notebook cell drag events
 const NOTEBOOK_CELL_MIME = 'application/vnd.jupyter.cells';
 
+// MIME type constant for TabBar file drag events
+const TABBAR_FILE_MIME = 'application/vnd.lumino.widget-factory';
+
 // CSS class constants
 const INPUT_CONTAINER_CLASS = 'jp-chat-input-container';
 const DRAG_HOVER_CLASS = 'jp-chat-drag-hover';
@@ -179,7 +182,9 @@ export class ChatWidget extends ReactWidget {
   private _canHandleDrop(event: Drag.Event): boolean {
     const types = event.mimeData.types();
     return (
-      types.includes(NOTEBOOK_CELL_MIME) || types.includes(FILE_BROWSER_MIME)
+      types.includes(NOTEBOOK_CELL_MIME) ||
+      types.includes(FILE_BROWSER_MIME) ||
+      types.includes(TABBAR_FILE_MIME)
     );
   }
 
@@ -202,6 +207,8 @@ export class ChatWidget extends ReactWidget {
         this._processCellDrop(event);
       } else if (event.mimeData.hasData(FILE_BROWSER_MIME)) {
         this._processFileDrop(event);
+      } else if (event.mimeData.hasData(TABBAR_FILE_MIME)) {
+        this._processTabDrop(event);
       }
     } catch (error) {
       console.error('Error processing drop:', error);
@@ -319,6 +326,41 @@ export class ChatWidget extends ReactWidget {
     } catch (error) {
       console.error('Failed to process cell drop: ', error);
     }
+  }
+
+  /**
+   * Process dropped tabBar files
+   */
+  private _processTabDrop(event: Drag.Event) {
+    const factory = event.mimeData.getData(TABBAR_FILE_MIME) as () => any;
+    if (!factory) {
+      console.warn('No factory in drag event');
+      return;
+    }
+
+    const widget = factory();
+    if (!widget) {
+      console.warn('Factory did not return a widget');
+      return;
+    }
+
+    const path =
+      typeof widget.context?.path === 'string' ? widget.context.path : null;
+    if (!path) {
+      console.warn('Widget has no path');
+      return;
+    }
+
+    const mimetype =
+      widget.context?.model?.mimeType || 'application/octet-stream';
+    const attachment: IFileAttachment = {
+      type: 'file',
+      value: path,
+      mimetype
+    };
+
+    const inputModel = this._getInputFromEvent(event);
+    inputModel?.addAttachment?.(attachment);
   }
 
   /**
