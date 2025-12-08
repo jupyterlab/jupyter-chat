@@ -34,7 +34,7 @@ export function MessageToolbar(props: MessageToolbar.IProps): JSX.Element {
   if (props.delete !== undefined) {
     const deleteButton = (
       <TooltippedIconButton
-        tooltip={'delete'}
+        tooltip={'Delete'}
         onClick={props.delete}
         aria-label={'Delete'}
         inputToolbar={false}

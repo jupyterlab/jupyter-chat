@@ -20,7 +20,7 @@ export function CancelButton(
   if (!props.model.cancel) {
     return <></>;
   }
-  const tooltip = 'Cancel edition';
+  const tooltip = 'Cancel editing';
   return (
     <TooltippedIconButton
       onClick={props.model.cancel}
