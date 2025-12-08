@@ -12,7 +12,7 @@ import {
 import { User } from '@jupyterlab/services';
 import { UUID } from '@lumino/coreutils';
 
-import { openChat, openSettings, sendMessage, USER } from './test-utils';
+import { openChat, openSettings, USER } from './test-utils';
 
 const FILENAME = 'my-chat.chat';
 const MSG_CONTENT = 'Hello World!';
@@ -46,15 +46,20 @@ test.describe('#settings', () => {
 
   test('should have default settings values', async ({ page }) => {
     const settings = await openSettings(page);
-    const sendWithShiftEnter = settings?.getByRole('checkbox', {
+    const sendWithShiftEnter = settings.getByRole('checkbox', {
       name: 'sendWithShiftEnter'
     });
-    expect(sendWithShiftEnter!).not.toBeChecked();
+    expect(sendWithShiftEnter).not.toBeChecked();
 
-    const stackMessages = settings?.getByRole('checkbox', {
+    const stackMessages = settings.getByRole('checkbox', {
       name: 'stackMessages'
     });
-    expect(stackMessages!).toBeChecked();
+    expect(stackMessages).toBeChecked();
+
+    const showDeleted = settings.getByRole('checkbox', {
+      name: 'showDeleted'
+    });
+    expect(showDeleted).not.toBeChecked();
   });
 });
 
@@ -314,5 +319,90 @@ test.describe('#typingNotification', () => {
     const result = regexp.exec((await writers.textContent()) ?? '');
     expect(result?.[1] !== undefined);
     expect(result?.[1] !== result?.[2]);
+  });
+});
+
+test.describe('#showDeletedMessages', () => {
+  const msg1 = {
+    type: 'msg',
+    id: UUID.uuid4(),
+    sender: USERNAME,
+    body: '',
+    time: 1714116341,
+    deleted: true
+  };
+  const msg2 = {
+    type: 'msg',
+    id: UUID.uuid4(),
+    sender: USERNAME,
+    body: 'Message not deleted',
+    time: 1714116341
+  };
+  const chatContent = {
+    messages: [msg1, msg2],
+    users: {}
+  };
+
+  test.beforeEach(async ({ page }) => {
+    // Create a chat file with content
+    await page.filebrowser.contents.uploadContent(
+      JSON.stringify(chatContent),
+      'text',
+      FILENAME
+    );
+  });
+
+  test.afterEach(async ({ page }) => {
+    if (await page.filebrowser.contents.fileExists(FILENAME)) {
+      await page.filebrowser.contents.deleteFile(FILENAME);
+    }
+  });
+
+  test('Should toggle the deleted message visibility', async ({ page }) => {
+    const chatPanel = await openChat(page, FILENAME);
+    const messages = chatPanel.locator('.jp-chat-message');
+    await expect(messages).toHaveCount(1);
+
+    /**
+     * Checking the checkbox should display the deleted message.
+     */
+    const settings = await openSettings(page);
+    const showDeleted = settings?.getByRole('checkbox', {
+      name: 'showDeleted'
+    });
+
+    await showDeleted.check();
+
+    // wait for the settings to be saved
+    await expect(page.activity.getTabLocator('Settings')).toHaveAttribute(
+      'class',
+      /jp-mod-dirty/
+    );
+    await expect(page.activity.getTabLocator('Settings')).not.toHaveAttribute(
+      'class',
+      /jp-mod-dirty/
+    );
+
+    await page.activity.activateTab(FILENAME);
+    await expect(messages).toHaveCount(2);
+
+    /**
+     * Unchecking the checkbox should hide the deleted message.
+     */
+    await page.activity.activateTab('Settings');
+    await showDeleted.uncheck();
+
+    // wait for the settings to be saved
+    await expect(page.activity.getTabLocator('Settings')).toHaveAttribute(
+      'class',
+      /jp-mod-dirty/
+    );
+    await expect(page.activity.getTabLocator('Settings')).not.toHaveAttribute(
+      'class',
+      /jp-mod-dirty/
+    );
+
+    await page.activity.activateTab(FILENAME);
+    await expect(messages).toHaveCount(1);
   });
 });
