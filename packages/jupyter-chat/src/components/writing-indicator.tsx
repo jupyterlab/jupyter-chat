@@ -3,10 +3,10 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { Box, Typography } from '@mui/material';
+import { Box, SxProps, Theme, Typography } from '@mui/material';
 import React from 'react';
 
-import { IChatModel } from '../../model';
+import { IChatModel } from '../model';
 
 /**
  * Classname on the root element. Used in E2E tests.
@@ -21,6 +21,10 @@ export interface IInputWritingIndicatorProps {
    * The list of users currently writing.
    */
   writers: IChatModel.IWriter[];
+  /**
+   * Custom mui/material styles.
+   */
+  sx?: SxProps<Theme>;
 }
 
 /**
@@ -48,9 +52,9 @@ function formatWritersText(writers: IChatModel.IWriter[]): string {
 }
 
 /**
- * The input writing indicator component, displaying typing status in the chat input area.
+ * The writing indicator component, displaying typing status.
  */
-export function InputWritingIndicator(
+export function WritingIndicator(
   props: IInputWritingIndicatorProps
 ): JSX.Element {
   const { writers } = props;
@@ -62,6 +66,7 @@ export function InputWritingIndicator(
     <Box
       className={WRITERS_ELEMENT_CLASSNAME}
       sx={{
+        ...props.sx,
         minHeight: '16px'
       }}
     >
