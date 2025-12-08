@@ -37,6 +37,12 @@
       "default": true,
       "readOnly": false
     },
+    "showDeleted": {
+      "description": "Show the deleted messages.",
+      "type": "boolean",
+      "default": false,
+      "readOnly": false
+    },
     "defaultDirectory": {
       "description": "Default directory where to create and look for chat, the jupyter root directory if empty.",
       "type": "string",
