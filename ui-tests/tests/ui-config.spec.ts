@@ -105,9 +105,13 @@ test.describe('#stackedMessages', () => {
     const messages = messagesContainer.locator('.jp-chat-message');
     await expect(messages).toHaveCount(2);
 
-    // Hide the time to avoid time zone diff
-    await messages
-      .locator('.jp-chat-message-time')
+    // Expect the time to be visible only in the first message.
+    const times = messages.locator('.jp-chat-message-time');
+    await expect(times).toHaveCount(1);
+    await expect(times.first()).toBeVisible();
+
+    // Hide the time to avoid time zone diff in screenshot.
+    await times
       .evaluateAll(elements =>
         elements.map(element => (element.style.display = 'none'))
       );
@@ -146,6 +150,11 @@ test.describe('#stackedMessages', () => {
     const messagesContainer = chatPanel.locator('.jp-chat-messages-container');
     const messages = messagesContainer.locator('.jp-chat-message');
     await expect(messages).toHaveCount(2);
+
+    // Expect the time to be visible only in the first message.
+    const times = messages.locator('.jp-chat-message-time');
+    await expect(times).toHaveCount(2);
+    await expect(times.last()).toBeVisible();
 
     // Hide the time to avoid time zone diff
     await messages
