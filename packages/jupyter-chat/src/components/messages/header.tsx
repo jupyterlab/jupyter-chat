@@ -30,12 +30,16 @@ type ChatMessageHeaderProps = {
  * The message header component.
  */
 export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
-  // Don't render header for stacked messages or current user messages
-  if (props.message.stacked || props.isCurrentUser) {
+  const message = props.message;
+  // Don't render header for stacked messages not deleted or edited.
+  if (message.stacked && !message.deleted && !message.edited) {
     return <></>;
   }
+
+  // Flag to display only the deleted or edited information (stacked message).
+  const onlyState = message.stacked && (message.deleted || message.edited);
+
   const [datetime, setDatetime] = useState<Record<number, string>>({});
-  const message = props.message;
   const sender = message.sender;
   /**
    * Effect: update cached datetime strings upon receiving a new message.
@@ -88,10 +92,10 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
         '& > :not(:last-child)': {
           marginRight: 3
         },
-        marginBottom: message.stacked ? '0px' : '12px'
+        marginBottom: message.stacked || props.isCurrentUser ? '0px' : '12px'
       }}
     >
-      {avatar}
+      {!props.isCurrentUser && !onlyState && avatar}
       <Box
         sx={{
           display: 'flex',
@@ -102,7 +106,7 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          {!message.stacked && (
+          {!onlyState && !props.isCurrentUser && (
             <Typography
               sx={{
                 fontWeight: 700,
@@ -124,17 +128,19 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
             </Typography>
           )}
         </Box>
-        <Typography
-          className={MESSAGE_TIME_CLASS}
-          sx={{
-            fontSize: '0.8em',
-            color: 'var(--jp-ui-font-color2)',
-            fontWeight: 300
-          }}
-          title={message.raw_time ? 'Unverified time' : ''}
-        >
-          {`${datetime[message.time]}${message.raw_time ? '*' : ''}`}
-        </Typography>
+        {!onlyState && (
+          <Typography
+            className={MESSAGE_TIME_CLASS}
+            sx={{
+              fontSize: '0.8em',
+              color: 'var(--jp-ui-font-color2)',
+              fontWeight: 300
+            }}
+            title={message.raw_time ? 'Unverified time' : ''}
+          >
+            {`${datetime[message.time]}${message.raw_time ? '*' : ''}`}
+          </Typography>
+        )}
       </Box>
     </Box>
   );
