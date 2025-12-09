@@ -2,6 +2,36 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.19.0alpha2
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.19.0-alpha.1...6981efcd43856a955ff258ab95918a2b135bd256))
+
+### Enhancements made
+
+- Hide command name from drop-down [#327](https://github.com/jupyterlab/jupyter-chat/pull/327) ([@nakul-py](https://github.com/nakul-py))
+- Restore time for current user's messages, and allow showing deleted messages [#325](https://github.com/jupyterlab/jupyter-chat/pull/325) ([@brichet](https://github.com/brichet))
+- Use the `TooltippedIconButton` in toolbars [#319](https://github.com/jupyterlab/jupyter-chat/pull/319) ([@brichet](https://github.com/brichet))
+- Chat tracker token [#307](https://github.com/jupyterlab/jupyter-chat/pull/307) ([@brichet](https://github.com/brichet))
+
+### Bugs fixed
+
+- Fix chat input field not scrolling when input is too long [#314](https://github.com/jupyterlab/jupyter-chat/pull/314) ([@ivandezra](https://github.com/ivandezra))
+
+### Maintenance and upkeep improvements
+
+- Bump glob from 10.4.5 to 10.5.0 in /ui-tests in the npm_and_yarn group across 1 directory [#321](https://github.com/jupyterlab/jupyter-chat/pull/321) ([@dependabot](https://github.com/dependabot))
+- Bump glob from 10.3.12 to 10.4.5 in /ui-tests in the npm_and_yarn group across 1 directory [#316](https://github.com/jupyterlab/jupyter-chat/pull/316) ([@dependabot](https://github.com/dependabot))
+- Bump js-yaml from 3.14.1 to 3.14.2 in the npm_and_yarn group across 1 directory [#312](https://github.com/jupyterlab/jupyter-chat/pull/312) ([@dependabot](https://github.com/dependabot))
+- React context [#281](https://github.com/jupyterlab/jupyter-chat/pull/281) ([@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2025-11-15&to=2025-12-09&type=c))
+
+[@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2025-11-15..2025-12-09&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adependabot+updated%3A2025-11-15..2025-12-09&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2025-11-15..2025-12-09&type=Issues) | [@ivandezra](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Aivandezra+updated%3A2025-11-15..2025-12-09&type=Issues) | [@jtpio](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2025-11-15..2025-12-09&type=Issues) | [@nakul-py](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Anakul-py+updated%3A2025-11-15..2025-12-09&type=Issues)
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.19.0alpha1
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.19.0-alpha.0...c0676b189b1b8112f1d5db24978096e9aeafdbdc))
@@ -20,8 +50,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2025-11-01&to=2025-11-15&type=c))
 
 [@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2025-11-01..2025-11-15&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adependabot+updated%3A2025-11-01..2025-11-15&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2025-11-01..2025-11-15&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.19.0alpha0
 
