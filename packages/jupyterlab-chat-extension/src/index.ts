@@ -12,6 +12,7 @@ import {
   IAttachment,
   IAttachmentOpenerRegistry,
   IChatCommandRegistry,
+  IChatTracker,
   IMessageFooterRegistry,
   ISelectionWatcher,
   InputToolbarRegistry,
@@ -32,6 +33,7 @@ import {
   ICommandPalette,
   IThemeManager,
   IToolbarWidgetRegistry,
+  IWidgetTracker,
   InputDialog,
   WidgetTracker,
   createToolbarFactory,
@@ -58,6 +60,7 @@ import {
   IChatPanel,
   ISelectionWatcherToken,
   IWelcomeMessage,
+  IWidgetConfig,
   LabChatModelFactory,
   LabChatPanel,
   WidgetConfig,
@@ -76,9 +79,11 @@ const pluginIds = {
   attachmentOpenerRegistry: 'jupyterlab-chat-extension:attachmentOpener',
   chatCommands: 'jupyterlab-chat-extension:commands',
   chatPanel: 'jupyterlab-chat-extension:chat-panel',
+  chatTracker: 'jupyterlab-chat-extension:tracker',
   docFactories: 'jupyterlab-chat-extension:factory',
   inputToolbarFactory: 'jupyterlab-chat-extension:inputToolbarFactory',
-  selectionWatcher: 'jupyterlab-chat-extension:selectionWatcher'
+  selectionWatcher: 'jupyterlab-chat-extension:selectionWatcher',
+  widgetConfig: 'jupyterlab-chat-extension:widget-config'
 };
 
 /**
@@ -157,59 +162,19 @@ const attachmentOpeners: JupyterFrontEndPlugin<IAttachmentOpenerRegistry> = {
 };
 
 /**
- * Extension registering the chat file type.
+ * Extension providing the chat widget config.
  */
-const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
-  id: pluginIds.docFactories,
-  description: 'Document factories for chat.',
+const chatConfig: JupyterFrontEndPlugin<IWidgetConfig> = {
+  id: pluginIds.widgetConfig,
+  description: 'Chat widget configuration.',
   autoStart: true,
-  requires: [IRenderMimeRegistry],
-  optional: [
-    IActiveCellManagerToken,
-    IAttachmentOpenerRegistry,
-    IChatCommandRegistry,
-    ICollaborativeContentProvider,
-    IDefaultFileBrowser,
-    IInputToolbarRegistryFactory,
-    ILayoutRestorer,
-    IMessageFooterRegistry,
-    ISelectionWatcherToken,
-    ISettingRegistry,
-    IThemeManager,
-    IToolbarWidgetRegistry,
-    ITranslator,
-    IWelcomeMessage
-  ],
-  provides: IChatFactory,
+  optional: [ICollaborativeContentProvider, ISettingRegistry],
+  provides: IWidgetConfig,
   activate: (
     app: JupyterFrontEnd,
-    rmRegistry: IRenderMimeRegistry,
-    activeCellManager: IActiveCellManager | null,
-    attachmentOpenerRegistry: IAttachmentOpenerRegistry,
-    chatCommandRegistry: IChatCommandRegistry,
     drive: ICollaborativeContentProvider | null,
-    filebrowser: IDefaultFileBrowser | null,
-    inputToolbarFactory: IInputToolbarRegistryFactory,
-    restorer: ILayoutRestorer | null,
-    messageFooterRegistry: IMessageFooterRegistry,
-    selectionWatcher: ISelectionWatcher | null,
-    settingRegistry: ISettingRegistry | null,
-    themeManager: IThemeManager | null,
-    toolbarRegistry: IToolbarWidgetRegistry | null,
-    translator_: ITranslator | null,
-    welcomeMessage: string
-  ): IChatFactory => {
-    const translator = translator_ ?? nullTranslator;
-
-    // Declare the toolbar factory.
-    let toolbarFactory:
-      | ((
-          widget: LabChatPanel
-        ) =>
-          | DocumentRegistry.IToolbarItem[]
-          | IObservableList<DocumentRegistry.IToolbarItem>)
-      | undefined;
-
+    settingRegistry: ISettingRegistry | null
+  ): IWidgetConfig => {
     /**
      * The chat config object.
      */
@@ -288,17 +253,6 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
     }
 
     if (settingRegistry) {
-      // Create the main area widget toolbar factory.
-      if (toolbarRegistry) {
-        toolbarFactory = createToolbarFactory(
-          toolbarRegistry,
-          settingRegistry,
-          FACTORY,
-          pluginIds.docFactories,
-          translator
-        );
-      }
-
       // Wait for the application to be restored and
       // for the settings to be loaded
       Promise.all([app.restored, settingRegistry.load(pluginIds.docFactories)])
@@ -315,12 +269,76 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
           );
         });
     }
+    return widgetConfig;
+  }
+};
 
-    // Namespace for the tracker
-    const namespace = 'chat';
+/**
+ * Extension registering the chat file type.
+ */
+const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
+  id: pluginIds.docFactories,
+  description: 'Document factories for chat.',
+  autoStart: true,
+  requires: [IRenderMimeRegistry, IWidgetConfig],
+  optional: [
+    IActiveCellManagerToken,
+    IAttachmentOpenerRegistry,
+    IChatCommandRegistry,
+    ICollaborativeContentProvider,
+    IDefaultFileBrowser,
+    IInputToolbarRegistryFactory,
+    IMessageFooterRegistry,
+    ISelectionWatcherToken,
+    ISettingRegistry,
+    IThemeManager,
+    IToolbarWidgetRegistry,
+    ITranslator,
+    IWelcomeMessage
+  ],
+  provides: IChatFactory,
+  activate: (
+    app: JupyterFrontEnd,
+    rmRegistry: IRenderMimeRegistry,
+    widgetConfig: IWidgetConfig,
+    activeCellManager: IActiveCellManager | null,
+    attachmentOpenerRegistry: IAttachmentOpenerRegistry,
+    chatCommandRegistry: IChatCommandRegistry,
+    drive: ICollaborativeContentProvider | null,
+    filebrowser: IDefaultFileBrowser | null,
+    inputToolbarFactory: IInputToolbarRegistryFactory,
+    messageFooterRegistry: IMessageFooterRegistry,
+    selectionWatcher: ISelectionWatcher | null,
+    settingRegistry: ISettingRegistry | null,
+    themeManager: IThemeManager | null,
+    toolbarRegistry: IToolbarWidgetRegistry | null,
+    translator_: ITranslator | null,
+    welcomeMessage: string
+  ): ChatWidgetFactory => {
+    const translator = translator_ ?? nullTranslator;
 
-    // Creating the tracker for the document
-    const tracker = new WidgetTracker<LabChatPanel | ChatWidget>({ namespace });
+    // Declare the toolbar factory.
+    let toolbarFactory:
+      | ((
+          widget: LabChatPanel
+        ) =>
+          | DocumentRegistry.IToolbarItem[]
+          | IObservableList<DocumentRegistry.IToolbarItem>)
+      | undefined;
+
+    if (settingRegistry) {
+      // Create the main area widget toolbar factory.
+      if (toolbarRegistry) {
+        toolbarFactory = createToolbarFactory(
+          toolbarRegistry,
+          settingRegistry,
+          FACTORY,
+          pluginIds.docFactories,
+          translator
+        );
+      }
+    }
+
     app.docRegistry.addFileType(chatFileType);
 
     if (drive) {
@@ -365,8 +383,39 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
       welcomeMessage
     });
 
+    // Registering the widget factory
+    app.docRegistry.addWidgetFactory(widgetFactory);
+
+    return widgetFactory;
+  }
+};
+
+/**
+ * Extension providing the chat widget tracker.
+ */
+const chatTracker: JupyterFrontEndPlugin<IChatTracker> = {
+  id: pluginIds.chatTracker,
+  description: 'The chat widget tracker',
+  autoStart: true,
+  provides: IChatTracker,
+  requires: [IChatFactory],
+  optional: [IChatPanel, ILayoutRestorer],
+  activate: (
+    app: JupyterFrontEnd,
+    factory: ChatWidgetFactory,
+    chatPanel: MultiChatPanel | null,
+    restorer: ILayoutRestorer | null
+  ): IChatTracker => {
+    // Namespace for the tracker
+    const namespace = 'chat';
+
+    // Creating the tracker for the chat widgets.
+    const tracker = new WidgetTracker<ChatWidget | LabChatPanel>({
+      namespace
+    });
+
     // Add the widget to the tracker when it's created
-    widgetFactory.widgetCreated.connect((sender, widget) => {
+    factory.widgetCreated.connect((sender, widget) => {
       // Notify the instance tracker if restore data needs to update.
       widget.context.pathChanged.connect(() => {
         tracker.save(widget);
@@ -379,8 +428,10 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
       );
     });
 
-    // Registering the widget factory
-    app.docRegistry.addWidgetFactory(widgetFactory);
+    // Add the new opened chat in the tracker.
+    chatPanel?.sectionAdded.connect((_, section) => {
+      tracker.add(section.widget);
+    });
 
     // Handle state restoration.
     if (restorer) {
@@ -398,15 +449,18 @@ const docFactories: JupyterFrontEndPlugin<IChatFactory> = {
         command: CommandIDs.openChat,
         args: widget => ({
           filepath: widget.model.name ?? '',
-          inSidePanel: widget instanceof ChatWidget,
+          inSidePanel: widget.area === 'sidebar',
           startup: true
         }),
-        name: widget => widget.model.name,
+        name: widget => {
+          const area = widget.area ?? 'main';
+          return `${area}:${widget.model.name}`;
+        },
         when: openCommandReady.promise
       });
     }
 
-    return { widgetConfig, tracker };
+    return tracker;
   }
 };
 
@@ -417,19 +471,20 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
   id: pluginIds.chatCommands,
   description: 'The commands to create or open a chat.',
   autoStart: true,
-  requires: [ICollaborativeContentProvider, IChatFactory],
+  requires: [ICollaborativeContentProvider, IWidgetConfig, IChatTracker],
   optional: [IChatPanel, ICommandPalette, IDefaultFileBrowser, ILauncher],
   activate: (
     app: JupyterFrontEnd,
     drive: ICollaborativeContentProvider,
-    factory: IChatFactory,
+    widgetConfig: IWidgetConfig,
+    tracker: IWidgetTracker<ChatWidget>,
     chatPanel: MultiChatPanel | null,
     commandPalette: ICommandPalette | null,
     filebrowser: IDefaultFileBrowser | null,
     launcher: ILauncher | null
   ) => {
     const { commands } = app;
-    const { tracker, widgetConfig } = factory;
+
     /**
      * Command to create a new chat.
      *
@@ -781,7 +836,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
   description: 'The chat panel widget.',
   autoStart: true,
   provides: IChatPanel,
-  requires: [IChatFactory, ICollaborativeContentProvider, IRenderMimeRegistry],
+  requires: [IWidgetConfig, ICollaborativeContentProvider, IRenderMimeRegistry],
   optional: [
     IAttachmentOpenerRegistry,
     IChatCommandRegistry,
@@ -793,7 +848,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
   ],
   activate: (
     app: JupyterFrontEnd,
-    factory: IChatFactory,
+    widgetConfig: IWidgetConfig,
     drive: ICollaborativeContentProvider,
     rmRegistry: IRenderMimeRegistry,
     attachmentOpenerRegistry: IAttachmentOpenerRegistry,
@@ -811,7 +866,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     // Get the chat in default directory
     const getChatNames = async () => {
       const dirContents = await serviceManager.contents.get(
-        factory.widgetConfig.config.defaultDirectory ?? ''
+        widgetConfig.config.defaultDirectory ?? ''
       );
       const names: { [name: string]: string } = {};
       for (const file of dirContents.content) {
@@ -832,7 +887,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
           app,
           drive,
           path,
-          factory.widgetConfig.config.defaultDirectory
+          widgetConfig.config.defaultDirectory
         );
       },
       openInMain: path => {
@@ -855,7 +910,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     chatPanel.id = 'JupyterlabChat:sidepanel';
 
     // Update available chats and section title when default directory changed.
-    factory.widgetConfig.configChanged.connect((_, config) => {
+    widgetConfig.configChanged.connect((_, config) => {
       if (config.defaultDirectory !== undefined) {
         chatPanel.updateChatList();
         chatPanel.sections.forEach(section => {
@@ -889,7 +944,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
         if (currentSection) {
           currentSection.displayName = getDisplayName(
             change.newValue.path,
-            factory.widgetConfig.config.defaultDirectory
+            widgetConfig.config.defaultDirectory
           );
         }
       }
@@ -902,11 +957,6 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     if (restorer) {
       restorer.add(chatPanel, 'jupyter-chat');
     }
-
-    // Add the new opened chat in the tracker.
-    chatPanel.sectionAdded.connect((_, section) => {
-      factory.tracker.add(section.widget);
-    });
 
     /*
      * Command to move a chat from the main area to the side panel.
@@ -1017,9 +1067,11 @@ const footerRegistry: JupyterFrontEndPlugin<IMessageFooterRegistry> = {
 export default [
   activeCellManager,
   attachmentOpeners,
+  chatConfig,
   chatCommands,
   chatCommandRegistryPlugin,
   chatPanel,
+  chatTracker,
   docFactories,
   footerRegistry,
   inputToolbarFactory,

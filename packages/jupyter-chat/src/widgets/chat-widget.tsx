@@ -15,6 +15,7 @@ import { Chat, IInputToolbarRegistry, MESSAGE_CLASS } from '../components';
 import { chatIcon } from '../icons';
 import { IChatModel } from '../model';
 import {
+  ChatArea,
   IFileAttachment,
   INotebookAttachment,
   INotebookAttachmentCell
@@ -69,6 +70,13 @@ export class ChatWidget extends ReactWidget {
    */
   get model(): IChatModel {
     return this._chatOptions.model;
+  }
+
+  /**
+   * The area where the chat is opened.
+   */
+  get area(): ChatArea | undefined {
+    return this._chatOptions.area;
   }
 
   /**
