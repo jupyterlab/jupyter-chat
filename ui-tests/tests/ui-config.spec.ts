@@ -111,10 +111,9 @@ test.describe('#stackedMessages', () => {
     await expect(times.first()).toBeVisible();
 
     // Hide the time to avoid time zone diff in screenshot.
-    await times
-      .evaluateAll(elements =>
-        elements.map(element => (element.style.display = 'none'))
-      );
+    await times.evaluateAll(elements =>
+      elements.map(element => (element.style.display = 'none'))
+    );
 
     expect(await messagesContainer.screenshot()).toMatchSnapshot(
       'stacked-messages.png'
