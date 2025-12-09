@@ -189,6 +189,10 @@ interface IConfig {
    * Whether to enable or not the code toolbar.
    */
   enableCodeToolbar?: boolean;
+  /**
+   * Whether to display deleted messages.
+   */
+  showDeleted?: boolean;
 }
 ```
 

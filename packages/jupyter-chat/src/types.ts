@@ -53,7 +53,7 @@ export interface IConfig {
    */
   sendTypingNotification?: boolean;
   /**
-   * Whether to display deleted messages or not
+   * Whether to display deleted messages.
    */
   showDeleted?: boolean;
 }
