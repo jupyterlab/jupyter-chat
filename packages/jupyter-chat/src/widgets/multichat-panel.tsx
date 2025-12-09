@@ -547,7 +547,9 @@ function ChatSelect({
 
   return (
     <HTMLSelect onChange={handleChange} value="-">
-      <option value="-">Open a chat</option>
+      <option value="-" disabled hidden>
+        Open a chat
+      </option>
       {Object.keys(chatNames).map(name => (
         <option value={chatNames[name]}>{name}</option>
       ))}
