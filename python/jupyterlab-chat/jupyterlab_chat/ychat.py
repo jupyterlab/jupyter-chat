@@ -15,6 +15,7 @@ from pycrdt import Array, ArrayEvent, Map, MapEvent
 import re
 
 from .models import message_asdict_factory, FileAttachment, NotebookAttachment, Message, NewMessage, User
+from .utils import find_mentions
 
 
 class YChat(YBaseDoc):
@@ -124,10 +125,18 @@ class YChat(YBaseDoc):
         """
         return self._ymessages.to_py() or []
 
-    def add_message(self, new_message: NewMessage) -> str:
+    def add_message(self, new_message: NewMessage, trigger_actions: list[Callable] | None = None) -> str:
         """
         Append a message to the document.
+
+        Args:
+            new_message: The message to add
+            trigger_actions: List of callbacks to execute on the message. Defaults to [find_mentions].
+                           Each callback receives (message, chat) as arguments.
         """
+        if trigger_actions is None:
+            trigger_actions = [find_mentions]
+
         timestamp: float = time.time()
         uid = str(uuid4())
         message = Message(
@@ -136,15 +145,9 @@ class YChat(YBaseDoc):
             id=uid,
         )
 
-        # find all mentioned users and add them as message mentions
-        mention_pattern = re.compile("@([\w-]+):?")
-        mentioned_names: Set[str] = set(re.findall(mention_pattern, message.body))
-        users = self.get_users()
-        mentioned_usernames = []
-        for username, user in users.items():
-            if user.mention_name in mentioned_names and user.username not in mentioned_usernames:
-                mentioned_usernames.append(username)
-        message.mentions = mentioned_usernames
+        # Execute all trigger action callbacks
+        for callback in trigger_actions:
+            callback(message, self)
 
         with self._ydoc.transaction():
             index = len(self._ymessages) - next((i for i, v in enumerate(self._get_messages()[::-1]) if v["time"] < timestamp), len(self._ymessages))
@@ -155,10 +158,14 @@ class YChat(YBaseDoc):
 
         return uid
 
-    def update_message(self, message: Message, append: bool = False):
+    def update_message(self, message: Message, append: bool = False, trigger_actions: list[Callable] | None = None):
         """
         Update a message of the document.
-        If append is True, the content will be append to the previous content.
+
+        Args:
+            message: The message to update
+            append: If True, the content will be appended to the previous content
+            trigger_actions: List of callbacks to execute on the message. Each callback receives (message, chat) as arguments.
         """
         with self._ydoc.transaction():
             index = self._indexes_by_id[message.id]
@@ -166,6 +173,12 @@ class YChat(YBaseDoc):
             message.time = initial_message["time"]  # type:ignore[index]
             if append:
                 message.body = initial_message["body"] + message.body  # type:ignore[index]
+
+            # Execute all trigger action callbacks
+            if trigger_actions:
+                for callback in trigger_actions:
+                    callback(message, self)
+
             self._ymessages[index] = asdict(message, dict_factory=message_asdict_factory)
 
     def get_attachments(self) -> dict[str, Union[FileAttachment, NotebookAttachment]]:
