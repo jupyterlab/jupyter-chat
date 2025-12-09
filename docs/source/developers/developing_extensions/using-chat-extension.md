@@ -25,11 +25,6 @@ This token is composed of:
 - `tracker`, a widget tracker that allows to track all the opened chats, and to
   retrieve the current one.
 
-```{caution}
-Currently the widget tracker only tracks the main area widgets, not the ones opened in
-the side panel.
-```
-
 ### IChatPanel
 
 This token is a pointer to the left panel containing chats.\
