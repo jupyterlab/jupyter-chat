@@ -48,6 +48,9 @@ export function SendButton(
     };
     model.configChanged.connect(configChanged);
 
+    // Initialize the tooltip.
+    configChanged(model, model.config);
+
     return () => {
       model.valueChanged.disconnect(inputChanged);
       model.attachmentsChanged?.disconnect(inputChanged);
