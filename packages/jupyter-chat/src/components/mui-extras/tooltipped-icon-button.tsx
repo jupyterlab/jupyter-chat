@@ -13,12 +13,7 @@ import {
 import React from 'react';
 
 import { ContrastingTooltip } from './contrasting-tooltip';
-import {
-  DEFAULT_BUTTON_PROPS,
-  DEFAULT_BUTTON_SX,
-  INPUT_TOOLBAR_BUTTON_SX,
-  TOOLTIPPED_WRAP_CLASS
-} from './tooltipped-button';
+import { TOOLTIPPED_WRAP_CLASS } from './tooltipped-button';
 
 export type TooltippedIconButtonProps = {
   onClick: () => unknown;
@@ -89,14 +84,10 @@ export function TooltippedIconButton(
       */}
       <span className={classes(props.className, TOOLTIPPED_WRAP_CLASS)}>
         <IconButton
-          {...DEFAULT_BUTTON_PROPS}
+          {...((props.inputToolbar ?? true) && { variant: 'input-toolbar' })}
           {...props.iconButtonProps}
           onClick={props.onClick}
           disabled={props.disabled}
-          sx={{
-            ...DEFAULT_BUTTON_SX,
-            ...((props.inputToolbar ?? true) && INPUT_TOOLBAR_BUTTON_SX)
-          }}
           aria-label={props['aria-label']}
         >
           {props.children}

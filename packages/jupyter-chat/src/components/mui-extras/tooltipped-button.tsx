@@ -5,7 +5,7 @@
 
 import {
   Button,
-  ButtonOwnProps,
+  // ButtonOwnProps,
   ButtonProps,
   SxProps,
   TooltipProps
@@ -15,37 +15,6 @@ import React from 'react';
 import { ContrastingTooltip } from './contrasting-tooltip';
 
 export const TOOLTIPPED_WRAP_CLASS = 'jp-chat-tooltipped-wrap';
-
-export const DEFAULT_BUTTON_PROPS: Partial<ButtonOwnProps> = {
-  size: 'small',
-  variant: 'contained'
-};
-
-export const DEFAULT_BUTTON_SX = {
-  minWidth: '24px',
-  width: '24px',
-  height: '24px',
-  lineHeight: 0,
-  '&:disabled': {
-    opacity: 0.5
-  }
-};
-
-export const INPUT_TOOLBAR_BUTTON_SX = {
-  backgroundColor: 'var(--jp-brand-color1)',
-  color: 'white',
-  borderRadius: '4px',
-  boxShadow: 'none',
-  '&:hover': {
-    backgroundColor: 'var(--jp-brand-color0)',
-    boxShadow: 'none'
-  },
-  '&:disabled': {
-    backgroundColor: 'var(--jp-border-color2)',
-    color: 'var(--jp-ui-font-color3)',
-    opacity: 0.5
-  }
-};
 
 export type TooltippedButtonProps = {
   onClick: React.MouseEventHandler<HTMLButtonElement>;
@@ -114,13 +83,11 @@ export function TooltippedButton(props: TooltippedButtonProps): JSX.Element {
       */}
       <span style={{ cursor: 'default' }} className={TOOLTIPPED_WRAP_CLASS}>
         <Button
-          {...DEFAULT_BUTTON_PROPS}
+          {...((props.inputToolbar ?? true) && { variant: 'input-toolbar' })}
           {...props.buttonProps}
           onClick={props.onClick}
           disabled={props.disabled}
           sx={{
-            ...DEFAULT_BUTTON_SX,
-            ...((props.inputToolbar ?? true) && INPUT_TOOLBAR_BUTTON_SX),
             ...props.sx
           }}
           aria-label={props['aria-label'] ?? props.tooltip}

@@ -3,7 +3,30 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import '@mui/material/Button';
+import '@mui/material/IconButton';
 import { Theme, createTheme } from '@mui/material/styles';
+
+/**
+ * Allow a new variant type, for the input toolbar.
+ */
+declare module '@mui/material/Button' {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  interface ButtonPropsVariantOverrides {
+    'input-toolbar': true;
+  }
+}
+
+/**
+ * Allow a new variant property in IconButton, to be able to set the same properties
+ * as the input toolbar buttons.
+ */
+declare module '@mui/material/IconButton' {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  interface IconButtonOwnProps {
+    variant?: 'input-toolbar';
+  }
+}
 
 function getCSSVariable(name: string): string {
   return getComputedStyle(document.body).getPropertyValue(name).trim();
@@ -23,8 +46,41 @@ export async function getJupyterLabTheme(): Promise<Theme> {
     components: {
       MuiButton: {
         defaultProps: {
-          size: 'small'
-        }
+          size: 'small',
+          variant: 'contained'
+        },
+        styleOverrides: {
+          root: {
+            minWidth: '24px',
+            width: '24px',
+            height: '24px',
+            lineHeight: 0,
+            '&:disabled': {
+              opacity: 0.5
+            }
+          }
+        },
+        variants: [
+          {
+            // The default style for input toolbar button variant.
+            props: { variant: 'input-toolbar' },
+            style: {
+              backgroundColor: 'var(--jp-brand-color1)',
+              color: 'white',
+              borderRadius: '4px',
+              boxShadow: 'none',
+              '&:hover': {
+                backgroundColor: 'var(--jp-brand-color0)',
+                boxShadow: 'none'
+              },
+              '&:disabled': {
+                backgroundColor: 'var(--jp-border-color2)',
+                color: 'var(--jp-ui-font-color3)',
+                opacity: 0.5
+              }
+            }
+          }
+        ]
       },
       MuiFilledInput: {
         defaultProps: {
@@ -45,7 +101,39 @@ export async function getJupyterLabTheme(): Promise<Theme> {
       MuiIconButton: {
         defaultProps: {
           size: 'small'
-        }
+        },
+        styleOverrides: {
+          root: {
+            minWidth: '24px',
+            width: '24px',
+            height: '24px',
+            lineHeight: 0,
+            '&:disabled': {
+              opacity: 0.5
+            }
+          }
+        },
+        variants: [
+          {
+            // The default style for input toolbar button variant.
+            props: { variant: 'input-toolbar' },
+            style: {
+              backgroundColor: 'var(--jp-brand-color1)',
+              color: 'white',
+              borderRadius: '4px',
+              boxShadow: 'none',
+              '&:hover': {
+                backgroundColor: 'var(--jp-brand-color0)',
+                boxShadow: 'none'
+              },
+              '&:disabled': {
+                backgroundColor: 'var(--jp-border-color2)',
+                color: 'var(--jp-ui-font-color3)',
+                opacity: 0.5
+              }
+            }
+          }
+        ]
       },
       MuiInputBase: {
         defaultProps: {
