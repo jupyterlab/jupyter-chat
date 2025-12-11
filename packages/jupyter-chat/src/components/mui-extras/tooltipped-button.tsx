@@ -3,17 +3,11 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import {
-  Button,
-  // ButtonOwnProps,
-  ButtonProps,
-  SxProps,
-  TooltipProps
-} from '@mui/material';
+import { classes } from '@jupyterlab/ui-components';
+import { Button, ButtonProps, SxProps, TooltipProps } from '@mui/material';
 import React from 'react';
 
 import { ContrastingTooltip } from './contrasting-tooltip';
-import { classes } from '@jupyterlab/ui-components';
 
 export const TOOLTIPPED_WRAP_CLASS = 'jp-chat-tooltipped-wrap';
 
