@@ -9,8 +9,7 @@ import {
   Box,
   SxProps,
   TextField,
-  Theme,
-  Typography
+  Theme
 } from '@mui/material';
 import clsx from 'clsx';
 import React, { useEffect, useRef, useState } from 'react';
@@ -26,7 +25,6 @@ import { IAttachment } from '../../types';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
 const INPUT_TEXTFIELD_CLASS = 'jp-chat-input-textfield';
-const INPUT_FOOTER_CLASS = 'jp-chat-input-footer';
 const INPUT_TOOLBAR_CLASS = 'jp-chat-input-toolbar';
 
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
@@ -50,7 +48,6 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   >([]);
   const [isFocused, setIsFocused] = useState<boolean>(false);
   const [writers, setWriters] = useState<IChatModel.IWriter[]>([]);
-  const [helperText, setHelperText] = useState<JSX.Element>();
 
   /**
    * Auto-focus the input when the component is first mounted.
@@ -74,26 +71,9 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     model.valueChanged.connect(inputChanged);
 
     const configChanged = (_: IInputModel, config: InputModel.IConfig) => {
-      const shiftEnter = config.sendWithShiftEnter ?? false;
-      setSendWithShiftEnter(shiftEnter);
-      // Set the helper text based on whether Shift+Enter is used for sending.
-      setHelperText(
-        <Typography
-          sx={{
-            variant: 'body2',
-            color: 'text.secondary',
-            fontSize: 'var(--jp-ui-font-size0)'
-          }}
-        >
-          Press <b>Shift</b>+<b>Enter</b>
-          {shiftEnter ? ' to send message' : ' to add a new line'}
-        </Typography>
-      );
+      setSendWithShiftEnter(config.sendWithShiftEnter ?? false);
     };
     model.configChanged.connect(configChanged);
-
-    // Trigger the config change on first load to set the helper text.
-    configChanged(model, model.config);
 
     const focusInputElement = () => {
       if (inputRef.current) {
@@ -339,9 +319,11 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
           }}
         />
         <Box
-          className={INPUT_FOOTER_CLASS}
+          className={INPUT_TOOLBAR_CLASS}
           sx={{
             display: 'flex',
+            justifyContent: 'flex-end',
+            gap: 2,
             padding: 1.5,
             borderTop: '1px solid',
             borderColor: 'var(--jp-border-color1)',
@@ -349,21 +331,15 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
             transition: 'background-color 0.2s ease'
           }}
         >
-          {input.length > 2 ? helperText : ' '}
-          <Box
-            className={INPUT_TOOLBAR_CLASS}
-            sx={{ marginLeft: 'auto', display: 'flex', gap: 2 }}
-          >
-            {toolbarElements.map((item, index) => (
-              <item.element
-                key={index}
-                model={model}
-                chatCommandRegistry={chatCommandRegistry}
-                chatModel={chatModel}
-                edit={props.edit}
-              />
-            ))}
-          </Box>
+          {toolbarElements.map((item, index) => (
+            <item.element
+              key={index}
+              model={model}
+              chatCommandRegistry={chatCommandRegistry}
+              chatModel={chatModel}
+              edit={props.edit}
+            />
+          ))}
         </Box>
       </Box>
       <InputWritingIndicator writers={writers} />
