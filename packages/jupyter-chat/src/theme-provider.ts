@@ -110,6 +110,10 @@ export async function getJupyterLabTheme(): Promise<Theme> {
             lineHeight: 0,
             '&:disabled': {
               opacity: 0.5
+            },
+            // Set the default size of the svg icon if not set by user.
+            '& .MuiSvgIcon-root:not([fontSize])': {
+              fontSize: 'medium'
             }
           }
         },

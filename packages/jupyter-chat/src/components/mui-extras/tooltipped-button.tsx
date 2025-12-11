@@ -13,13 +13,18 @@ import {
 import React from 'react';
 
 import { ContrastingTooltip } from './contrasting-tooltip';
+import { classes } from '@jupyterlab/ui-components';
 
 export const TOOLTIPPED_WRAP_CLASS = 'jp-chat-tooltipped-wrap';
 
+/**
+ * The props for the icon button.
+ */
 export type TooltippedButtonProps = {
   onClick: React.MouseEventHandler<HTMLButtonElement>;
   tooltip: string;
   children: JSX.Element;
+  className?: string;
   inputToolbar?: boolean;
   disabled?: boolean;
   placement?: TooltipProps['placement'];
@@ -81,16 +86,16 @@ export function TooltippedButton(props: TooltippedButtonProps): JSX.Element {
 
         See: https://mui.com/material-ui/react-tooltip/#disabled-elements
       */}
-      <span style={{ cursor: 'default' }} className={TOOLTIPPED_WRAP_CLASS}>
+      <span className={classes(props.className, TOOLTIPPED_WRAP_CLASS)}>
         <Button
           {...((props.inputToolbar ?? true) && { variant: 'input-toolbar' })}
           {...props.buttonProps}
           onClick={props.onClick}
           disabled={props.disabled}
+          aria-label={props['aria-label'] ?? props.tooltip}
           sx={{
             ...props.sx
           }}
-          aria-label={props['aria-label'] ?? props.tooltip}
         >
           {props.children}
         </Button>

@@ -73,7 +73,7 @@ export function SendButton(
       onClick={send}
       tooltip={tooltip}
       disabled={disabled}
-      iconButtonProps={{
+      buttonProps={{
         title: tooltip,
         className: SEND_BUTTON_CLASS
       }}
