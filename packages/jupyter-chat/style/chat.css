@@ -106,3 +106,12 @@
   padding: 2px 0;
   font-weight: bold;
 }
+
+.jp-chat-open {
+  max-width: calc(100% - 140px);
+  overflow: hidden;
+}
+
+.lm-AccordionPanel-titleLabel {
+  max-width: calc(100% - 140px);
+}
