@@ -4,46 +4,23 @@
  */
 
 import { classes } from '@jupyterlab/ui-components';
-import {
-  IconButton,
-  IconButtonProps,
-  SvgIconOwnProps,
-  TooltipProps
-} from '@mui/material';
+import { IconButton, IconButtonProps } from '@mui/material';
 import React from 'react';
 
 import { ContrastingTooltip } from './contrasting-tooltip';
 import {
-  DEFAULT_BUTTON_PROPS,
-  DEFAULT_BUTTON_SX,
-  INPUT_TOOLBAR_BUTTON_SX,
-  TOOLTIPPED_WRAP_CLASS
+  TOOLTIPPED_WRAP_CLASS,
+  TooltippedButtonProps
 } from './tooltipped-button';
 
-export type TooltippedIconButtonProps = {
-  onClick: () => unknown;
-  tooltip: string;
-  children: JSX.Element;
-  className?: string;
-  inputToolbar?: boolean;
-  disabled?: boolean;
-  placement?: TooltipProps['placement'];
-  /**
-   * The font size of the icon. By default it will be set to 'small'.
-   */
-  fontSize?: SvgIconOwnProps['fontSize'];
-  /**
-   * The offset of the tooltip popup.
-   *
-   * The expected syntax is defined by the Popper library:
-   * https://popper.js.org/docs/v2/modifiers/offset/
-   */
-  offset?: [number, number];
-  'aria-label'?: string;
+/**
+ * The props for the tooltipped icon button.
+ */
+export type TooltippedIconButtonProps = TooltippedButtonProps & {
   /**
    * Props passed directly to the MUI `IconButton` component.
    */
-  iconButtonProps?: IconButtonProps;
+  buttonProps?: IconButtonProps;
 };
 
 /**
@@ -57,12 +34,15 @@ export type TooltippedIconButtonProps = {
  * - Lowers the opacity of the IconButton when disabled.
  * - Renders the IconButton with `line-height: 0` to avoid showing extra
  * vertical space in SVG icons.
+ *
+ * NOTES:
+ *  This kind of button doesn't allow regular variants ('outlined', 'contained', 'text').
+ *  The only one allowed is 'input-toolbar'. If you want to use one of the regular, use
+ *  the TooltippedButton instead.
  */
 export function TooltippedIconButton(
   props: TooltippedIconButtonProps
 ): JSX.Element {
-  // Override the default icon font size from 'medium' to 'small'
-  props.children.props.fontSize = props.fontSize ?? 'small';
   return (
     <ContrastingTooltip
       title={props.tooltip}
@@ -89,15 +69,14 @@ export function TooltippedIconButton(
       */}
       <span className={classes(props.className, TOOLTIPPED_WRAP_CLASS)}>
         <IconButton
-          {...DEFAULT_BUTTON_PROPS}
-          {...props.iconButtonProps}
+          {...((props.inputToolbar ?? true) && { variant: 'input-toolbar' })}
+          {...props.buttonProps}
           onClick={props.onClick}
           disabled={props.disabled}
+          aria-label={props['aria-label'] ?? props.tooltip}
           sx={{
-            ...DEFAULT_BUTTON_SX,
-            ...((props.inputToolbar ?? true) && INPUT_TOOLBAR_BUTTON_SX)
+            ...props.sx
           }}
-          aria-label={props['aria-label']}
         >
           {props.children}
         </IconButton>

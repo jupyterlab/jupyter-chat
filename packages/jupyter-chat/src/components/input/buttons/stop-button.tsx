@@ -55,7 +55,7 @@ export function StopButton(
       onClick={stop}
       tooltip={tooltip}
       disabled={disabled}
-      iconButtonProps={{
+      buttonProps={{
         title: tooltip,
         className: STOP_BUTTON_CLASS
       }}

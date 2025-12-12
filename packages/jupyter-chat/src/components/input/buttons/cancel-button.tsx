@@ -25,7 +25,7 @@ export function CancelButton(
     <TooltippedIconButton
       onClick={props.model.cancel}
       tooltip={tooltip}
-      iconButtonProps={{
+      buttonProps={{
         title: tooltip,
         className: CANCEL_BUTTON_CLASS
       }}
