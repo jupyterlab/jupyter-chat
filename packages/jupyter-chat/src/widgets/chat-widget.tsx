@@ -6,10 +6,12 @@
 import { ReactWidget } from '@jupyterlab/apputils';
 import { Cell } from '@jupyterlab/cells';
 import { DirListing } from '@jupyterlab/filebrowser';
+import { DocumentWidget } from '@jupyterlab/docregistry';
 import { ICell, isCode, isMarkdown, isRaw } from '@jupyterlab/nbformat';
 import React from 'react';
 import { Message } from '@lumino/messaging';
 import { Drag } from '@lumino/dragdrop';
+import { Widget } from '@lumino/widgets';
 
 import { Chat, IInputToolbarRegistry, MESSAGE_CLASS } from '../components';
 import { chatIcon } from '../icons';
@@ -332,27 +334,26 @@ export class ChatWidget extends ReactWidget {
    * Process dropped tabBar files
    */
   private _processTabDrop(event: Drag.Event) {
-    const factory = event.mimeData.getData(TABBAR_FILE_MIME) as () => any;
+    const factory = event.mimeData.getData(TABBAR_FILE_MIME) as () => Widget;
     if (!factory) {
       console.warn('No factory in drag event');
       return;
     }
 
     const widget = factory();
-    if (!widget) {
-      console.warn('Factory did not return a widget');
+    if (!widget || !(widget instanceof DocumentWidget)) {
+      console.warn('No file associated to the element');
       return;
     }
 
-    const path =
-      typeof widget.context?.path === 'string' ? widget.context.path : null;
+    const path = widget.context.path;
     if (!path) {
       console.warn('Widget has no path');
       return;
     }
 
     const mimetype =
-      widget.context?.model?.mimeType || 'application/octet-stream';
+      widget.context.model?.mimeType || 'application/octet-stream';
     const attachment: IFileAttachment = {
       type: 'file',
       value: path,
