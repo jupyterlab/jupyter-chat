@@ -7,6 +7,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { Box, Button, Tooltip } from '@mui/material';
 import React from 'react';
 import { PathExt } from '@jupyterlab/coreutils';
+import { UUID } from '@lumino/coreutils';
 
 import { useChatContext } from '../context';
 import { IAttachment } from '../types';
@@ -65,7 +66,7 @@ export function AttachmentPreviewList(props: AttachmentsProps): JSX.Element {
     >
       {props.attachments.map(attachment => (
         <AttachmentPreview
-          key={attachment.value}
+          key={`${PathExt.basename(attachment.value)}-${UUID.uuid4()}`}
           {...props}
           attachment={attachment}
         />
