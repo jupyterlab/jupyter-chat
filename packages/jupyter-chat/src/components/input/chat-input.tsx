@@ -46,7 +46,6 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   const [toolbarElements, setToolbarElements] = useState<
     InputToolbarRegistry.IToolbarItem[]
   >([]);
-  const [isFocused, setIsFocused] = useState<boolean>(false);
   const [writers, setWriters] = useState<IChatModel.IWriter[]>([]);
 
   /**
@@ -214,9 +213,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
       <Box
         sx={{
           border: '1px solid',
-          borderColor: isFocused
-            ? 'var(--jp-brand-color1)'
-            : 'var(--jp-border-color1)',
+          borderColor: 'var(--jp-border-color1)',
           borderRadius: 2,
           transition: 'border-color 0.2s ease',
           display: 'flex',
@@ -262,8 +259,6 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
               onKeyDown={handleKeyDown}
               placeholder="Type a chat message, @ to mention..."
               inputRef={inputRef}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
               onSelect={() =>
                 (model.cursorIndex = inputRef.current?.selectionStart ?? null)
               }
