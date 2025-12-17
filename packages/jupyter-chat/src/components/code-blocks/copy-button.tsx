@@ -3,10 +3,10 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { copyIcon } from '@jupyterlab/ui-components';
 import React, { useState, useCallback, useRef } from 'react';
 
-import { copyIcon } from '@jupyterlab/ui-components';
-import { IconButton, Tooltip } from '@mui/material';
+import { TooltippedIconButton } from '../mui-extras';
 
 enum CopyStatus {
   None,
@@ -61,23 +61,16 @@ export function CopyButton(props: CopyButtonProps): JSX.Element {
   const tooltip = COPYBTN_TEXT_BY_STATUS[copyStatus];
 
   return (
-    <Tooltip title={tooltip} placement="top" arrow>
-      <span>
-        <IconButton
-          disabled={isCopyDisabled}
-          className={props.className}
-          onClick={copy}
-          aria-label="Copy to clipboard"
-          sx={{
-            lineHeight: 0,
-            '&.Mui-disabled': {
-              opacity: 0.5
-            }
-          }}
-        >
-          <copyIcon.react height="16px" width="16px" />
-        </IconButton>
-      </span>
-    </Tooltip>
+    <TooltippedIconButton
+      disabled={isCopyDisabled}
+      className={props.className}
+      tooltip={tooltip}
+      placement="top"
+      onClick={copy}
+      aria-label="Copy to clipboard"
+      inputToolbar={false}
+    >
+      <copyIcon.react height="16px" width="16px" />
+    </TooltippedIconButton>
   );
 }

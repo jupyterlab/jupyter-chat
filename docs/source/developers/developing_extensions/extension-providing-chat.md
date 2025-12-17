@@ -189,6 +189,10 @@ interface IConfig {
    * Whether to enable or not the code toolbar.
    */
   enableCodeToolbar?: boolean;
+  /**
+   * Whether to display deleted messages.
+   */
+  showDeleted?: boolean;
 }
 ```
 
@@ -378,4 +382,19 @@ const myChatExtension: JupyterFrontEndPlugin<void> = {
     app.shell.add(widget, 'right');
   }
 };
+```
+
+## Make the chats discoverable for third party extensions
+
+The `jupyter/chat` package provides an `IChatTracker` token. This token is a generic
+token that can be exposed by any extension providing a chat. It is designed to expose
+an `IWidgetTracker` tracking either `ChatWidget` or `MainAreaWidget<ChatWidget>`, in
+order to allow tracking both chats in main area chats and those in side panel.
+To be available for others extensions, this token must be exposed by the developers
+of the extension providing the chat(s), with a dedicated plugin.
+
+```{note}
+Since the token is generic, a configuration with multiple extensions providing chat(s)
+will create a conflict. One of the plugins exposing the `IChatTracker` token will have
+to be disabled (and the chats from that extension will no longer be tracked).
 ```

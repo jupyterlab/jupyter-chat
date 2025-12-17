@@ -1,6 +1,6 @@
 {
   "name": "jupyterlab-chat-extension",
-  "version": "0.19.0-alpha.0",
+  "version": "0.19.0-alpha.2",
   "description": "A chat extension based on shared documents",
   "keywords": [
     "jupyter",
@@ -67,7 +67,7 @@
     "@lumino/coreutils": "^2.2.1",
     "@lumino/signaling": "^2.1.4",
     "@lumino/widgets": "^2.7.0",
-    "jupyterlab-chat": "^0.19.0-alpha.0",
+    "jupyterlab-chat": "^0.19.0-alpha.2",
     "react": "^18.2.0",
     "y-protocols": "^1.0.5",
     "yjs": "^13.5.40"

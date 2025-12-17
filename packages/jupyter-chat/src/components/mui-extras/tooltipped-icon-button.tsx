@@ -4,20 +4,34 @@
  */
 
 import { classes } from '@jupyterlab/ui-components';
-import { IconButton, IconButtonProps, TooltipProps } from '@mui/material';
+import {
+  IconButton,
+  IconButtonProps,
+  SvgIconOwnProps,
+  TooltipProps
+} from '@mui/material';
 import React from 'react';
 
 import { ContrastingTooltip } from './contrasting-tooltip';
-
-const TOOLTIPPED_WRAP_CLASS = 'jp-chat-tooltipped-wrap';
+import {
+  DEFAULT_BUTTON_PROPS,
+  DEFAULT_BUTTON_SX,
+  INPUT_TOOLBAR_BUTTON_SX,
+  TOOLTIPPED_WRAP_CLASS
+} from './tooltipped-button';
 
 export type TooltippedIconButtonProps = {
   onClick: () => unknown;
   tooltip: string;
   children: JSX.Element;
   className?: string;
+  inputToolbar?: boolean;
   disabled?: boolean;
   placement?: TooltipProps['placement'];
+  /**
+   * The font size of the icon. By default it will be set to 'small'.
+   */
+  fontSize?: SvgIconOwnProps['fontSize'];
   /**
    * The offset of the tooltip popup.
    *
@@ -47,6 +61,8 @@ export type TooltippedIconButtonProps = {
 export function TooltippedIconButton(
   props: TooltippedIconButtonProps
 ): JSX.Element {
+  // Override the default icon font size from 'medium' to 'small'
+  props.children.props.fontSize = props.fontSize ?? 'small';
   return (
     <ContrastingTooltip
       title={props.tooltip}
@@ -73,13 +89,13 @@ export function TooltippedIconButton(
       */}
       <span className={classes(props.className, TOOLTIPPED_WRAP_CLASS)}>
         <IconButton
+          {...DEFAULT_BUTTON_PROPS}
           {...props.iconButtonProps}
           onClick={props.onClick}
           disabled={props.disabled}
           sx={{
-            marginLeft: '8px',
-            lineHeight: 0,
-            ...(props.disabled && { opacity: 0.5 })
+            ...DEFAULT_BUTTON_SX,
+            ...((props.inputToolbar ?? true) && INPUT_TOOLBAR_BUTTON_SX)
           }}
           aria-label={props['aria-label']}
         >

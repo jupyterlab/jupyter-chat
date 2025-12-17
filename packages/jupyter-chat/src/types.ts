@@ -52,6 +52,10 @@ export interface IConfig {
    * Whether to send typing notification.
    */
   sendTypingNotification?: boolean;
+  /**
+   * Whether to display deleted messages.
+   */
+  showDeleted?: boolean;
 }
 
 /**

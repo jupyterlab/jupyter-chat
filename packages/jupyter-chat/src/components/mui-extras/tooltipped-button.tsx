@@ -3,17 +3,55 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { Button, ButtonProps, SxProps, TooltipProps } from '@mui/material';
+import {
+  Button,
+  ButtonOwnProps,
+  ButtonProps,
+  SxProps,
+  TooltipProps
+} from '@mui/material';
 import React from 'react';
 
 import { ContrastingTooltip } from './contrasting-tooltip';
 
-const TOOLTIPPED_WRAP_CLASS = 'jp-chat-tooltipped-wrap';
+export const TOOLTIPPED_WRAP_CLASS = 'jp-chat-tooltipped-wrap';
+
+export const DEFAULT_BUTTON_PROPS: Partial<ButtonOwnProps> = {
+  size: 'small',
+  variant: 'contained'
+};
+
+export const DEFAULT_BUTTON_SX = {
+  minWidth: '24px',
+  width: '24px',
+  height: '24px',
+  lineHeight: 0,
+  '&:disabled': {
+    opacity: 0.5
+  }
+};
+
+export const INPUT_TOOLBAR_BUTTON_SX = {
+  backgroundColor: 'var(--jp-brand-color1)',
+  color: 'white',
+  borderRadius: '4px',
+  boxShadow: 'none',
+  '&:hover': {
+    backgroundColor: 'var(--jp-brand-color0)',
+    boxShadow: 'none'
+  },
+  '&:disabled': {
+    backgroundColor: 'var(--jp-border-color2)',
+    color: 'var(--jp-ui-font-color3)',
+    opacity: 0.5
+  }
+};
 
 export type TooltippedButtonProps = {
   onClick: React.MouseEventHandler<HTMLButtonElement>;
   tooltip: string;
   children: JSX.Element;
+  inputToolbar?: boolean;
   disabled?: boolean;
   placement?: TooltipProps['placement'];
   /**
@@ -76,15 +114,16 @@ export function TooltippedButton(props: TooltippedButtonProps): JSX.Element {
       */}
       <span style={{ cursor: 'default' }} className={TOOLTIPPED_WRAP_CLASS}>
         <Button
+          {...DEFAULT_BUTTON_PROPS}
           {...props.buttonProps}
           onClick={props.onClick}
           disabled={props.disabled}
           sx={{
-            lineHeight: 0,
-            ...(props.disabled && { opacity: 0.5 }),
+            ...DEFAULT_BUTTON_SX,
+            ...((props.inputToolbar ?? true) && INPUT_TOOLBAR_BUTTON_SX),
             ...props.sx
           }}
-          aria-label={props['aria-label']}
+          aria-label={props['aria-label'] ?? props.tooltip}
         >
           {props.children}
         </Button>

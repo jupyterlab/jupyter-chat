@@ -3,7 +3,6 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { PromiseDelegate } from '@lumino/coreutils';
 import { Box } from '@mui/material';
 import clsx from 'clsx';
@@ -14,58 +13,28 @@ import { ChatMessageHeader } from './header';
 import { ChatMessage } from './message';
 import { Navigation } from './navigation';
 import { WelcomeMessage } from './welcome';
-import { IInputToolbarRegistry } from '../input';
 import { ScrollContainer } from '../scroll-container';
-import { IChatCommandRegistry, IMessageFooterRegistry } from '../../registers';
+import { useChatContext } from '../../context';
+import { IChatMessage, IConfig } from '../../types';
 import { IChatModel } from '../../model';
-import { ChatArea, IChatMessage } from '../../types';
 
 export const MESSAGE_CLASS = 'jp-chat-message';
 const MESSAGES_BOX_CLASS = 'jp-chat-messages-container';
 const MESSAGE_STACKED_CLASS = 'jp-chat-message-stacked';
 
 /**
- * The base components props.
- */
-export type BaseMessageProps = {
-  /**
-   * The mime renderer registry.
-   */
-  rmRegistry: IRenderMimeRegistry;
-  /**
-   * The chat model.
-   */
-  model: IChatModel;
-  /**
-   * The chat commands registry.
-   */
-  chatCommandRegistry?: IChatCommandRegistry;
-  /**
-   * The input toolbar registry.
-   */
-  inputToolbarRegistry: IInputToolbarRegistry;
-  /**
-   * The footer registry.
-   */
-  messageFooterRegistry?: IMessageFooterRegistry;
-  /**
-   * The welcome message.
-   */
-  welcomeMessage?: string;
-  /**
-   * The area where the chat is displayed.
-   */
-  area?: ChatArea;
-};
-
-/**
  * The messages list component.
  */
-export function ChatMessages(props: BaseMessageProps): JSX.Element {
-  const { model } = props;
+export function ChatMessages(): JSX.Element {
+  const { area, messageFooterRegistry, model, welcomeMessage } =
+    useChatContext();
+
   const [messages, setMessages] = useState<IChatMessage[]>(model.messages);
   const refMsgBox = useRef<HTMLDivElement>(null);
   const [allRendered, setAllRendered] = useState<boolean>(false);
+  const [showDeleted, setShowDeleted] = useState<boolean>(
+    model.config.showDeleted ?? false
+  );
 
   // The list of message DOM and their rendered promises.
   const listRef = useRef<(HTMLDivElement | null)[]>([]);
@@ -95,13 +64,28 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
     function handleChatEvents() {
       setMessages([...model.messages]);
     }
-
     model.messagesUpdated.connect(handleChatEvents);
 
-    return function cleanup() {
+    return () => {
       model.messagesUpdated.disconnect(handleChatEvents);
     };
   }, [model]);
+
+  /**
+   * Effect: Listen to the config change.
+   */
+  useEffect(() => {
+    function handleConfigChange(_: IChatModel, config: IConfig) {
+      if (config.showDeleted !== showDeleted) {
+        setShowDeleted(config.showDeleted ?? false);
+      }
+    }
+    model.configChanged.connect(handleConfigChange);
+
+    return () => {
+      model.configChanged.disconnect(handleConfigChange);
+    };
+  }, [model, showDeleted]);
 
   /**
    * Observe the messages to update the current viewport and the unread messages.
@@ -137,7 +121,7 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
         }
       });
 
-      props.model.messagesInViewport = inViewport;
+      model.messagesInViewport = inViewport;
 
       // Ensure that all messages are rendered before updating unread messages, otherwise
       // it can lead to wrong assumption , because more message are in the viewport
@@ -165,16 +149,11 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
     };
   }, [messages, allRendered]);
 
-  const horizontalPadding = props.area === 'main' ? 8 : 4;
+  const horizontalPadding = area === 'main' ? 8 : 4;
   return (
     <>
       <ScrollContainer sx={{ flexGrow: 1 }}>
-        {props.welcomeMessage && (
-          <WelcomeMessage
-            rmRegistry={props.rmRegistry}
-            content={props.welcomeMessage}
-          />
-        )}
+        {welcomeMessage && <WelcomeMessage content={welcomeMessage} />}
         <Box
           sx={{
             paddingLeft: horizontalPadding,
@@ -188,55 +167,52 @@ export function ChatMessages(props: BaseMessageProps): JSX.Element {
           ref={refMsgBox}
           className={clsx(MESSAGES_BOX_CLASS)}
         >
-          {messages
-            .filter(message => !message.deleted)
-            .map((message, i) => {
-              renderedPromise.current[i] = new PromiseDelegate();
-              const isCurrentUser =
-                model.user !== undefined &&
-                model.user.username === message.sender.username;
-              return (
-                // extra div needed to ensure each bubble is on a new line
-                <Box
-                  key={i}
-                  sx={{
-                    ...(isCurrentUser && {
-                      marginLeft: props.area === 'main' ? '25%' : '10%',
-                      backgroundColor: 'var(--jp-layout-color2)',
-                      border: 'none',
-                      borderRadius: 2,
-                      padding: 2
-                    })
-                  }}
-                  className={clsx(
-                    MESSAGE_CLASS,
-                    message.stacked ? MESSAGE_STACKED_CLASS : ''
-                  )}
-                >
-                  <ChatMessageHeader
-                    message={message}
-                    isCurrentUser={isCurrentUser}
-                  />
-                  <ChatMessage
-                    {...props}
-                    message={message}
-                    index={i}
-                    renderedPromise={renderedPromise.current[i]}
-                    ref={el => (listRef.current[i] = el)}
-                  />
-                  {props.messageFooterRegistry && (
-                    <MessageFooterComponent
-                      registry={props.messageFooterRegistry}
-                      message={message}
-                      model={model}
-                    />
-                  )}
-                </Box>
-              );
-            })}
+          {/* Filter the deleted message if user don't expect to see it. */}
+          {(showDeleted
+            ? messages
+            : messages.filter(message => !message.deleted)
+          ).map((message, i) => {
+            renderedPromise.current[i] = new PromiseDelegate();
+            const isCurrentUser =
+              model.user !== undefined &&
+              model.user.username === message.sender.username;
+            return (
+              // extra div needed to ensure each bubble is on a new line
+              <Box
+                key={i}
+                sx={{
+                  ...(isCurrentUser && {
+                    marginLeft: area === 'main' ? '25%' : '10%',
+                    backgroundColor: 'var(--jp-layout-color2)',
+                    border: 'none',
+                    borderRadius: 2,
+                    padding: 2
+                  })
+                }}
+                className={clsx(
+                  MESSAGE_CLASS,
+                  message.stacked ? MESSAGE_STACKED_CLASS : ''
+                )}
+              >
+                <ChatMessageHeader
+                  message={message}
+                  isCurrentUser={isCurrentUser}
+                />
+                <ChatMessage
+                  message={message}
+                  index={i}
+                  renderedPromise={renderedPromise.current[i]}
+                  ref={el => (listRef.current[i] = el)}
+                />
+                {messageFooterRegistry && (
+                  <MessageFooterComponent message={message} />
+                )}
+              </Box>
+            );
+          })}
         </Box>
       </ScrollContainer>
-      <Navigation {...props} refMsgBox={refMsgBox} allRendered={allRendered} />
+      <Navigation refMsgBox={refMsgBox} allRendered={allRendered} />
     </>
   );
 }

@@ -7,9 +7,9 @@ import { PromiseDelegate } from '@lumino/coreutils';
 import React, { forwardRef, useEffect, useState } from 'react';
 
 import { MessageRenderer } from './message-renderer';
-import { BaseMessageProps } from './messages';
 import { AttachmentPreviewList } from '../attachments';
 import { ChatInput } from '../input';
+import { useChatContext } from '../../context';
 import { IInputModel, InputModel } from '../../input-model';
 import { IChatMessage } from '../../types';
 import { replaceSpanToMention } from '../../utils';
@@ -17,7 +17,7 @@ import { replaceSpanToMention } from '../../utils';
 /**
  * The message component props.
  */
-type ChatMessageProps = BaseMessageProps & {
+type ChatMessageProps = {
   /**
    * The message to display.
    */
@@ -37,7 +37,8 @@ type ChatMessageProps = BaseMessageProps & {
  */
 export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
   (props, ref): JSX.Element => {
-    const { message, model, rmRegistry } = props;
+    const { message } = props;
+    const { model } = useChatContext();
     const [edit, setEdit] = useState<boolean>(false);
     const [deleted, setDeleted] = useState<boolean>(false);
     const [canEdit, setCanEdit] = useState<boolean>(false);
@@ -132,15 +133,11 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
           <ChatInput
             onCancel={() => cancelEdition()}
             model={model.getEditionModel(message.id)!}
-            chatCommandRegistry={props.chatCommandRegistry}
-            toolbarRegistry={props.inputToolbarRegistry}
             edit={true}
           />
         ) : (
           <MessageRenderer
-            rmRegistry={rmRegistry}
             markdownStr={message.body}
-            model={model}
             edit={canEdit ? startEdition : undefined}
             delete={canDelete ? () => deleteMessage(message.id) : undefined}
             rendered={props.renderedPromise}

@@ -25,9 +25,9 @@ test.describe('#inputToolbar', () => {
 
     // Modify the input toolbar when a chat is opened.
     await page.evaluate(async () => {
-      const tracker = (
-        await window.getPlugin('jupyterlab-chat-extension:factory')
-      ).tracker;
+      const tracker = await window.getPlugin(
+        'jupyterlab-chat-extension:tracker'
+      );
 
       const updateToolbar = registry => {
         registry.hide('attach');

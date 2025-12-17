@@ -18,7 +18,7 @@ import {
 } from './input';
 import { JlThemeProvider } from './jl-theme-provider';
 import { ChatMessages } from './messages';
-import { AttachmentOpenerContext } from '../context';
+import { ChatReactContext } from '../context';
 import { IChatModel } from '../model';
 import {
   IAttachmentOpenerRegistry,
@@ -27,7 +27,7 @@ import {
 } from '../registers';
 import { ChatArea } from '../types';
 
-export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
+export function ChatBody(props: Chat.IChatProps): JSX.Element {
   const { model } = props;
   let { inputToolbarRegistry } = props;
   if (!inputToolbarRegistry) {
@@ -36,17 +36,14 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
   // const horizontalPadding = props.area === 'main' ? 8 : 4;
   const horizontalPadding = 4;
 
+  const contextValue: Chat.IChatProps = {
+    ...props,
+    inputToolbarRegistry
+  };
+
   return (
-    <AttachmentOpenerContext.Provider value={props.attachmentOpenerRegistry}>
-      <ChatMessages
-        rmRegistry={props.rmRegistry}
-        model={model}
-        chatCommandRegistry={props.chatCommandRegistry}
-        inputToolbarRegistry={inputToolbarRegistry}
-        messageFooterRegistry={props.messageFooterRegistry}
-        welcomeMessage={props.welcomeMessage}
-        area={props.area}
-      />
+    <ChatReactContext.Provider value={contextValue}>
+      <ChatMessages />
       <ChatInput
         sx={{
           paddingLeft: horizontalPadding,
@@ -55,17 +52,13 @@ export function ChatBody(props: Chat.IChatBodyProps): JSX.Element {
           paddingBottom: 0
         }}
         model={model.input}
-        chatCommandRegistry={props.chatCommandRegistry}
-        toolbarRegistry={inputToolbarRegistry}
-        area={props.area}
-        chatModel={model}
       />
-    </AttachmentOpenerContext.Provider>
+    </ChatReactContext.Provider>
   );
 }
 
 export function Chat(props: Chat.IOptions): JSX.Element {
-  const [view, setView] = useState<Chat.View>(props.chatView || Chat.View.chat);
+  const [view, setView] = useState<Chat.View>(Chat.View.chat);
   return (
     <JlThemeProvider themeManager={props.themeManager ?? null}>
       <Box
@@ -117,7 +110,7 @@ export namespace Chat {
   /**
    * The props for the chat body component.
    */
-  export interface IChatBodyProps {
+  export interface IChatProps {
     /**
      * The chat model.
      */
@@ -155,15 +148,11 @@ export namespace Chat {
   /**
    * The options to build the Chat UI.
    */
-  export interface IOptions extends IChatBodyProps {
+  export interface IOptions extends IChatProps {
     /**
      * The theme manager.
      */
     themeManager?: IThemeManager | null;
-    /**
-     * The view to render.
-     */
-    chatView?: View;
     /**
      * A settings panel that can be used for dedicated settings (e.g. jupyter-ai)
      */
