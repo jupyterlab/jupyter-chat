@@ -107,11 +107,10 @@
   font-weight: bold;
 }
 
-.jp-chat-open {
-  max-width: calc(100% - 140px);
-  overflow: hidden;
+.jp-chat-open .jp-HTMLSelect select {
+  max-width: 110px;
 }
 
-.lm-AccordionPanel-titleLabel {
+.jp-AccordionPanel-title .lm-AccordionPanel-titleLabel {
   max-width: calc(100% - 140px);
 }
