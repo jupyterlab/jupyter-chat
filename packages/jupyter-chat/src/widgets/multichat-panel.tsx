@@ -518,7 +518,7 @@ export namespace ChatSection {
   }
 }
 
-type ChatSelectProps = {
+export type ChatSelectProps = {
   /**
    * A signal emitting when the list of chat changed.
    */
@@ -532,7 +532,7 @@ type ChatSelectProps = {
 /**
  * A component to select a chat from the drive.
  */
-function ChatSelect({
+export function ChatSelect({
   chatNamesChanged,
   handleChange
 }: ChatSelectProps): JSX.Element {
