@@ -50,7 +50,7 @@ export function AttachButton(
     <TooltippedIconButton
       onClick={onclick}
       tooltip={tooltip}
-      iconButtonProps={{
+      buttonProps={{
         title: tooltip,
         className: ATTACH_BUTTON_CLASS
       }}

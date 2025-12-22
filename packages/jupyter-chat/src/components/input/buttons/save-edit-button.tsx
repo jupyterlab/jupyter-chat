@@ -54,7 +54,7 @@ export function SaveEditButton(
       onClick={save}
       tooltip={tooltip}
       disabled={disabled}
-      iconButtonProps={{
+      buttonProps={{
         title: tooltip,
         className: SAVE_EDIT_BUTTON_CLASS
       }}
