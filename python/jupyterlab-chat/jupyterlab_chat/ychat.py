@@ -174,10 +174,16 @@ class YChat(YBaseDoc):
             except (KeyError, IndexError) as e:
                 print(f"Error while updating the message:\n{e}")
                 return
-            update_dict = asdict(update)
-            if (update.body and append):
-                update_dict["body"] = message.get("body") + update.body
 
+            if (update.body and append):
+                update.body = message.get("body") + update.body
+
+            # Execute all trigger action callbacks
+            if trigger_actions:
+                for callback in trigger_actions:
+                    callback(update, self)
+
+            update_dict = asdict(update)
             # Only update the changed values.
             for key in update_dict:
                 if key in message:
@@ -185,11 +191,6 @@ class YChat(YBaseDoc):
                         message.update({ key: update_dict[key] })
                 elif update_dict[key] is not None:
                     message.update({ key: update_dict[key] })
-
-            # Execute all trigger action callbacks
-            if trigger_actions:
-                for callback in trigger_actions:
-                    callback(update, self)
 
     def get_attachments(self) -> dict[str, Union[FileAttachment, NotebookAttachment]]:
         """
