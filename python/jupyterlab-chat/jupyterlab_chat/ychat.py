@@ -189,7 +189,7 @@ class YChat(YBaseDoc):
             # Execute all trigger action callbacks
             if trigger_actions:
                 for callback in trigger_actions:
-                    callback(message, self)
+                    callback(update, self)
 
     def get_attachments(self) -> dict[str, Union[FileAttachment, NotebookAttachment]]:
         """
