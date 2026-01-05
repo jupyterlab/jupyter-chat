@@ -34,11 +34,6 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
     props.message.content
   );
 
-  // Don't render header for stacked messages not deleted or edited.
-  if (message.stacked && !message.deleted && !message.edited) {
-    return <></>;
-  }
-
   // Flag to display only the deleted or edited information (stacked message).
   const onlyState = message.stacked && (message.deleted || message.edited);
 
@@ -97,7 +92,10 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
   const name =
     sender.display_name ?? sender.name ?? (sender.username || 'User undefined');
 
-  return (
+  // Don't render header for stacked messages not deleted or edited.
+  return message.stacked && !message.deleted && !message.edited ? (
+    <></>
+  ) : (
     <Box
       className={MESSAGE_HEADER_CLASS}
       sx={{
