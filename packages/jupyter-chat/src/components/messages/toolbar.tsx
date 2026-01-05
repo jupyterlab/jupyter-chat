@@ -3,8 +3,8 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-// import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import { Box } from '@mui/material';
 import React from 'react';
 
@@ -18,19 +18,19 @@ const TOOLBAR_CLASS = 'jp-chat-toolbar';
 export function MessageToolbar(props: MessageToolbar.IProps): JSX.Element {
   const buttons: JSX.Element[] = [];
 
-  // if (props.edit !== undefined) {
-  //   const editButton = (
-  //     <TooltippedIconButton
-  //       tooltip={'edit'}
-  //       onClick={props.edit}
-  //       aria-label={'Edit'}
-  //       inputToolbar={false}
-  //     >
-  //       <EditIcon />
-  //     </TooltippedIconButton>
-  //   );
-  //   buttons.push(editButton);
-  // }
+  if (props.edit !== undefined) {
+    const editButton = (
+      <TooltippedIconButton
+        tooltip={'edit'}
+        onClick={props.edit}
+        aria-label={'Edit'}
+        inputToolbar={false}
+      >
+        <EditIcon />
+      </TooltippedIconButton>
+    );
+    buttons.push(editButton);
+  }
   if (props.delete !== undefined) {
     const deleteButton = (
       <TooltippedIconButton
