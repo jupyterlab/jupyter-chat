@@ -75,7 +75,7 @@ test.describe('#messageToolbar', () => {
     await expect(messageContent).not.toBeVisible();
   });
 
-    test('should update the message', async ({ page }) => {
+  test('should update the message', async ({ page }) => {
     const chatPanel = await openChat(page, FILENAME);
     const message = chatPanel
       .locator('.jp-chat-messages-container .jp-chat-message')
