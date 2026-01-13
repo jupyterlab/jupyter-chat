@@ -106,3 +106,13 @@
   padding: 2px 0;
   font-weight: bold;
 }
+
+.jp-chat-sidepanel .jp-chat-open {
+  flex: 1 1 0%;
+  min-width: 0;
+  max-width: fit-content;
+}
+
+.jp-AccordionPanel-title .jp-chat-section-toolbar {
+  flex: 0 0 auto;
+}
