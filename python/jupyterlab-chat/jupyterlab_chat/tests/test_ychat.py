@@ -9,6 +9,7 @@ import pytest
 from uuid import uuid4
 from ..models import message_asdict_factory, Message, NewMessage, User
 from ..ychat import YChat
+from ..utils import find_mentions
 
 USER = User(
     username=str(uuid4()),
@@ -165,6 +166,63 @@ def test_update_message_should_append_content():
     message_dict = chat._get_messages()[0]
     assert message_dict["body"] == msg.body + content_to_append
     assert message_dict["sender"] == msg.sender
+
+
+def test_update_message_includes_mentions():
+    chat = YChat()
+    chat.set_user(USER)
+    chat.set_user(USER2)
+    chat.set_user(USER3)
+
+    new_msg = create_new_message(f"@{USER2.mention_name} Hello!")
+    msg_id = chat.add_message(new_msg)
+    msg = chat.get_message(msg_id)
+    assert msg
+    assert msg.mentions == [USER2.username]
+
+    msg.body = f"@{USER3.mention_name} Goodbye!"
+    chat.update_message(msg, trigger_actions=[find_mentions])
+    updated_msg = chat.get_message(msg_id)
+    assert updated_msg
+    assert updated_msg.mentions == [USER3.username]
+
+
+def test_update_message_append_includes_mentions():
+    chat = YChat()
+    chat.set_user(USER)
+    chat.set_user(USER2)
+    chat.set_user(USER3)
+
+    new_msg = create_new_message(f"@{USER2.mention_name} Hello!")
+    msg_id = chat.add_message(new_msg)
+    msg = chat.get_message(msg_id)
+    assert msg
+    assert msg.mentions == [USER2.username]
+
+    msg.body = f" and @{USER3.mention_name}!"
+    chat.update_message(msg, append=True, trigger_actions=[find_mentions])
+    updated_msg = chat.get_message(msg_id)
+    assert updated_msg
+    assert sorted(updated_msg.mentions) == sorted([USER2.username, USER3.username])
+
+
+def test_update_message_append_no_duplicate_mentions():
+    chat = YChat()
+    chat.set_user(USER)
+    chat.set_user(USER2)
+
+    new_msg = create_new_message(f"@{USER2.mention_name} Hello!")
+    msg_id = chat.add_message(new_msg)
+    msg = chat.get_message(msg_id)
+    assert msg
+    assert msg.mentions == [USER2.username]
+
+    msg.body = f" @{USER2.mention_name} again!"
+    chat.update_message(msg, append=True, trigger_actions=[find_mentions])
+    updated_msg = chat.get_message(msg_id)
+    assert updated_msg
+    assert updated_msg.mentions == [USER2.username]
+    assert len(updated_msg.mentions) == 1
 
 
 def test_indexes_by_id():
