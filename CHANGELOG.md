@@ -2,6 +2,39 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.19.0alpha3
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.19.0-alpha.2...70178e036bae74637837f6bdb866858d1dd4dee4))
+
+### Enhancements made
+
+- Shrink name of the chat if too big [#332](https://github.com/jupyterlab/jupyter-chat/pull/332) ([@nakul-py](https://github.com/nakul-py), [@brichet](https://github.com/brichet))
+- Making files dragable and dropable from TabBar. [#324](https://github.com/jupyterlab/jupyter-chat/pull/324) ([@nakul-py](https://github.com/nakul-py), [@brichet](https://github.com/brichet))
+- Add mention detection to update_message [#302](https://github.com/jupyterlab/jupyter-chat/pull/302) ([@Abigayle-Mercer](https://github.com/Abigayle-Mercer), [@Zsailer](https://github.com/Zsailer), [@abmercer](https://github.com/abmercer), [@brichet](https://github.com/brichet))
+
+### Bugs fixed
+
+- Fixing Attachment opening in input bug [#334](https://github.com/jupyterlab/jupyter-chat/pull/334) ([@nakul-py](https://github.com/nakul-py), [@brichet](https://github.com/brichet))
+- Fix the send button tooltip [#326](https://github.com/jupyterlab/jupyter-chat/pull/326) ([@brichet](https://github.com/brichet), [@jtpio](https://github.com/jtpio), [@nakul-py](https://github.com/nakul-py))
+
+### Maintenance and upkeep improvements
+
+- Update snapshots bot checkout and permission check [#340](https://github.com/jupyterlab/jupyter-chat/pull/340) ([@martinRenou](https://github.com/martinRenou), [@brichet](https://github.com/brichet))
+- Bump the npm_and_yarn group across 1 directory with 2 updates [#339](https://github.com/jupyterlab/jupyter-chat/pull/339) ([@brichet](https://github.com/brichet))
+- Bump systeminformation from 5.23.14 to 5.27.14 in /ui-tests in the npm_and_yarn group across 1 directory [#335](https://github.com/jupyterlab/jupyter-chat/pull/335) ([@brichet](https://github.com/brichet))
+- Improve MUI theme usage [#330](https://github.com/jupyterlab/jupyter-chat/pull/330) ([@brichet](https://github.com/brichet), [@jtpio](https://github.com/jtpio))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2025-12-09&to=2026-01-14&type=c))
+
+@Abigayle-Mercer ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3AAbigayle-Mercer+updated%3A2025-12-09..2026-01-14&type=Issues)) | @abmercer ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Aabmercer+updated%3A2025-12-09..2026-01-14&type=Issues)) | @brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2025-12-09..2026-01-14&type=Issues)) | @jtpio ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2025-12-09..2026-01-14&type=Issues)) | @martinRenou ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3AmartinRenou+updated%3A2025-12-09..2026-01-14&type=Issues)) | @nakul-py ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Anakul-py+updated%3A2025-12-09..2026-01-14&type=Issues)) | @Zsailer ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3AZsailer+updated%3A2025-12-09..2026-01-14&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.19.0alpha2
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.19.0-alpha.1...6981efcd43856a955ff258ab95918a2b135bd256))
@@ -29,8 +62,6 @@
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2025-11-15&to=2025-12-09&type=c))
 
 [@brichet](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2025-11-15..2025-12-09&type=Issues) | [@dependabot](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adependabot+updated%3A2025-11-15..2025-12-09&type=Issues) | [@github-actions](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Agithub-actions+updated%3A2025-11-15..2025-12-09&type=Issues) | [@ivandezra](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Aivandezra+updated%3A2025-11-15..2025-12-09&type=Issues) | [@jtpio](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2025-11-15..2025-12-09&type=Issues) | [@nakul-py](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Anakul-py+updated%3A2025-11-15..2025-12-09&type=Issues)
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.19.0alpha1
 
