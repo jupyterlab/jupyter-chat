@@ -12,7 +12,7 @@ import { ContrastingTooltip } from './contrasting-tooltip';
 export const TOOLTIPPED_WRAP_CLASS = 'jp-chat-tooltipped-wrap';
 
 /**
- * The props for the icon button.
+ * The props for the tooltipped button.
  */
 export type TooltippedButtonProps = {
   onClick: React.MouseEventHandler<HTMLButtonElement>;
