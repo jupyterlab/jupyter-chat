@@ -12,7 +12,6 @@ import { InputDialog } from '@jupyterlab/apputils';
 import {
   addIcon,
   closeIcon,
-  HTMLSelect,
   launchIcon,
   PanelWithToolbar,
   ReactWidget,
@@ -22,10 +21,11 @@ import {
 } from '@jupyterlab/ui-components';
 import { Debouncer } from '@lumino/polling';
 import { ISignal, Signal } from '@lumino/signaling';
-import { AccordionPanel, Panel } from '@lumino/widgets';
-import React, { useState } from 'react';
+import { AccordionPanel, Panel, Widget } from '@lumino/widgets';
+import React, { useRef, useState } from 'react';
 
 import { ChatWidget } from './chat-widget';
+import { ChatSelectorPopup } from './chat-selector-popup';
 import {
   Chat,
   IInputToolbarRegistry,
@@ -76,15 +76,32 @@ export class MultiChatPanel extends SidePanel {
     }
 
     if (this._getChatNames && this._createModel) {
-      // Chat select dropdown
+      // Chat selector with search input
       this._openChatWidget = ReactWidget.create(
-        <ChatSelect
-          chatNamesChanged={this._chatNamesChanged}
-          handleChange={this._chatSelected.bind(this)}
+        <ChatSearchInput
+          onChatSelected={this._chatSelected.bind(this)}
+          getPopupContainer={() => this._chatSelectorPopup}
         />
       );
       this._openChatWidget.addClass(OPEN_SELECT_CLASS);
       this.toolbar.addItem('openChat', this._openChatWidget);
+
+      // Create the popup widget (attached to document body)
+      this._chatSelectorPopup = new ChatSelectorPopup({
+        chatNames: {},
+        onSelect: async (value: string) => {
+          if (this._createModel) {
+            const addChatArgs = await this._createModel(value);
+            this.addChat(addChatArgs);
+          }
+          this._chatSelectorPopup?.hidePopup();
+        }
+      });
+
+      // Update popup chats when the signal emits
+      this._chatNamesChanged.connect((_, chatNames) => {
+        this._chatSelectorPopup?.updateChats(chatNames);
+      });
     }
 
     const content = this.content as AccordionPanel;
@@ -195,6 +212,32 @@ export class MultiChatPanel extends SidePanel {
    */
   protected onAfterAttach(): void {
     this._openChatWidget?.renderPromise?.then(() => this.updateChatList());
+
+    // Attach the popup to the document body
+    if (this._chatSelectorPopup && !this._chatSelectorPopup.isAttached) {
+      Widget.attach(this._chatSelectorPopup, document.body);
+    }
+  }
+
+  /**
+   * A message handler invoked on an `'before-detach'` message.
+   */
+  protected onBeforeDetach(): void {
+    // Detach the popup
+    if (this._chatSelectorPopup && this._chatSelectorPopup.isAttached) {
+      Widget.detach(this._chatSelectorPopup);
+    }
+  }
+
+  /**
+   * Dispose of the resources held by the widget.
+   */
+  dispose(): void {
+    if (this._chatSelectorPopup) {
+      this._chatSelectorPopup.dispose();
+      this._chatSelectorPopup = undefined;
+    }
+    super.dispose();
   }
 
   /**
@@ -216,20 +259,13 @@ export class MultiChatPanel extends SidePanel {
   }
 
   /**
-   * Handle `change` events for the HTMLSelect component.
+   * Handle chat selection from the popup.
    */
-  private async _chatSelected(
-    event: React.ChangeEvent<HTMLSelectElement>
-  ): Promise<void> {
-    const selection = event.target.value;
-    if (selection === '-') {
-      return;
-    }
+  private async _chatSelected(value: string): Promise<void> {
     if (this._createModel) {
-      const addChatArgs = await this._createModel(selection);
+      const addChatArgs = await this._createModel(value);
       this.addChat(addChatArgs);
     }
-    event.target.selectedIndex = 0;
   }
 
   /**
@@ -263,6 +299,7 @@ export class MultiChatPanel extends SidePanel {
   private _renameChat?: (oldName: string, newName: string) => Promise<boolean>;
 
   private _openChatWidget?: ReactWidget;
+  private _chatSelectorPopup?: ChatSelectorPopup;
 }
 
 /**
@@ -289,7 +326,7 @@ export namespace MultiChatPanel {
     /**
      * An optional callback to get the list of existing chats.
      *
-     * @returns an object with display name as key and the "full" name as value.
+     * @returns an object mapping display names to values used to identify chats.
      */
     getChatNames?: () => Promise<{ [name: string]: string }>;
     /**
@@ -518,45 +555,102 @@ export namespace ChatSection {
   }
 }
 
-type ChatSelectProps = {
+type ChatSearchInputProps = {
   /**
-   * A signal emitting when the list of chat changed.
+   * The callback to call when a chat is selected.
    */
-  chatNamesChanged: ISignal<MultiChatPanel, { [name: string]: string }>;
+  onChatSelected: (value: string) => void;
   /**
-   * The callback to call when the selection changed in the select.
+   * Function to get the popup container widget.
    */
-  handleChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+  getPopupContainer: () => ChatSelectorPopup | undefined;
 };
 
 /**
- * A component to select a chat from the drive.
+ * A search input component for selecting a chat.
  */
-function ChatSelect({
-  chatNamesChanged,
-  handleChange
-}: ChatSelectProps): JSX.Element {
-  // An object associating a chat name to its path. Both are purely indicative, the name
-  // is the section title and the path is used as caption.
-  const [chatNames, setChatNames] = useState<{ [name: string]: string }>({});
+function ChatSearchInput({
+  onChatSelected,
+  getPopupContainer
+}: ChatSearchInputProps): JSX.Element {
+  const [query, setQuery] = useState<string>('');
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Update the chat list.
-  chatNamesChanged.connect((_, chatNames) => {
-    setChatNames(chatNames);
-  });
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setQuery(value);
+    const popup = getPopupContainer();
+    if (popup) {
+      popup.setQuery(value);
+      if (!popup.isVisible && value) {
+        popup.showPopup();
+      }
+    }
+  };
+
+  const handleInputFocus = () => {
+    const popup = getPopupContainer();
+    if (popup && inputRef.current) {
+      // Set anchor element before showing
+      (popup as any)._anchorElement = inputRef.current;
+      popup.setQuery(query);
+      popup.showPopup();
+    }
+  };
+
+  const handleInputClick = () => {
+    const popup = getPopupContainer();
+    if (popup && inputRef.current && !popup.isVisible) {
+      (popup as any)._anchorElement = inputRef.current;
+      popup.setQuery(query);
+      popup.showPopup();
+    }
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    const popup = getPopupContainer();
+    if (!popup || !popup.isVisible) {
+      return;
+    }
+
+    let value: string | null;
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault();
+        popup.selectNext();
+        break;
+      case 'ArrowUp':
+        event.preventDefault();
+        popup.selectPrevious();
+        break;
+      case 'Enter':
+        event.preventDefault();
+        value = popup.getSelectedValue();
+        if (value) {
+          onChatSelected(value);
+          popup.hidePopup();
+          setQuery('');
+        }
+        break;
+      case 'Escape':
+        event.preventDefault();
+        popup.hidePopup();
+        setQuery('');
+        break;
+    }
+  };
 
   return (
-    <HTMLSelect
-      key={Object.keys(chatNames).join()}
-      onChange={handleChange}
-      value="-"
-    >
-      <option value="-" disabled hidden>
-        Open a chat
-      </option>
-      {Object.keys(chatNames).map(name => (
-        <option value={chatNames[name]}>{name}</option>
-      ))}
-    </HTMLSelect>
+    <input
+      ref={inputRef}
+      type="text"
+      placeholder="Open a chat"
+      value={query}
+      onChange={handleInputChange}
+      onFocus={handleInputFocus}
+      onClick={handleInputClick}
+      onKeyDown={handleKeyDown}
+      className="jp-chat-search-input"
+    />
   );
 }
