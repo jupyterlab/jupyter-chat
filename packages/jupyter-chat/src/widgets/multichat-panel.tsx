@@ -90,11 +90,19 @@ export class MultiChatPanel extends SidePanel {
       this._chatSelectorPopup = new ChatSelectorPopup({
         chatNames: {},
         onSelect: async (value: string) => {
-          if (this._createModel) {
+          // Check if model is already loaded
+          let model = this.getLoadedModel(value);
+          if (!model && this._createModel) {
             const addChatArgs = await this._createModel(value);
-            this.addChat(addChatArgs);
+            model = addChatArgs.model;
+          }
+          if (model) {
+            this.addChat({ model });
           }
           this._chatSelectorPopup?.hidePopup();
+        },
+        onClose: (name: string) => {
+          this.disposeLoadedModel(name);
         }
       });
 
@@ -137,6 +145,12 @@ export class MultiChatPanel extends SidePanel {
       return;
     }
 
+    // Add model to loaded models
+    if (!this._loadedModels.has(model.name)) {
+      this._loadedModels.set(model.name, model);
+      this._updatePopupLoadedModels();
+    }
+
     if (this.openIfExists(model.name)) {
       return;
     }
@@ -172,6 +186,48 @@ export class MultiChatPanel extends SidePanel {
 
     this._sectionAdded.emit(section);
     return widget;
+  }
+
+  /**
+   * Get a loaded model by name, or undefined if not loaded.
+   */
+  getLoadedModel(name: string): IChatModel | undefined {
+    return this._loadedModels.get(name);
+  }
+
+  /**
+   * Get all loaded model names.
+   */
+  getLoadedModelNames(): string[] {
+    return Array.from(this._loadedModels.keys());
+  }
+
+  /**
+   * Dispose a model and remove it from loaded models.
+   */
+  disposeLoadedModel(name: string): void {
+    const model = this._loadedModels.get(name);
+    if (model) {
+      model.dispose();
+      this._loadedModels.delete(name);
+      this._updatePopupLoadedModels();
+
+      // Also close the section if it exists
+      const index = this._getChatIndex(name);
+      if (index > -1) {
+        const section = this.sections[index];
+        section.dispose();
+      }
+    }
+  }
+
+  /**
+   * Update the popup with current loaded model names.
+   */
+  private _updatePopupLoadedModels(): void {
+    if (this._chatSelectorPopup) {
+      this._chatSelectorPopup.setLoadedModels(this.getLoadedModelNames());
+    }
   }
 
   /**
@@ -300,6 +356,7 @@ export class MultiChatPanel extends SidePanel {
 
   private _openChatWidget?: ReactWidget;
   private _chatSelectorPopup?: ChatSelectorPopup;
+  private _loadedModels: Map<string, IChatModel> = new Map();
 }
 
 /**
