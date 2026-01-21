@@ -66,10 +66,66 @@
   background: var(--jp-brand-color1);
 }
 
+/* Item content layout */
+.jp-chat-selector-popup-item-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 32px;
+}
+
+.jp-chat-selector-popup-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
 /* Item label (chat name) */
 .jp-chat-selector-popup-item-label {
   font-size: var(--jp-ui-font-size1);
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.jp-chat-selector-popup-item-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Cached indicator (bullet) */
+.jp-chat-selector-popup-item-indicator {
+  font-size: 8px;
+  color: var(--jp-brand-color1);
+  line-height: 1;
+}
+
+.jp-chat-selector-popup-item-active .jp-chat-selector-popup-item-indicator {
+  color: var(--jp-ui-inverse-font-color1);
+}
+
+/* Close button */
+.jp-chat-selector-popup-item-close:hover {
+  background: var(--jp-layout-color3);
+  color: var(--jp-ui-font-color0);
+}
+
+.jp-chat-selector-popup-item-active .jp-chat-selector-popup-item-close {
+  color: var(--jp-ui-inverse-font-color1);
+  opacity: 0.8;
+}
+
+.jp-chat-selector-popup-item-active .jp-chat-selector-popup-item-close:hover {
+  background: rgba(0, 0, 0, 0.2);
+  opacity: 1;
 }
 
 /* Empty state */
