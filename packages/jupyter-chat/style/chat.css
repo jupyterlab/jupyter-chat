@@ -3,6 +3,11 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+ .jp-chat-widget {
+  min-height: 0;
+  flex-grow: 1;
+ }
+
 .jp-chat-message-container {
   position: relative;
 }
@@ -120,4 +125,30 @@
 
 .jp-AccordionPanel-title .jp-chat-section-toolbar {
   flex: 0 0 auto;
+}
+
+/* Sidepanel widget styles */
+.jp-chat-sidepanel {
+  display: flex;
+  flex-direction: column;
+}
+
+.jp-chat-sidepanel-widget {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.jp-chat-sidepanel-widget-toolbar > .jp-chat-sidepanel-toolbar-title {
+  display: block;
+  align-content: center;
+  flex: 1 1 0%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  color: var(--jp-ui-font-color1);
+  font-size: var(--jp-ui-font-size0);
+  font-weight: bold;
 }

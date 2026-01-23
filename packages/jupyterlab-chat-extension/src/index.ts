@@ -103,7 +103,7 @@ async function createChatModel(
   contentProvider: ICollaborativeContentProvider,
   path?: string,
   defaultDirectory?: string
-): Promise<MultiChatPanel.IAddChatArgs> {
+): Promise<MultiChatPanel.IOpenChatArgs> {
   const modelFactory = app.docRegistry.getModelFactory(
     'Chat'
   ) as LabChatModelFactory;
@@ -435,8 +435,8 @@ const chatTracker: JupyterFrontEndPlugin<IChatTracker> = {
     });
 
     // Add the new opened chat in the tracker.
-    chatPanel?.sectionAdded.connect((_, section) => {
-      tracker.add(section.widget);
+    chatPanel?.chatOpened.connect((_, widget) => {
+      tracker.add(widget);
     });
 
     // Handle state restoration.
@@ -715,14 +715,14 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
                 app.shell.activateById(chatPanel.id);
               }
 
-              if (chatPanel.openIfExists(filepath)) {
+              if (chatPanel.openIfLoaded(filepath)) {
                 return true;
               }
 
-              const addChatArgs = await createChatModel(app, drive, filepath);
+              const openChatArgs = await createChatModel(app, drive, filepath);
 
               // Add a chat widget to the side panel.
-              chatPanel.addChat(addChatArgs);
+              chatPanel.open(openChatArgs);
             } else {
               // The chat is opened in the main area
               // TODO: support JCollab v3 by optionally prefixing 'RTC:'
@@ -801,7 +801,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           if (widget instanceof ChatWidget && chatPanel) {
             // The chat is the side panel.
             app.shell.activateById(chatPanel.id);
-            chatPanel.openIfExists(widget.model.name);
+            chatPanel.openIfLoaded(widget.model.name);
           } else {
             // The chat is in the main area.
             app.shell.activateById(widget.id);
@@ -880,7 +880,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
       for (const file of dirContents.content) {
         if (file.type === 'file' && file.name.endsWith(chatFileExtension)) {
           const nameWithoutExt = file.name.replace(chatFileExtension, '');
-          names[nameWithoutExt] = file.path;
+          names[file.path] = nameWithoutExt;
         }
       }
       return names;
@@ -918,27 +918,22 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     });
     chatPanel.id = 'JupyterlabChat:sidepanel';
 
-    // Update available chats and section title when default directory changed.
+    // Update available chats when default directory changed.
     widgetConfig.configChanged.connect((_, config) => {
       if (config.defaultDirectory !== undefined) {
         chatPanel.updateChatList();
-        chatPanel.sections.forEach(section => {
-          section.displayName = getDisplayName(
-            section.model.name,
-            config.defaultDirectory
-          );
-        });
       }
     });
 
-    // Listen for the file changes to update the chat list and the sections.
+    // Listen for the file changes to update the chat list.
     serviceManager.contents.fileChanged.connect((_sender, change) => {
       if (change.type === 'delete') {
         chatPanel.updateChatList();
-        // Dispose of the section if the chat is opened in the side panel.
-        chatPanel.sections
-          .find(section => section.model.name === change.oldValue?.path)
-          ?.dispose();
+        // Dispose of the model if the chat is loaded in the side panel.
+        const deletedPath = change.oldValue?.path;
+        if (deletedPath) {
+          chatPanel.disposeLoadedModel(deletedPath);
+        }
       }
       const updateActions = ['new', 'rename'];
       if (
@@ -946,15 +941,14 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
         change.newValue?.path?.endsWith(chatFileType.extensions[0])
       ) {
         chatPanel.updateChatList();
-        // Rename the section if the chat is opened in the side panel.
-        const currentSection = chatPanel.sections.find(
-          section => section.model.name === change.oldValue?.path
-        );
-        if (currentSection) {
-          currentSection.displayName = getDisplayName(
-            change.newValue.path,
-            widgetConfig.config.defaultDirectory
-          );
+        // Update the model name if it's loaded
+        const oldPath = change.oldValue?.path;
+        const newPath = change.newValue?.path;
+        if (oldPath && newPath) {
+          const model = chatPanel.getLoadedModel(oldPath);
+          if (model) {
+            model.name = newPath;
+          }
         }
       }
     });
