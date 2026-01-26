@@ -551,7 +551,7 @@ class SidePanelWidget extends PanelWithToolbar {
     this.title.caption = this._displayName;
 
     const titleElement = document.createElement('span');
-    titleElement.classList.add('jp-chat-sidepanel-toolbar-title');
+    titleElement.classList.add('jp-chat-sidepanel-widget-title');
     titleElement.title = this._displayName;
     titleElement.textContent = this._displayName;
 
