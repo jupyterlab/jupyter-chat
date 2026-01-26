@@ -149,9 +149,6 @@ export class MultiChatPanel extends PanelWithToolbar {
       this._chatSelectorPopup?.setLoadedModels(this.getLoadedModelNames());
     }
 
-    this._chatNames[displayName] = model.name;
-    this._chatSelectorPopup?.updateChats(Object.keys(this._chatNames));
-
     // Open this chat (will create widget)
     return this._open(displayName);
   }
@@ -531,7 +528,7 @@ class SidePanelWidget extends PanelWithToolbar {
   }
 
   /**
-   *  * Update the section’s title based on the chat name.
+   * Update the title based on the chat name.
    */
   private _updateTitle(): void {
     this.title.label = this.model.name;
