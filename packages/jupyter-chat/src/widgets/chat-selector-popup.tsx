@@ -265,7 +265,9 @@ export class ChatSelectorPopup extends ReactWidget {
    * Update the filtered and sorted chats based on current state.
    */
   private _updateFilteredChats(): void {
-    let filteredChats = [...this._chatNames];
+    let filteredChats = Array.from(
+      new Set([...this._chatNames, ...this._loadedModels])
+    );
 
     // Filter by query if present
     if (this._query.trim()) {
