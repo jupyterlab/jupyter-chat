@@ -952,10 +952,13 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     serviceManager.contents.fileChanged.connect((_sender, change) => {
       if (change.type === 'delete') {
         chatPanel.updateChatList();
-        // Dispose of the model if the chat is loaded in the side panel.
-        const deletedPath = change.oldValue?.path;
-        if (deletedPath) {
-          chatPanel.disposeLoadedModel(deletedPath);
+        if (change.oldValue?.path) {
+          // Dispose of the model if the chat is loaded in the side panel.
+          const oldName = getDisplayName(
+            change.oldValue.path,
+            widgetConfig.config.defaultDirectory
+          );
+          chatPanel.disposeLoadedModel(oldName);
         }
       }
       const updateActions = ['new', 'rename'];
