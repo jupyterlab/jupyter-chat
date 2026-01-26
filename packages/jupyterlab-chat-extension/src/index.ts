@@ -439,6 +439,26 @@ const chatTracker: JupyterFrontEndPlugin<IChatTracker> = {
       tracker.add(widget);
     });
 
+    // Listen for the file renaming to update the models name.
+    app.serviceManager.contents.fileChanged.connect((_sender, change) => {
+      if (
+        change.type === 'rename' &&
+        change.newValue?.path?.endsWith(chatFileType.extensions[0])
+      ) {
+        // Update the model name from the widget tracker.
+        const oldPath = change.oldValue?.path;
+        const newPath = change.newValue?.path;
+        if (oldPath && newPath && oldPath !== newPath) {
+          // Loop on all the model in tracker that have the old path as name.
+          let widget = tracker.find(widget => widget.model.name === oldPath);
+          while (widget) {
+            widget.model.name = newPath;
+            widget = tracker.find(widget => widget.model.name === oldPath);
+          }
+        }
+      }
+    });
+
     // Handle state restoration.
     if (restorer) {
       // Promise that resolve when the openChat command is ready.
@@ -750,12 +770,16 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     // Command to rename a chat
     commands.addCommand(CommandIDs.renameChat, {
       label: 'Rename chat',
-      execute: async (args: any): Promise<boolean> => {
-        const oldPath = args.oldPath as string;
+      execute: async (args: any): Promise<string | null> => {
+        let oldPath = args.oldPath as string;
         let newPath = args.newPath as string | null;
         if (!oldPath) {
-          showErrorMessage('Error renaming chat', 'Missing old path');
-          return false;
+          if (tracker.currentWidget) {
+            oldPath = tracker.currentWidget.model.name;
+          } else {
+            showErrorMessage('Error renaming chat', 'Missing old path');
+            return null;
+          }
         }
 
         // Ask user if new name not passed in args
@@ -766,13 +790,13 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
             placeholder: 'new-name'
           });
           if (!result.button.accept) {
-            return false; // user cancelled
+            return null;
           }
           newPath = result.value;
         }
 
         if (!newPath) {
-          return false;
+          return null;
         }
 
         // Ensure `.chat` extension
@@ -782,12 +806,12 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
 
         try {
           await app.serviceManager.contents.rename(oldPath, newPath);
-          return true;
+          return getDisplayName(newPath, widgetConfig.config.defaultDirectory);
         } catch (err) {
           console.error('Error renaming chat', err);
           showErrorMessage('Error renaming chat', `${err}`);
         }
-        return false;
+        return null;
       }
     });
 
@@ -903,11 +927,10 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
           filepath: path
         }) as Promise<boolean>;
       },
-      renameChat: (oldPath, newPath) => {
+      renameChat: (oldPath: string) => {
         return commands.execute(CommandIDs.renameChat, {
-          oldPath,
-          newPath
-        }) as Promise<boolean>;
+          oldPath
+        }) as Promise<string | null>;
       },
       chatCommandRegistry,
       attachmentOpenerRegistry,
@@ -941,13 +964,19 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
         change.newValue?.path?.endsWith(chatFileType.extensions[0])
       ) {
         chatPanel.updateChatList();
-        // Update the model name if it's loaded
+        // Update the displayed name if the current chat file is renamed.
         const oldPath = change.oldValue?.path;
         const newPath = change.newValue?.path;
         if (oldPath && newPath) {
-          const model = chatPanel.getLoadedModel(oldPath);
-          if (model) {
-            model.name = newPath;
+          const oldName = getDisplayName(
+            oldPath,
+            widgetConfig.config.defaultDirectory
+          );
+          if (chatPanel.current?.name === oldName) {
+            chatPanel.current.name = getDisplayName(
+              newPath,
+              widgetConfig.config.defaultDirectory
+            );
           }
         }
       }
