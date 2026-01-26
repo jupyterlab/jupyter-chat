@@ -11,7 +11,7 @@
   background: var(--jp-layout-color1);
   color: var(--jp-ui-font-color1);
   font-size: var(--jp-ui-font-size1);
-  min-width: 200px;
+  min-width: 150px;
   outline: none;
 }
 
@@ -29,12 +29,15 @@
   background: var(--jp-layout-color1);
   border: 1px solid var(--jp-border-color1);
   border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  max-height: 400px;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  z-index: 10000;
+  z-index: 10;
+  position: fixed;
+  min-width: 150px;
+  max-width: 300px;
+  max-height: 400px;
 }
 
 /* Popup list container */
@@ -109,7 +112,7 @@
 }
 
 .jp-chat-selector-popup-item-active .jp-chat-selector-popup-item-indicator {
-  color: var(--jp-ui-inverse-font-color1);
+  color: var(--jp-layout-color3);
 }
 
 /* Close button */
@@ -118,13 +121,15 @@
   color: var(--jp-ui-font-color0);
 }
 
-.jp-chat-selector-popup-item-active .jp-chat-selector-popup-item-close {
-  color: var(--jp-ui-inverse-font-color1);
+.jp-chat-selector-popup-item-active
+  .jp-chat-selector-popup-item-close
+  .jp-icon3[fill] {
+  fill: var(--jp-layout-color3);
   opacity: 0.8;
 }
 
 .jp-chat-selector-popup-item-active .jp-chat-selector-popup-item-close:hover {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgb(0 0 0 / 20%);
   opacity: 1;
 }
 
