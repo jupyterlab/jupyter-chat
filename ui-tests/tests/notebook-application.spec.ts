@@ -42,12 +42,10 @@ test.describe('#NotebookApp', () => {
     await expect(panel).toBeVisible();
     await expect(panel.locator('.jp-chat-sidepanel')).toBeVisible();
 
-    const select = panel.locator(
-      '.jp-SidePanel-toolbar .jp-Toolbar-item.jp-chat-open select'
-    );
+    const chatList = page.locator('.jp-chat-selector-popup');
 
-    await expect(select.locator('option')).toHaveCount(2);
-    await expect(select.locator('option').last()).toHaveText(NAME);
+    await expect(chatList.locator('li')).toHaveCount(1);
+    await expect(chatList.locator('li').last()).toHaveText(NAME);
   });
 
   test('Should open main panel in a separate tab', async ({
