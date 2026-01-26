@@ -88,16 +88,17 @@ export class MultiChatPanel extends PanelWithToolbar {
 
       // Create the popup widget (attached to document body)
       this._chatSelectorPopup = new ChatSelectorPopup({
-        chatNames: {},
-        onSelect: async (value: string) => {
+        chatNames: [],
+        onSelect: async (name: string) => {
           // Check if model is already loaded
           let openChatArgs: MultiChatPanel.IOpenChatArgs = {
-            model: this.getLoadedModel(value),
-            displayName: this._chatNames[value]
+            model: this.getLoadedModel(name),
+            displayName: name
           };
           // If not, create the model.
           if (!openChatArgs.model && this._createModel) {
-            openChatArgs = await this._createModel(value);
+            const chatID = this._chatNames[name];
+            openChatArgs = await this._createModel(chatID);
           }
           if (openChatArgs.model) {
             this.open(openChatArgs);
@@ -135,22 +136,24 @@ export class MultiChatPanel extends PanelWithToolbar {
    * @param args - the chat args including model and display name.
    */
   open(args: MultiChatPanel.IOpenChatArgs): ChatWidget | undefined {
-    const { model, displayName } = args;
+    const { model } = args;
     if (!model) {
       return;
     }
 
+    const displayName = args.displayName ?? model.name;
+
     // Add model to loaded models
-    if (!this._loadedModels.has(model.name)) {
-      this._loadedModels.set(model.name, model);
-      this._updatePopupLoadedModels();
+    if (!this._loadedModels.has(displayName)) {
+      this._loadedModels.set(displayName, model);
+      this._chatSelectorPopup?.setLoadedModels(this.getLoadedModelNames());
     }
 
-    this._chatNames[model.name] = displayName ?? model.name;
-    this._chatSelectorPopup?.updateChats(this._chatNames);
+    this._chatNames[displayName] = model.name;
+    this._chatSelectorPopup?.updateChats(Object.keys(this._chatNames));
 
     // Open this chat (will create widget)
-    return this._open(model.name);
+    return this._open(displayName);
   }
 
   /**
@@ -186,7 +189,7 @@ export class MultiChatPanel extends PanelWithToolbar {
 
       model.dispose();
       this._loadedModels.delete(name);
-      this._updatePopupLoadedModels();
+      this._chatSelectorPopup?.setLoadedModels(this.getLoadedModelNames());
     }
   }
 
@@ -221,7 +224,7 @@ export class MultiChatPanel extends PanelWithToolbar {
     // Create a chat with toolbar
     const widget = new SidePanelWidget({
       widget: chatWidget,
-      displayName: this._chatNames[name],
+      displayName: name,
       openInMain: this._openInMain,
       renameChat: this._renameChat,
       onClose: () => {
@@ -244,15 +247,6 @@ export class MultiChatPanel extends PanelWithToolbar {
   }
 
   /**
-   * Update the popup with current loaded model names.
-   */
-  private _updatePopupLoadedModels(): void {
-    if (this._chatSelectorPopup) {
-      this._chatSelectorPopup.setLoadedModels(this.getLoadedModelNames());
-    }
-  }
-
-  /**
    * Invoke the update of the list of available chats.
    */
   updateChatList() {
@@ -266,7 +260,7 @@ export class MultiChatPanel extends PanelWithToolbar {
     try {
       const chatNames = await this._getChatNames?.();
       this._chatNames = chatNames ?? {};
-      this._chatSelectorPopup?.updateChats(this._chatNames);
+      this._chatSelectorPopup?.updateChats(Object.keys(this._chatNames));
     } catch (e) {
       console.error('Error getting chat files', e);
     }
@@ -379,7 +373,7 @@ export namespace MultiChatPanel {
     /**
      * An optional callback to get the list of existing chats.
      *
-     * @returns an object mapping chat identifiers to display names.
+     * @returns an object mapping chat display names to identifiers.
      */
     getChatNames?: () => Promise<{ [name: string]: string }>;
     /**
@@ -470,6 +464,7 @@ class SidePanelWidget extends PanelWithToolbar {
           const newName = result.value;
           if (this.model && newName && newName !== oldName) {
             if (await options.renameChat?.(oldName, newName)) {
+              this.model.name = newName;
               this._displayName = newName;
               this._updateTitle();
             }
