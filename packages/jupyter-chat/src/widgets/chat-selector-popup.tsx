@@ -30,8 +30,8 @@ export class ChatSelectorPopup extends ReactWidget {
     // Start hidden
     this.hide();
 
-    // Initialize filtered entries
-    this._updateFilteredEntries();
+    // Initialize filtered chats
+    this._updateFilteredChats();
   }
 
   /**
@@ -47,9 +47,9 @@ export class ChatSelectorPopup extends ReactWidget {
   /**
    * Update the list of available chats.
    */
-  updateChats(chatNames: { [name: string]: string }): void {
+  updateChats(chatNames: string[]): void {
     this._chatNames = chatNames;
-    this._updateFilteredEntries();
+    this._updateFilteredChats();
     this.update();
   }
 
@@ -58,7 +58,7 @@ export class ChatSelectorPopup extends ReactWidget {
    */
   setLoadedModels(loadedModels: string[]): void {
     this._loadedModels = new Set(loadedModels);
-    this._updateFilteredEntries();
+    this._updateFilteredChats();
     this.update();
   }
 
@@ -75,11 +75,11 @@ export class ChatSelectorPopup extends ReactWidget {
    */
   setQuery(query: string): void {
     this._query = query;
-    this._updateFilteredEntries();
+    this._updateFilteredChats();
     // When filtering, select first in filtered list
     if (query.trim()) {
       this._selectedName =
-        this._filteredEntries.length > 0 ? this._filteredEntries[0][0] : null;
+        this._filteredChats.length > 0 ? this._filteredChats[0][0] : null;
     }
     this.update();
   }
@@ -95,21 +95,21 @@ export class ChatSelectorPopup extends ReactWidget {
    * Move selection down.
    */
   selectNext(): void {
-    if (this._filteredEntries.length === 0) {
+    if (this._filteredChats.length === 0) {
       return;
     }
 
-    const currentIndex = this._filteredEntries.findIndex(
+    const currentIndex = this._filteredChats.findIndex(
       ([name]) => name === this._selectedName
     );
 
     // If not found or at the end, wrap to first or move down
     if (currentIndex === -1) {
       // No selection yet, select first
-      this._selectedName = this._filteredEntries[0][0];
-    } else if (currentIndex < this._filteredEntries.length - 1) {
+      this._selectedName = this._filteredChats[0][0];
+    } else if (currentIndex < this._filteredChats.length - 1) {
       // Move to next
-      this._selectedName = this._filteredEntries[currentIndex + 1][0];
+      this._selectedName = this._filteredChats[currentIndex + 1][0];
     }
     this.update();
   }
@@ -118,11 +118,11 @@ export class ChatSelectorPopup extends ReactWidget {
    * Move selection up.
    */
   selectPrevious(): void {
-    if (this._filteredEntries.length === 0) {
+    if (this._filteredChats.length === 0) {
       return;
     }
 
-    const currentIndex = this._filteredEntries.findIndex(
+    const currentIndex = this._filteredChats.findIndex(
       ([name]) => name === this._selectedName
     );
 
@@ -130,10 +130,10 @@ export class ChatSelectorPopup extends ReactWidget {
     if (currentIndex === -1) {
       // No selection yet, select last
       this._selectedName =
-        this._filteredEntries[this._filteredEntries.length - 1][0];
+        this._filteredChats[this._filteredChats.length - 1][0];
     } else if (currentIndex > 0) {
       // Move to previous
-      this._selectedName = this._filteredEntries[currentIndex - 1][0];
+      this._selectedName = this._filteredChats[currentIndex - 1][0];
     }
     this.update();
   }
@@ -151,18 +151,16 @@ export class ChatSelectorPopup extends ReactWidget {
    * Show the popup and position it.
    */
   show(): void {
-    // Initialize selection based on current chat or first entry
-    const entries = this._filteredEntries;
     let needsUpdate = false;
 
-    if (entries.length > 0) {
+    if (this._filteredChats.length > 0) {
       const oldSelection = this._selectedName;
       // If there's a current chat and no query, select it
       if (this._currentChat && !this._query.trim()) {
         this._selectedName = this._currentChat;
       } else if (!this._selectedName) {
-        // Otherwise select first entry if nothing is selected
-        this._selectedName = entries[0][0];
+        // Otherwise select first chat if nothing is selected
+        this._selectedName = this._filteredChats[0];
       }
       needsUpdate = oldSelection !== this._selectedName;
     }
@@ -187,7 +185,7 @@ export class ChatSelectorPopup extends ReactWidget {
   render(): JSX.Element {
     return (
       <ChatSelectorList
-        entries={this._filteredEntries}
+        names={this._filteredChats}
         selectedName={this._selectedName}
         loadedModels={this._loadedModels}
         onSelect={this._handleItemClick.bind(this)}
@@ -264,42 +262,42 @@ export class ChatSelectorPopup extends ReactWidget {
   }
 
   /**
-   * Update the filtered and sorted entries based on current state.
+   * Update the filtered and sorted chats based on current state.
    */
-  private _updateFilteredEntries(): void {
-    let allEntries = Object.entries(this._chatNames);
+  private _updateFilteredChats(): void {
+    let filteredChats = [...this._chatNames];
 
     // Filter by query if present
     if (this._query.trim()) {
       const queryLower = this._query.toLowerCase();
-      allEntries = allEntries.filter(([_, value]) =>
-        value.toLowerCase().includes(queryLower)
+      filteredChats = filteredChats.filter(name =>
+        name.toLowerCase().includes(queryLower)
       );
     }
 
     // Separate into loaded and non-loaded
-    const loadedEntries: Array<[string, string]> = [];
-    const nonLoadedEntries: Array<[string, string]> = [];
+    const loadedChats: string[] = [];
+    const nonLoadedChats: string[] = [];
 
-    allEntries.forEach(entry => {
-      if (this._loadedModels.has(entry[0])) {
-        loadedEntries.push(entry);
+    filteredChats.forEach(name => {
+      if (this._loadedModels.has(name)) {
+        loadedChats.push(name);
       } else {
-        nonLoadedEntries.push(entry);
+        nonLoadedChats.push(name);
       }
     });
 
-    // Sort each group alphabetically by display name
-    loadedEntries.sort((a, b) => a[1].localeCompare(b[1]));
-    nonLoadedEntries.sort((a, b) => a[1].localeCompare(b[1]));
+    // Sort each group alphabetically by name
+    loadedChats.sort();
+    nonLoadedChats.sort();
 
     // Combine: loaded first, then non-loaded
-    this._filteredEntries = [...loadedEntries, ...nonLoadedEntries];
+    this._filteredChats = [...loadedChats, ...nonLoadedChats];
   }
 
-  private _handleItemClick(chatPath: string): void {
+  private _handleItemClick(name: string): void {
     if (this._onSelect) {
-      this._onSelect(chatPath);
+      this._onSelect(name);
     }
   }
 
@@ -307,9 +305,9 @@ export class ChatSelectorPopup extends ReactWidget {
     this._selectedName = name;
   }
 
-  private _handleClose(chatPath: string): void {
+  private _handleClose(name: string): void {
     if (this._onClose) {
-      this._onClose(chatPath);
+      this._onClose(name);
     }
   }
 
@@ -328,13 +326,13 @@ export class ChatSelectorPopup extends ReactWidget {
     }
   }
 
-  private _chatNames: { [name: string]: string } = {};
+  private _chatNames: string[] = [];
   private _loadedModels: Set<string> = new Set();
   private _currentChat: string | null = null;
   private _query: string = '';
   private _selectedName: string | null = null;
-  private _filteredEntries: Array<[string, string]> = [];
-  private _onSelect?: (value: string) => void;
+  private _filteredChats: string[] = [];
+  private _onSelect?: (name: string) => void;
   private _onClose?: (name: string) => void;
   private _anchor: HTMLElement | null = null;
   private _anchorRect: DOMRect | null = null;
@@ -348,11 +346,11 @@ export namespace ChatSelectorPopup {
     /**
      * Object mapping display names to values used to identify/open chats.
      */
-    chatNames: { [name: string]: string };
+    chatNames: string[];
     /**
      * Callback when a chat is selected.
      */
-    onSelect?: (value: string) => void;
+    onSelect?: (name: string) => void;
     /**
      * Callback when a chat is closed/disposed.
      */
@@ -368,19 +366,19 @@ export namespace ChatSelectorPopup {
  * Props for the ChatSelectorList component.
  */
 interface IChatSelectorListProps {
-  entries: Array<[string, string]>;
+  names: string[];
   selectedName: string | null;
   loadedModels: Set<string>;
-  onSelect: (chatPath: string) => void;
+  onSelect: (name: string) => void;
   onUpdateSelectedName: (name: string) => void;
-  onClose: (chatPath: string) => void;
+  onClose: (names: string) => void;
 }
 
 /**
  * React component for rendering the chat list.
  */
 function ChatSelectorList({
-  entries,
+  names,
   selectedName,
   loadedModels,
   onSelect,
@@ -401,21 +399,18 @@ function ChatSelectorList({
     }
   }, [selectedName]);
 
-  const handleCloseClick = (
-    event: React.MouseEvent,
-    chatPath: string
-  ): void => {
+  const handleCloseClick = (event: React.MouseEvent, name: string): void => {
     event.stopPropagation();
-    onClose(chatPath);
+    onClose(name);
   };
 
-  if (entries.length === 0) {
+  if (names.length === 0) {
     return <div className={POPUP_EMPTY_CLASS}>No chats found</div>;
   }
 
   return (
     <ul ref={listRef} className={POPUP_LIST_CLASS}>
-      {entries.map(([name, value]) => {
+      {names.map(name => {
         const isLoaded = loadedModels.has(name);
         return (
           <li
@@ -432,9 +427,9 @@ function ChatSelectorList({
                 <div className={POPUP_ITEM_LABEL_CLASS}>
                   <span
                     className="jp-chat-selector-popup-item-name"
-                    title={value}
+                    title={name}
                   >
-                    {value}
+                    {name}
                   </span>
                   {isLoaded && (
                     <span className="jp-chat-selector-popup-item-indicator">

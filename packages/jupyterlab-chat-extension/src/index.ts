@@ -880,7 +880,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
       for (const file of dirContents.content) {
         if (file.type === 'file' && file.name.endsWith(chatFileExtension)) {
           const nameWithoutExt = file.name.replace(chatFileExtension, '');
-          names[file.path] = nameWithoutExt;
+          names[nameWithoutExt] = file.path;
         }
       }
       return names;
