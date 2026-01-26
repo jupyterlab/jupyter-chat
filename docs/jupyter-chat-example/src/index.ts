@@ -132,8 +132,8 @@ const plugin: JupyterFrontEndPlugin<void> = {
                 .composite as boolean
             };
 
-            if (panel.currentChat) {
-              panel.currentChat.model.config = config;
+            if (panel.current) {
+              panel.current.model.config = config;
             }
           }
           // Read the settings
@@ -174,7 +174,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
       createModel: createModel,
       // No op, since the chat are transient, but it need to be provided to have the
       // button in the toolbar.
-      renameChat: async (oldName: string, newName: string) => true
+      renameChat: true
     });
     app.shell.add(panel, 'left');
   }
