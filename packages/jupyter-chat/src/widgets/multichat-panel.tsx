@@ -102,20 +102,15 @@ export class MultiChatPanel extends PanelWithToolbar {
           if (openChatArgs.model) {
             this.open(openChatArgs);
           }
-          this._chatSelectorPopup?.hidePopup();
+          this._chatSelectorPopup?.hide();
         },
         onClose: (name: string) => {
           this.disposeLoadedModel(name);
         }
       });
-
-      // Update popup chats when the signal emits
-      this._chatNamesChanged.connect((_, chatNames) => {
-        this._chatSelectorPopup?.updateChats(chatNames);
-      });
     }
 
-    // Insert the widget as first child.
+    // Insert the toolbar as first child.
     this.insertWidget(0, this.toolbar);
     this._updateChatListDebouncer = new Debouncer(this._updateChatList, 200);
   }
@@ -152,7 +147,7 @@ export class MultiChatPanel extends PanelWithToolbar {
     }
 
     this._chatNames[model.name] = displayName ?? model.name;
-    this._chatNamesChanged.emit(this._chatNames);
+    this._chatSelectorPopup?.updateChats(this._chatNames);
 
     // Open this chat (will create widget)
     return this._open(model.name);
@@ -271,7 +266,7 @@ export class MultiChatPanel extends PanelWithToolbar {
     try {
       const chatNames = await this._getChatNames?.();
       this._chatNames = chatNames ?? {};
-      this._chatNamesChanged.emit(this._chatNames);
+      this._chatSelectorPopup?.updateChats(this._chatNames);
     } catch (e) {
       console.error('Error getting chat files', e);
     }
@@ -341,9 +336,6 @@ export class MultiChatPanel extends PanelWithToolbar {
     }
   }
 
-  private _chatNamesChanged = new Signal<this, { [name: string]: string }>(
-    this
-  );
   private _chatOpened = new Signal<MultiChatPanel, ChatWidget>(this);
   private _chatOptions: Omit<Chat.IOptions, 'model' | 'inputToolbarRegistry'>;
   private _inputToolbarFactory?: IInputToolbarRegistryFactory;
@@ -637,7 +629,7 @@ function ChatSearchInput({
     if (popup) {
       popup.setQuery(value);
       if (!popup.isVisible && value) {
-        popup.showPopup();
+        popup.show();
       }
     }
   };
@@ -646,18 +638,18 @@ function ChatSearchInput({
     const popup = getPopup();
     if (popup && inputRef.current) {
       // Set anchor element before showing
-      (popup as any)._anchorElement = inputRef.current;
+      popup.anchor = inputRef.current;
       popup.setQuery(query);
-      popup.showPopup();
+      popup.show();
     }
   };
 
   const handleInputClick = () => {
     const popup = getPopup();
     if (popup && inputRef.current && !popup.isVisible) {
-      (popup as any)._anchorElement = inputRef.current;
+      popup.anchor = inputRef.current;
       popup.setQuery(query);
-      popup.showPopup();
+      popup.show();
     }
   };
 
@@ -682,13 +674,13 @@ function ChatSearchInput({
         value = popup.getSelectedValue();
         if (value) {
           onChatSelected(value);
-          popup.hidePopup();
+          popup.hide();
           setQuery('');
         }
         break;
       case 'Escape':
         event.preventDefault();
-        popup.hidePopup();
+        popup.hide();
         setQuery('');
         break;
     }

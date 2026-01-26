@@ -3,10 +3,10 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
- .jp-chat-widget {
+.jp-chat-widget {
   min-height: 0;
   flex-grow: 1;
- }
+}
 
 .jp-chat-message-container {
   position: relative;

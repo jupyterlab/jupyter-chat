@@ -4,12 +4,7 @@
  */
 
 import { Button } from '@jupyter/react-components';
-import {
-  classes,
-  closeIcon,
-  LabIcon,
-  ReactWidget
-} from '@jupyterlab/ui-components';
+import { closeIcon, ReactWidget } from '@jupyterlab/ui-components';
 import { Message } from '@lumino/messaging';
 import React, { useEffect, useRef } from 'react';
 
@@ -30,13 +25,23 @@ export class ChatSelectorPopup extends ReactWidget {
     this._chatNames = options.chatNames;
     this._onSelect = options.onSelect;
     this._onClose = options.onClose;
-    this._anchorElement = options.anchorElement;
+    this._anchor = options.anchor ?? null;
 
     // Start hidden
     this.hide();
 
     // Initialize filtered entries
     this._updateFilteredEntries();
+  }
+
+  /**
+   * Getter/setter of the anchor element.
+   */
+  get anchor(): HTMLElement | null {
+    return this._anchor;
+  }
+  set anchor(element: HTMLElement | null) {
+    this._anchor = element;
   }
 
   /**
@@ -143,24 +148,9 @@ export class ChatSelectorPopup extends ReactWidget {
   }
 
   /**
-   * Position the popup below the anchor element.
-   */
-  positionBelowAnchor(): void {
-    if (!this._anchorElement) {
-      return;
-    }
-
-    const rect = this._anchorElement.getBoundingClientRect();
-    this.node.style.position = 'fixed';
-    this.node.style.top = `${rect.bottom}px`;
-    this.node.style.left = `${rect.left}px`;
-    this.node.style.width = `${Math.max(rect.width, 300)}px`;
-  }
-
-  /**
    * Show the popup and position it.
    */
-  showPopup(): void {
+  show(): void {
     // Initialize selection based on current chat or first entry
     const entries = this._filteredEntries;
     let needsUpdate = false;
@@ -177,8 +167,8 @@ export class ChatSelectorPopup extends ReactWidget {
       needsUpdate = oldSelection !== this._selectedName;
     }
 
-    this.show();
-    this.positionBelowAnchor();
+    super.show();
+    this._positionPopup();
 
     // Only update if selection changed
     if (needsUpdate) {
@@ -189,8 +179,9 @@ export class ChatSelectorPopup extends ReactWidget {
   /**
    * Hide the popup.
    */
-  hidePopup(): void {
-    this.hide();
+  hide(): void {
+    this._anchorRect = null;
+    super.hide();
   }
 
   render(): JSX.Element {
@@ -206,22 +197,70 @@ export class ChatSelectorPopup extends ReactWidget {
     );
   }
 
-  protected onAfterAttach(msg: Message): void {
-    super.onAfterAttach(msg);
+  protected onAfterShow(msg: Message): void {
+    super.onAfterShow(msg);
     document.addEventListener(
-      'click',
+      'pointerdown',
       this._handleOutsideClick.bind(this),
       true
     );
+    window.addEventListener('resize', this._checkPosition);
   }
 
-  protected onBeforeDetach(msg: Message): void {
+  protected onAfterHide(msg: Message): void {
     document.removeEventListener(
-      'click',
+      'pointerdown',
       this._handleOutsideClick.bind(this),
       true
     );
-    super.onBeforeDetach(msg);
+    window.removeEventListener('resize', this._checkPosition);
+    super.onAfterHide(msg);
+  }
+
+  /**
+   * Check if the popup should move (anchor has moved).
+   */
+  private _checkPosition = (): void => {
+    if (!this._anchor) {
+      return;
+    }
+    console.log('Check position');
+    const rect = this._anchor.getBoundingClientRect();
+    if (
+      rect.bottom !== this._anchorRect?.bottom ||
+      rect.left !== this._anchorRect.left ||
+      rect.width !== this._anchorRect.width
+    ) {
+      this._positionPopup();
+    }
+  };
+
+  /**
+   * Position the popup below the search element.
+   */
+  private _positionPopup(): void {
+    if (!this._anchor) {
+      return;
+    }
+
+    this._anchorRect = this._anchor.getBoundingClientRect();
+
+    const rect = this.node.getBoundingClientRect();
+    const margin = 8;
+
+    let left = this._anchorRect.left;
+    if (this._anchorRect.left + rect.width > window.innerWidth - margin) {
+      left = window.innerWidth - margin - rect.width;
+    }
+
+    let top = this._anchorRect.bottom;
+    if (this._anchorRect.bottom + rect.height > window.innerHeight - margin) {
+      top = window.innerHeight - margin - rect.height;
+    }
+
+    this.node.style.minWidth = `${this._anchorRect.width}px`;
+    this.node.style.top = `${top}px`;
+    this.node.style.left = `${left}px`;
   }
 
   /**
@@ -282,10 +321,10 @@ export class ChatSelectorPopup extends ReactWidget {
     const target = event.target as HTMLElement;
     if (
       !this.node.contains(target) &&
-      this._anchorElement &&
-      !this._anchorElement.contains(target)
+      this._anchor &&
+      !this._anchor.contains(target)
     ) {
-      this.hidePopup();
+      this.hide();
     }
   }
 
@@ -297,7 +336,8 @@ export class ChatSelectorPopup extends ReactWidget {
   private _filteredEntries: Array<[string, string]> = [];
   private _onSelect?: (value: string) => void;
   private _onClose?: (name: string) => void;
-  private _anchorElement?: HTMLElement;
+  private _anchor: HTMLElement | null = null;
+  private _anchorRect: DOMRect | null = null;
 }
 
 /**
@@ -320,7 +360,7 @@ export namespace ChatSelectorPopup {
     /**
      * The element to anchor the popup to.
      */
-    anchorElement?: HTMLElement;
+    anchor?: HTMLElement;
   }
 }
 
@@ -410,11 +450,7 @@ function ChatSelectorList({
                   title="Close and dispose this chat"
                   className="jp-chat-selector-popup-item-close"
                 >
-                  <LabIcon.resolveReact
-                    display={'flex'}
-                    icon={closeIcon}
-                    iconClass={classes('jp-Icon')}
-                  />
+                  <closeIcon.react tag={null} />
                 </Button>
               )}
             </div>
