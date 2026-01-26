@@ -453,6 +453,7 @@ const chatTracker: JupyterFrontEndPlugin<IChatTracker> = {
           let widget = tracker.find(widget => widget.model.name === oldPath);
           while (widget) {
             widget.model.name = newPath;
+            tracker.save(widget);
             widget = tracker.find(widget => widget.model.name === oldPath);
           }
         }
