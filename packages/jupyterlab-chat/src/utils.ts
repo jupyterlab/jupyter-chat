@@ -8,6 +8,7 @@ import { PathExt } from '@jupyterlab/coreutils';
 import { chatFileType } from './token';
 
 /**
+ * Return the name of the chat from its path.
  *
  * @param defaultDirectory - the default directory.
  * @param path - the path of the chat file.

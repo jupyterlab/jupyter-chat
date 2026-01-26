@@ -119,8 +119,8 @@ export class MultiChatPanel extends PanelWithToolbar {
   /**
    * The currently displayed chat widget.
    */
-  get currentChat(): ChatWidget | undefined {
-    return this._currentChat?.widget;
+  get current(): SidePanelWidget | undefined {
+    return this._currentWidget;
   }
 
   /**
@@ -174,9 +174,9 @@ export class MultiChatPanel extends PanelWithToolbar {
     const model = this._loadedModels.get(name);
     if (model) {
       // If this is the currently displayed chat, remove it.
-      if (this._currentChat?.model === model) {
-        this._currentChat.dispose();
-        this._currentChat = undefined;
+      if (this._currentWidget?.model === model) {
+        this._currentWidget.dispose();
+        this._currentWidget = undefined;
 
         // Clear current chat in selector
         if (this._chatSelectorPopup) {
@@ -200,8 +200,8 @@ export class MultiChatPanel extends PanelWithToolbar {
     }
 
     // Dispose current chat widget if any
-    if (this._currentChat) {
-      this._currentChat.dispose();
+    if (this._currentWidget) {
+      this._currentWidget.dispose();
     }
 
     // Create the toolbar registry.
@@ -232,7 +232,7 @@ export class MultiChatPanel extends PanelWithToolbar {
     // Add to content panel
     this.addWidget(widget);
     this.update();
-    this._currentChat = widget;
+    this._currentWidget = widget;
 
     // Update selector to show current chat
     if (this._chatSelectorPopup) {
@@ -337,12 +337,11 @@ export class MultiChatPanel extends PanelWithToolbar {
   ) => Promise<MultiChatPanel.IOpenChatArgs>;
   private _getChatNames?: () => Promise<{ [name: string]: string }>;
   private _openInMain?: (name: string) => Promise<boolean>;
-  private _renameChat?: (oldName: string, newName: string) => Promise<boolean>;
-
+  private _renameChat?: boolean | ((oldName: string) => Promise<string | null>);
   private _openChatWidget?: ReactWidget;
   private _chatSelectorPopup?: ChatSelectorPopup;
   private _loadedModels: Map<string, IChatModel> = new Map();
-  private _currentChat?: SidePanelWidget;
+  private _currentWidget?: SidePanelWidget;
   private _chatNames: { [name: string]: string } = {};
 }
 
@@ -386,7 +385,7 @@ export namespace MultiChatPanel {
      * @param newName - the new name of the chat.
      * @returns - a boolean, whether the chat has been renamed or not.
      */
-    renameChat?: (oldName: string, newName: string) => Promise<boolean>;
+    renameChat?: boolean | ((oldName: string) => Promise<string | null>);
   }
   /**
    * The options for the add chat method.
@@ -411,8 +410,7 @@ class SidePanelWidget extends PanelWithToolbar {
   constructor(options: SidePanelWidget.IOptions) {
     super();
     this._chatWidget = options.widget;
-    this._displayName =
-      options.displayName ?? options.widget.model.name ?? 'Chat';
+    this._displayName = options.displayName ?? options.widget.model.name;
 
     this.addClass(SIDEPANEL_WIDGET_CLASS);
     this.toolbar.addClass(TOOLBAR_CLASS);
@@ -449,22 +447,29 @@ class SidePanelWidget extends PanelWithToolbar {
         iconLabel: 'Rename chat',
         className: 'jp-mod-styled',
         onClick: async () => {
-          const oldName = this.model.name ?? 'Chat';
-          const result = await InputDialog.getText({
-            title: 'Rename Chat',
-            text: this.model.name,
-            placeholder: 'new-name'
-          });
-          if (!result.button.accept) {
+          if (!options.renameChat) {
             return;
           }
-          const newName = result.value;
-          if (this.model && newName && newName !== oldName) {
-            if (await options.renameChat?.(oldName, newName)) {
+          let newName: string | null;
+          if (options.renameChat === true) {
+            // If rename chat is true, let's provide a input to select new name.
+            const result = await InputDialog.getText({
+              title: 'Rename Chat',
+              text: this.model.name,
+              placeholder: 'new-name'
+            });
+            if (!result.button.accept && result.value) {
+              return;
+            }
+            newName = result.value;
+            if (newName) {
               this.model.name = newName;
               this._displayName = newName;
               this._updateTitle();
             }
+          } else {
+            // Rename chat is a function, let's call it.
+            await options.renameChat(this.model.name);
           }
         }
       });
@@ -514,6 +519,17 @@ class SidePanelWidget extends PanelWithToolbar {
    */
   get model(): IChatModel {
     return this._chatWidget.model;
+  }
+
+  /**
+   * The displayed name of the widget.
+   */
+  get name(): string {
+    return this._displayName;
+  }
+  set name(value: string) {
+    this._displayName = value;
+    this._updateTitle();
   }
 
   /**
@@ -585,7 +601,7 @@ namespace SidePanelWidget {
     /**
      * The callback to rename the chat.
      */
-    renameChat?: (oldName: string, newName: string) => Promise<boolean>;
+    renameChat?: boolean | ((oldName: string) => Promise<string | null>);
     /**
      * The callback when closing the chat.
      */
