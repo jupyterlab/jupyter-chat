@@ -342,10 +342,10 @@ test.describe('#markUnread', () => {
 
     test('button should be disabled in side panel', async ({ page }) => {
       const sidePanel = await openChatToSide(page, FILENAME, chatContent);
-      const chatTitle = sidePanel
-        .locator('.jp-SidePanel-content .jp-AccordionPanel-title')
+      const chatToolbar = sidePanel
+        .locator('.jp-chat-sidepanel-widget-toolbar')
         .first();
-      const button = chatTitle.getByTitle('Mark chat as read');
+      const button = chatToolbar.getByTitle('Mark chat as read');
       await expect(button).toBeAttached();
 
       // toBeDisabled() does not work in this case, maybe because it is a jp-button ?
