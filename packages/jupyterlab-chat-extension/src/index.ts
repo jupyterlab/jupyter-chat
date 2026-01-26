@@ -460,7 +460,7 @@ const chatTracker: JupyterFrontEndPlugin<IChatTracker> = {
         }),
         name: widget => {
           const area = widget.area ?? 'main';
-          return `${area}:${widget.model.name}`;
+          return area === 'main' ? widget.model.name : 'sidebar';
         },
         when: openCommandReady.promise
       });
