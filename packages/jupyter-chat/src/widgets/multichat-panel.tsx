@@ -71,8 +71,7 @@ export class MultiChatPanel extends PanelWithToolbar {
           this.open(addChatArgs);
         },
         icon: addIcon,
-        label: 'Chat',
-        tooltip: 'Add a new chat'
+        tooltip: 'Create a new chat'
       });
       addChat.addClass(ADD_BUTTON_CLASS);
       this.toolbar.addItem('createChat', addChat);
@@ -406,7 +405,7 @@ export namespace MultiChatPanel {
      * An optional callback to create a chat model.
      *
      * @param name - the name of the chat, optional.
-     * @return an object that can be passed to add a chat section.
+     * @return an object that can be passed to open the chat.
      */
     createModel?: (name?: string) => Promise<IOpenChatArgs>;
     /**
@@ -758,7 +757,7 @@ function ChatSearchInput({
     <input
       ref={inputRef}
       type="text"
-      placeholder="Open a chat"
+      placeholder="Select a chat"
       value={query}
       onChange={handleInputChange}
       onFocus={handleInputFocus}
