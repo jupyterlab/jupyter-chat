@@ -123,14 +123,15 @@
   max-width: fit-content;
 }
 
-.jp-AccordionPanel-title .jp-chat-section-toolbar {
-  flex: 0 0 auto;
-}
-
-/* Sidepanel widget styles */
+/* Sidepanel styles */
 .jp-chat-sidepanel {
   display: flex;
   flex-direction: column;
+}
+
+.jp-chat-sidepanel .jp-chat-add svg path.jp-icon3 {
+  stroke: var(--jp-inverse-layout-color3);
+  stroke-width: 2;
 }
 
 .jp-chat-sidepanel-widget {
