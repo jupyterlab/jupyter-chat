@@ -100,7 +100,7 @@ export class ChatSelectorPopup extends ReactWidget {
     }
 
     const currentIndex = this._filteredChats.findIndex(
-      ([name]) => name === this._selectedName
+      name => name === this._selectedName
     );
 
     // If not found or at the end, wrap to first or move down
@@ -123,7 +123,7 @@ export class ChatSelectorPopup extends ReactWidget {
     }
 
     const currentIndex = this._filteredChats.findIndex(
-      ([name]) => name === this._selectedName
+      name => name === this._selectedName
     );
 
     // If not found, select last; otherwise move up
@@ -135,15 +135,6 @@ export class ChatSelectorPopup extends ReactWidget {
       this._selectedName = this._filteredChats[currentIndex - 1];
     }
     this.update();
-  }
-
-  /**
-   * Select the current item.
-   */
-  selectCurrent(): void {
-    if (this._selectedName && this._onSelect) {
-      this._onSelect(this._selectedName);
-    }
   }
 
   /**
@@ -187,29 +178,21 @@ export class ChatSelectorPopup extends ReactWidget {
         names={this._filteredChats}
         selectedName={this._selectedName}
         loadedModels={this._loadedModels}
-        onSelect={this._handleItemClick.bind(this)}
-        onUpdateSelectedName={this._handleUpdateSelectedName.bind(this)}
-        onClose={this._handleClose.bind(this)}
+        onSelect={this._handleItemClick}
+        onUpdateSelectedName={this._handleUpdateSelectedName}
+        onClose={this._handleClose}
       />
     );
   }
 
   protected onAfterShow(msg: Message): void {
     super.onAfterShow(msg);
-    document.addEventListener(
-      'pointerdown',
-      this._handleOutsideClick.bind(this),
-      true
-    );
+    document.addEventListener('pointerdown', this._handleOutsideClick, true);
     window.addEventListener('resize', this._checkPosition);
   }
 
   protected onAfterHide(msg: Message): void {
-    document.removeEventListener(
-      'pointerdown',
-      this._handleOutsideClick.bind(this),
-      true
-    );
+    document.removeEventListener('pointerdown', this._handleOutsideClick, true);
     window.removeEventListener('resize', this._checkPosition);
     super.onAfterHide(msg);
   }
@@ -221,7 +204,6 @@ export class ChatSelectorPopup extends ReactWidget {
     if (!this._anchor) {
       return;
     }
-    console.log('Check position');
     const rect = this._anchor.getBoundingClientRect();
     if (
       rect.bottom !== this._anchorRect?.bottom ||
@@ -296,23 +278,23 @@ export class ChatSelectorPopup extends ReactWidget {
     this._filteredChats = [...loadedChats, ...nonLoadedChats];
   }
 
-  private _handleItemClick(name: string): void {
+  private _handleItemClick = (name: string): void => {
     if (this._onSelect) {
       this._onSelect(name);
     }
-  }
+  };
 
-  private _handleUpdateSelectedName(name: string): void {
+  private _handleUpdateSelectedName = (name: string): void => {
     this._selectedName = name;
-  }
+  };
 
-  private _handleClose(name: string): void {
+  private _handleClose = (name: string): void => {
     if (this._onClose) {
       this._onClose(name);
     }
-  }
+  };
 
-  private _handleOutsideClick(event: MouseEvent): void {
+  private _handleOutsideClick = (event: MouseEvent): void => {
     if (this.isHidden) {
       return;
     }
@@ -325,7 +307,7 @@ export class ChatSelectorPopup extends ReactWidget {
     ) {
       this.hide();
     }
-  }
+  };
 
   private _chatNames: string[] = [];
   private _loadedModels: Set<string> = new Set();
