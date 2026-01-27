@@ -23,7 +23,7 @@ import { Message } from '@lumino/messaging';
 import { Debouncer } from '@lumino/polling';
 import { ISignal, Signal } from '@lumino/signaling';
 import { Widget } from '@lumino/widgets';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { ChatWidget } from './chat-widget';
 import { ChatSelectorPopup } from './chat-selector-popup';
@@ -82,8 +82,9 @@ export class MultiChatPanel extends PanelWithToolbar {
       // Chat selector with search input
       this._openChatWidget = ReactWidget.create(
         <ChatSearchInput
-          onChatSelected={this._chatSelected}
+          selectChat={this._onSelectChat}
           getPopup={() => this._chatSelectorPopup}
+          chatOpened={this._chatOpened}
         />
       );
       this._openChatWidget.addClass(OPEN_SELECT_CLASS);
@@ -92,7 +93,7 @@ export class MultiChatPanel extends PanelWithToolbar {
       // Create the popup widget (attached to document body)
       this._chatSelectorPopup = new ChatSelectorPopup({
         chatNames: [],
-        onSelect: this._chatSelected,
+        onSelect: this._onSelectChat,
         onClose: (name: string) => {
           this.disposeLoadedModel(name);
         }
@@ -354,7 +355,7 @@ export class MultiChatPanel extends PanelWithToolbar {
   /**
    * Handle chat selection from the popup.
    */
-  private _chatSelected = async (name: string): Promise<void> => {
+  private _onSelectChat = async (name: string): Promise<void> => {
     // Check if model is already loaded
     let openChatArgs: MultiChatPanel.IOpenChatArgs = {
       model: this.getLoadedModel(name),
@@ -675,22 +676,38 @@ type ChatSearchInputProps = {
   /**
    * The callback to call when a chat is selected.
    */
-  onChatSelected: (value: string) => void;
+  selectChat: (value: string) => void;
   /**
    * Function to get the popup widget.
    */
   getPopup: () => ChatSelectorPopup | undefined;
+  /**
+   * Signal emitting when a chat is opened.
+   */
+  chatOpened: ISignal<MultiChatPanel, ChatWidget>;
 };
 
 /**
  * A search input component for selecting a chat.
  */
 function ChatSearchInput({
-  onChatSelected,
-  getPopup
+  selectChat,
+  getPopup,
+  chatOpened
 }: ChatSearchInputProps): JSX.Element {
   const [query, setQuery] = useState<string>('');
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const resetQuery = () => {
+      setQuery('');
+    };
+    chatOpened.connect(resetQuery);
+
+    return () => {
+      chatOpened.disconnect(resetQuery);
+    };
+  }, [chatOpened]);
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
@@ -745,9 +762,8 @@ function ChatSearchInput({
         event.preventDefault();
         value = popup.getSelectedValue();
         if (value) {
-          onChatSelected(value);
+          selectChat(value);
           popup.hide();
-          setQuery('');
         }
         break;
       case 'Escape':
