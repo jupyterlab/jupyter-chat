@@ -75,6 +75,7 @@ import { emojiCommandsPlugin } from './chat-commands/providers/emoji';
 import { mentionCommandsPlugin } from './chat-commands/providers/user-mention';
 
 const FACTORY = 'Chat';
+const CHAT_LIST_UPDATE_INTERVAL = 2000;
 
 const pluginIds = {
   activeCellManager: 'jupyterlab-chat-extension:activeCellManager',
@@ -993,6 +994,21 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     if (restorer) {
       restorer.add(chatPanel, 'jupyter-chat');
     }
+
+    /**
+     * Update the chat list when panel is visible, to handle chats creation/deletion
+     *  without event.
+     */
+    let getChatsListInterval: number | undefined;
+    chatPanel.visibilityChanged.connect((_, visible) => {
+      window.clearInterval(getChatsListInterval);
+      if (visible) {
+        getChatsListInterval = window.setInterval(
+          chatPanel.updateChatList,
+          CHAT_LIST_UPDATE_INTERVAL
+        );
+      }
+    });
 
     /*
      * Command to move a chat from the main area to the side panel.
