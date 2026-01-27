@@ -103,39 +103,6 @@ test.describe('#sidepanel', () => {
       const content = panel.locator('.jp-chat-sidepanel-widget');
       await expect(content).not.toBeAttached();
     });
-
-    // test('should reveal the existing chat when creating again', async ({
-    //   page
-    // }) => {
-    //   await dialog.locator('input[type="text"]').pressSequentially(name);
-    //   await dialog.getByRole('button').getByText('Ok').click();
-    //   await page.waitForCondition(
-    //     async () => await page.filebrowser.contents.fileExists(FILENAME)
-    //   );
-
-    //   const chatTitle = panel.locator(
-    //     '.jp-SidePanel-content .jp-AccordionPanel-title'
-    //   );
-    //   await expect(chatTitle).toHaveCount(1);
-    //   await expect(
-    //     chatTitle.locator('.lm-AccordionPanel-titleLabel')
-    //   ).toHaveText(name);
-
-    //   // Collapse the chat.
-    //   await chatTitle.click();
-    //   await expect(chatTitle).not.toHaveClass(/lm-mod-expanded/);
-
-    //   await addButton.click();
-
-    //   // try to recreate the same chat.
-    //   dialog = page.locator('.jp-Dialog');
-    //   await dialog.waitFor();
-    //   await dialog.locator('input[type="text"]').pressSequentially(name);
-    //   await dialog.getByRole('button').getByText('Ok').click();
-
-    //   // the chat should be expanded.
-    //   await expect(chatTitle).toHaveClass(/lm-mod-expanded/);
-    // });
   });
 
   test.describe('#openingClosing', () => {
@@ -292,33 +259,6 @@ test.describe('#sidepanel', () => {
         chatToolbar.locator('.jp-chat-sidepanel-widget-title')
       ).toHaveText(FILENAME.split('.')[0]);
     });
-
-    // test('should reveal the existing chat in side panel when moving again', async ({
-    //   page
-    // }) => {
-    //   let chatPanel = await openChat(page, FILENAME);
-    //   const button = chatPanel.getByTitle('Move the chat to the side panel');
-    //   await button.click();
-    //   await expect(chatPanel).not.toBeAttached();
-
-    //   const sidePanel = page.locator('..jp-chat-sidepanel');
-    //   await expect(sidePanel).toBeVisible();
-    //   const chatToolbar = sidePanel.locator(
-    //     '.jp-chat-sidepanel-widget-content .jp-chat-sidepanel-widget-toolbar'
-    //   );
-    //   await expect(chatToolbar).toBeVisible();
-    //   await expect(
-    //     chatToolbar.locator('.jp-chat-sidepanel-widget-title')
-    //   ).toHaveText(FILENAME.split('.')[0]);
-
-    //   await chatToolbar.click();
-    //   await expect(chatToolbar).not.toHaveClass(/lm-mod-expanded/);
-
-    //   chatPanel = await openChat(page, FILENAME);
-    //   await button.click();
-    //   await expect(chatPanel).not.toBeAttached();
-    //   await expect(chatToolbar).toHaveClass(/lm-mod-expanded/);
-    // });
 
     test('chat should contain the file path', async ({ page }) => {
       // Create a nested chat file and open it.
