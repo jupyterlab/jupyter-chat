@@ -18,6 +18,7 @@ import {
   Spinner,
   ToolbarButton
 } from '@jupyterlab/ui-components';
+import { ArrayExt } from '@lumino/algorithm';
 import { Message } from '@lumino/messaging';
 import { Debouncer } from '@lumino/polling';
 import { ISignal, Signal } from '@lumino/signaling';
@@ -81,7 +82,7 @@ export class MultiChatPanel extends PanelWithToolbar {
       // Chat selector with search input
       this._openChatWidget = ReactWidget.create(
         <ChatSearchInput
-          onChatSelected={this._chatSelected.bind(this)}
+          onChatSelected={this._chatSelected}
           getPopup={() => this._chatSelectorPopup}
         />
       );
@@ -91,22 +92,7 @@ export class MultiChatPanel extends PanelWithToolbar {
       // Create the popup widget (attached to document body)
       this._chatSelectorPopup = new ChatSelectorPopup({
         chatNames: [],
-        onSelect: async (name: string) => {
-          // Check if model is already loaded
-          let openChatArgs: MultiChatPanel.IOpenChatArgs = {
-            model: this.getLoadedModel(name),
-            displayName: name
-          };
-          // If not, create the model.
-          if (!openChatArgs.model && this._createModel) {
-            const chatID = this._chatNames[name];
-            openChatArgs = await this._createModel(chatID);
-          }
-          if (openChatArgs.model) {
-            this.open(openChatArgs);
-          }
-          this._chatSelectorPopup?.hide();
-        },
+        onSelect: this._chatSelected,
         onClose: (name: string) => {
           this.disposeLoadedModel(name);
         }
@@ -279,8 +265,15 @@ export class MultiChatPanel extends PanelWithToolbar {
   private _updateChatList = async (): Promise<void> => {
     try {
       const chatNames = await this._getChatNames?.();
-      this._chatNames = chatNames ?? {};
-      this._chatSelectorPopup?.updateChats(Object.keys(this._chatNames));
+      if (
+        !ArrayExt.shallowEqual(
+          Object.keys(chatNames ?? {}),
+          Object.keys(this._chatNames)
+        )
+      ) {
+        this._chatNames = chatNames ?? {};
+        this._chatSelectorPopup?.updateChats(Object.keys(this._chatNames));
+      }
     } catch (e) {
       console.error('Error getting chat files', e);
     }
@@ -361,12 +354,22 @@ export class MultiChatPanel extends PanelWithToolbar {
   /**
    * Handle chat selection from the popup.
    */
-  private async _chatSelected(value: string): Promise<void> {
-    if (this._createModel) {
-      const addChatArgs = await this._createModel(value);
-      this.open(addChatArgs);
+  private _chatSelected = async (name: string): Promise<void> => {
+    // Check if model is already loaded
+    let openChatArgs: MultiChatPanel.IOpenChatArgs = {
+      model: this.getLoadedModel(name),
+      displayName: name
+    };
+    // If not, create the model.
+    if (!openChatArgs.model && this._createModel) {
+      const chatID = this._chatNames[name];
+      openChatArgs = await this._createModel(chatID);
     }
-  }
+    if (openChatArgs.model) {
+      this.open(openChatArgs);
+    }
+    this._chatSelectorPopup?.hide();
+  };
 
   private _chatOpened = new Signal<MultiChatPanel, ChatWidget>(this);
   private _chatOptions: Omit<Chat.IOptions, 'model' | 'inputToolbarRegistry'>;
@@ -718,6 +721,8 @@ function ChatSearchInput({
       popup.setQuery(query);
       popup.show();
     }
+    // Force focus on input.
+    inputRef.current?.focus();
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
