@@ -140,7 +140,7 @@
   flex-grow: 1;
 }
 
-.jp-chat-sidepanel-widget-toolbar > .jp-chat-sidepanel-toolbar-title {
+.jp-chat-sidepanel-widget-toolbar > .jp-chat-sidepanel-widget-title {
   display: block;
   align-content: center;
   flex: 1 1 0%;

@@ -15,7 +15,6 @@ import {
   launchIcon,
   PanelWithToolbar,
   ReactWidget,
-  SidePanel,
   Spinner,
   ToolbarButton
 } from '@jupyterlab/ui-components';
@@ -186,6 +185,7 @@ export class MultiChatPanel extends PanelWithToolbar {
     if (model) {
       // If this is the currently displayed chat, remove it.
       if (this._currentWidget?.model === model) {
+        this._currentWidget.nameChanged.disconnect(this._modelNameChanged);
         this._currentWidget.dispose();
         this._currentWidget = undefined;
 
@@ -222,6 +222,7 @@ export class MultiChatPanel extends PanelWithToolbar {
 
     // Dispose current chat widget if any
     if (this._currentWidget) {
+      this._currentWidget.nameChanged.disconnect(this._modelNameChanged);
       this._currentWidget.dispose();
     }
 
@@ -245,7 +246,7 @@ export class MultiChatPanel extends PanelWithToolbar {
       displayName: name,
       openInMain: this._openInMain,
       renameChat: this._renameChat,
-      onClose: () => {
+      onClose: (name: string) => {
         this.disposeLoadedModel(name);
       }
     });
@@ -254,6 +255,8 @@ export class MultiChatPanel extends PanelWithToolbar {
     this.addWidget(widget);
     this.update();
     this._currentWidget = widget;
+
+    this._currentWidget.nameChanged.connect(this._modelNameChanged);
 
     // Update selector to show current chat
     if (this._chatSelectorPopup) {
@@ -339,6 +342,24 @@ export class MultiChatPanel extends PanelWithToolbar {
   }
 
   /**
+   * Update loaded model when the current widget updates its name.
+   */
+  private _modelNameChanged = (
+    _: SidePanelWidget,
+    change: { old: string; new: string }
+  ) => {
+    const model = this.getLoadedModel(change.old);
+    if (model) {
+      this._loadedModels.set(change.new, model);
+      this._loadedModels.delete(change.old);
+      this._chatSelectorPopup?.setLoadedModels(this.getLoadedModelNames());
+      if (this._currentWidget?.model.name === model.name) {
+        this._chatSelectorPopup?.setCurrentChat(change.new);
+      }
+    }
+  };
+
+  /**
    * Handle chat selection from the popup.
    */
   private async _chatSelected(value: string): Promise<void> {
@@ -375,7 +396,7 @@ export namespace MultiChatPanel {
    * Options of the constructor of the chat panel.
    */
   export interface IOptions
-    extends SidePanel.IOptions,
+    extends PanelWithToolbar.IOptions,
       Omit<Chat.IOptions, 'model' | 'inputToolbarRegistry'> {
     /**
      * The input toolbar factory;
@@ -486,12 +507,13 @@ class SidePanelWidget extends PanelWithToolbar {
             newName = result.value;
             if (newName) {
               this.model.name = newName;
-              this._displayName = newName;
-              this._updateTitle();
             }
           } else {
             // Rename chat is a function, let's call it.
-            await options.renameChat(this.model.name);
+            newName = await options.renameChat(this.model.name);
+          }
+          if (newName) {
+            this.name = newName;
           }
         }
       });
@@ -519,7 +541,7 @@ class SidePanelWidget extends PanelWithToolbar {
       iconLabel: 'Close the chat',
       className: 'jp-mod-styled',
       onClick: () => {
-        options.onClose?.();
+        options.onClose(this._displayName);
       }
     });
     this.toolbar.addItem('close', closeButton);
@@ -550,8 +572,20 @@ class SidePanelWidget extends PanelWithToolbar {
     return this._displayName;
   }
   set name(value: string) {
+    const old = this._displayName;
+    if (old === value) {
+      return;
+    }
     this._displayName = value;
     this._updateTitle();
+    this._nameChanged.emit({ old, new: value });
+  }
+
+  /**
+   * A signal emitting when the name has changed.
+   */
+  get nameChanged(): ISignal<SidePanelWidget, { old: string; new: string }> {
+    return this._nameChanged;
   }
 
   /**
@@ -598,6 +632,10 @@ class SidePanelWidget extends PanelWithToolbar {
   private _markAsRead: ToolbarButton;
   private _displayName: string;
   private _titleWidget: Widget | undefined;
+  private _nameChanged = new Signal<
+    SidePanelWidget,
+    { old: string; new: string }
+  >(this);
 }
 
 /**
@@ -613,6 +651,10 @@ namespace SidePanelWidget {
      */
     widget: ChatWidget;
     /**
+     * The callback when closing the chat.
+     */
+    onClose: (name: string) => void;
+    /**
      * The displayed name of the chat.
      */
     displayName?: string;
@@ -624,10 +666,6 @@ namespace SidePanelWidget {
      * The callback to rename the chat.
      */
     renameChat?: boolean | ((oldName: string) => Promise<string | null>);
-    /**
-     * The callback when closing the chat.
-     */
-    onClose?: () => void;
   }
 }
 
