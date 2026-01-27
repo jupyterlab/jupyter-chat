@@ -19,6 +19,7 @@ import {
   Spinner,
   ToolbarButton
 } from '@jupyterlab/ui-components';
+import { Message } from '@lumino/messaging';
 import { Debouncer } from '@lumino/polling';
 import { ISignal, Signal } from '@lumino/signaling';
 import { Widget } from '@lumino/widgets';
@@ -44,6 +45,9 @@ const TOOLBAR_CLASS = 'jp-chat-sidepanel-widget-toolbar';
  * Generic sidepanel widget including multiple chats and the add chat button.
  */
 export class MultiChatPanel extends PanelWithToolbar {
+  /**
+   * The constructor of the multichat panel.
+   */
   constructor(options: MultiChatPanel.IOptions) {
     super(options);
     this.id = 'jupyter-chat::multi-chat-panel';
@@ -131,6 +135,13 @@ export class MultiChatPanel extends PanelWithToolbar {
   }
 
   /**
+   * A signal emitting when the panel visibility changed.
+   */
+  get visibilityChanged(): ISignal<MultiChatPanel, boolean> {
+    return this._visibilityChanged;
+  }
+
+  /**
    * Add a chat to the panel by creating or showing its widget.
    *
    * @param args - the chat args including model and display name.
@@ -191,6 +202,16 @@ export class MultiChatPanel extends PanelWithToolbar {
   }
 
   /**
+   * Emit a signal when the panel visibility changed.
+   */
+  protected onAfterShow(msg: Message): void {
+    this._visibilityChanged.emit(true);
+  }
+  protected onBeforeHide(msg: Message): void {
+    this._visibilityChanged.emit(false);
+  }
+
+  /**
    * Open a specific chat by name, creating a new sidepanel widget.
    */
   private _open(name: string): ChatWidget | undefined {
@@ -246,9 +267,9 @@ export class MultiChatPanel extends PanelWithToolbar {
   /**
    * Invoke the update of the list of available chats.
    */
-  updateChatList() {
+  updateChatList = (): void => {
     this._updateChatListDebouncer.invoke();
-  }
+  };
 
   /**
    * Update the list of available chats.
@@ -343,6 +364,7 @@ export class MultiChatPanel extends PanelWithToolbar {
   private _loadedModels: Map<string, IChatModel> = new Map();
   private _currentWidget?: SidePanelWidget;
   private _chatNames: { [name: string]: string } = {};
+  private _visibilityChanged = new Signal<MultiChatPanel, boolean>(this);
 }
 
 /**

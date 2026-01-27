@@ -79,7 +79,7 @@ export class ChatSelectorPopup extends ReactWidget {
     // When filtering, select first in filtered list
     if (query.trim()) {
       this._selectedName =
-        this._filteredChats.length > 0 ? this._filteredChats[0][0] : null;
+        this._filteredChats.length > 0 ? this._filteredChats[0] : null;
     }
     this.update();
   }
@@ -106,10 +106,10 @@ export class ChatSelectorPopup extends ReactWidget {
     // If not found or at the end, wrap to first or move down
     if (currentIndex === -1) {
       // No selection yet, select first
-      this._selectedName = this._filteredChats[0][0];
+      this._selectedName = this._filteredChats[0];
     } else if (currentIndex < this._filteredChats.length - 1) {
       // Move to next
-      this._selectedName = this._filteredChats[currentIndex + 1][0];
+      this._selectedName = this._filteredChats[currentIndex + 1];
     }
     this.update();
   }
@@ -129,11 +129,10 @@ export class ChatSelectorPopup extends ReactWidget {
     // If not found, select last; otherwise move up
     if (currentIndex === -1) {
       // No selection yet, select last
-      this._selectedName =
-        this._filteredChats[this._filteredChats.length - 1][0];
+      this._selectedName = this._filteredChats[this._filteredChats.length - 1];
     } else if (currentIndex > 0) {
       // Move to previous
-      this._selectedName = this._filteredChats[currentIndex - 1][0];
+      this._selectedName = this._filteredChats[currentIndex - 1];
     }
     this.update();
   }
