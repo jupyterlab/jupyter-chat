@@ -419,7 +419,7 @@ function ChatSelectorList({
             data-chat-name={name}
             className={`${POPUP_ITEM_CLASS} ${
               name === selectedName ? POPUP_ITEM_ACTIVE_CLASS : ''
-            } ${isLoaded ? 'jp-chat-selector-popup-item-loaded' : ''}`}
+            }`}
             onClick={() => onSelect(name)}
             onMouseEnter={() => onUpdateSelectedName(name)}
           >
