@@ -15,8 +15,9 @@ import { Navigation } from './navigation';
 import { WelcomeMessage } from './welcome';
 import { ScrollContainer } from '../scroll-container';
 import { useChatContext } from '../../context';
-import { IChatMessage, IConfig } from '../../types';
+import { Message } from '../../message';
 import { IChatModel } from '../../model';
+import { IMessage, IConfig } from '../../types';
 
 export const MESSAGE_CLASS = 'jp-chat-message';
 const MESSAGES_BOX_CLASS = 'jp-chat-messages-container';
@@ -29,7 +30,7 @@ export function ChatMessages(): JSX.Element {
   const { area, messageFooterRegistry, model, welcomeMessage } =
     useChatContext();
 
-  const [messages, setMessages] = useState<IChatMessage[]>(model.messages);
+  const [messages, setMessages] = useState<IMessage[]>(model.messages);
   const refMsgBox = useRef<HTMLDivElement>(null);
   const [allRendered, setAllRendered] = useState<boolean>(false);
   const [showDeleted, setShowDeleted] = useState<boolean>(
@@ -50,7 +51,11 @@ export function ChatMessages(): JSX.Element {
       }
       model
         .getHistory()
-        .then(history => setMessages(history.messages))
+        .then(history =>
+          setMessages(
+            history.messages.map(message => new Message({ ...message }))
+          )
+        )
         .catch(e => console.error(e));
     }
 
@@ -179,7 +184,7 @@ export function ChatMessages(): JSX.Element {
             return (
               // extra div needed to ensure each bubble is on a new line
               <Box
-                key={i}
+                key={message.id}
                 sx={{
                   ...(isCurrentUser && {
                     marginLeft: area === 'main' ? '25%' : '10%',

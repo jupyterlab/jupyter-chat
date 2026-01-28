@@ -11,7 +11,7 @@ import { AttachmentPreviewList } from '../attachments';
 import { ChatInput } from '../input';
 import { useChatContext } from '../../context';
 import { IInputModel, InputModel } from '../../input-model';
-import { IChatMessage } from '../../types';
+import { IMessageContent, IMessage } from '../../types';
 import { replaceSpanToMention } from '../../utils';
 
 /**
@@ -21,7 +21,7 @@ type ChatMessageProps = {
   /**
    * The message to display.
    */
-  message: IChatMessage;
+  message: IMessage;
   /**
    * The index of the message in the list.
    */
@@ -37,8 +37,10 @@ type ChatMessageProps = {
  */
 export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
   (props, ref): JSX.Element => {
-    const { message } = props;
     const { model } = useChatContext();
+    const [message, setMessage] = useState<IMessageContent>(
+      props.message.content
+    );
     const [edit, setEdit] = useState<boolean>(false);
     const [deleted, setDeleted] = useState<boolean>(false);
     const [canEdit, setCanEdit] = useState<boolean>(false);
@@ -62,6 +64,24 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
         setCanDelete(false);
       }
     }, [model, message]);
+
+    // Listen for changes in the current message.
+    useEffect(() => {
+      function messageChanged() {
+        setMessage(props.message.content);
+      }
+
+      props.message.changed.connect(messageChanged);
+
+      // Initialize the message when the message is re-rendered.
+      // FIX ? This seems to be required for outofband change, to get the new value,
+      // even if when an outofband change occurs, all the messages are deleted and
+      // recreated.
+      setMessage(props.message.content);
+      return () => {
+        props.message.changed.disconnect(messageChanged);
+      };
+    }, [props.message]);
 
     // Create an input model only if the message is edited.
     const startEdition = (): void => {

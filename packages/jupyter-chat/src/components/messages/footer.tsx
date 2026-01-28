@@ -7,7 +7,7 @@ import { Box } from '@mui/material';
 import React from 'react';
 
 import { useChatContext } from '../../context';
-import { IChatMessage } from '../../types';
+import { IMessageContent } from '../../types';
 
 /**
  * The chat footer component properties.
@@ -16,7 +16,7 @@ export interface IMessageFootersProps {
   /**
    * The chat model.
    */
-  message: IChatMessage;
+  message: IMessageContent;
 }
 
 /**
