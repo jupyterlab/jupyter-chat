@@ -206,22 +206,26 @@ export class ChatWidget extends ReactWidget {
       return;
     }
 
-    event.preventDefault();
-    event.stopPropagation();
     event.dropAction = 'move';
 
     this._removeDragHoverClass();
 
+    let attached = false;
     try {
       if (event.mimeData.hasData(NOTEBOOK_CELL_MIME)) {
-        this._processCellDrop(event);
+        attached = this._processCellDrop(event);
       } else if (event.mimeData.hasData(FILE_BROWSER_MIME)) {
-        this._processFileDrop(event);
+        attached = this._processFileDrop(event);
       } else if (event.mimeData.hasData(TABBAR_FILE_MIME)) {
-        this._processTabDrop(event);
+        attached = this._processTabDrop(event);
       }
     } catch (error) {
       console.error('Error processing drop:', error);
+    }
+
+    if (attached) {
+      event.preventDefault();
+      event.stopPropagation();
     }
   }
 
@@ -252,14 +256,14 @@ export class ChatWidget extends ReactWidget {
   /**
    * Process dropped files
    */
-  private _processFileDrop(event: Drag.Event): void {
+  private _processFileDrop(event: Drag.Event): boolean {
     const data = event.mimeData.getData(
       FILE_BROWSER_MIME
     ) as DirListing.IContentsThunk;
 
     if (!data?.model?.path) {
       console.warn('Invalid file browser data in drop event');
-      return;
+      return false;
     }
 
     const attachment: IFileAttachment = {
@@ -269,12 +273,13 @@ export class ChatWidget extends ReactWidget {
     };
     const inputModel = this._getInputFromEvent(event);
     inputModel?.addAttachment?.(attachment);
+    return !!inputModel;
   }
 
   /**
    * Process dropped cells
    */
-  private _processCellDrop(event: Drag.Event): void {
+  private _processCellDrop(event: Drag.Event): boolean {
     try {
       const cellData = event.mimeData.getData(NOTEBOOK_CELL_MIME) as ICell[];
 
@@ -284,7 +289,7 @@ export class ChatWidget extends ReactWidget {
       // Get path from first cell as all cells come from same notebook as users can only select or drag cells from one notebook at a time
       if (!cells[0]?.id) {
         console.warn('No valid cells to process');
-        return;
+        return false;
       }
 
       const notebookPath = this._findNotebookPath(String(cells[0].id));
@@ -292,7 +297,7 @@ export class ChatWidget extends ReactWidget {
         console.warn(
           `Cannot find notebook for dragged cells from ${cells[0].id}`
         );
-        return;
+        return false;
       }
 
       const validCells: INotebookAttachmentCell[] = [];
@@ -332,32 +337,34 @@ export class ChatWidget extends ReactWidget {
         };
         const inputModel = this._getInputFromEvent(event);
         inputModel?.addAttachment?.(attachment);
+        return !!inputModel;
       }
     } catch (error) {
       console.error('Failed to process cell drop: ', error);
     }
+    return false;
   }
 
   /**
    * Process dropped tabBar files
    */
-  private _processTabDrop(event: Drag.Event) {
+  private _processTabDrop(event: Drag.Event): boolean {
     const factory = event.mimeData.getData(TABBAR_FILE_MIME) as () => Widget;
     if (!factory) {
       console.warn('No factory in drag event');
-      return;
+      return false;
     }
 
     const widget = factory();
     if (!widget || !(widget instanceof DocumentWidget)) {
       console.warn('No file associated to the element');
-      return;
+      return false;
     }
 
     const path = widget.context.path;
     if (!path) {
       console.warn('Widget has no path');
-      return;
+      return false;
     }
 
     const mimetype =
@@ -370,6 +377,7 @@ export class ChatWidget extends ReactWidget {
 
     const inputModel = this._getInputFromEvent(event);
     inputModel?.addAttachment?.(attachment);
+    return !!inputModel;
   }
 
   /**
