@@ -546,7 +546,11 @@ function ChatSelect({
   });
 
   return (
-    <HTMLSelect onChange={handleChange} value="-">
+    <HTMLSelect
+      key={Object.keys(chatNames).join()}
+      onChange={handleChange}
+      value="-"
+    >
       <option value="-" disabled hidden>
         Open a chat
       </option>
