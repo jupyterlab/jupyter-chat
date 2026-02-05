@@ -4,6 +4,7 @@
  */
 
 import { ISignal } from '@lumino/signaling';
+import { IRenderMime } from '@jupyterlab/rendermime';
 
 /**
  * The user description.
@@ -65,7 +66,7 @@ export interface IConfig {
  */
 export type IMessageContent<T = IUser, U = IAttachment> = {
   type: string;
-  body: string;
+  body: string | IRenderMime.IMimeModel;
   id: string;
   time: number;
   sender: T;

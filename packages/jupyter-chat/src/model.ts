@@ -22,7 +22,6 @@ import {
   INewMessage,
   IUser
 } from './types';
-import { replaceMentionToSpan } from './utils';
 
 /**
  * The chat model interface.
@@ -535,9 +534,6 @@ export abstract class AbstractChatModel implements IChatModel {
    * Can be useful if some actions are required on the message.
    */
   protected formatChatMessage(message: IMessageContent): IMessageContent {
-    message.mentions?.forEach(user => {
-      message.body = replaceMentionToSpan(message.body, user);
-    });
     return message;
   }
 

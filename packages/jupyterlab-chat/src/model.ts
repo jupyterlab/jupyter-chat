@@ -276,11 +276,11 @@ export class LabChatModel
       delete message.attachments;
     }
 
-    // Update the mentioned users.
-    const mentions = this._buildMentionList(
-      updatedMessage.mentions,
-      updatedMessage.body
-    );
+    // Update the mentioned users (text messages only).
+    const mentions =
+      typeof updatedMessage.body === 'string'
+        ? this._buildMentionList(updatedMessage.mentions, updatedMessage.body)
+        : [];
     if (mentions.length) {
       message.mentions = mentions;
     } else {

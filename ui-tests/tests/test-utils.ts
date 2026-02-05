@@ -71,10 +71,10 @@ export const openChat = async (
     await page.waitForCondition(async () => {
       const expectedCount = content.messages.length;
       const currentCount = await panel
-        ?.locator('.jp-chat-rendered-markdown')
+        ?.locator('.jp-chat-rendered-message')
         .count();
       const currentBodies = await panel
-        ?.locator('.jp-chat-rendered-markdown')
+        ?.locator('.jp-chat-rendered-message')
         .allTextContents();
       return (
         expectedCount === currentCount &&
@@ -105,10 +105,10 @@ export const openChatToSide = async (
     await page.waitForCondition(async () => {
       const expectedCount = content.messages.length;
       const currentCount = await panel
-        ?.locator('.jp-chat-rendered-markdown')
+        ?.locator('.jp-chat-rendered-message')
         .count();
       const currentBodies = await panel
-        ?.locator('.jp-chat-rendered-markdown')
+        ?.locator('.jp-chat-rendered-message')
         .allTextContents();
       return (
         expectedCount === currentCount &&
@@ -189,7 +189,7 @@ export const hoverFirstMessage = async (chatPanel: Locator) => {
   const message = chatPanel
     .locator('.jp-chat-messages-container .jp-chat-message')
     .first();
-  const messageContent = message.locator('.jp-chat-rendered-markdown');
+  const messageContent = message.locator('.jp-chat-rendered-message');
 
   // Should display the message toolbar
   await messageContent.hover({ position: { x: 5, y: 5 } });
