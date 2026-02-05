@@ -7,7 +7,7 @@ import { Box, Typography } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
 import { Avatar } from '../avatar';
-import { IChatMessage } from '../../types';
+import { IMessageContent, IMessage } from '../../types';
 
 const MESSAGE_HEADER_CLASS = 'jp-chat-message-header';
 const MESSAGE_TIME_CLASS = 'jp-chat-message-time';
@@ -19,7 +19,7 @@ type ChatMessageHeaderProps = {
   /**
    * The chat message.
    */
-  message: IChatMessage;
+  message: IMessage;
   /**
    * Whether this message is from the current user.
    */
@@ -30,11 +30,9 @@ type ChatMessageHeaderProps = {
  * The message header component.
  */
 export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
-  const message = props.message;
-  // Don't render header for stacked messages not deleted or edited.
-  if (message.stacked && !message.deleted && !message.edited) {
-    return <></>;
-  }
+  const [message, setMessage] = useState<IMessageContent>(
+    props.message.content
+  );
 
   // Flag to display only the deleted or edited information (stacked message).
   const onlyState = message.stacked && (message.deleted || message.edited);
@@ -78,12 +76,26 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
     }
   });
 
+  // Listen for changes in the current message.
+  useEffect(() => {
+    function messageChanged() {
+      setMessage(props.message.content);
+    }
+    props.message.changed.connect(messageChanged);
+    return () => {
+      props.message.changed.disconnect(messageChanged);
+    };
+  }, [props.message]);
+
   const avatar = message.stacked ? null : Avatar({ user: sender });
 
   const name =
     sender.display_name ?? sender.name ?? (sender.username || 'User undefined');
 
-  return (
+  // Don't render header for stacked messages not deleted or edited.
+  return message.stacked && !message.deleted && !message.edited ? (
+    <></>
+  ) : (
     <Box
       className={MESSAGE_HEADER_CLASS}
       sx={{

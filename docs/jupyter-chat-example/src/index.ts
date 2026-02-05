@@ -9,9 +9,9 @@ import {
   ActiveCellManager,
   AttachmentOpenerRegistry,
   IAttachment,
-  IChatMessage,
   IChatContext,
   IConfig,
+  IMessageContent,
   INewMessage,
   MultiChatPanel,
   SelectionWatcher,
@@ -58,7 +58,7 @@ class MyChatModel extends AbstractChatModel {
   sendMessage(
     newMessage: INewMessage
   ): Promise<boolean | void> | boolean | void {
-    const message: IChatMessage = {
+    const message: IMessageContent = {
       body: newMessage.body,
       id: newMessage.id ?? UUID.uuid4(),
       type: 'msg',
