@@ -65,7 +65,7 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
 
     // Create an input model only if the message is edited.
     const startEdition = (): void => {
-      if (!canEdit) {
+      if (!canEdit || !(typeof message.body === 'string')) {
         return;
       }
       let body = message.body;
@@ -137,7 +137,7 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
           />
         ) : (
           <MessageRenderer
-            markdownStr={message.body}
+            message={message}
             edit={canEdit ? startEdition : undefined}
             delete={canDelete ? () => deleteMessage(message.id) : undefined}
             rendered={props.renderedPromise}

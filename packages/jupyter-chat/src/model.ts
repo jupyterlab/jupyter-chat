@@ -19,7 +19,6 @@ import {
   IConfig,
   IUser
 } from './types';
-import { replaceMentionToSpan } from './utils';
 import { PromiseDelegate } from '@lumino/coreutils';
 
 /**
@@ -533,9 +532,6 @@ export abstract class AbstractChatModel implements IChatModel {
    * Can be useful if some actions are required on the message.
    */
   protected formatChatMessage(message: IChatMessage): IChatMessage {
-    message.mentions?.forEach(user => {
-      message.body = replaceMentionToSpan(message.body, user);
-    });
     return message;
   }
 

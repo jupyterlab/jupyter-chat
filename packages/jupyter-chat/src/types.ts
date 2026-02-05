@@ -3,6 +3,8 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { IRenderMime } from '@jupyterlab/rendermime';
+
 /**
  * The user description.
  */
@@ -63,7 +65,7 @@ export interface IConfig {
  */
 export interface IChatMessage<T = IUser, U = IAttachment> {
   type: 'msg';
-  body: string;
+  body: string | IRenderMime.IMimeModel;
   id: string;
   time: number;
   sender: T;
