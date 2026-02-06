@@ -5,7 +5,7 @@
 
 import { expect, test } from '@jupyterlab/galata';
 
-import { openChat, openSettings, splitMainArea } from './test-utils';
+import { openChat, openSettings } from './test-utils';
 
 const FILENAME = 'my-chat.chat';
 const MSG_CONTENT = 'Hello World!';
