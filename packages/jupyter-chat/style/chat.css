@@ -35,7 +35,8 @@
   padding-left: 5px;
 }
 
-.jp-ThemedContainer .jp-RenderedMarkdown pre {
+.jp-ThemedContainer .jp-chat-rendered-message .jp-RenderedMarkdown pre,
+.jp-ThemedContainer .jp-chat-welcome-message .jp-RenderedMarkdown pre {
   background-color: var(--jp-cell-editor-background);
   overflow-x: auto;
   white-space: pre;

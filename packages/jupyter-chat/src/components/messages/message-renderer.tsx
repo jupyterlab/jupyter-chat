@@ -87,6 +87,7 @@ function MessageRendererBase(props: MessageRendererProps): JSX.Element {
           data: { [DEFAULT_MIME_TYPE]: mdStr }
         });
       } else {
+        setCanEdit(false);
         // This is a mime bundle.
         let mimeContent = message.body;
         let preferred = rmRegistry.preferredMimeType(
@@ -168,7 +169,7 @@ function MessageRendererBase(props: MessageRendererProps): JSX.Element {
       }
       node = null;
     };
-  }, [message.body, rmRegistry]);
+  }, [message.body, message.mentions, rmRegistry]);
 
   return (
     <div className={RENDERED_CLASS} ref={containerRef}>
