@@ -13,7 +13,7 @@ import { createPortal } from 'react-dom';
 import { MessageToolbar } from './toolbar';
 import { CodeToolbar, CodeToolbarProps } from '../code-blocks/code-toolbar';
 import { useChatContext } from '../../context';
-import { IChatMessage } from '../../types';
+import { IMessageContent } from '../../types';
 import { replaceMentionToSpan } from '../../utils';
 
 const RENDERED_CLASS = 'jp-chat-rendered-message';
@@ -26,7 +26,7 @@ type MessageRendererProps = {
   /**
    * The string or rendermime bundle to render.
    */
-  message: IChatMessage;
+  message: IMessageContent;
   /**
    * The promise to resolve when the message is rendered.
    */
@@ -72,34 +72,48 @@ function MessageRendererBase(props: MessageRendererProps): JSX.Element {
 
       // Create the renderer and the mime model.
       if (typeof message.body === 'string') {
+        // Allow editing content for text messages.
         setCanEdit(true);
-        // Replace user in markdown content.
-        let content = message.body;
+
+        // Improve users display in markdown content.
+        let mdStr = message.body;
         message.mentions?.forEach(user => {
-          content = replaceMentionToSpan(content, user);
+          mdStr = replaceMentionToSpan(mdStr, user);
         });
 
-        // If body is a string, use the markdown renderer.
+        // Body is a string, use the markdown renderer.
         renderer = rmRegistry.createRenderer(DEFAULT_MIME_TYPE);
         mimeModel = rmRegistry.createModel({
-          data: { [DEFAULT_MIME_TYPE]: content }
+          data: { [DEFAULT_MIME_TYPE]: mdStr }
         });
       } else {
-        let content = message.body;
-        const preferred = rmRegistry.preferredMimeType(content.data);
-        renderer = rmRegistry.createRenderer(preferred ?? DEFAULT_MIME_TYPE);
+        // This is a mime bundle.
+        let mimeContent = message.body;
+        let preferred = rmRegistry.preferredMimeType(
+          mimeContent.data,
+          'ensure' // Should be changed with 'prefer' if we can handle trusted content.
+        );
+        if (!preferred) {
+          preferred = DEFAULT_MIME_TYPE;
+          mimeContent = {
+            data: {
+              [DEFAULT_MIME_TYPE]: `_No renderer found for [**${Object.keys(mimeContent.data).join(', ')}**] mimetype(s)_`
+            }
+          };
+        }
+        renderer = rmRegistry.createRenderer(preferred);
 
+        // Improve users display in markdown content.
         if (preferred === DEFAULT_MIME_TYPE) {
-          // Replace user in markdown content.
-          let mdStr = content.data[DEFAULT_MIME_TYPE];
+          let mdStr = mimeContent.data[DEFAULT_MIME_TYPE];
           if (mdStr) {
             message.mentions?.forEach(user => {
               mdStr = replaceMentionToSpan(mdStr as string, user);
             });
-            content = {
-              ...message.body,
+            mimeContent = {
+              ...mimeContent,
               data: {
-                ...message.body.data,
+                ...mimeContent.data,
                 [DEFAULT_MIME_TYPE]: mdStr
               }
             };
@@ -108,7 +122,7 @@ function MessageRendererBase(props: MessageRendererProps): JSX.Element {
           isMarkdownRenderer = false;
         }
 
-        mimeModel = rmRegistry.createModel(content);
+        mimeModel = rmRegistry.createModel(mimeContent);
       }
       await renderer.renderModel(mimeModel);
 
