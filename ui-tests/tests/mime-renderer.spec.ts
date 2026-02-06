@@ -78,7 +78,6 @@ test.describe('#mime-renderer', () => {
     const messages = chatPanel.locator('.jp-chat-message');
 
     await expect(messages).toHaveCount(BUNDLES.length);
-    await page.pause();
     for (let i = 0; i < (await messages.count()); i++) {
       const rendered = messages.nth(i).locator(BUNDLES[i].class);
       await expect(rendered).toBeAttached();
