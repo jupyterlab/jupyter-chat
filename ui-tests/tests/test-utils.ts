@@ -71,10 +71,10 @@ export const openChat = async (
     await page.waitForCondition(async () => {
       const expectedCount = content.messages.length;
       const currentCount = await panel
-        ?.locator('.jp-chat-rendered-markdown')
+        ?.locator('.jp-chat-rendered-message')
         .count();
       const currentBodies = await panel
-        ?.locator('.jp-chat-rendered-markdown')
+        ?.locator('.jp-chat-rendered-message')
         .allTextContents();
       return (
         expectedCount === currentCount &&
@@ -105,10 +105,10 @@ export const openChatToSide = async (
     await page.waitForCondition(async () => {
       const expectedCount = content.messages.length;
       const currentCount = await panel
-        ?.locator('.jp-chat-rendered-markdown')
+        ?.locator('.jp-chat-rendered-message')
         .count();
       const currentBodies = await panel
-        ?.locator('.jp-chat-rendered-markdown')
+        ?.locator('.jp-chat-rendered-message')
         .allTextContents();
       return (
         expectedCount === currentCount &&

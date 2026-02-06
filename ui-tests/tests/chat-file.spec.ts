@@ -215,7 +215,7 @@ test.describe('#outofband', () => {
     const updatedContent = 'Content updated';
     const chatPanel = await openChat(page, FILENAME);
     const messageContent = chatPanel
-      .locator('.jp-chat-messages-container .jp-chat-rendered-markdown')
+      .locator('.jp-chat-messages-container .jp-chat-rendered-message')
       .first();
     const newMsg = { ...msg, body: updatedContent };
     const newContent = {
@@ -261,14 +261,14 @@ test.describe('#outofband', () => {
 
     await expect(messages).toHaveCount(2);
     await expect(
-      messages.last().locator('.jp-chat-rendered-markdown')
+      messages.last().locator('.jp-chat-rendered-message')
     ).toHaveText(newMsgContent);
   });
 
   test('should delete a message from file', async ({ page }) => {
     const chatPanel = await openChat(page, FILENAME);
     const messageContent = chatPanel
-      .locator('.jp-chat-messages-container .jp-chat-rendered-markdown')
+      .locator('.jp-chat-messages-container .jp-chat-rendered-message')
       .first();
     const newContent = {
       messages: [],

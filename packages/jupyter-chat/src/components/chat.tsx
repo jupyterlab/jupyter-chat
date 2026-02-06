@@ -60,7 +60,6 @@ export function ChatBody(props: Chat.IChatProps): JSX.Element {
     };
   }, [model]);
 
-  // const horizontalPadding = props.area === 'main' ? 8 : 4;
   const horizontalPadding = 4;
 
   const contextValue: Chat.IChatProps = {
