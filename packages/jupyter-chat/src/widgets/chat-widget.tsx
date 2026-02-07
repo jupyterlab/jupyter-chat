@@ -47,25 +47,54 @@ export class ChatWidget extends ReactWidget {
 
     this._chatOptions = options;
     this.id = `jupyter-chat::widget::${options.model.name}`;
+
+    // Track mouse position to detect text selection vs click
+    let mouseDownPos: { x: number; y: number } | null = null;
+
+    this.node.addEventListener('mousedown', (event: MouseEvent) => {
+      mouseDownPos = { x: event.clientX, y: event.clientY };
+    });
+
     this.node.addEventListener('click', (event: MouseEvent) => {
       const target = event.target as HTMLElement;
+
+      // Don't focus if something already has focus (e.g., input is focused)
       if (this.node.contains(document.activeElement)) {
         return;
       }
 
       const message = target.closest(`.${MESSAGE_CLASS}`);
       if (message) {
-        const selection = window.getSelection();
-
-        if (
-          selection &&
-          selection.toString().trim() !== '' &&
-          message.contains(selection.anchorNode)
-        ) {
-          return;
+        // Check if mouse moved during click (indicates drag/selection attempt)
+        if (mouseDownPos) {
+          const dx = Math.abs(event.clientX - mouseDownPos.x);
+          const dy = Math.abs(event.clientY - mouseDownPos.y);
+          // If mouse moved more than 5px in any direction, likely a selection attempt
+          if (dx > 5 || dy > 5) {
+            return;
+          }
         }
+
+        // Use setTimeout to allow selection to settle before checking
+        setTimeout(() => {
+          const selection = window.getSelection();
+
+          // Check if user has selected text after the click completed
+          if (
+            selection &&
+            selection.toString().trim() !== '' &&
+            message.contains(selection.anchorNode)
+          ) {
+            return;
+          }
+
+          // Only focus if no text is selected
+          this.model.input.focus();
+        }, 0);
+        return;
       }
 
+      // For non-message areas, focus immediately
       this.model.input.focus();
     });
   }
