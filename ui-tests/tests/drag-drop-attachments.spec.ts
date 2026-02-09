@@ -98,7 +98,6 @@ test.describe('#drag-drop-attachments', () => {
 
     await page.mouse.move(cellBox!.x + 10, cellBox!.y + 10);
     await page.mouse.down();
-    await page.waitForTimeout(50);
 
     await page.mouse.move(inputBox!.x + inputBox!.width / 2, inputBox!.y + 10);
     await page.mouse.up();
@@ -108,7 +107,43 @@ test.describe('#drag-drop-attachments', () => {
     await expect(attachments.first()).toContainText(NOTEBOOK);
   });
 
-  //   Should be coome in work after https://github.com/jupyterlab/jupyter-chat/pull/338
+  test('Should attach a file via drag & drop from tab-bar into chat input', async ({
+    page,
+    tmpPath
+  }) => {
+    await page.filebrowser.openDirectory(tmpPath);
+    await page.filebrowser.open(FILE);
+
+    const tab = page
+      .locator('.lm-TabBar-tab')
+      .filter({ hasText: FILE })
+      .first();
+    await expect(tab).toBeVisible();
+
+    const chatPanel = await openChatToSide(page, chatPath);
+    const input = chatPanel.locator('.jp-chat-input-container');
+    await expect(input).toBeVisible();
+
+    await page.activity.activateTab(CHAT);
+
+    const tabBox = await tab.boundingBox();
+    const inputBox = await input.boundingBox();
+
+    expect(tabBox).not.toBeNull();
+    expect(inputBox).not.toBeNull();
+
+    await page.mouse.move(tabBox!.x + tabBox!.width / 2, tabBox!.y + 10);
+    await page.mouse.down();
+
+    await page.mouse.move(inputBox!.x + inputBox!.width / 2, inputBox!.y + 10);
+    await page.mouse.up();
+
+    const attachments = input.locator('.jp-chat-attachment');
+    await expect(attachments).toHaveCount(1);
+    await expect(attachments.first()).toContainText(FILE);
+  });
+
+  //  Below tests Should come in work after https://github.com/jupyterlab/jupyter-chat/pull/338
   test.skip('Should attach a file via drag & drop into edit message input', async ({
     page
   }) => {
@@ -145,7 +180,6 @@ test.describe('#drag-drop-attachments', () => {
     await expect(attachments.first()).toHaveText(FILE);
   });
 
-  //   Should be come in work after https://github.com/jupyterlab/jupyter-chat/pull/338
   test.skip('Should attach notebook cell via drag & drop into edit message input', async ({
     page
   }) => {
@@ -182,7 +216,6 @@ test.describe('#drag-drop-attachments', () => {
 
     await page.mouse.move(cellBox!.x + 10, cellBox!.y + 10);
     await page.mouse.down();
-    await page.waitForTimeout(50);
 
     await page.mouse.move(editBox!.x + editBox!.width / 2, editBox!.y + 10);
     await page.mouse.up();
@@ -190,5 +223,48 @@ test.describe('#drag-drop-attachments', () => {
     const attachments = editInput.locator('.jp-chat-attachment');
     await expect(attachments).toHaveCount(1);
     await expect(attachments.first()).toContainText(NOTEBOOK);
+  });
+
+  test.skip('Should attach a file via drag & drop from tab-bar into edit message input', async ({
+    page,
+    tmpPath
+  }) => {
+    await page.filebrowser.openDirectory(tmpPath);
+    await page.filebrowser.open(FILE);
+
+    const tab = page
+      .locator('.lm-TabBar-tab')
+      .filter({ hasText: FILE })
+      .first();
+    await expect(tab).toBeVisible();
+
+    const chatPanel = await openChatToSide(page, chatPath);
+    await sendMessage(page, chatPath, 'Hello chat');
+
+    const message = chatPanel
+      .locator('.jp-chat-messages-container .jp-chat-message')
+      .first();
+    await message.locator('[aria-label="Edit message"]').click();
+
+    const editInput = chatPanel.locator(
+      '.jp-chat-edit-container .jp-chat-input-container'
+    );
+    await expect(editInput).toBeVisible();
+
+    const tabBox = await tab.boundingBox();
+    expect(tabBox).not.toBeNull();
+
+    const editBox = await editInput.boundingBox();
+    expect(editBox).not.toBeNull();
+
+    await page.mouse.move(tabBox!.x + tabBox!.width / 2, tabBox!.y + 10);
+    await page.mouse.down();
+
+    await page.mouse.move(editBox!.x + editBox!.width / 2, editBox!.y + 10);
+    await page.mouse.up();
+
+    const attachments = editInput.locator('.jp-chat-attachment');
+    await expect(attachments).toHaveCount(1);
+    await expect(attachments.first()).toHaveText(FILE);
   });
 });
