@@ -4,21 +4,18 @@
  */
 
 import { PathExt } from '@jupyterlab/coreutils';
-import { expect, IJupyterLabPageFixture, test } from '@jupyterlab/galata';
+import { expect, test } from '@jupyterlab/galata';
 
-import { createChat, openChat, openChatToSide } from './test-utils';
+import {
+  createChat,
+  openChat,
+  openChatToSide,
+  sendMessage
+} from './test-utils';
 
 const CHAT = 'drag-drop.chat';
 const NOTEBOOK = 'Notebook.ipynb';
 const FILE = 'File.txt';
-
-async function dismissKernelDialog(page: IJupyterLabPageFixture) {
-  try {
-    await page.waitForSelector('text=Select', { timeout: 2000 });
-  } catch {
-    // No Select Kernel dialog appeared – safe to continue
-  }
-}
 
 test.describe('#drag-drop-attachments', () => {
   let chatPath: string;
@@ -37,7 +34,7 @@ test.describe('#drag-drop-attachments', () => {
     await page.filebrowser.openDirectory(tmpPath);
 
     await page.notebook.createNew(NOTEBOOK);
-    await dismissKernelDialog(page);
+    await page.notebook.save();
     await page.activity.closeAll();
   });
 
@@ -62,7 +59,6 @@ test.describe('#drag-drop-attachments', () => {
 
     await page.mouse.move(fileBox!.x + 5, fileBox!.y + 5);
     await page.mouse.down();
-    await page.waitForTimeout(50);
 
     await page.mouse.move(inputBox!.x + inputBox!.width / 2, inputBox!.y + 10);
     await page.mouse.up();
@@ -117,10 +113,7 @@ test.describe('#drag-drop-attachments', () => {
     page
   }) => {
     const chatPanel = await openChat(page, chatPath);
-    const input = chatPanel.locator('.jp-chat-input-container');
-
-    await input.getByRole('combobox').fill('Hello chat');
-    await input.locator('.jp-chat-send-button').click();
+    await sendMessage(page, chatPath, 'Hello chat');
 
     const message = chatPanel
       .locator('.jp-chat-messages-container .jp-chat-message')
@@ -143,7 +136,6 @@ test.describe('#drag-drop-attachments', () => {
 
     await page.mouse.move(fileBox!.x + 5, fileBox!.y + 5);
     await page.mouse.down();
-    await page.waitForTimeout(50);
 
     await page.mouse.move(editBox!.x + editBox!.width / 2, editBox!.y + 10);
     await page.mouse.up();
@@ -158,10 +150,7 @@ test.describe('#drag-drop-attachments', () => {
     page
   }) => {
     const chatPanel = await openChatToSide(page, chatPath);
-    const input = chatPanel.locator('.jp-chat-input-container');
-
-    await input.getByRole('combobox').fill('Hello chat');
-    await input.locator('.jp-chat-send-button').click();
+    await sendMessage(page, chatPath, 'Hello chat');
 
     const message = chatPanel
       .locator('.jp-chat-messages-container .jp-chat-message')
