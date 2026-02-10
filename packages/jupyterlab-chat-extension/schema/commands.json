@@ -13,7 +13,7 @@
               "id": "jp-mainmenu-file-new",
               "items": [
                 {
-                  "command": "jupyterlab-chat:create",
+                  "command": "jupyterlab-chat:createAndOpen",
                   "rank": 50
                 }
               ]

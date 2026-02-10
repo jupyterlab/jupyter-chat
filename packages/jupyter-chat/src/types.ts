@@ -3,6 +3,8 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { ISignal } from '@lumino/signaling';
+
 /**
  * The user description.
  */
@@ -61,8 +63,8 @@ export interface IConfig {
 /**
  * The chat message description.
  */
-export interface IChatMessage<T = IUser, U = IAttachment> {
-  type: 'msg';
+export type IMessageContent<T = IUser, U = IAttachment> = {
+  type: string;
   body: string;
   id: string;
   time: number;
@@ -73,13 +75,31 @@ export interface IChatMessage<T = IUser, U = IAttachment> {
   deleted?: boolean;
   edited?: boolean;
   stacked?: boolean;
+};
+
+/**
+ *
+ */
+export interface IMessage extends IMessageContent {
+  /**
+   * Update one or several fields of the message.
+   */
+  update(updated: Partial<IMessageContent>): void;
+  /**
+   * The message content.
+   */
+  content: IMessageContent;
+  /**
+   * A signal emitting when the message has been updated.
+   */
+  changed: ISignal<IMessage, void>;
 }
 
 /**
  * The chat history interface.
  */
 export interface IChatHistory {
-  messages: IChatMessage[];
+  messages: IMessageContent[];
 }
 
 /**

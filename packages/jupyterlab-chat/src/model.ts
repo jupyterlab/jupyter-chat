@@ -8,9 +8,9 @@ import {
   AbstractChatContext,
   IAttachment,
   IChatContext,
-  IChatMessage,
   IChatModel,
   IInputModel,
+  IMessageContent,
   INewMessage,
   IUser
 } from '@jupyter/chat';
@@ -189,7 +189,7 @@ export class LabChatModel
 
   async messagesInserted(
     index: number,
-    messages: IChatMessage[]
+    messages: IMessageContent[]
   ): Promise<void> {
     // Ensure the chat has an ID before inserting the messages, to properly catch the
     // unread messages (the last read message is saved using the chat ID).
@@ -246,7 +246,7 @@ export class LabChatModel
 
   updateMessage(
     id: string,
-    updatedMessage: IChatMessage
+    updatedMessage: IMessageContent
   ): Promise<boolean | void> | boolean | void {
     const index = this.sharedModel.getMessageIndex(id);
     let message = this.sharedModel.getMessage(index);
@@ -398,8 +398,8 @@ export class LabChatModel
   }
 
   private _onchange = async (_: YChat, changes: IChatChanges) => {
-    if (changes.messageChanges) {
-      const msgDelta = changes.messageChanges;
+    if (changes.messageListChanges) {
+      const msgDelta = changes.messageListChanges;
       let index = 0;
       for (const delta of msgDelta) {
         if (delta.retain) {
@@ -411,10 +411,10 @@ export class LabChatModel
               attachments: attachmentIds,
               mentions: mentionsIds,
               ...baseMessage
-            } = ymessage;
+            } = ymessage.toJSON() as IYmessage;
 
             // Build the base message with sender.
-            const msg: IChatMessage = {
+            const msg: IMessageContent = {
               ...baseMessage,
               sender: this.sharedModel.getUser(sender) || {
                 username: 'User undefined',
@@ -455,6 +455,54 @@ export class LabChatModel
           this.messagesDeleted(index, delta.delete);
         }
       }
+    }
+
+    if (changes.messageChanges) {
+      // Update change in the message.
+      changes.messageChanges.forEach(change => {
+        const message = this.messages[change.index];
+        if (change.type === 'remove') {
+          delete message[change.key as keyof IMessageContent];
+        } else if (change.newValue !== undefined) {
+          const key = change.key;
+          const value = change.newValue;
+          if (key === 'attachments') {
+            const attachments: IAttachment[] = [];
+            (value as string[]).forEach(attachmentId => {
+              const attachment = this.sharedModel.getAttachment(attachmentId);
+              if (attachment) {
+                attachments.push(attachment);
+              }
+            });
+            if (attachments.length) {
+              message.update({ attachments });
+            } else {
+              message.update({ attachments: undefined });
+            }
+          } else if (key === 'mentions') {
+            const mentions: IUser[] = (value as string[]).map(
+              user =>
+                this.sharedModel.getUser(user) || {
+                  username: 'User undefined',
+                  mention_name: 'User-undefined'
+                }
+            );
+            if (mentions?.length) {
+              message.update({ mentions });
+            }
+          } else if (
+            ['body', 'time', 'raw_time', 'deleted', 'edited'].includes(key)
+          ) {
+            const update: Partial<IMessageContent> = {};
+            update[key as keyof IMessageContent] = value;
+            message.update(update);
+          } else {
+            console.error(
+              `The attribute '${key}' of message cannot be updated`
+            );
+          }
+        }
+      });
     }
 
     if (changes.metadataChanges) {

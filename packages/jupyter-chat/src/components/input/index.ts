@@ -7,4 +7,3 @@ export * from './buttons';
 export * from './chat-input';
 export * from './toolbar-registry';
 export * from './use-chat-commands';
-export * from './writing-indicator';
