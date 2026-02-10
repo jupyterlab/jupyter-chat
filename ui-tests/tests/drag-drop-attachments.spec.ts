@@ -35,7 +35,7 @@ test.describe('#drag-drop-attachments', () => {
     await page.filebrowser.openDirectory(tmpPath);
 
     await page.notebook.createNew(NOTEBOOK);
-    await page.notebook.save();
+    await page.locator('text=Python 3 (ipykernel) | Idle').waitFor();
     await page.activity.closeAll();
   });
 
