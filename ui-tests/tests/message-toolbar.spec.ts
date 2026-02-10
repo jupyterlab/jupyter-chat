@@ -18,6 +18,8 @@ test.use({
 });
 
 test.describe('#messageToolbar', () => {
+  const additionalContent = ' Messages can be edited';
+
   const msg = {
     type: 'msg',
     id: UUID.uuid4(),
@@ -71,5 +73,73 @@ test.describe('#messageToolbar', () => {
     await messageContent.locator('.jp-chat-toolbar button').last().click();
 
     await expect(messageContent).not.toBeVisible();
+  });
+
+  test('should update the message', async ({ page }) => {
+    const chatPanel = await openChat(page, FILENAME);
+    const message = chatPanel
+      .locator('.jp-chat-messages-container .jp-chat-message')
+      .first();
+    const messageContent = message.locator('.jp-chat-rendered-markdown');
+
+    // Should display the message toolbar
+    await messageContent.hover({ position: { x: 5, y: 5 } });
+    await messageContent.locator('.jp-chat-toolbar button').first().click();
+
+    await expect(messageContent).not.toBeVisible();
+
+    const editInput = chatPanel
+      .locator('.jp-chat-messages-container .jp-chat-input-container')
+      .getByRole('combobox');
+
+    await expect(editInput).toBeVisible();
+    await editInput.focus();
+    await editInput.press('End');
+    await editInput.pressSequentially(additionalContent);
+    await editInput.press('Enter');
+
+    // It seems that the markdown renderer adds a new line.
+    await expect(messageContent).toHaveText(
+      MSG_CONTENT + additionalContent + '\n'
+    );
+    expect(
+      await message.locator('.jp-chat-message-header').textContent()
+    ).toContain('(edited)');
+  });
+
+  test('should cancel message edition', async ({ page }) => {
+    const chatPanel = await openChat(page, FILENAME);
+    const message = chatPanel
+      .locator('.jp-chat-messages-container .jp-chat-message')
+      .first();
+    const messageContent = message.locator('.jp-chat-rendered-markdown');
+
+    // Should display the message toolbar
+    await messageContent.hover({ position: { x: 5, y: 5 } });
+    await messageContent.locator('.jp-chat-toolbar button').first().click();
+
+    await expect(messageContent).not.toBeVisible();
+
+    const editInput = chatPanel
+      .locator('.jp-chat-messages-container .jp-chat-input-container')
+      .getByRole('combobox');
+
+    await expect(editInput).toBeVisible();
+    await editInput.focus();
+    await editInput.press('End');
+    await editInput.pressSequentially(additionalContent);
+
+    const cancelButton = chatPanel
+      .locator('.jp-chat-messages-container .jp-chat-input-container')
+      .getByTitle('Cancel editing');
+    await expect(cancelButton).toBeVisible();
+    await cancelButton.click();
+    await expect(editInput).not.toBeVisible();
+
+    // It seems that the markdown renderer adds a new line.
+    await expect(messageContent).toHaveText(MSG_CONTENT + '\n');
+    expect(
+      await message.locator('.jp-chat-message-header').textContent()
+    ).not.toContain('(edited)');
   });
 });

@@ -6,21 +6,23 @@
 import { IDocumentManager } from '@jupyterlab/docmanager';
 import { ArrayExt } from '@lumino/algorithm';
 import { CommandRegistry } from '@lumino/commands';
+import { PromiseDelegate } from '@lumino/coreutils';
 import { IDisposable } from '@lumino/disposable';
 import { ISignal, Signal } from '@lumino/signaling';
 
 import { IActiveCellManager } from './active-cell-manager';
 import { IInputModel, InputModel } from './input-model';
+import { Message } from './message';
 import { ISelectionWatcher } from './selection-watcher';
 import {
   IChatHistory,
-  INewMessage,
-  IChatMessage,
   IConfig,
+  IMessage,
+  IMessageContent,
+  INewMessage,
   IUser
 } from './types';
 import { replaceMentionToSpan } from './utils';
-import { PromiseDelegate } from '@lumino/coreutils';
 
 /**
  * The chat model interface.
@@ -59,7 +61,7 @@ export interface IChatModel extends IDisposable {
   /**
    * The chat messages list.
    */
-  readonly messages: IChatMessage[];
+  readonly messages: IMessage[];
 
   /**
    * The input model.
@@ -138,7 +140,7 @@ export interface IChatModel extends IDisposable {
    */
   updateMessage?(
     id: string,
-    message: IChatMessage
+    message: IMessageContent
   ): Promise<boolean | void> | boolean | void;
 
   /**
@@ -168,7 +170,7 @@ export interface IChatModel extends IDisposable {
    *
    * @param message - the message with user information and body.
    */
-  messageAdded(message: IChatMessage): void;
+  messageAdded(message: IMessageContent): void;
 
   /**
    * Function called when messages are inserted.
@@ -176,7 +178,7 @@ export interface IChatModel extends IDisposable {
    * @param index - the index of the first message of the list.
    * @param messages - the messages list.
    */
-  messagesInserted(index: number, messages: IChatMessage[]): void;
+  messagesInserted(index: number, messages: IMessageContent[]): void;
 
   /**
    * Function called when messages are deleted.
@@ -286,7 +288,7 @@ export abstract class AbstractChatModel implements IChatModel {
   /**
    * The chat messages list.
    */
-  get messages(): IChatMessage[] {
+  get messages(): IMessage[] {
     return this._messages;
   }
 
@@ -387,11 +389,11 @@ export abstract class AbstractChatModel implements IChatModel {
       if (this._config.stackMessages) {
         this._messages.slice(1).forEach((message, idx) => {
           const previousUser = this._messages[idx].sender.username;
-          message.stacked = previousUser === message.sender.username;
+          message.update({ stacked: previousUser === message.sender.username });
         });
       } else {
         this._messages.forEach(message => {
-          delete message.stacked;
+          message.update({ stacked: undefined });
         });
       }
       this._messagesUpdated.emit();
@@ -450,7 +452,7 @@ export abstract class AbstractChatModel implements IChatModel {
   }
 
   /**
-   * A signal emitting when the messages list is updated.
+   * A signal emitting when the message list is updated.
    */
   get messagesUpdated(): ISignal<IChatModel, void> {
     return this._messagesUpdated;
@@ -532,7 +534,7 @@ export abstract class AbstractChatModel implements IChatModel {
    * A function called before transferring the message to the panel(s).
    * Can be useful if some actions are required on the message.
    */
-  protected formatChatMessage(message: IChatMessage): IChatMessage {
+  protected formatChatMessage(message: IMessageContent): IMessageContent {
     message.mentions?.forEach(user => {
       message.body = replaceMentionToSpan(message.body, user);
     });
@@ -544,7 +546,7 @@ export abstract class AbstractChatModel implements IChatModel {
    *
    * @param message - the message with user information and body.
    */
-  messageAdded(message: IChatMessage): void {
+  messageAdded(message: IMessageContent): void {
     const messageIndex = this._messages.findIndex(msg => msg.id === message.id);
     if (messageIndex > -1) {
       // The message is an update of an existing one.
@@ -567,15 +569,16 @@ export abstract class AbstractChatModel implements IChatModel {
    * @param index - the index of the first message of the list.
    * @param messages - the messages list.
    */
-  messagesInserted(index: number, messages: IChatMessage[]): void {
-    const formattedMessages: IChatMessage[] = [];
+  messagesInserted(index: number, messages: IMessageContent[]): void {
+    const formattedMessages: IMessage[] = [];
     const unreadIndexes: number[] = [];
 
     const lastRead = this.lastRead ?? 0;
 
     // Format the messages.
     messages.forEach((message, idx) => {
-      formattedMessages.push(this.formatChatMessage(message));
+      const formattedMessage = this.formatChatMessage(message);
+      formattedMessages.push(new Message(formattedMessage));
       if (message.time > lastRead) {
         unreadIndexes.push(index + idx);
       }
@@ -593,7 +596,7 @@ export abstract class AbstractChatModel implements IChatModel {
       for (let idx = start; idx <= end; idx++) {
         const message = this._messages[idx];
         const previousUser = this._messages[idx - 1].sender.username;
-        message.stacked = previousUser === message.sender.username;
+        message.update({ stacked: previousUser === message.sender.username });
       }
     }
 
@@ -713,7 +716,7 @@ export abstract class AbstractChatModel implements IChatModel {
     }
   }
 
-  private _messages: IChatMessage[] = [];
+  private _messages: IMessage[] = [];
   private _unreadMessages: number[] = [];
   private _messagesInViewport: number[] = [];
   private _id: string | undefined;
@@ -821,9 +824,9 @@ export interface IChatContext {
    */
   readonly name: string;
   /**
-   * A copy of the messages.
+   * A copy of the messages content.
    */
-  readonly messages: IChatMessage[];
+  readonly messages: IMessageContent[];
   /**
    * A list of all users who have connected to this chat.
    */
@@ -847,8 +850,8 @@ export abstract class AbstractChatContext implements IChatContext {
     return this._model.name;
   }
 
-  get messages(): IChatMessage[] {
-    return [...this._model.messages];
+  get messages(): IMessageContent[] {
+    return this._model.messages.map(message => ({ ...message.content }));
   }
 
   get user(): IUser | undefined {

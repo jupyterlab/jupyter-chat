@@ -6,7 +6,7 @@ from pathlib import Path
 
 import click
 from jupyter_releaser.util import get_version, run
-from pkg_resources import parse_version  # type: ignore
+from packaging.version import parse
 
 LERNA_CMD = "jlpm run lerna version --no-push --force-publish --no-git-tag-version"
 
@@ -14,7 +14,7 @@ VERSION_SPEC = ["major", "minor", "release", "next", "patch"]
 
 
 def increment_version(current, spec):
-    curr = parse_version(current)
+    curr = parse(current)
 
     if spec == "major":
         spec = f"{curr.major + 1}.0.0.a0"
@@ -67,9 +67,9 @@ def bump(force, skip_if_dirty, spec):
     current = get_version()
 
     if spec in VERSION_SPEC:
-        version = parse_version(increment_version(current, spec))
+        version = parse(increment_version(current, spec))
     else:
-        version = parse_version(spec)
+        version = parse(spec)
 
     # convert the Python version
     js_version = f"{version.major}.{version.minor}.{version.micro}"
