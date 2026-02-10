@@ -47,12 +47,12 @@ import jupyter_collaboration
 import time
 import uuid
 from functools import partial
+from jupyterlab_chat.models import Message
+from jupyterlab_chat.ychat import YChat
 from jupyter_collaboration.utils import JUPYTER_COLLABORATION_EVENTS_URI
 from jupyter_events import EventLogger
 from jupyter_server.extension.application import ExtensionApp
 from pycrdt import ArrayEvent
-
-from .ychat import YChat
 
 
 if int(jupyter_collaboration.__version__[0]) >= 3:
@@ -109,16 +109,16 @@ class MyExtension(ExtensionApp):
 
     def on_change(self, chat: YChat, events: ArrayEvent) -> None:
         for change in events.delta:
-            if not "insert" in change.keys():
+            if "insert" not in change.keys():
                 continue
-            messages = change["insert"]
+            messages = [Message(**m.to_py()) for m in change["insert"]]
             for message in messages:
-                if message["sender"] == USER["username"] or message["raw_time"]:
+                if message.sender == USER["username"]:
                     continue
                 chat.create_task(
                     self.write_message(
                         chat,
-                        f"Received:\n\n- **id**: *{message["id"]}*:\n\n- **body**: *{message["body"]}*")
+                        f"Received:\n\n- **id**: *{message.id}*:\n\n- **body**: *{message.body}*")
                 )
 
     async def write_message(self, chat: YChat, body: str) -> None:
@@ -129,12 +129,8 @@ class MyExtension(ExtensionApp):
             USER["username"] = bot["username"]
 
         chat.add_message({
-            "type": "msg",
             "body": body,
-            "id": str(uuid.uuid4()),
-            "time": time.time(),
-            "sender": USER["username"],
-            "raw_time": False
+            "sender": USER["username"]
         })
 
 ```
