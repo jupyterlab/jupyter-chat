@@ -16,6 +16,7 @@ import {
 const CHAT = 'drag-drop.chat';
 const NOTEBOOK = 'Notebook.ipynb';
 const FILE = 'File.txt';
+const MSG_CONTENT = 'Hello from drag and drop test!';
 
 test.describe('#drag-drop-attachments', () => {
   let chatPath: string;
@@ -26,7 +27,7 @@ test.describe('#drag-drop-attachments', () => {
     await createChat(page, CHAT, false, tmpPath);
 
     await page.filebrowser.contents.uploadContent(
-      'Testing drag and drop',
+      MSG_CONTENT,
       'text',
       PathExt.join(tmpPath, FILE)
     );
@@ -72,11 +73,7 @@ test.describe('#drag-drop-attachments', () => {
     page
   }) => {
     await page.notebook.open(NOTEBOOK);
-    await page.notebook.setCell(
-      0,
-      'code',
-      'print("Hello from drag and drop test")'
-    );
+    await page.notebook.setCell(0, 'code', MSG_CONTENT);
 
     const cell = page.locator('.jp-Cell').first();
     await expect(cell).toBeVisible();
@@ -143,20 +140,22 @@ test.describe('#drag-drop-attachments', () => {
     await expect(attachments.first()).toContainText(FILE);
   });
 
-  //  Below tests Should come in work after https://github.com/jupyterlab/jupyter-chat/pull/338
-  test.skip('Should attach a file via drag & drop into edit message input', async ({
+  test('Should attach a file via drag & drop into edit message input', async ({
     page
   }) => {
     const chatPanel = await openChat(page, chatPath);
-    await sendMessage(page, chatPath, 'Hello chat');
+    await sendMessage(page, chatPath, MSG_CONTENT);
 
     const message = chatPanel
       .locator('.jp-chat-messages-container .jp-chat-message')
       .first();
-    await message.locator('[aria-label="Edit message"]').click();
+
+    const messageContent = message.locator('.jp-chat-rendered-markdown');
+    await messageContent.hover({ position: { x: 5, y: 5 } });
+    await message.locator('[aria-label="Edit"]').click();
 
     const editInput = chatPanel.locator(
-      '.jp-chat-edit-container .jp-chat-input-container'
+      '.jp-chat-messages-container .jp-chat-input-container'
     );
 
     const fileItem = page
@@ -180,30 +179,11 @@ test.describe('#drag-drop-attachments', () => {
     await expect(attachments.first()).toHaveText(FILE);
   });
 
-  test.skip('Should attach notebook cell via drag & drop into edit message input', async ({
+  test('Should attach notebook cell via drag & drop into edit message input', async ({
     page
   }) => {
-    const chatPanel = await openChatToSide(page, chatPath);
-    await sendMessage(page, chatPath, 'Hello chat');
-
-    const message = chatPanel
-      .locator('.jp-chat-messages-container .jp-chat-message')
-      .first();
-    await message.locator('[aria-label="Edit message"]').click();
-
-    const editInput = chatPanel.locator(
-      '.jp-chat-edit-container .jp-chat-input-container'
-    );
-
-    const editBox = await editInput.boundingBox();
-    expect(editBox).not.toBeNull();
-
     await page.notebook.open(NOTEBOOK);
-    await page.notebook.setCell(
-      0,
-      'code',
-      'print("Hello from drag and drop test while editing message")'
-    );
+    await page.notebook.setCell(0, 'code', MSG_CONTENT);
 
     const cell = page.locator('.jp-Cell').first();
     await expect(cell).toBeVisible();
@@ -213,6 +193,26 @@ test.describe('#drag-drop-attachments', () => {
 
     const cellBox = await prompt.boundingBox();
     expect(cellBox).not.toBeNull();
+
+    const chatPanel = await openChatToSide(page, chatPath);
+    await sendMessage(page, chatPath, MSG_CONTENT);
+
+    const message = chatPanel
+      .locator('.jp-chat-messages-container .jp-chat-message')
+      .first();
+
+    const messageContent = message.locator('.jp-chat-rendered-markdown');
+    await messageContent.hover({ position: { x: 5, y: 5 } });
+    await message.locator('[aria-label="Edit"]').click();
+
+    const editInput = chatPanel.locator(
+      '.jp-chat-messages-container .jp-chat-input-container'
+    );
+
+    const editBox = await editInput.boundingBox();
+    expect(editBox).not.toBeNull();
+
+    await page.activity.activateTab(NOTEBOOK);
 
     await page.mouse.move(cellBox!.x + 10, cellBox!.y + 10);
     await page.mouse.down();
@@ -225,7 +225,7 @@ test.describe('#drag-drop-attachments', () => {
     await expect(attachments.first()).toContainText(NOTEBOOK);
   });
 
-  test.skip('Should attach a file via drag & drop from tab-bar into edit message input', async ({
+  test('Should attach a file via drag & drop from tab-bar into edit message input', async ({
     page,
     tmpPath
   }) => {
@@ -239,15 +239,18 @@ test.describe('#drag-drop-attachments', () => {
     await expect(tab).toBeVisible();
 
     const chatPanel = await openChatToSide(page, chatPath);
-    await sendMessage(page, chatPath, 'Hello chat');
+    await sendMessage(page, chatPath, MSG_CONTENT);
 
     const message = chatPanel
       .locator('.jp-chat-messages-container .jp-chat-message')
       .first();
-    await message.locator('[aria-label="Edit message"]').click();
+
+    const messageContent = message.locator('.jp-chat-rendered-markdown');
+    await messageContent.hover({ position: { x: 5, y: 5 } });
+    await message.locator('[aria-label="Edit"]').click();
 
     const editInput = chatPanel.locator(
-      '.jp-chat-edit-container .jp-chat-input-container'
+      '.jp-chat-messages-container .jp-chat-input-container'
     );
     await expect(editInput).toBeVisible();
 
