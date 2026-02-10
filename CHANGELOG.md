@@ -2,6 +2,48 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.19.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.19.0-alpha.3...2dc5de2948dde91f66ef3b8495925bfa1eefec00))
+
+### Enhancements made
+
+- Restore the message edition UI [#338](https://github.com/jupyterlab/jupyter-chat/pull/338) ([@brichet](https://github.com/brichet), [@ellisonbg](https://github.com/ellisonbg))
+- Lift the typing indicator out of the input component [#304](https://github.com/jupyterlab/jupyter-chat/pull/304) ([@brichet](https://github.com/brichet), [@ellisonbg](https://github.com/ellisonbg))
+- Message as ymap in shared document [#299](https://github.com/jupyterlab/jupyter-chat/pull/299) ([@brichet](https://github.com/brichet))
+
+### Bugs fixed
+
+- Prevent default drop behavior only if necessary [#347](https://github.com/jupyterlab/jupyter-chat/pull/347) ([@brichet](https://github.com/brichet), [@jtpio](https://github.com/jtpio))
+- Open the chat when creating it from the menu [#346](https://github.com/jupyterlab/jupyter-chat/pull/346) ([@brichet](https://github.com/brichet), [@jtpio](https://github.com/jtpio))
+
+### Maintenance and upkeep improvements
+
+- Remove use of deprecated pkg_resources [#353](https://github.com/jupyterlab/jupyter-chat/pull/353) ([@brichet](https://github.com/brichet))
+- Bump webpack from 5.94.0 to 5.105.0 in the npm_and_yarn group across 1 directory [#350](https://github.com/jupyterlab/jupyter-chat/pull/350) ([@brichet](https://github.com/brichet))
+- Bump the npm_and_yarn group across 2 directories with 1 update [#342](https://github.com/jupyterlab/jupyter-chat/pull/342) ([@brichet](https://github.com/brichet))
+- Bump the npm_and_yarn group across 2 directories with 1 update [#341](https://github.com/jupyterlab/jupyter-chat/pull/341) ([@brichet](https://github.com/brichet))
+
+### Documentation improvements
+
+- Update documentation after #299 [#354](https://github.com/jupyterlab/jupyter-chat/pull/354) ([@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-01-14&to=2026-02-10&type=c))
+
+@brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-01-14..2026-02-10&type=Issues)) | @ellisonbg ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Aellisonbg+updated%3A2026-01-14..2026-02-10&type=Issues)) | @jtpio ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2026-01-14..2026-02-10&type=Issues)) | @nakul-py ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Anakul-py+updated%3A2026-01-14..2026-02-10&type=Issues))
+
+> [!WARNING]
+> This release includes some API/types changes in the frontend, due to #299.
+> The former interface `IChatMessage` has been replaced by the type `IMessageContent`.
+> The messages available in the frontend are interfaced by `IMessage`, extending `IMessageContent` with an additional signal emitting when the content is updated.
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.19.0alpha3
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.19.0-alpha.2...70178e036bae74637837f6bdb866858d1dd4dee4))
@@ -32,8 +74,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2025-12-09&to=2026-01-14&type=c))
 
 @Abigayle-Mercer ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3AAbigayle-Mercer+updated%3A2025-12-09..2026-01-14&type=Issues)) | @abmercer ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Aabmercer+updated%3A2025-12-09..2026-01-14&type=Issues)) | @brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2025-12-09..2026-01-14&type=Issues)) | @jtpio ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2025-12-09..2026-01-14&type=Issues)) | @martinRenou ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3AmartinRenou+updated%3A2025-12-09..2026-01-14&type=Issues)) | @nakul-py ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Anakul-py+updated%3A2025-12-09..2026-01-14&type=Issues)) | @Zsailer ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3AZsailer+updated%3A2025-12-09..2026-01-14&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.19.0alpha2
 
