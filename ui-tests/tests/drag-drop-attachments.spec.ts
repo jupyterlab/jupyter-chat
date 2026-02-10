@@ -36,7 +36,6 @@ test.describe('#drag-drop-attachments', () => {
 
     await page.notebook.createNew(NOTEBOOK);
     await page.locator('text=Python 3 (ipykernel) | Idle').waitFor();
-    await page.activity.closeAll();
   });
 
   test('Should attach a file via drag & drop into chat input', async ({
