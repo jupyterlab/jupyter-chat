@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { IAttachment, IChatMessage, IUser } from '@jupyter/chat';
+import { IAttachment, IMessageContent, IUser } from '@jupyter/chat';
 import { Delta, DocumentChange, IMapChange, YDocument } from '@jupyter/ydoc';
 import { JSONExt, JSONObject, PartialJSONValue, UUID } from '@lumino/coreutils';
 import * as Y from 'yjs';
@@ -11,7 +11,7 @@ import * as Y from 'yjs';
 /**
  * The type for a YMessage.
  */
-export type IYmessage = IChatMessage<string, string>;
+export type IYmessage = IMessageContent<string, string>;
 
 /**
  * The type for a YMessage.
@@ -25,7 +25,11 @@ export interface IChatChanges extends DocumentChange {
   /**
    * Changes in messages.
    */
-  messageChanges?: MessageChange;
+  messageListChanges?: MessageListChange;
+  /**
+   * Changes of one message.
+   */
+  messageChanges?: MessageChange[];
   /**
    * Changes in users.
    */
@@ -41,9 +45,14 @@ export interface IChatChanges extends DocumentChange {
 }
 
 /**
+ * The message list change type.
+ */
+export type MessageListChange = Delta<Y.Map<any>[]>;
+
+/**
  * The message change type.
  */
-export type MessageChange = Delta<IYmessage[]>;
+export type MessageChange = IMapChange<any> & { index: number };
 
 /**
  * The user change type.
@@ -72,8 +81,8 @@ export class YChat extends YDocument<IChatChanges> {
     this._users = this.ydoc.getMap<IUser>('users');
     this._users.observe(this._usersObserver);
 
-    this._messages = this.ydoc.getArray<IYmessage>('messages');
-    this._messages.observe(this._messagesObserver);
+    this._messages = this.ydoc.getArray<Y.Map<any>>('messages');
+    this._messages.observeDeep(this._messagesObserver);
 
     this._attachments = this.ydoc.getMap<IAttachment>('attachments');
     this._attachments.observe(this._attachmentsObserver);
@@ -132,9 +141,15 @@ export class YChat extends YDocument<IChatChanges> {
 
     this.transact(() => {
       const messages = (value['messages'] as unknown as Array<IYmessage>) ?? [];
+      const ymessages: Y.Map<any>[] = [];
       messages.forEach(message => {
-        this._messages.push([message]);
+        const ymessage = new Y.Map<any>();
+        for (const [key, value] of Object.entries(message)) {
+          ymessage.set(key, value);
+        }
+        ymessages.push(ymessage);
       });
+      this._messages.push(ymessages);
 
       const users = value['users'] ?? {};
       Object.entries(users).forEach(([key, val]) =>
@@ -167,24 +182,32 @@ export class YChat extends YDocument<IChatChanges> {
   }
 
   getMessage(index: number): IYmessage | undefined {
-    return this._messages.get(index);
+    return this._messages.get(index).toJSON() as IYmessage;
   }
 
-  addMessage(value: IYmessage): void {
+  addMessage(msg: IYmessage): void {
     this.transact(() => {
-      this._messages.push([value]);
+      const ymessage = new Y.Map<any>();
+      for (const [key, value] of Object.entries(msg)) {
+        ymessage.set(key, value);
+      }
+      this._messages.push([ymessage]);
     });
   }
 
-  updateMessage(index: number, value: IYmessage): void {
+  updateMessage(index: number, msg: IYmessage): void {
     this.transact(() => {
-      this._messages.delete(index);
-      this._messages.insert(index, [value]);
+      const original = this._messages.get(index);
+      for (const [key, value] of Object.entries(msg)) {
+        if (original.get(key) !== value) {
+          original.set(key, value);
+        }
+      }
     });
   }
 
   getMessageIndex(id: string): number {
-    return this._messages.toArray().findIndex(msg => msg.id === id);
+    return this._messages.toArray().findIndex(msg => msg.get('id') === id);
   }
 
   deleteMessage(index: number): void {
@@ -258,14 +281,60 @@ export class YChat extends YDocument<IChatChanges> {
       }
     });
 
-    this._changed.emit({ userChanges } as Partial<IChatChanges>);
+    this._changed.emit({ userChanges });
   };
 
-  private _messagesObserver = (event: Y.YArrayEvent<IYmessage>): void => {
-    const messageChanges = event.delta;
-    this._changed.emit({
-      messageChanges: messageChanges
-    } as Partial<IChatChanges>);
+  private _messagesObserver = (
+    events: (Y.YArrayEvent<Y.Map<any>> | Y.YMapEvent<any>)[]
+  ): void => {
+    events.forEach(event => {
+      if (event instanceof Y.YArrayEvent) {
+        // Change on the message list.
+        const messageListChanges = event.delta;
+        this._changed.emit({
+          messageListChanges
+        } as Partial<IChatChanges>);
+      } else if (event instanceof Y.YMapEvent) {
+        // Change on existing message(s), let's update the whole message.
+        const messageChanges = new Array<MessageChange>();
+        event.keysChanged.forEach(key => {
+          const change = event.changes.keys.get(key);
+          if (change) {
+            const index = this.getMessageIndex(event.target.get('id'));
+            switch (change.action) {
+              case 'add':
+                messageChanges.push({
+                  index,
+                  key,
+                  newValue: event.target.get(key),
+                  type: 'add'
+                });
+                break;
+              case 'delete':
+                messageChanges.push({
+                  index,
+                  key,
+                  oldValue: change.oldValue,
+                  type: 'remove'
+                });
+                break;
+              case 'update':
+                messageChanges.push({
+                  index,
+                  key: key,
+                  oldValue: change.oldValue,
+                  newValue: event.target.get(key),
+                  type: 'change'
+                });
+                break;
+            }
+          }
+        });
+        this._changed.emit({
+          messageChanges
+        });
+      }
+    });
   };
 
   private _attachmentsObserver = (event: Y.YMapEvent<IAttachment>): void => {
@@ -300,7 +369,7 @@ export class YChat extends YDocument<IChatChanges> {
       }
     });
 
-    this._changed.emit({ attachmentChanges } as Partial<IChatChanges>);
+    this._changed.emit({ attachmentChanges });
   };
 
   private _metadataObserver = (event: Y.YMapEvent<IMetadata>): void => {
@@ -332,11 +401,11 @@ export class YChat extends YDocument<IChatChanges> {
       }
     });
 
-    this._changed.emit({ metadataChanges } as Partial<IChatChanges>);
+    this._changed.emit({ metadataChanges });
   };
 
   private _users: Y.Map<IUser>;
-  private _messages: Y.Array<IYmessage>;
+  private _messages: Y.Array<Y.Map<any>>;
   private _attachments: Y.Map<IAttachment>;
   private _metadata: Y.Map<IMetadata>;
 }
