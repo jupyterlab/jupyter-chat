@@ -5,7 +5,7 @@
 
 import { Token } from '@lumino/coreutils';
 import { IChatModel } from '../model';
-import { IChatMessage } from '../types';
+import { IMessageContent } from '../types';
 
 /**
  * The token providing the chat footer registry.
@@ -35,7 +35,7 @@ export interface IMessageFooterRegistry {
  */
 export type MessageFooterSectionProps = {
   model: IChatModel;
-  message: IChatMessage;
+  message: IMessageContent;
 };
 
 /**
