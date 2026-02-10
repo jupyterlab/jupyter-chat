@@ -52,14 +52,14 @@ As an example, here is a simple model that logs the message to the console and a
 the message list.
 
 ```typescript
-import { AbstractChatModel, IChatMessage, INewMessage } from '@jupyter/chat';
+import { AbstractChatModel, IMessageContent, INewMessage } from '@jupyter/chat';
 
 class MyModel extends AbstractChatModel {
   sendMessage(
     newMessage: INewMessage
   ): Promise<boolean | void> | boolean | void {
     console.log(`New Message:\n${newMessage.body}`);
-    const message: IChatMessage = {
+    const message: IMessageContent = {
       body: newMessage.body,
       id: newMessage.id ?? UUID.uuid4(),
       type: 'msg',
@@ -96,7 +96,7 @@ methods to correctly manage message transmission and reception.
 import {
   AbstractChatModel,
   ChatWidget,
-  IChatMessage,
+  IMessageContent,
   INewMessage
 } from '@jupyter/chat';
 import {
@@ -111,7 +111,7 @@ class MyModel extends AbstractChatModel {
     newMessage: INewMessage
   ): Promise<boolean | void> | boolean | void {
     console.log(`New Message:\n${newMessage.body}`);
-    const message: IChatMessage = {
+    const message: IMessageContent = {
       body: newMessage.body,
       id: newMessage.id ?? UUID.uuid4(),
       type: 'msg',
@@ -248,7 +248,7 @@ import {
   ActiveCellManager,
   AbstractChatModel,
   ChatWidget,
-  IChatMessage,
+  IMessageContent,
   INewMessage
 } from '@jupyter/chat';
 
@@ -332,7 +332,7 @@ import {
   AbstractChatModel,
   ChatWidget,
   IAttachment,
-  IChatMessage,
+  IMessageContent,
   INewMessage
 } from '@jupyter/chat';
 import { IDefaultFileBrowser } from '@jupyterlab/filebrowser';
@@ -343,7 +343,7 @@ class MyModel extends AbstractChatModel {
   sendMessage(
     newMessage: INewMessage
   ): Promise<boolean | void> | boolean | void {
-    const message: IChatMessage = {
+    const message: IMessageContent = {
       body: newMessage.body,
       id: newMessage.id ?? UUID.uuid4(),
       type: 'msg',
