@@ -40,8 +40,9 @@ export async function pollUntilReady(): Promise<void> {
 
 export async function getJupyterLabTheme(): Promise<Theme> {
   await pollUntilReady();
-  const light = document.body.getAttribute('data-jp-theme-light');
+  const light = document.body.getAttribute('data-jp-theme-light') === 'true';
   return createTheme({
+    cssVariables: true,
     spacing: 4,
     components: {
       MuiButton: {
@@ -65,12 +66,12 @@ export async function getJupyterLabTheme(): Promise<Theme> {
             // The default style for input toolbar button variant.
             props: { variant: 'input-toolbar' },
             style: {
-              backgroundColor: 'var(--jp-brand-color1)',
-              color: 'white',
+              backgroundColor: `var(--jp-brand-color${light ? '1' : '2'})`,
+              color: 'var(--jp-ui-inverse-font-color1)',
               borderRadius: '4px',
               boxShadow: 'none',
               '&:hover': {
-                backgroundColor: 'var(--jp-brand-color0)',
+                backgroundColor: `var(--jp-brand-color${light ? '0' : '1'})`,
                 boxShadow: 'none'
               },
               '&:disabled': {
@@ -122,12 +123,12 @@ export async function getJupyterLabTheme(): Promise<Theme> {
             // The default style for input toolbar button variant.
             props: { variant: 'input-toolbar' },
             style: {
-              backgroundColor: 'var(--jp-brand-color1)',
-              color: 'white',
+              backgroundColor: `var(--jp-brand-color${light ? '1' : '2'})`,
+              color: 'var(--jp-ui-inverse-font-color1)',
               borderRadius: '4px',
               boxShadow: 'none',
               '&:hover': {
-                backgroundColor: 'var(--jp-brand-color0)',
+                backgroundColor: `var(--jp-brand-color${light ? '0' : '1'})`,
                 boxShadow: 'none'
               },
               '&:disabled': {
@@ -187,9 +188,9 @@ export async function getJupyterLabTheme(): Promise<Theme> {
         paper: getCSSVariable('--jp-layout-color1'),
         default: getCSSVariable('--jp-layout-color1')
       },
-      mode: light === 'true' ? 'light' : 'dark',
+      mode: light ? 'light' : 'dark',
       primary: {
-        main: getCSSVariable('--jp-brand-color1'),
+        main: getCSSVariable(`--jp-brand-color${light ? '1' : '2'}`),
         light: getCSSVariable('--jp-brand-color2'),
         dark: getCSSVariable('--jp-brand-color0')
       },
