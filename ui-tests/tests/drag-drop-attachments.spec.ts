@@ -10,7 +10,8 @@ import {
   createChat,
   openChat,
   openChatToSide,
-  sendMessage
+  sendMessage,
+  hoverFirstMessage
 } from './test-utils';
 
 const CHAT = 'drag-drop.chat';
@@ -145,12 +146,8 @@ test.describe('#drag-drop-attachments', () => {
     const chatPanel = await openChat(page, chatPath);
     await sendMessage(page, chatPath, MSG_CONTENT);
 
-    const message = chatPanel
-      .locator('.jp-chat-messages-container .jp-chat-message')
-      .first();
+    const { message } = await hoverFirstMessage(chatPanel);
 
-    const messageContent = message.locator('.jp-chat-rendered-markdown');
-    await messageContent.hover({ position: { x: 5, y: 5 } });
     await message.locator('button[aria-label="Edit"]').click();
 
     const editInput = chatPanel.locator(
@@ -196,12 +193,8 @@ test.describe('#drag-drop-attachments', () => {
     const chatPanel = await openChatToSide(page, chatPath);
     await sendMessage(page, chatPath, MSG_CONTENT);
 
-    const message = chatPanel
-      .locator('.jp-chat-messages-container .jp-chat-message')
-      .first();
+    const { message } = await hoverFirstMessage(chatPanel);
 
-    const messageContent = message.locator('.jp-chat-rendered-markdown');
-    await messageContent.hover({ position: { x: 5, y: 5 } });
     await message.locator('button[aria-label="Edit"]').click();
 
     const editInput = chatPanel.locator(
@@ -240,12 +233,8 @@ test.describe('#drag-drop-attachments', () => {
     const chatPanel = await openChatToSide(page, chatPath);
     await sendMessage(page, chatPath, MSG_CONTENT);
 
-    const message = chatPanel
-      .locator('.jp-chat-messages-container .jp-chat-message')
-      .first();
+    const { message } = await hoverFirstMessage(chatPanel);
 
-    const messageContent = message.locator('.jp-chat-rendered-markdown');
-    await messageContent.hover({ position: { x: 5, y: 5 } });
     await message.locator('button[aria-label="Edit"]').click();
 
     const editInput = chatPanel.locator(

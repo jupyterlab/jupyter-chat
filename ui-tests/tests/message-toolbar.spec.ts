@@ -6,7 +6,7 @@
 import { expect, galata, test } from '@jupyterlab/galata';
 import { UUID } from '@lumino/coreutils';
 
-import { openChat, USER } from './test-utils';
+import { openChat, USER, hoverFirstMessage } from './test-utils';
 
 const FILENAME = 'my-chat.chat';
 const MSG_CONTENT = 'Hello World!';
@@ -63,28 +63,19 @@ test.describe('#messageToolbar', () => {
 
   test('should set the message as deleted', async ({ page }) => {
     const chatPanel = await openChat(page, FILENAME);
-    const message = chatPanel
-      .locator('.jp-chat-messages-container .jp-chat-message')
-      .first();
-    const messageContent = message.locator('.jp-chat-rendered-markdown');
 
-    // Should display the message toolbar
-    await messageContent.hover({ position: { x: 5, y: 5 } });
-    await messageContent.locator('.jp-chat-toolbar button').last().click();
+    const { message, messageContent } = await hoverFirstMessage(chatPanel);
+    await message.locator('button[aria-label="Delete"]').click();
 
     await expect(messageContent).not.toBeVisible();
   });
 
   test('should update the message', async ({ page }) => {
     const chatPanel = await openChat(page, FILENAME);
-    const message = chatPanel
-      .locator('.jp-chat-messages-container .jp-chat-message')
-      .first();
-    const messageContent = message.locator('.jp-chat-rendered-markdown');
 
-    // Should display the message toolbar
-    await messageContent.hover({ position: { x: 5, y: 5 } });
-    await messageContent.locator('.jp-chat-toolbar button').first().click();
+    const { message, messageContent } = await hoverFirstMessage(chatPanel);
+
+    await message.locator('button[aria-label="Edit"]').click();
 
     await expect(messageContent).not.toBeVisible();
 
@@ -109,14 +100,10 @@ test.describe('#messageToolbar', () => {
 
   test('should cancel message edition', async ({ page }) => {
     const chatPanel = await openChat(page, FILENAME);
-    const message = chatPanel
-      .locator('.jp-chat-messages-container .jp-chat-message')
-      .first();
-    const messageContent = message.locator('.jp-chat-rendered-markdown');
 
-    // Should display the message toolbar
-    await messageContent.hover({ position: { x: 5, y: 5 } });
-    await messageContent.locator('.jp-chat-toolbar button').first().click();
+    const { message, messageContent } = await hoverFirstMessage(chatPanel);
+
+    await message.locator('button[aria-label="Edit"]').click();
 
     await expect(messageContent).not.toBeVisible();
 
