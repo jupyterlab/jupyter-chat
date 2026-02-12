@@ -104,7 +104,7 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
         config: {
           sendWithShiftEnter: model.config.sendWithShiftEnter
         },
-        attachments: message.attachments,
+        attachments: structuredClone(message.attachments ?? []),
         mentions: message.mentions
       });
       model.addEditionModel(message.id, inputModel);
