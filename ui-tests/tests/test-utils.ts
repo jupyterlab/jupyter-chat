@@ -185,6 +185,18 @@ export const openSidePanel = async (
   return panel.first();
 };
 
+export const hoverFirstMessage = async (chatPanel: Locator) => {
+  const message = chatPanel
+    .locator('.jp-chat-messages-container .jp-chat-message')
+    .first();
+  const messageContent = message.locator('.jp-chat-rendered-markdown');
+
+  // Should display the message toolbar
+  await messageContent.hover({ position: { x: 5, y: 5 } });
+
+  return { message, messageContent };
+};
+
 // Workaround to expose a function using 'window' in the browser context.
 // Copied from https://github.com/puppeteer/puppeteer/issues/724#issuecomment-896755822
 export const exposeDepsJs = (

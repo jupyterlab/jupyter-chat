@@ -5,7 +5,7 @@
 
 import { expect, test } from '@jupyterlab/galata';
 
-import { openChat, openSettings, splitMainArea } from './test-utils';
+import { openChat, openSettings, sendMessage } from './test-utils';
 
 const FILENAME = 'my-chat.chat';
 const MSG_CONTENT = 'Hello World!';
@@ -24,14 +24,7 @@ test.describe('#sendMessages', () => {
 
   test('should send a message using button', async ({ page }) => {
     const chatPanel = await openChat(page, FILENAME);
-    const input = chatPanel
-      .locator('.jp-chat-input-container')
-      .getByRole('combobox');
-    const sendButton = chatPanel.locator(
-      '.jp-chat-input-container .jp-chat-send-button'
-    );
-    await input.pressSequentially(MSG_CONTENT);
-    await sendButton.click();
+    await sendMessage(page, FILENAME, MSG_CONTENT);
 
     const messages = chatPanel.locator('.jp-chat-messages-container');
     await expect(messages.locator('.jp-chat-message')).toHaveCount(1);
