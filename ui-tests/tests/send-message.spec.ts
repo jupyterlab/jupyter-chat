@@ -30,7 +30,7 @@ test.describe('#sendMessages', () => {
     await expect(messages.locator('.jp-chat-message')).toHaveCount(1);
     // It seems that the markdown renderer adds a new line.
     await expect(
-      messages.locator('.jp-chat-message .jp-chat-rendered-markdown')
+      messages.locator('.jp-chat-message .jp-chat-rendered-message')
     ).toHaveText(MSG_CONTENT + '\n');
   });
 
@@ -46,7 +46,7 @@ test.describe('#sendMessages', () => {
     await expect(messages.locator('.jp-chat-message')).toHaveCount(1);
     // It seems that the markdown renderer adds a new line.
     await expect(
-      messages.locator('.jp-chat-message .jp-chat-rendered-markdown')
+      messages.locator('.jp-chat-message .jp-chat-rendered-message')
     ).toHaveText(MSG_CONTENT + '\n');
   });
 
@@ -86,7 +86,7 @@ test.describe('#sendMessages', () => {
     // It seems that the markdown renderer adds a new line, but the '\n' inserter when
     // pressing Enter above is trimmed.
     await expect(
-      messages.locator('.jp-chat-message .jp-chat-rendered-markdown')
+      messages.locator('.jp-chat-message .jp-chat-rendered-message')
     ).toHaveText(MSG_CONTENT + '\n');
   });
 
@@ -132,7 +132,7 @@ test.describe('#sendMessages', () => {
     // It seems that the markdown renderer adds a new line, but the '\n' inserted when
     // pressing Enter above is trimmed.
     await expect(
-      messages.locator('.jp-chat-message .jp-chat-rendered-markdown')
+      messages.locator('.jp-chat-message .jp-chat-rendered-message')
     ).toHaveText(MSG_CONTENT + '\n');
   });
 });
