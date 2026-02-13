@@ -531,8 +531,7 @@ class SidePanelWidget extends PanelWithToolbar {
         onClick: async () => {
           const name = this.model.name;
           if (await options.openInMain?.(name)) {
-            this.model.dispose();
-            this.dispose();
+            options.onClose(this._displayName);
           }
         }
       });
