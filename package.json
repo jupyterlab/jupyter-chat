@@ -1,6 +1,6 @@
 {
   "name": "jupyter-chat-root",
-  "version": "0.19.0",
+  "version": "0.20.0-alpha.0",
   "description": "A chat package for Jupyterlab extension",
   "private": true,
   "keywords": [

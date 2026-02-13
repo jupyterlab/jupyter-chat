@@ -2,6 +2,36 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.20.0alpha0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.19.0...42d5360aa3993ece11ab4cac88ce3ee571ac0e66))
+
+### Enhancements made
+
+- Render mime bundle [#349](https://github.com/jupyterlab/jupyter-chat/pull/349) ([@brichet](https://github.com/brichet), [@jtpio](https://github.com/jtpio), [@nakul-py](https://github.com/nakul-py))
+
+### Bugs fixed
+
+- Dark mode: use black color for text in buttons [#359](https://github.com/jupyterlab/jupyter-chat/pull/359) ([@brichet](https://github.com/brichet), [@jtpio](https://github.com/jtpio))
+- Capital Tooltip [#357](https://github.com/jupyterlab/jupyter-chat/pull/357) ([@nakul-py](https://github.com/nakul-py), [@brichet](https://github.com/brichet))
+
+### Maintenance and upkeep improvements
+
+- Add a CI to set the author of the PR at opening [#358](https://github.com/jupyterlab/jupyter-chat/pull/358) ([@brichet](https://github.com/brichet))
+- Use more util functions in UI tests [#355](https://github.com/jupyterlab/jupyter-chat/pull/355) ([@nakul-py](https://github.com/nakul-py), [@brichet](https://github.com/brichet))
+- Adding UI-tests on drag and drop attachments [#352](https://github.com/jupyterlab/jupyter-chat/pull/352) ([@nakul-py](https://github.com/nakul-py), [@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-02-10&to=2026-02-13&type=c))
+
+@brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-02-10..2026-02-13&type=Issues)) | @jtpio ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2026-02-10..2026-02-13&type=Issues)) | @nakul-py ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Anakul-py+updated%3A2026-02-10..2026-02-13&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.19.0
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.19.0-alpha.3...2dc5de2948dde91f66ef3b8495925bfa1eefec00))
@@ -41,8 +71,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 > This release includes some API/types changes in the frontend, due to #299.
 > The former interface `IChatMessage` has been replaced by the type `IMessageContent`.
 > The messages available in the frontend are interfaced by `IMessage`, extending `IMessageContent` with an additional signal emitting when the content is updated.
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.19.0alpha3
 
