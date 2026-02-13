@@ -21,7 +21,7 @@ export function MessageToolbar(props: MessageToolbar.IProps): JSX.Element {
   if (props.edit !== undefined) {
     const editButton = (
       <TooltippedIconButton
-        tooltip={'edit'}
+        tooltip={'Edit'}
         onClick={props.edit}
         aria-label={'Edit'}
         inputToolbar={false}

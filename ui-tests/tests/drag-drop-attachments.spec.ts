@@ -148,7 +148,7 @@ test.describe('#drag-drop-attachments', () => {
 
     const { message } = await hoverFirstMessage(chatPanel);
 
-    await message.locator('[aria-label="Edit"]').click();
+    await message.locator('button[aria-label="Edit"]').click();
 
     const editInput = chatPanel.locator(
       '.jp-chat-messages-container .jp-chat-input-container'
@@ -195,7 +195,7 @@ test.describe('#drag-drop-attachments', () => {
 
     const { message } = await hoverFirstMessage(chatPanel);
 
-    await message.locator('[aria-label="Edit"]').click();
+    await message.locator('button[aria-label="Edit"]').click();
 
     const editInput = chatPanel.locator(
       '.jp-chat-messages-container .jp-chat-input-container'
@@ -235,7 +235,7 @@ test.describe('#drag-drop-attachments', () => {
 
     const { message } = await hoverFirstMessage(chatPanel);
 
-    await message.locator('[aria-label="Edit"]').click();
+    await message.locator('button[aria-label="Edit"]').click();
 
     const editInput = chatPanel.locator(
       '.jp-chat-messages-container .jp-chat-input-container'

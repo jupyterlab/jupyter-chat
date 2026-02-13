@@ -75,7 +75,7 @@ test.describe('#messageToolbar', () => {
 
     const { message, messageContent } = await hoverFirstMessage(chatPanel);
 
-    await message.locator('[aria-label="Edit"]').click();
+    await message.locator('button[aria-label="Edit"]').click();
 
     await expect(messageContent).not.toBeVisible();
 
@@ -103,7 +103,7 @@ test.describe('#messageToolbar', () => {
 
     const { message, messageContent } = await hoverFirstMessage(chatPanel);
 
-    await message.locator('[aria-label="Edit"]').click();
+    await message.locator('button[aria-label="Edit"]').click();
 
     await expect(messageContent).not.toBeVisible();
 
