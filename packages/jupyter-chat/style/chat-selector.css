@@ -1,0 +1,161 @@
+/*
+ * Copyright (c) Jupyter Development Team.
+ * Distributed under the terms of the Modified BSD License.
+ */
+
+/* Chat search input in toolbar */
+.jp-chat-search-input {
+  padding: 4px 8px;
+  border: 1px solid var(--jp-border-color1);
+  border-radius: 3px;
+  background: var(--jp-layout-color1);
+  color: var(--jp-ui-font-color1);
+  font-size: var(--jp-ui-font-size1);
+  min-width: 150px;
+  outline: none;
+}
+
+.jp-chat-search-input:focus {
+  border-color: var(--jp-brand-color1);
+  box-shadow: inset 0 0 0 1px var(--jp-brand-color1);
+}
+
+.jp-chat-search-input::placeholder {
+  color: var(--jp-ui-font-color2);
+}
+
+/* Chat selector popup */
+.jp-chat-selector-popup {
+  background: var(--jp-layout-color1);
+  border: 1px solid var(--jp-border-color1);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  z-index: 10;
+  position: fixed;
+  min-width: 150px;
+  max-width: 300px;
+  max-height: 400px;
+}
+
+/* Popup list container */
+.jp-chat-selector-popup-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  overflow-y: auto;
+  max-height: 400px;
+}
+
+/* Popup list item */
+.jp-chat-selector-popup-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+
+.jp-chat-selector-popup-item:hover {
+  background: var(--jp-layout-color2);
+}
+
+.jp-chat-selector-popup-item-active {
+  background: var(--jp-brand-color1);
+  color: var(--jp-ui-inverse-font-color1);
+}
+
+.jp-chat-selector-popup-item-active:hover {
+  background: var(--jp-brand-color1);
+}
+
+/* Item content layout */
+.jp-chat-selector-popup-item-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 32px;
+}
+
+.jp-chat-selector-popup-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Item label (chat name) */
+.jp-chat-selector-popup-item-label {
+  font-size: var(--jp-ui-font-size1);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.jp-chat-selector-popup-item-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Cached indicator (bullet) */
+.jp-chat-selector-popup-item-indicator {
+  font-size: 8px;
+  color: var(--jp-brand-color1);
+  line-height: 1;
+}
+
+.jp-chat-selector-popup-item-active .jp-chat-selector-popup-item-indicator {
+  color: var(--jp-layout-color3);
+}
+
+/* Close button */
+.jp-chat-selector-popup-item-close:hover {
+  background: var(--jp-layout-color3);
+  color: var(--jp-ui-font-color0);
+}
+
+.jp-chat-selector-popup-item-active
+  .jp-chat-selector-popup-item-close
+  .jp-icon3[fill] {
+  fill: var(--jp-layout-color3);
+  opacity: 0.8;
+}
+
+.jp-chat-selector-popup-item-active .jp-chat-selector-popup-item-close:hover {
+  background: rgb(0 0 0 / 20%);
+  opacity: 1;
+}
+
+/* Empty state */
+.jp-chat-selector-popup-empty {
+  padding: 12px;
+  text-align: center;
+  color: var(--jp-ui-font-color2);
+  font-style: italic;
+  font-size: var(--jp-ui-font-size1);
+}
+
+/* Scrollbar styling for the list */
+.jp-chat-selector-popup-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.jp-chat-selector-popup-list::-webkit-scrollbar-track {
+  background: var(--jp-layout-color1);
+}
+
+.jp-chat-selector-popup-list::-webkit-scrollbar-thumb {
+  background: var(--jp-scrollbar-thumb-color);
+  border-radius: 4px;
+}
+
+.jp-chat-selector-popup-list::-webkit-scrollbar-thumb:hover {
+  background: var(--jp-scrollbar-thumb-hover-color);
+}

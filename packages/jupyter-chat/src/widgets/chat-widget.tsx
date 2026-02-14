@@ -47,6 +47,7 @@ export class ChatWidget extends ReactWidget {
 
     this._chatOptions = options;
     this.id = `jupyter-chat::widget::${options.model.name}`;
+    this.addClass('jp-chat-widget');
     this.node.addEventListener('click', (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       if (this.node.contains(document.activeElement)) {

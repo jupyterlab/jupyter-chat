@@ -122,7 +122,7 @@ export class LabChatModelFactory
 
   collaborative = true;
   /**
-   * The name of the model.
+   * The name of the factory.
    *
    * @returns The name
    */
