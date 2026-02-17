@@ -268,6 +268,17 @@ export abstract class AbstractChatModel implements IChatModel {
   }
   set id(value: string | undefined) {
     this._id = value;
+
+    // Update the last read message.
+    const storage = JSON.parse(
+      localStorage.getItem(`@jupyter/chat:${this._id}`) || '{}'
+    );
+    if (
+      typeof storage.lastRead === 'number' &&
+      storage.lastRead > this._lastRead
+    ) {
+      this._lastRead = storage.lastRead;
+    }
   }
 
   /**
@@ -330,18 +341,15 @@ export abstract class AbstractChatModel implements IChatModel {
    * Timestamp of the last read message in local storage.
    */
   get lastRead(): number {
-    if (this._id === undefined) {
-      return 0;
-    }
-    const storage = JSON.parse(
-      localStorage.getItem(`@jupyter/chat:${this._id}`) || '{}'
-    );
-    return storage.lastRead ?? 0;
+    return this._lastRead;
   }
   set lastRead(value: number) {
+    this._lastRead = value;
+
     if (this._id === undefined) {
       return;
     }
+    // Save the last read message to the local storage, for persistence across reload.
     const storage = JSON.parse(
       localStorage.getItem(`@jupyter/chat:${this._id}`) || '{}'
     );
@@ -422,10 +430,10 @@ export abstract class AbstractChatModel implements IChatModel {
     // Notify the change.
     this._notify(unread.length, unreadCountDiff > 0);
 
-    // Save the last read to the local storage.
-    if (this._id !== undefined && recentlyRead.length) {
+    // Save the last read.
+    if (recentlyRead.length) {
       let lastReadChanged = false;
-      let lastRead = this.lastRead ?? this.messages[recentlyRead[0]].time;
+      let lastRead = this.lastRead;
       recentlyRead.forEach(index => {
         if (this.messages[index].time > lastRead) {
           lastRead = this.messages[index].time;
@@ -569,13 +577,11 @@ export abstract class AbstractChatModel implements IChatModel {
     const formattedMessages: IMessage[] = [];
     const unreadIndexes: number[] = [];
 
-    const lastRead = this.lastRead ?? 0;
-
     // Format the messages.
     messages.forEach((message, idx) => {
       const formattedMessage = this.formatChatMessage(message);
       formattedMessages.push(new Message(formattedMessage));
-      if (message.time > lastRead) {
+      if (message.time > this.lastRead) {
         unreadIndexes.push(index + idx);
       }
     });
@@ -714,6 +720,7 @@ export abstract class AbstractChatModel implements IChatModel {
 
   private _messages: IMessage[] = [];
   private _unreadMessages: number[] = [];
+  private _lastRead: number = 0;
   private _messagesInViewport: number[] = [];
   private _id: string | undefined;
   private _name: string = '';
