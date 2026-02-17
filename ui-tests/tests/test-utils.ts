@@ -189,7 +189,7 @@ export const hoverFirstMessage = async (chatPanel: Locator) => {
   const message = chatPanel
     .locator('.jp-chat-messages-container .jp-chat-message')
     .first();
-  const messageContent = message.locator('.jp-chat-rendered-message');
+  const messageContent = message.locator('.jp-chat-message-container');
 
   // Should display the message toolbar
   await messageContent.hover({ position: { x: 5, y: 5 } });

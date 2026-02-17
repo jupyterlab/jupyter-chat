@@ -14,6 +14,8 @@ import { IInputModel, InputModel } from '../../input-model';
 import { IMessageContent, IMessage } from '../../types';
 import { replaceSpanToMention } from '../../utils';
 
+const MESSAGE_CONTAINER_CLASS = 'jp-chat-message-container';
+
 /**
  * The message component props.
  */
@@ -148,7 +150,11 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
     return deleted ? (
       <div ref={ref} data-index={props.index}></div>
     ) : (
-      <div ref={ref} data-index={props.index}>
+      <div
+        ref={ref}
+        data-index={props.index}
+        className={MESSAGE_CONTAINER_CLASS}
+      >
         {edit && canEdit && model.getEditionModel(message.id) ? (
           <ChatInput
             onCancel={() => cancelEdition()}
