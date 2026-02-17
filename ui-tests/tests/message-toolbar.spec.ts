@@ -51,7 +51,7 @@ test.describe('#messageToolbar', () => {
   test('message should have a toolbar', async ({ page }) => {
     const chatPanel = await openChat(page, FILENAME);
     const message = chatPanel
-      .locator('.jp-chat-messages-container .jp-chat-rendered-message')
+      .locator('.jp-chat-messages-container .jp-chat-message-container')
       .first();
 
     await expect(message.locator('.jp-chat-toolbar')).not.toBeVisible();
