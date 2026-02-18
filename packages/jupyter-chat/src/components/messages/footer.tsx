@@ -33,6 +33,10 @@ export function MessageFooterComponent(
   }
   const footer = messageFooterRegistry.getFooter();
 
+  if (!footer.left && !footer.center && !footer.right) {
+    return null;
+  }
+
   return (
     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
       {footer.left?.component ? (

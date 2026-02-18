@@ -4,6 +4,7 @@
  */
 
 import { ISignal } from '@lumino/signaling';
+import { IRenderMime } from '@jupyterlab/rendermime';
 
 /**
  * The user description.
@@ -65,7 +66,10 @@ export interface IConfig {
  */
 export type IMessageContent<T = IUser, U = IAttachment> = {
   type: string;
-  body: string;
+  body:
+    | string
+    // Should contain at least the data of the mime model.
+    | (Partial<IRenderMime.IMimeModel> & Pick<IRenderMime.IMimeModel, 'data'>);
   id: string;
   time: number;
   sender: T;

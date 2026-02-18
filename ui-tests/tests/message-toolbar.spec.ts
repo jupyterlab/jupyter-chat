@@ -51,7 +51,7 @@ test.describe('#messageToolbar', () => {
   test('message should have a toolbar', async ({ page }) => {
     const chatPanel = await openChat(page, FILENAME);
     const message = chatPanel
-      .locator('.jp-chat-messages-container .jp-chat-rendered-markdown')
+      .locator('.jp-chat-messages-container .jp-chat-message-container')
       .first();
 
     await expect(message.locator('.jp-chat-toolbar')).not.toBeVisible();
@@ -75,7 +75,7 @@ test.describe('#messageToolbar', () => {
 
     const { message, messageContent } = await hoverFirstMessage(chatPanel);
 
-    await message.locator('[aria-label="Edit"]').click();
+    await message.locator('button[aria-label="Edit"]').click();
 
     await expect(messageContent).not.toBeVisible();
 
@@ -103,7 +103,7 @@ test.describe('#messageToolbar', () => {
 
     const { message, messageContent } = await hoverFirstMessage(chatPanel);
 
-    await message.locator('[aria-label="Edit"]').click();
+    await message.locator('button[aria-label="Edit"]').click();
 
     await expect(messageContent).not.toBeVisible();
 

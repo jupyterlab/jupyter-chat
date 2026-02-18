@@ -14,6 +14,8 @@ import { IInputModel, InputModel } from '../../input-model';
 import { IMessageContent, IMessage } from '../../types';
 import { replaceSpanToMention } from '../../utils';
 
+const MESSAGE_CONTAINER_CLASS = 'jp-chat-message-container';
+
 /**
  * The message component props.
  */
@@ -85,7 +87,7 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
 
     // Create an input model only if the message is edited.
     const startEdition = (): void => {
-      if (!canEdit) {
+      if (!canEdit || !(typeof message.body === 'string')) {
         return;
       }
       let body = message.body;
@@ -148,7 +150,11 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
     return deleted ? (
       <div ref={ref} data-index={props.index}></div>
     ) : (
-      <div ref={ref} data-index={props.index}>
+      <div
+        ref={ref}
+        data-index={props.index}
+        className={MESSAGE_CONTAINER_CLASS}
+      >
         {edit && canEdit && model.getEditionModel(message.id) ? (
           <ChatInput
             onCancel={() => cancelEdition()}
@@ -157,7 +163,7 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
           />
         ) : (
           <MessageRenderer
-            markdownStr={message.body}
+            message={message}
             edit={canEdit ? startEdition : undefined}
             delete={canDelete ? () => deleteMessage(message.id) : undefined}
             rendered={props.renderedPromise}

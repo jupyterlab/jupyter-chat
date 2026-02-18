@@ -3,6 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { IRenderMime } from '@jupyterlab/rendermime';
 import { ISignal, Signal } from '@lumino/signaling';
 import { IAttachment, IMessageContent, IMessage, IUser } from './types';
 
@@ -32,7 +33,9 @@ export class Message implements IMessage {
   get type(): string {
     return this._content.type;
   }
-  get body(): string {
+  get body():
+    | string
+    | (Partial<IRenderMime.IMimeModel> & Pick<IRenderMime.IMimeModel, 'data'>) {
     return this._content.body;
   }
   get id(): string {

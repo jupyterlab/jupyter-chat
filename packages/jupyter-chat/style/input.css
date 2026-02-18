@@ -20,7 +20,7 @@
   position: absolute;
   inset: 0;
   background: rgb(33 150 243 / 10%);
-  border: 2px dashed var(--jp-brand-color1);
+  border: 2px dashed var(--mui-palette-primary-main);
   border-radius: 4px;
   pointer-events: none;
   z-index: 1;
@@ -32,7 +32,7 @@
   top: -24px;
   left: 50%;
   transform: translateX(-50%);
-  color: var(--jp-brand-color1);
+  color: var(--mui-palette-primary-main);
   font-size: 12px;
   font-weight: 500;
   pointer-events: none;
@@ -47,5 +47,5 @@
 }
 
 .jp-chat-input-container:focus-within > div:first-of-type {
-  border-color: var(--jp-brand-color1);
+  border-color: var(--mui-palette-primary-main);
 }
