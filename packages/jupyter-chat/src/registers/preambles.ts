@@ -31,7 +31,9 @@ export interface IMessagePreambleRegistry {
    * Add a preamble component to the registry.
    * Components are rendered in the order they are added.
    */
-  addComponent(component: (props: MessagePreambleProps) => JSX.Element | null): void;
+  addComponent(
+    component: (props: MessagePreambleProps) => JSX.Element | null
+  ): void;
   /**
    * Get all registered preamble components.
    */
@@ -45,7 +47,9 @@ export class MessagePreambleRegistry implements IMessagePreambleRegistry {
   /**
    * Add a preamble component to the registry.
    */
-  addComponent(component: (props: MessagePreambleProps) => JSX.Element | null): void {
+  addComponent(
+    component: (props: MessagePreambleProps) => JSX.Element | null
+  ): void {
     this._components.push(component);
   }
 
@@ -56,5 +60,6 @@ export class MessagePreambleRegistry implements IMessagePreambleRegistry {
     return [...this._components];
   }
 
-  private _components: ((props: MessagePreambleProps) => JSX.Element | null)[] = [];
+  private _components: ((props: MessagePreambleProps) => JSX.Element | null)[] =
+    [];
 }
