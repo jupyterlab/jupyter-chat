@@ -3,16 +3,16 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { useChatContext } from '../../context';
-import { IMessageContent } from '../../types';
+import { IMessage, IMessageContent } from '../../types';
 
 /**
  * The preamble component properties.
  */
 export interface IMessagePreambleProps {
-  message: IMessageContent;
+  message: IMessage;
 }
 
 /**
@@ -21,7 +21,21 @@ export interface IMessagePreambleProps {
 export function MessagePreambleComponent(
   props: IMessagePreambleProps
 ): JSX.Element | null {
-  const { message } = props;
+  const [message, setMessage] = useState<IMessageContent>(
+    props.message.content
+  );
+
+  useEffect(() => {
+    function messageChanged() {
+      setMessage(props.message.content);
+    }
+    props.message.changed.connect(messageChanged);
+    setMessage(props.message.content);
+    return () => {
+      props.message.changed.disconnect(messageChanged);
+    };
+  }, [props.message]);
+
   const { model, messagePreambleRegistry } = useChatContext();
   if (!messagePreambleRegistry) {
     return null;
