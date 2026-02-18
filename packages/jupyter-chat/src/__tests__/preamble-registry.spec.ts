@@ -20,15 +20,18 @@ describe('MessagePreambleRegistry', () => {
   });
 
   it('should add a component', () => {
-    const component: (props: MessagePreambleProps) => JSX.Element | null = () => null;
+    const component: (props: MessagePreambleProps) => JSX.Element | null = () =>
+      null;
     registry.addComponent(component);
     expect(registry.getComponents()).toHaveLength(1);
     expect(registry.getComponents()[0]).toBe(component);
   });
 
   it('should preserve insertion order', () => {
-    const first: (props: MessagePreambleProps) => JSX.Element | null = () => null;
-    const second: (props: MessagePreambleProps) => JSX.Element | null = () => null;
+    const first: (props: MessagePreambleProps) => JSX.Element | null = () =>
+      null;
+    const second: (props: MessagePreambleProps) => JSX.Element | null = () =>
+      null;
     registry.addComponent(first);
     registry.addComponent(second);
     const components = registry.getComponents();
@@ -38,7 +41,8 @@ describe('MessagePreambleRegistry', () => {
   });
 
   it('should return a copy from getComponents', () => {
-    const component: (props: MessagePreambleProps) => JSX.Element | null = () => null;
+    const component: (props: MessagePreambleProps) => JSX.Element | null = () =>
+      null;
     registry.addComponent(component);
     const result = registry.getComponents();
     result.push(() => null);
