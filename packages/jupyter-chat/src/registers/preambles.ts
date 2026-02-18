@@ -5,7 +5,7 @@
 
 import { Token } from '@lumino/coreutils';
 import { IChatModel } from '../model';
-import { IChatMessage } from '../types';
+import { IMessageContent } from '../types';
 
 /**
  * The token providing the chat preamble registry.
@@ -19,7 +19,7 @@ export const IMessagePreambleRegistry = new Token<IMessagePreambleRegistry>(
  */
 export type MessagePreambleProps = {
   model: IChatModel;
-  message: IChatMessage;
+  message: IMessageContent;
 };
 
 /**

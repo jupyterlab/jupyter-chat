@@ -6,13 +6,13 @@
 import React from 'react';
 
 import { useChatContext } from '../../context';
-import { IChatMessage } from '../../types';
+import { IMessageContent } from '../../types';
 
 /**
  * The preamble component properties.
  */
 export interface IMessagePreambleProps {
-  message: IChatMessage;
+  message: IMessageContent;
 }
 
 /**
