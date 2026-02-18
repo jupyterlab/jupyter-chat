@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-.jp-chat-rendered-message {
+.jp-chat-message-container {
   position: relative;
 }
 
@@ -58,8 +58,8 @@
 .jp-chat-toolbar {
   visibility: hidden;
   position: absolute;
-  right: 2px;
-  top: 2px;
+  right: 0;
+  top: 0;
   font-size: var(--jp-ui-font-size0);
   color: var(--jp-ui-font-color3);
 }
@@ -69,7 +69,7 @@
   color: var(--jp-ui-font-color2);
 }
 
-.jp-chat-rendered-message:hover .jp-chat-toolbar {
+.jp-chat-message-container:hover .jp-chat-toolbar {
   visibility: visible;
 }
 

@@ -7,7 +7,7 @@ import { IRenderMime } from '@jupyterlab/rendermime';
 import { PromiseDelegate } from '@lumino/coreutils';
 import { MessageLoop } from '@lumino/messaging';
 import { Widget } from '@lumino/widgets';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
 import { MessageToolbar } from './toolbar';
@@ -48,7 +48,10 @@ function MessageRendererBase(props: MessageRendererProps): JSX.Element {
   const { message } = props;
   const { model, rmRegistry } = useChatContext();
 
-  const containerRef = useRef<HTMLDivElement>(null);
+  // The rendered content, return by the mime renderer.
+  const [renderedContent, setRenderedContent] = useState<HTMLElement | null>(
+    null
+  );
 
   // Allow edition only on text messages.
   const [canEdit, setCanEdit] = useState<boolean>(false);
@@ -59,12 +62,6 @@ function MessageRendererBase(props: MessageRendererProps): JSX.Element {
   >([]);
 
   useEffect(() => {
-    let node: HTMLElement | null = null;
-    const container = containerRef.current;
-    if (!container) {
-      return;
-    }
-
     const renderContent = async () => {
       let isMarkdownRenderer = true;
       let renderer: IRenderMime.IRenderer;
@@ -153,26 +150,24 @@ function MessageRendererBase(props: MessageRendererProps): JSX.Element {
         setCodeToolbarDefns(newCodeToolbarDefns);
       }
 
-      // Add the rendered node to the DOM.
-      node = renderer.node;
-      container.insertBefore(node, container.firstChild);
+      // Update the content.
+      setRenderedContent(renderer.node);
 
       // Resolve the rendered promise.
       props.rendered.resolve();
     };
 
     renderContent();
-
-    return () => {
-      if (node && container.contains(node)) {
-        container.removeChild(node);
-      }
-      node = null;
-    };
   }, [message.body, message.mentions, rmRegistry]);
 
   return (
-    <div className={RENDERED_CLASS} ref={containerRef}>
+    <>
+      {renderedContent && (
+        <div
+          className={RENDERED_CLASS}
+          ref={node => node && node.replaceChildren(renderedContent)}
+        />
+      )}
       <MessageToolbar
         edit={canEdit ? props.edit : undefined}
         delete={props.delete}
@@ -189,7 +184,7 @@ function MessageRendererBase(props: MessageRendererProps): JSX.Element {
           );
         })
       }
-    </div>
+    </>
   );
 }
 
