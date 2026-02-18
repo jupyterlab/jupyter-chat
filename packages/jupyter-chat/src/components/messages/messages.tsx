@@ -28,8 +28,13 @@ const MESSAGE_STACKED_CLASS = 'jp-chat-message-stacked';
  * The messages list component.
  */
 export function ChatMessages(): JSX.Element {
-  const { area, messageFooterRegistry, messagePreambleRegistry, model, welcomeMessage } =
-    useChatContext();
+  const {
+    area,
+    messageFooterRegistry,
+    messagePreambleRegistry,
+    model,
+    welcomeMessage
+  } = useChatContext();
 
   const [messages, setMessages] = useState<IMessage[]>(model.messages);
   const refMsgBox = useRef<HTMLDivElement>(null);
