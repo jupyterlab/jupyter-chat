@@ -2,8 +2,17 @@
 # Distributed under the terms of the Modified BSD License.
 
 from dataclasses import dataclass, field
-from typing import Literal, Optional, Tuple
+from typing import Literal, Optional, Tuple, TypedDict
 from jupyter_server.auth import User as JupyterUser
+
+
+class ToolCallDict(TypedDict, total=False):
+    """A tool call associated with an AI agent message."""
+    tool_call_id: str
+    title: str
+    kind: str
+    status: str
+    raw_output: object
 
 
 def message_asdict_factory(data):
@@ -59,10 +68,10 @@ class Message:
     Default to None.
     """
 
-    tool_calls: Optional[list[dict]] = None
+    tool_calls: Optional[list[ToolCallDict]] = None
     """
     Tool calls associated with this message (for AI agent messages).
-    Each dict contains: tool_call_id, title, kind, status, raw_output.
+    See `ToolCallDict` for the schema.
     Default to None.
     """
 

@@ -31,11 +31,11 @@ export interface IMessagePreambleRegistry {
    * Add a preamble component to the registry.
    * Components are rendered in the order they are added.
    */
-  addComponent(component: React.FC<MessagePreambleProps>): void;
+  addComponent(component: (props: MessagePreambleProps) => JSX.Element | null): void;
   /**
    * Get all registered preamble components.
    */
-  getComponents(): React.FC<MessagePreambleProps>[];
+  getComponents(): ((props: MessagePreambleProps) => JSX.Element | null)[];
 }
 
 /**
@@ -45,16 +45,16 @@ export class MessagePreambleRegistry implements IMessagePreambleRegistry {
   /**
    * Add a preamble component to the registry.
    */
-  addComponent(component: React.FC<MessagePreambleProps>): void {
+  addComponent(component: (props: MessagePreambleProps) => JSX.Element | null): void {
     this._components.push(component);
   }
 
   /**
    * Get all registered preamble components.
    */
-  getComponents(): React.FC<MessagePreambleProps>[] {
+  getComponents(): ((props: MessagePreambleProps) => JSX.Element | null)[] {
     return [...this._components];
   }
 
-  private _components: React.FC<MessagePreambleProps>[] = [];
+  private _components: ((props: MessagePreambleProps) => JSX.Element | null)[] = [];
 }
