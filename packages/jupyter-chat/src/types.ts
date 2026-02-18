@@ -62,6 +62,17 @@ export interface IConfig {
 }
 
 /**
+ * A tool call associated with an AI agent message.
+ */
+export interface IToolCall {
+  tool_call_id: string;
+  title: string;
+  kind?: string;
+  status?: string;
+  raw_output?: unknown;
+}
+
+/**
  * The chat message description.
  */
 export type IMessageContent<T = IUser, U = IAttachment> = {
@@ -79,11 +90,9 @@ export type IMessageContent<T = IUser, U = IAttachment> = {
   deleted?: boolean;
   edited?: boolean;
   stacked?: boolean;
+  tool_calls?: IToolCall[];
 };
 
-/**
- *
- */
 export interface IMessage extends IMessageContent {
   /**
    * Update one or several fields of the message.

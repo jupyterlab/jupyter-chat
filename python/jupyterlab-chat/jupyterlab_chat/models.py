@@ -59,6 +59,13 @@ class Message:
     Default to None.
     """
 
+    tool_calls: Optional[list[dict]] = None
+    """
+    Tool calls associated with this message (for AI agent messages).
+    Each dict contains: tool_call_id, title, kind, status, raw_output.
+    Default to None.
+    """
+
 
 @dataclass
 class NewMessage:

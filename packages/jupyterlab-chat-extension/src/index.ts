@@ -14,9 +14,11 @@ import {
   IChatCommandRegistry,
   IChatTracker,
   IMessageFooterRegistry,
+  IMessagePreambleRegistry,
   ISelectionWatcher,
   InputToolbarRegistry,
   MessageFooterRegistry,
+  MessagePreambleRegistry,
   SelectionWatcher,
   chatIcon,
   readIcon,
@@ -290,6 +292,7 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
     IDefaultFileBrowser,
     IInputToolbarRegistryFactory,
     IMessageFooterRegistry,
+    IMessagePreambleRegistry,
     ISelectionWatcherToken,
     ISettingRegistry,
     IThemeManager,
@@ -309,6 +312,7 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
     filebrowser: IDefaultFileBrowser | null,
     inputToolbarFactory: IInputToolbarRegistryFactory,
     messageFooterRegistry: IMessageFooterRegistry,
+    messagePreambleRegistry: IMessagePreambleRegistry,
     selectionWatcher: ISelectionWatcher | null,
     settingRegistry: ISettingRegistry | null,
     themeManager: IThemeManager | null,
@@ -381,6 +385,7 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
       attachmentOpenerRegistry,
       inputToolbarFactory,
       messageFooterRegistry,
+      messagePreambleRegistry,
       welcomeMessage
     });
 
@@ -844,6 +849,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     IInputToolbarRegistryFactory,
     ILayoutRestorer,
     IMessageFooterRegistry,
+    IMessagePreambleRegistry,
     IThemeManager,
     IWelcomeMessage
   ],
@@ -857,6 +863,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     inputToolbarFactory: IInputToolbarRegistryFactory,
     restorer: ILayoutRestorer | null,
     messageFooterRegistry: IMessageFooterRegistry,
+    messagePreambleRegistry: IMessagePreambleRegistry,
     themeManager: IThemeManager | null,
     welcomeMessage: string
   ): MultiChatPanel => {
@@ -906,6 +913,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
       attachmentOpenerRegistry,
       inputToolbarFactory,
       messageFooterRegistry,
+      messagePreambleRegistry,
       welcomeMessage
     });
     chatPanel.id = 'JupyterlabChat:sidepanel';
@@ -1065,6 +1073,19 @@ const footerRegistry: JupyterFrontEndPlugin<IMessageFooterRegistry> = {
   }
 };
 
+/**
+ * Extension providing the message preamble registry.
+ */
+const preambleRegistry: JupyterFrontEndPlugin<IMessagePreambleRegistry> = {
+  id: 'jupyterlab-chat/preambleRegistry',
+  description: 'The preamble registry plugin.',
+  autoStart: true,
+  provides: IMessagePreambleRegistry,
+  activate: (): IMessagePreambleRegistry => {
+    return new MessagePreambleRegistry();
+  }
+};
+
 export default [
   activeCellManager,
   attachmentOpeners,
@@ -1076,6 +1097,7 @@ export default [
   docFactories,
   footerRegistry,
   inputToolbarFactory,
+  preambleRegistry,
   selectionWatcher,
   emojiCommandsPlugin,
   mentionCommandsPlugin
