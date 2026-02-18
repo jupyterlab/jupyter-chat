@@ -5,7 +5,13 @@
 
 import { IRenderMime } from '@jupyterlab/rendermime';
 import { ISignal, Signal } from '@lumino/signaling';
-import { IAttachment, IMessageContent, IMessage, IToolCall, IUser } from './types';
+import {
+  IAttachment,
+  IMessageContent,
+  IMessage,
+  IToolCall,
+  IUser
+} from './types';
 
 /**
  * The message object.
