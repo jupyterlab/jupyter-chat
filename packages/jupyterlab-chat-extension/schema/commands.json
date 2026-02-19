@@ -21,6 +21,18 @@
           }
         ]
       }
+    ],
+    "context": [
+      {
+        "id": "jp-browser-panel",
+        "items": [
+          {
+            "command": "jupyterlab-chat:deleteChat",
+            "selector": "[data-file-type='chat']",
+            "rank": 11
+          }
+        ]
+      }
     ]
   },
   "jupyter.lab.shortcuts": [
