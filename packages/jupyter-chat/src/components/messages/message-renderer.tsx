@@ -87,9 +87,10 @@ function MessageRendererBase(props: MessageRendererProps): JSX.Element {
         setCanEdit(false);
         // This is a mime bundle.
         let mimeContent = message.body;
+        const safeMode = mimeContent.trusted ? 'prefer' : 'ensure';
         let preferred = rmRegistry.preferredMimeType(
           mimeContent.data,
-          'ensure' // Should be changed with 'prefer' if we can handle trusted content.
+          safeMode
         );
         if (!preferred) {
           preferred = DEFAULT_MIME_TYPE;
