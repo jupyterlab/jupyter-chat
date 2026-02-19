@@ -63,7 +63,7 @@ export function SendButton(
     await chatCommandRegistry?.onSubmit(model);
 
     // send message through chat model
-    await chatModel?.sendMessage({
+    void chatModel?.sendMessage({
       body: model.value
     });
     // clear input model value & re-focus
