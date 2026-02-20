@@ -66,6 +66,7 @@ export function SendButton(
 
     model.value = '';
     model.send(body);
+    model.focus();
   }
 
   return (
