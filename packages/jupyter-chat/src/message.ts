@@ -9,7 +9,7 @@ import {
   IAttachment,
   IMessageContent,
   IMessage,
-  IToolCall,
+  IMessageMetadata,
   IUser
 } from './types';
 
@@ -71,8 +71,8 @@ export class Message implements IMessage {
   get stacked(): boolean | undefined {
     return this._content.stacked;
   }
-  get tool_calls(): IToolCall[] | undefined {
-    return this._content.tool_calls;
+  get metadata(): IMessageMetadata | undefined {
+    return this._content.metadata;
   }
 
   /**

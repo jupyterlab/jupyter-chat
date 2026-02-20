@@ -62,15 +62,18 @@ export interface IConfig {
 }
 
 /**
- * A tool call associated with an AI agent message.
+ * An empty interface to describe optional metadata attached to a chat message.
+ * Extensions can augment this interface to add custom fields:
+ *
+ * ```ts
+ * declare module '@jupyter/chat' {
+ *   interface IMessageMetadata {
+ *     myField?: MyType;
+ *   }
+ * }
+ * ```
  */
-export interface IToolCall {
-  tool_call_id: string;
-  title: string;
-  kind?: string;
-  status?: string;
-  raw_output?: unknown;
-}
+export interface IMessageMetadata {} /* eslint-disable-line @typescript-eslint/no-empty-object-type */
 
 /**
  * The chat message description.
@@ -90,7 +93,7 @@ export type IMessageContent<T = IUser, U = IAttachment> = {
   deleted?: boolean;
   edited?: boolean;
   stacked?: boolean;
-  tool_calls?: IToolCall[];
+  metadata?: IMessageMetadata;
 };
 
 export interface IMessage extends IMessageContent {

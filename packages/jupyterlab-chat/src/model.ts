@@ -497,7 +497,7 @@ export class LabChatModel
               'raw_time',
               'deleted',
               'edited',
-              'tool_calls'
+              'metadata'
             ].includes(key)
           ) {
             const update: Partial<IMessageContent> = {};
