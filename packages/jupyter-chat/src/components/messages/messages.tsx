@@ -11,6 +11,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { MessageFooterComponent } from './footer';
 import { ChatMessageHeader } from './header';
 import { ChatMessage } from './message';
+import { MessagePreambleComponent } from './preamble';
 import { Navigation } from './navigation';
 import { WelcomeMessage } from './welcome';
 import { ScrollContainer } from '../scroll-container';
@@ -27,8 +28,13 @@ const MESSAGE_STACKED_CLASS = 'jp-chat-message-stacked';
  * The messages list component.
  */
 export function ChatMessages(): JSX.Element {
-  const { area, messageFooterRegistry, model, welcomeMessage } =
-    useChatContext();
+  const {
+    area,
+    messageFooterRegistry,
+    messagePreambleRegistry,
+    model,
+    welcomeMessage
+  } = useChatContext();
 
   const [messages, setMessages] = useState<IMessage[]>(model.messages);
   const refMsgBox = useRef<HTMLDivElement>(null);
@@ -203,6 +209,9 @@ export function ChatMessages(): JSX.Element {
                   message={message}
                   isCurrentUser={isCurrentUser}
                 />
+                {messagePreambleRegistry && (
+                  <MessagePreambleComponent message={message} />
+                )}
                 <ChatMessage
                   message={message}
                   index={i}
