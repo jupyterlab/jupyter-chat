@@ -491,7 +491,14 @@ export class LabChatModel
               message.update({ mentions });
             }
           } else if (
-            ['body', 'time', 'raw_time', 'deleted', 'edited'].includes(key)
+            [
+              'body',
+              'time',
+              'raw_time',
+              'deleted',
+              'edited',
+              'metadata'
+            ].includes(key)
           ) {
             const update: Partial<IMessageContent> = {};
             update[key as keyof IMessageContent] = value;

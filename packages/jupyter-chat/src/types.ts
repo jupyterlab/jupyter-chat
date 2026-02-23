@@ -62,6 +62,20 @@ export interface IConfig {
 }
 
 /**
+ * An empty interface to describe optional metadata attached to a chat message.
+ * Extensions can augment this interface to add custom fields:
+ *
+ * ```ts
+ * declare module '@jupyter/chat' {
+ *   interface IMessageMetadata {
+ *     myField?: MyType;
+ *   }
+ * }
+ * ```
+ */
+export interface IMessageMetadata {} /* eslint-disable-line @typescript-eslint/no-empty-object-type */
+
+/**
  * The chat message description.
  */
 export type IMessageContent<T = IUser, U = IAttachment> = {
@@ -79,11 +93,9 @@ export type IMessageContent<T = IUser, U = IAttachment> = {
   deleted?: boolean;
   edited?: boolean;
   stacked?: boolean;
+  metadata?: IMessageMetadata;
 };
 
-/**
- *
- */
 export interface IMessage extends IMessageContent {
   /**
    * Update one or several fields of the message.

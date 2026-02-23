@@ -5,7 +5,13 @@
 
 import { IRenderMime } from '@jupyterlab/rendermime';
 import { ISignal, Signal } from '@lumino/signaling';
-import { IAttachment, IMessageContent, IMessage, IUser } from './types';
+import {
+  IAttachment,
+  IMessageContent,
+  IMessage,
+  IMessageMetadata,
+  IUser
+} from './types';
 
 /**
  * The message object.
@@ -64,6 +70,9 @@ export class Message implements IMessage {
   }
   get stacked(): boolean | undefined {
     return this._content.stacked;
+  }
+  get metadata(): IMessageMetadata | undefined {
+    return this._content.metadata;
   }
 
   /**
