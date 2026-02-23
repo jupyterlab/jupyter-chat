@@ -59,6 +59,9 @@ class Message:
     Default to None.
     """
 
+    metadata: Optional[dict] = None
+    """ Optional metadata attached to this message. """
+
 
 @dataclass
 class NewMessage:
