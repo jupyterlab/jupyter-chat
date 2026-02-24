@@ -104,7 +104,11 @@ export const CommandIDs = {
   /**
    * Rename the current chat.
    */
-  renameChat: 'jupyterlab-chat:renameChat'
+  renameChat: 'jupyterlab-chat:renameChat',
+  /**
+   * Export the current chat as a Markdown file.
+   */
+  exportChat: 'jupyterlab-chat:exportChat'
 };
 
 /**

@@ -12,4 +12,5 @@ export * from './registers';
 export * from './selection-watcher';
 export * from './tokens';
 export * from './types';
+export * from './utils';
 export * from './widgets';
