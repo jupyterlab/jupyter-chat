@@ -791,6 +791,26 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
       }
     });
 
+    // Command to delete a chat
+    commands.addCommand(CommandIDs.deleteChat, {
+      label: 'Delete chat',
+      execute: async (args: any): Promise<boolean> => {
+        const path = args.path as string;
+        if (!path) {
+          showErrorMessage('Error deleting chat', 'Missing path');
+          return false;
+        }
+
+        try {
+          await app.serviceManager.contents.delete(path);
+          return true;
+        } catch (err) {
+          showErrorMessage('Error deleting chat', `${err}`);
+        }
+        return false;
+      }
+    });
+
     // The command to focus the input of the current chat widget.
     commands.addCommand(CommandIDs.focusInput, {
       caption: 'Focus the input of the current chat widget',
@@ -908,6 +928,9 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
           oldPath,
           newPath
         }) as Promise<boolean>;
+      },
+      deleteChat: (path: string) => {
+        return commands.execute(CommandIDs.deleteChat, { path }) as Promise<boolean>;
       },
       chatCommandRegistry,
       attachmentOpenerRegistry,

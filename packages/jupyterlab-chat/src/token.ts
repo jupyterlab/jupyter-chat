@@ -104,7 +104,11 @@ export const CommandIDs = {
   /**
    * Rename the current chat.
    */
-  renameChat: 'jupyterlab-chat:renameChat'
+  renameChat: 'jupyterlab-chat:renameChat',
+  /**
+   * Delete the current chat.
+   */
+  deleteChat: 'jupyterlab-chat:deleteChat'
 };
 
 /**
