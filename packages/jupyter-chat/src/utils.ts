@@ -10,7 +10,7 @@ import { FileEditor } from '@jupyterlab/fileeditor';
 import { Notebook } from '@jupyterlab/notebook';
 import { Widget } from '@lumino/widgets';
 
-import { IUser } from './types';
+import { IMessage, IUser } from './types';
 
 const MENTION_CLASS = 'jp-chat-mention';
 
@@ -80,4 +80,57 @@ export function replaceSpanToMention(content: string, user: IUser): string {
   const mentionEl = `<span class="${MENTION_CLASS}">${mention}</span>`;
   const regex = new RegExp(mentionEl, 'g');
   return content.replace(regex, mention);
+}
+
+/**
+ * Trigger a browser download of a Markdown-formatted chat export.
+ *
+ * @param chatName - Raw model name (e.g. "path/to/my.chat"). Used to derive the
+ *   filename and as the document title passed to formatChatAsMarkdown.
+ * @param messages - Messages to export.
+ */
+export function downloadChatAsMarkdown(
+  chatName: string,
+  messages: ReadonlyArray<IMessage>
+): void {
+  // Use || (not ??) so that empty string '' also falls back to 'chat'.
+  const name = chatName || 'chat';
+  const basename = name.split('/').pop()?.replace(/\.chat$/, '') || name;
+  const markdown = formatChatAsMarkdown(basename, messages);
+  const blob = new Blob([markdown], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${basename}.md`;
+  a.style.display = 'none';
+  document.body.appendChild(a); // Firefox requires DOM attachment
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 100); // delayed to avoid premature revoke
+}
+
+/**
+ * Format chat messages as a Markdown document for export.
+ *
+ * @param chatName - The display name of the chat, used as the document title.
+ * @param messages - Messages to format. Deleted messages are skipped.
+ * @returns A Markdown-formatted string ready for download.
+ */
+export function formatChatAsMarkdown(
+  chatName: string,
+  messages: ReadonlyArray<IMessage>
+): string {
+  const lines: string[] = [`# ${chatName}`, ''];
+  const visibleMessages = messages.filter(msg => !msg.deleted);
+  if (visibleMessages.length === 0) {
+    lines.push('*(No messages)*', '');
+    return lines.join('\n');
+  }
+  for (const msg of visibleMessages) {
+    const displayName = msg.sender.display_name || msg.sender.username || 'Unknown';
+    const timestamp = new Date(msg.time * 1000).toLocaleString();
+    const body = typeof msg.body === 'string' ? msg.body : '[Rich content]';
+    lines.push(`**${displayName}** — ${timestamp}`, '', body, '', '---', '');
+  }
+  return lines.join('\n');
 }

@@ -12,6 +12,7 @@ import { InputDialog } from '@jupyterlab/apputils';
 import {
   addIcon,
   closeIcon,
+  downloadIcon,
   HTMLSelect,
   launchIcon,
   PanelWithToolbar,
@@ -33,6 +34,7 @@ import {
 } from '../components';
 import { chatIcon, readIcon } from '../icons';
 import { IChatModel } from '../model';
+import { downloadChatAsMarkdown } from '../utils';
 
 const SIDEPANEL_CLASS = 'jp-chat-sidepanel';
 const ADD_BUTTON_CLASS = 'jp-chat-add';
@@ -381,6 +383,19 @@ export class ChatSection extends PanelWithToolbar {
       this.toolbar.addItem('rename', renameButton);
     }
 
+    const exportButton = new ToolbarButton({
+      icon: downloadIcon,
+      iconLabel: 'Export chat as Markdown',
+      className: 'jp-mod-styled',
+      onClick: () => {
+        try {
+          downloadChatAsMarkdown(this.model.name, this.model.messages);
+        } catch (err) {
+          console.error('Failed to export chat:', err);
+        }
+      }
+    });
+    this.toolbar.addItem('export', exportButton);
     if (options.openInMain) {
       const moveToMain = new ToolbarButton({
         icon: launchIcon,

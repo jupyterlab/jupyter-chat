@@ -52,7 +52,7 @@ import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { Contents } from '@jupyterlab/services';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { ITranslator, nullTranslator } from '@jupyterlab/translation';
-import { launchIcon } from '@jupyterlab/ui-components';
+import { downloadIcon, launchIcon } from '@jupyterlab/ui-components';
 import { PromiseDelegate } from '@lumino/coreutils';
 import {
   ChatWidgetFactory,
@@ -70,6 +70,7 @@ import {
   chatFileType,
   getDisplayName
 } from 'jupyterlab-chat';
+import { downloadChatAsMarkdown } from '@jupyter/chat';
 import { chatCommandRegistryPlugin } from './chat-commands/plugins';
 import { emojiCommandsPlugin } from './chat-commands/providers/emoji';
 import { mentionCommandsPlugin } from './chat-commands/providers/user-mention';
@@ -791,6 +792,23 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
       }
     });
 
+    // Command to export the current chat as a Markdown file.
+    commands.addCommand(CommandIDs.exportChat, {
+      label: 'Export chat as Markdown',
+      icon: downloadIcon,
+      isEnabled: () => tracker.currentWidget !== null,
+      execute: () => {
+        const widget = tracker.currentWidget;
+        if (!widget) {
+          return;
+        }
+        try {
+          downloadChatAsMarkdown(widget.model.name, widget.model.messages);
+        } catch (err) {
+          console.error('Failed to export chat:', err);
+        }
+      }
+    });
     // The command to focus the input of the current chat widget.
     commands.addCommand(CommandIDs.focusInput, {
       caption: 'Focus the input of the current chat widget',
@@ -821,6 +839,10 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
       commandPalette.addItem({
         category: 'Chat',
         command: CommandIDs.renameChat
+      });
+      commandPalette.addItem({
+        category: 'Chat',
+        command: CommandIDs.exportChat
       });
     }
 
