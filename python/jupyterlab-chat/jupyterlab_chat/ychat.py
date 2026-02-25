@@ -14,7 +14,8 @@ from uuid import uuid4
 from pycrdt import Array, ArrayEvent, Map, MapEvent
 import re
 
-from .models import message_asdict_factory, FileAttachment, NotebookAttachment, Message, NewMessage, User
+from .models import message_asdict_factory, FileAttachment, NotebookAttachment, Message, NewMessage, TokenUsage, User
+from .pricing import calculate_cost
 from .utils import find_mentions
 
 
@@ -156,6 +157,10 @@ class YChat(YBaseDoc):
                 asdict(message, dict_factory=message_asdict_factory)
             )
 
+        # Track token usage if present
+        if message.usage:
+            self.add_usage(message.usage)
+
         return uid
 
     def update_message(self, message: Message, append: bool = False, trigger_actions: list[Callable] | None = None):
@@ -178,6 +183,11 @@ class YChat(YBaseDoc):
             if trigger_actions:
                 for callback in trigger_actions:
                     callback(message, self)
+
+            # Track usage if this is a new usage (not present in initial message)
+            had_usage = initial_message.get("usage") is not None  # type:ignore[attr-defined]
+            if message.usage and not had_usage:
+                self.add_usage(message.usage)
 
             self._ymessages[index] = asdict(message, dict_factory=message_asdict_factory)
 
@@ -247,6 +257,48 @@ class YChat(YBaseDoc):
         """
         with self._ydoc.transaction():
             self._ymetadata.update({"id": id})
+
+    def get_cumulative_usage(self) -> Optional[TokenUsage]:
+        """
+        Returns the cumulative token usage for this chat.
+        """
+        usage_dict = self._ymetadata.get("cumulative_usage", None)
+        if usage_dict:
+            return TokenUsage(**usage_dict)
+        return None
+
+    def add_usage(self, usage: TokenUsage) -> None:
+        """
+        Adds token usage to the cumulative total.
+
+        Args:
+            usage: Token usage to add to the cumulative total
+        """
+        # Calculate cost if not provided
+        if usage.cost is None and usage.model:
+            usage.cost = calculate_cost(
+                usage.model,
+                usage.input_tokens or 0,
+                usage.output_tokens or 0
+            )
+
+        current = self.get_cumulative_usage()
+
+        if current is None:
+            # First usage record
+            with self._ydoc.transaction():
+                self._ymetadata.update({"cumulative_usage": asdict(usage)})
+        else:
+            # Add to existing usage
+            new_usage = TokenUsage(
+                input_tokens=(current.input_tokens or 0) + (usage.input_tokens or 0),
+                output_tokens=(current.output_tokens or 0) + (usage.output_tokens or 0),
+                total_tokens=(current.total_tokens or 0) + (usage.total_tokens or 0),
+                model=usage.model,  # Keep the most recent model
+                cost=(current.cost or 0.0) + (usage.cost or 0.0)
+            )
+            with self._ydoc.transaction():
+                self._ymetadata.update({"cumulative_usage": asdict(new_usage)})
 
     def get(self) -> str:
         """

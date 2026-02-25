@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { IAttachment, IChatMessage, IUser } from '@jupyter/chat';
+import { IAttachment, IChatMessage, ITokenUsage, IUser } from '@jupyter/chat';
 import { Delta, DocumentChange, IMapChange, YDocument } from '@jupyter/ydoc';
 import { JSONExt, JSONObject, PartialJSONValue, UUID } from '@lumino/coreutils';
 import * as Y from 'yjs';
@@ -224,6 +224,42 @@ export class YChat extends YDocument<IChatChanges> {
       this._attachments.set(id, attachment);
     });
     return id;
+  }
+
+  /**
+   * Returns the cumulative token usage for this chat.
+   */
+  getCumulativeUsage(): ITokenUsage | undefined {
+    return this._metadata.get('cumulative_usage') as ITokenUsage | undefined;
+  }
+
+  /**
+   * Adds token usage to the cumulative total.
+   *
+   * @param usage - Token usage to add to the cumulative total
+   */
+  addUsage(usage: ITokenUsage): void {
+    const current = this.getCumulativeUsage();
+
+    if (!current) {
+      // First usage record
+      this.transact(() => {
+        this._metadata.set('cumulative_usage', usage as any);
+      });
+    } else {
+      // Add to existing usage
+      const newUsage: ITokenUsage = {
+        input_tokens: (current.input_tokens || 0) + (usage.input_tokens || 0),
+        output_tokens:
+          (current.output_tokens || 0) + (usage.output_tokens || 0),
+        total_tokens: (current.total_tokens || 0) + (usage.total_tokens || 0),
+        model: usage.model, // Keep the most recent model
+        cost: (current.cost || 0.0) + (usage.cost || 0.0)
+      };
+      this.transact(() => {
+        this._metadata.set('cumulative_usage', newUsage as any);
+      });
+    }
   }
 
   private _usersObserver = (event: Y.YMapEvent<IUser>): void => {

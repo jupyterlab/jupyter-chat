@@ -12,6 +12,26 @@ def message_asdict_factory(data):
 
 
 @dataclass
+class TokenUsage:
+    """Token usage information for LLM responses"""
+
+    input_tokens: Optional[int] = None
+    """Number of input tokens consumed"""
+
+    output_tokens: Optional[int] = None
+    """Number of output tokens generated"""
+
+    total_tokens: Optional[int] = None
+    """Total tokens (input + output)"""
+
+    model: Optional[str] = None
+    """Model identifier (e.g., 'gpt-4', 'claude-3-opus')"""
+
+    cost: Optional[float] = None
+    """Estimated cost in USD"""
+
+
+@dataclass
 class Message:
     """ Object representing a message """
 
@@ -56,6 +76,12 @@ class Message:
     edited: Optional[bool] = None
     """
     Whether the message has been edited or not
+    Default to None.
+    """
+
+    usage: Optional[TokenUsage] = None
+    """
+    Token usage information for this message (if from an LLM)
     Default to None.
     """
 

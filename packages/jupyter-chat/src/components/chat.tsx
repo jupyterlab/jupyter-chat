@@ -18,6 +18,7 @@ import {
 } from './input';
 import { JlThemeProvider } from './jl-theme-provider';
 import { ChatMessages } from './messages';
+import { TokenUsageDisplay } from './token-usage-display';
 import { WritingIndicator } from './writing-indicator';
 import { ChatReactContext } from '../context';
 import { IChatModel } from '../model';
@@ -26,11 +27,12 @@ import {
   IChatCommandRegistry,
   IMessageFooterRegistry
 } from '../registers';
-import { ChatArea } from '../types';
+import { ChatArea, ITokenUsage } from '../types';
 
 export function ChatBody(props: Chat.IChatProps): JSX.Element {
   const { model } = props;
   const [writers, setWriters] = useState<IChatModel.IWriter[]>([]);
+  const [cumulativeUsage, setCumulativeUsage] = useState<ITokenUsage | undefined>(undefined);
   let { inputToolbarRegistry } = props;
   if (!inputToolbarRegistry) {
     inputToolbarRegistry = InputToolbarRegistry.defaultToolbarRegistry();
@@ -60,6 +62,36 @@ export function ChatBody(props: Chat.IChatProps): JSX.Element {
     };
   }, [model]);
 
+  /**
+   * Handle cumulative usage updates from metadata changes.
+   */
+  useEffect(() => {
+    if (!model) {
+      return;
+    }
+
+    // Check if the model has a sharedModel property (e.g., LabChatModel)
+    const sharedModel = (model as any).sharedModel;
+    if (!sharedModel || typeof sharedModel.getCumulativeUsage !== 'function') {
+      return;
+    }
+
+    const updateUsage = () => {
+      const usage = sharedModel.getCumulativeUsage();
+      setCumulativeUsage(usage);
+    };
+
+    // Set initial usage state
+    updateUsage();
+
+    // Listen for metadata changes
+    const handler = sharedModel.changed.connect(updateUsage);
+
+    return () => {
+      handler?.disconnect(updateUsage);
+    };
+  }, [model]);
+
   // const horizontalPadding = props.area === 'main' ? 8 : 4;
   const horizontalPadding = 4;
 
@@ -70,6 +102,20 @@ export function ChatBody(props: Chat.IChatProps): JSX.Element {
 
   return (
     <ChatReactContext.Provider value={contextValue}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+          paddingLeft: horizontalPadding,
+          paddingRight: horizontalPadding,
+          paddingTop: 1,
+          paddingBottom: 1,
+          minHeight: cumulativeUsage ? 'auto' : 0
+        }}
+      >
+        <TokenUsageDisplay usage={cumulativeUsage} />
+      </Box>
       <ChatMessages />
       <ChatInput
         sx={{

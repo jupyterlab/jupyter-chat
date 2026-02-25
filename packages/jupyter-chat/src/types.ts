@@ -59,6 +59,32 @@ export interface IConfig {
 }
 
 /**
+ * Token usage information for LLM responses.
+ */
+export interface ITokenUsage {
+  /**
+   * Number of input tokens consumed.
+   */
+  input_tokens?: number;
+  /**
+   * Number of output tokens generated.
+   */
+  output_tokens?: number;
+  /**
+   * Total tokens (input + output).
+   */
+  total_tokens?: number;
+  /**
+   * Model identifier (e.g., 'gpt-4', 'claude-3-opus').
+   */
+  model?: string;
+  /**
+   * Estimated cost in USD.
+   */
+  cost?: number;
+}
+
+/**
  * The chat message description.
  */
 export interface IChatMessage<T = IUser, U = IAttachment> {
@@ -73,6 +99,10 @@ export interface IChatMessage<T = IUser, U = IAttachment> {
   deleted?: boolean;
   edited?: boolean;
   stacked?: boolean;
+  /**
+   * Token usage information for this message (if from an LLM).
+   */
+  usage?: ITokenUsage;
 }
 
 /**
