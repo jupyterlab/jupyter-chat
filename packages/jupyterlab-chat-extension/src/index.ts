@@ -75,6 +75,7 @@ import { emojiCommandsPlugin } from './chat-commands/providers/emoji';
 import { mentionCommandsPlugin } from './chat-commands/providers/user-mention';
 
 const FACTORY = 'Chat';
+const CHAT_LIST_UPDATE_INTERVAL = 2000;
 
 const pluginIds = {
   activeCellManager: 'jupyterlab-chat-extension:activeCellManager',
@@ -103,7 +104,7 @@ async function createChatModel(
   contentProvider: ICollaborativeContentProvider,
   path?: string,
   defaultDirectory?: string
-): Promise<MultiChatPanel.IAddChatArgs> {
+): Promise<MultiChatPanel.IOpenChatArgs> {
   const modelFactory = app.docRegistry.getModelFactory(
     'Chat'
   ) as LabChatModelFactory;
@@ -435,8 +436,29 @@ const chatTracker: JupyterFrontEndPlugin<IChatTracker> = {
     });
 
     // Add the new opened chat in the tracker.
-    chatPanel?.sectionAdded.connect((_, section) => {
-      tracker.add(section.widget);
+    chatPanel?.chatOpened.connect((_, widget) => {
+      tracker.add(widget);
+    });
+
+    // Listen for the file renaming to update the models name.
+    app.serviceManager.contents.fileChanged.connect((_sender, change) => {
+      if (
+        change.type === 'rename' &&
+        change.newValue?.path?.endsWith(chatFileType.extensions[0])
+      ) {
+        // Update the model name from the widget tracker.
+        const oldPath = change.oldValue?.path;
+        const newPath = change.newValue?.path;
+        if (oldPath && newPath && oldPath !== newPath) {
+          // Loop on all the model in tracker that have the old path as name.
+          let widget = tracker.find(widget => widget.model.name === oldPath);
+          while (widget) {
+            widget.model.name = newPath;
+            tracker.save(widget);
+            widget = tracker.find(widget => widget.model.name === oldPath);
+          }
+        }
+      }
     });
 
     // Handle state restoration.
@@ -460,7 +482,7 @@ const chatTracker: JupyterFrontEndPlugin<IChatTracker> = {
         }),
         name: widget => {
           const area = widget.area ?? 'main';
-          return `${area}:${widget.model.name}`;
+          return area === 'main' ? widget.model.name : 'sidebar';
         },
         when: openCommandReady.promise
       });
@@ -715,14 +737,14 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
                 app.shell.activateById(chatPanel.id);
               }
 
-              if (chatPanel.openIfExists(filepath)) {
+              if (chatPanel.openIfLoaded(filepath)) {
                 return true;
               }
 
-              const addChatArgs = await createChatModel(app, drive, filepath);
+              const openChatArgs = await createChatModel(app, drive, filepath);
 
               // Add a chat widget to the side panel.
-              chatPanel.addChat(addChatArgs);
+              chatPanel.open(openChatArgs);
             } else {
               // The chat is opened in the main area
               // TODO: support JCollab v3 by optionally prefixing 'RTC:'
@@ -750,12 +772,16 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     // Command to rename a chat
     commands.addCommand(CommandIDs.renameChat, {
       label: 'Rename chat',
-      execute: async (args: any): Promise<boolean> => {
-        const oldPath = args.oldPath as string;
+      execute: async (args: any): Promise<string | null> => {
+        let oldPath = args.oldPath as string;
         let newPath = args.newPath as string | null;
         if (!oldPath) {
-          showErrorMessage('Error renaming chat', 'Missing old path');
-          return false;
+          if (tracker.currentWidget) {
+            oldPath = tracker.currentWidget.model.name;
+          } else {
+            showErrorMessage('Error renaming chat', 'Missing old path');
+            return null;
+          }
         }
 
         // Ask user if new name not passed in args
@@ -766,13 +792,13 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
             placeholder: 'new-name'
           });
           if (!result.button.accept) {
-            return false; // user cancelled
+            return null;
           }
           newPath = result.value;
         }
 
         if (!newPath) {
-          return false;
+          return null;
         }
 
         // Ensure `.chat` extension
@@ -782,12 +808,12 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
 
         try {
           await app.serviceManager.contents.rename(oldPath, newPath);
-          return true;
+          return getDisplayName(newPath, widgetConfig.config.defaultDirectory);
         } catch (err) {
           console.error('Error renaming chat', err);
           showErrorMessage('Error renaming chat', `${err}`);
         }
-        return false;
+        return null;
       }
     });
 
@@ -801,7 +827,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           if (widget instanceof ChatWidget && chatPanel) {
             // The chat is the side panel.
             app.shell.activateById(chatPanel.id);
-            chatPanel.openIfExists(widget.model.name);
+            chatPanel.openIfLoaded(widget.model.name);
           } else {
             // The chat is in the main area.
             app.shell.activateById(widget.id);
@@ -903,11 +929,10 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
           filepath: path
         }) as Promise<boolean>;
       },
-      renameChat: (oldPath, newPath) => {
+      renameChat: (oldPath: string) => {
         return commands.execute(CommandIDs.renameChat, {
-          oldPath,
-          newPath
-        }) as Promise<boolean>;
+          oldPath
+        }) as Promise<string | null>;
       },
       chatCommandRegistry,
       attachmentOpenerRegistry,
@@ -918,27 +943,25 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     });
     chatPanel.id = 'JupyterlabChat:sidepanel';
 
-    // Update available chats and section title when default directory changed.
+    // Update available chats when default directory changed.
     widgetConfig.configChanged.connect((_, config) => {
       if (config.defaultDirectory !== undefined) {
         chatPanel.updateChatList();
-        chatPanel.sections.forEach(section => {
-          section.displayName = getDisplayName(
-            section.model.name,
-            config.defaultDirectory
-          );
-        });
       }
     });
 
-    // Listen for the file changes to update the chat list and the sections.
+    // Listen for the file changes to update the chat list.
     serviceManager.contents.fileChanged.connect((_sender, change) => {
       if (change.type === 'delete') {
         chatPanel.updateChatList();
-        // Dispose of the section if the chat is opened in the side panel.
-        chatPanel.sections
-          .find(section => section.model.name === change.oldValue?.path)
-          ?.dispose();
+        if (change.oldValue?.path) {
+          // Dispose of the model if the chat is loaded in the side panel.
+          const oldName = getDisplayName(
+            change.oldValue.path,
+            widgetConfig.config.defaultDirectory
+          );
+          chatPanel.disposeLoadedModel(oldName);
+        }
       }
       const updateActions = ['new', 'rename'];
       if (
@@ -946,15 +969,20 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
         change.newValue?.path?.endsWith(chatFileType.extensions[0])
       ) {
         chatPanel.updateChatList();
-        // Rename the section if the chat is opened in the side panel.
-        const currentSection = chatPanel.sections.find(
-          section => section.model.name === change.oldValue?.path
-        );
-        if (currentSection) {
-          currentSection.displayName = getDisplayName(
-            change.newValue.path,
+        // Update the displayed name if the current chat file is renamed.
+        const oldPath = change.oldValue?.path;
+        const newPath = change.newValue?.path;
+        if (oldPath && newPath) {
+          const oldName = getDisplayName(
+            oldPath,
             widgetConfig.config.defaultDirectory
           );
+          if (chatPanel.current?.name === oldName) {
+            chatPanel.current.name = getDisplayName(
+              newPath,
+              widgetConfig.config.defaultDirectory
+            );
+          }
         }
       }
     });
@@ -966,6 +994,21 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     if (restorer) {
       restorer.add(chatPanel, 'jupyter-chat');
     }
+
+    /**
+     * Update the chat list when panel is visible, to handle chats creation/deletion
+     *  without event.
+     */
+    let getChatsListInterval: number | undefined;
+    chatPanel.visibilityChanged.connect((_, visible) => {
+      window.clearInterval(getChatsListInterval);
+      if (visible) {
+        getChatsListInterval = window.setInterval(
+          chatPanel.updateChatList,
+          CHAT_LIST_UPDATE_INTERVAL
+        );
+      }
+    });
 
     /*
      * Command to move a chat from the main area to the side panel.
