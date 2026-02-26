@@ -7,13 +7,19 @@ import { IWidgetTracker, MainAreaWidget } from '@jupyterlab/apputils';
 import { Token } from '@lumino/coreutils';
 
 import { ChatWidget } from './widgets';
+import { IChatModel } from './model';
+
+/**
+ * The main area chat widget type.
+ */
+export type MainAreaChat = MainAreaWidget<ChatWidget> & {
+  model: IChatModel;
+};
 
 /**
  * the chat tracker type.
  */
-export type IChatTracker = IWidgetTracker<
-  ChatWidget | MainAreaWidget<ChatWidget>
->;
+export type IChatTracker = IWidgetTracker<ChatWidget | MainAreaChat>;
 
 /**
  * A chat tracker token.
