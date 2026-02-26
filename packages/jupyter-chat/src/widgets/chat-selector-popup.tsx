@@ -388,7 +388,7 @@ function ChatSelectorList({
   };
 
   if (names.length === 0) {
-    return <div className={POPUP_EMPTY_CLASS}>No chats found</div>;
+    return <div className={POPUP_EMPTY_CLASS}>No chat found</div>;
   }
 
   return (
