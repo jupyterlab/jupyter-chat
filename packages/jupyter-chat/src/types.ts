@@ -62,6 +62,12 @@ export interface IConfig {
 }
 
 /**
+ * Mime model body type, a partial mime bundle model containing at least the data.
+ */
+export type IMimeModelBody = Partial<IRenderMime.IMimeModel> &
+  Pick<IRenderMime.IMimeModel, 'data'>;
+
+/**
  * An empty interface to describe optional metadata attached to a chat message.
  * Extensions can augment this interface to add custom fields:
  *
@@ -80,10 +86,7 @@ export interface IMessageMetadata {} /* eslint-disable-line @typescript-eslint/n
  */
 export type IMessageContent<T = IUser, U = IAttachment> = {
   type: string;
-  body:
-    | string
-    // Should contain at least the data of the mime model.
-    | (Partial<IRenderMime.IMimeModel> & Pick<IRenderMime.IMimeModel, 'data'>);
+  body: string | IMimeModelBody;
   id: string;
   time: number;
   sender: T;
