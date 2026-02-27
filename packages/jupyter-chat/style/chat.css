@@ -67,6 +67,8 @@
   top: 0;
   font-size: var(--jp-ui-font-size0);
   color: var(--jp-ui-font-color3);
+  background-color: var(--jp-layout-color2);
+  box-shadow: var(--jp-elevation-z2);
 }
 
 .jp-chat-toolbar:hover {
