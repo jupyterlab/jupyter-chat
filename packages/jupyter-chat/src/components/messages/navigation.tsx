@@ -11,7 +11,7 @@ import {
 } from '@jupyterlab/ui-components';
 import React, { useEffect, useState } from 'react';
 
-import { useChatContext } from '../../context';
+import { useChatContext, useTranslator } from '../../context';
 import { IChatModel } from '../../model';
 
 const NAVIGATION_BUTTON_CLASS = 'jp-chat-navigation';
@@ -38,6 +38,7 @@ type NavigationProps = {
  */
 export function Navigation(props: NavigationProps): JSX.Element {
   const { model } = useChatContext();
+  const trans = useTranslator();
   const [lastInViewport, setLastInViewport] = useState<boolean>(true);
   const [unreadBefore, setUnreadBefore] = useState<number | null>(null);
   const [unreadAfter, setUnreadAfter] = useState<number | null>(null);
@@ -132,7 +133,7 @@ export function Navigation(props: NavigationProps): JSX.Element {
         <Button
           className={`${NAVIGATION_BUTTON_CLASS} ${NAVIGATION_UNREAD_CLASS} ${NAVIGATION_TOP_CLASS}`}
           onClick={() => gotoMessage!(unreadBefore)}
-          title={'Go to unread messages'}
+          title={trans.__('Go to unread messages')}
         >
           <LabIcon.resolveReact
             display={'flex'}
@@ -151,8 +152,8 @@ export function Navigation(props: NavigationProps): JSX.Element {
           }
           title={
             unreadAfter !== null
-              ? 'Go to unread messages'
-              : 'Go to last message'
+              ? trans.__('Go to unread messages')
+              : trans.__('Go to last message')
           }
         >
           <LabIcon.resolveReact

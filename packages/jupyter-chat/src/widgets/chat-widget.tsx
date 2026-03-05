@@ -8,6 +8,7 @@ import { Cell } from '@jupyterlab/cells';
 import { DirListing } from '@jupyterlab/filebrowser';
 import { DocumentWidget } from '@jupyterlab/docregistry';
 import { ICell, isCode, isMarkdown, isRaw } from '@jupyterlab/nbformat';
+import { nullTranslator } from '@jupyterlab/translation';
 import React from 'react';
 import { Message } from '@lumino/messaging';
 import { Drag } from '@lumino/dragdrop';
@@ -24,6 +25,8 @@ import {
 } from '../types';
 import { ActiveCellManager } from '../active-cell-manager';
 import { IInputModel } from '../input-model';
+
+const TRANSLATION_DOMAIN = 'jupyterlab_chat';
 
 // MIME type constant for file browser drag events
 const FILE_BROWSER_MIME = 'application/x-jupyter-icontentsrich';
@@ -42,8 +45,11 @@ export class ChatWidget extends ReactWidget {
   constructor(options: Chat.IOptions) {
     super();
 
+    const trans = (options.translator ?? nullTranslator).load(
+      TRANSLATION_DOMAIN
+    );
     this.title.icon = chatIcon;
-    this.title.caption = 'Jupyter Chat'; // TODO: i18n
+    this.title.caption = trans.__('Jupyter Chat');
 
     this._chatOptions = options;
     this.id = `jupyter-chat::widget::${options.model.name}`;

@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react';
 
 import { InputToolbarRegistry } from '../toolbar-registry';
 import { TooltippedIconButton } from '../../mui-extras';
+import { useTranslator } from '../../../context';
 
 const STOP_BUTTON_CLASS = 'jp-chat-stop-button';
 
@@ -19,7 +20,8 @@ export function StopButton(
 ): JSX.Element {
   const { chatModel } = props;
   const [disabled, setDisabled] = useState(true);
-  const tooltip = 'Stop generating';
+  const trans = useTranslator();
+  const tooltip = trans.__('Stop generating');
 
   useEffect(() => {
     if (!chatModel) {
