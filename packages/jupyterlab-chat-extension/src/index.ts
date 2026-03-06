@@ -865,8 +865,8 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     }
 
     // Command to open a chat and send a message into it.
-    commands.addCommand(CommandIDs.openWithPrompt, {
-      label: 'Open chat with prompt',
+    commands.addCommand(CommandIDs.openWithMessage, {
+      label: 'Open chat with message',
       caption: 'Open a chat and send a message',
       execute: async args => {
         const name = args.name as string | undefined;

@@ -108,7 +108,7 @@ export const CommandIDs = {
   /**
    * Open a chat and send a message into it.
    */
-  openWithPrompt: 'jupyterlab-chat:openWithPrompt'
+  openWithMessage: 'jupyterlab-chat:openWithMessage'
 };
 
 /**
