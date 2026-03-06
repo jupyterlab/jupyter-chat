@@ -896,7 +896,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
             if (chatCommandRegistry) {
               await chatCommandRegistry.onSubmit(model.input);
             }
-            model.input.send(input);
+            model.input.send(model.input.value);
           } else {
             model.input.focus();
           }
