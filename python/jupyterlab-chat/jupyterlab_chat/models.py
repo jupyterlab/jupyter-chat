@@ -186,6 +186,11 @@ class NotebookAttachment:
 
     type: Literal['notebook'] = 'notebook'
 
+    mimetype: Optional[str] = None
+    """
+    (optional) The mime type of the notebook. Defaults to `None`.
+    """
+
     cells: Optional[list[NotebookAttachmentCell]] = None
     """
     (optional) A list of cells in the notebook.
