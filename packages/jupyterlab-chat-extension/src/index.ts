@@ -14,9 +14,11 @@ import {
   IChatCommandRegistry,
   IChatTracker,
   IMessageFooterRegistry,
+  IMessagePreambleRegistry,
   ISelectionWatcher,
   InputToolbarRegistry,
   MessageFooterRegistry,
+  MessagePreambleRegistry,
   SelectionWatcher,
   chatIcon,
   readIcon,
@@ -33,7 +35,6 @@ import {
   ICommandPalette,
   IThemeManager,
   IToolbarWidgetRegistry,
-  IWidgetTracker,
   InputDialog,
   WidgetTracker,
   createToolbarFactory,
@@ -73,6 +74,7 @@ import { emojiCommandsPlugin } from './chat-commands/providers/emoji';
 import { mentionCommandsPlugin } from './chat-commands/providers/user-mention';
 
 const FACTORY = 'Chat';
+const CHAT_LIST_UPDATE_INTERVAL = 2000;
 
 const pluginIds = {
   activeCellManager: 'jupyterlab-chat-extension:activeCellManager',
@@ -101,7 +103,7 @@ async function createChatModel(
   contentProvider: ICollaborativeContentProvider,
   path?: string,
   defaultDirectory?: string
-): Promise<MultiChatPanel.IAddChatArgs> {
+): Promise<MultiChatPanel.IOpenChatArgs> {
   const modelFactory = app.docRegistry.getModelFactory(
     'Chat'
   ) as LabChatModelFactory;
@@ -290,6 +292,7 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
     IDefaultFileBrowser,
     IInputToolbarRegistryFactory,
     IMessageFooterRegistry,
+    IMessagePreambleRegistry,
     ISelectionWatcherToken,
     ISettingRegistry,
     IThemeManager,
@@ -309,6 +312,7 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
     filebrowser: IDefaultFileBrowser | null,
     inputToolbarFactory: IInputToolbarRegistryFactory,
     messageFooterRegistry: IMessageFooterRegistry,
+    messagePreambleRegistry: IMessagePreambleRegistry,
     selectionWatcher: ISelectionWatcher | null,
     settingRegistry: ISettingRegistry | null,
     themeManager: IThemeManager | null,
@@ -381,6 +385,7 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
       attachmentOpenerRegistry,
       inputToolbarFactory,
       messageFooterRegistry,
+      messagePreambleRegistry,
       welcomeMessage
     });
 
@@ -430,8 +435,29 @@ const chatTracker: JupyterFrontEndPlugin<IChatTracker> = {
     });
 
     // Add the new opened chat in the tracker.
-    chatPanel?.sectionAdded.connect((_, section) => {
-      tracker.add(section.widget);
+    chatPanel?.chatOpened.connect((_, widget) => {
+      tracker.add(widget);
+    });
+
+    // Listen for the file renaming to update the models name.
+    app.serviceManager.contents.fileChanged.connect((_sender, change) => {
+      if (
+        change.type === 'rename' &&
+        change.newValue?.path?.endsWith(chatFileType.extensions[0])
+      ) {
+        // Update the model name from the widget tracker.
+        const oldPath = change.oldValue?.path;
+        const newPath = change.newValue?.path;
+        if (oldPath && newPath && oldPath !== newPath) {
+          // Loop on all the model in tracker that have the old path as name.
+          let widget = tracker.find(widget => widget.model.name === oldPath);
+          while (widget) {
+            widget.model.name = newPath;
+            tracker.save(widget);
+            widget = tracker.find(widget => widget.model.name === oldPath);
+          }
+        }
+      }
     });
 
     // Handle state restoration.
@@ -455,7 +481,7 @@ const chatTracker: JupyterFrontEndPlugin<IChatTracker> = {
         }),
         name: widget => {
           const area = widget.area ?? 'main';
-          return `${area}:${widget.model.name}`;
+          return area === 'main' ? widget.model.name : 'sidebar';
         },
         when: openCommandReady.promise
       });
@@ -473,16 +499,23 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
   description: 'The commands to create or open a chat.',
   autoStart: true,
   requires: [ICollaborativeContentProvider, IWidgetConfig, IChatTracker],
-  optional: [IChatPanel, ICommandPalette, IDefaultFileBrowser, ILauncher],
+  optional: [
+    IChatPanel,
+    ICommandPalette,
+    IDefaultFileBrowser,
+    ILauncher,
+    IChatCommandRegistry
+  ],
   activate: (
     app: JupyterFrontEnd,
     drive: ICollaborativeContentProvider,
     widgetConfig: IWidgetConfig,
-    tracker: IWidgetTracker<ChatWidget>,
+    tracker: IChatTracker,
     chatPanel: MultiChatPanel | null,
     commandPalette: ICommandPalette | null,
     filebrowser: IDefaultFileBrowser | null,
-    launcher: ILauncher | null
+    launcher: ILauncher | null,
+    chatCommandRegistry: IChatCommandRegistry | null
   ) => {
     const { commands } = app;
 
@@ -710,14 +743,14 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
                 app.shell.activateById(chatPanel.id);
               }
 
-              if (chatPanel.openIfExists(filepath)) {
+              if (chatPanel.openIfLoaded(filepath)) {
                 return true;
               }
 
-              const addChatArgs = await createChatModel(app, drive, filepath);
+              const openChatArgs = await createChatModel(app, drive, filepath);
 
               // Add a chat widget to the side panel.
-              chatPanel.addChat(addChatArgs);
+              chatPanel.open(openChatArgs);
             } else {
               // The chat is opened in the main area
               // TODO: support JCollab v3 by optionally prefixing 'RTC:'
@@ -745,12 +778,16 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     // Command to rename a chat
     commands.addCommand(CommandIDs.renameChat, {
       label: 'Rename chat',
-      execute: async (args: any): Promise<boolean> => {
-        const oldPath = args.oldPath as string;
+      execute: async (args: any): Promise<string | null> => {
+        let oldPath = args.oldPath as string;
         let newPath = args.newPath as string | null;
         if (!oldPath) {
-          showErrorMessage('Error renaming chat', 'Missing old path');
-          return false;
+          if (tracker.currentWidget) {
+            oldPath = tracker.currentWidget.model.name;
+          } else {
+            showErrorMessage('Error renaming chat', 'Missing old path');
+            return null;
+          }
         }
 
         // Ask user if new name not passed in args
@@ -761,13 +798,13 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
             placeholder: 'new-name'
           });
           if (!result.button.accept) {
-            return false; // user cancelled
+            return null;
           }
           newPath = result.value;
         }
 
         if (!newPath) {
-          return false;
+          return null;
         }
 
         // Ensure `.chat` extension
@@ -777,12 +814,12 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
 
         try {
           await app.serviceManager.contents.rename(oldPath, newPath);
-          return true;
+          return getDisplayName(newPath, widgetConfig.config.defaultDirectory);
         } catch (err) {
           console.error('Error renaming chat', err);
           showErrorMessage('Error renaming chat', `${err}`);
         }
-        return false;
+        return null;
       }
     });
 
@@ -796,7 +833,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           if (widget instanceof ChatWidget && chatPanel) {
             // The chat is the side panel.
             app.shell.activateById(chatPanel.id);
-            chatPanel.openIfExists(widget.model.name);
+            chatPanel.openIfLoaded(widget.model.name);
           } else {
             // The chat is in the main area.
             app.shell.activateById(widget.id);
@@ -826,6 +863,48 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         category: 'Other'
       });
     }
+
+    // Command to open a chat and send a message into it.
+    commands.addCommand(CommandIDs.openWithMessage, {
+      label: 'Open chat with message',
+      caption: 'Open a chat and send a message',
+      execute: async args => {
+        const name = args.name as string | undefined;
+        const path = args.path as string | undefined;
+        const inSidePanel = (args.inSidePanel as boolean) ?? false;
+        const input = (args.input as string) ?? '';
+        const autoSend = (args.autoSend as boolean) ?? false;
+
+        const widget = await commands.execute(CommandIDs.createAndOpen, {
+          name,
+          path,
+          inSidePanel
+        });
+
+        // Resolve the model from either the widget or the side panel
+        const model =
+          widget instanceof LabChatPanel
+            ? widget.model
+            : inSidePanel && chatPanel?.current
+              ? chatPanel.current.model
+              : null;
+
+        if (model && input.trim()) {
+          await model.ready;
+          model.input.value = input;
+          if (autoSend) {
+            if (chatCommandRegistry) {
+              await chatCommandRegistry.onSubmit(model.input);
+            }
+            model.input.send(model.input.value);
+          } else {
+            model.input.focus();
+          }
+        }
+
+        return widget;
+      }
+    });
   }
 };
 
@@ -844,6 +923,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     IInputToolbarRegistryFactory,
     ILayoutRestorer,
     IMessageFooterRegistry,
+    IMessagePreambleRegistry,
     IThemeManager,
     IWelcomeMessage
   ],
@@ -857,6 +937,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     inputToolbarFactory: IInputToolbarRegistryFactory,
     restorer: ILayoutRestorer | null,
     messageFooterRegistry: IMessageFooterRegistry,
+    messagePreambleRegistry: IMessagePreambleRegistry,
     themeManager: IThemeManager | null,
     welcomeMessage: string
   ): MultiChatPanel => {
@@ -896,41 +977,39 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
           filepath: path
         }) as Promise<boolean>;
       },
-      renameChat: (oldPath, newPath) => {
+      renameChat: (oldPath: string) => {
         return commands.execute(CommandIDs.renameChat, {
-          oldPath,
-          newPath
-        }) as Promise<boolean>;
+          oldPath
+        }) as Promise<string | null>;
       },
       chatCommandRegistry,
       attachmentOpenerRegistry,
       inputToolbarFactory,
       messageFooterRegistry,
+      messagePreambleRegistry,
       welcomeMessage
     });
     chatPanel.id = 'JupyterlabChat:sidepanel';
 
-    // Update available chats and section title when default directory changed.
+    // Update available chats when default directory changed.
     widgetConfig.configChanged.connect((_, config) => {
       if (config.defaultDirectory !== undefined) {
         chatPanel.updateChatList();
-        chatPanel.sections.forEach(section => {
-          section.displayName = getDisplayName(
-            section.model.name,
-            config.defaultDirectory
-          );
-        });
       }
     });
 
-    // Listen for the file changes to update the chat list and the sections.
+    // Listen for the file changes to update the chat list.
     serviceManager.contents.fileChanged.connect((_sender, change) => {
       if (change.type === 'delete') {
         chatPanel.updateChatList();
-        // Dispose of the section if the chat is opened in the side panel.
-        chatPanel.sections
-          .find(section => section.model.name === change.oldValue?.path)
-          ?.dispose();
+        if (change.oldValue?.path) {
+          // Dispose of the model if the chat is loaded in the side panel.
+          const oldName = getDisplayName(
+            change.oldValue.path,
+            widgetConfig.config.defaultDirectory
+          );
+          chatPanel.disposeLoadedModel(oldName);
+        }
       }
       const updateActions = ['new', 'rename'];
       if (
@@ -938,15 +1017,20 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
         change.newValue?.path?.endsWith(chatFileType.extensions[0])
       ) {
         chatPanel.updateChatList();
-        // Rename the section if the chat is opened in the side panel.
-        const currentSection = chatPanel.sections.find(
-          section => section.model.name === change.oldValue?.path
-        );
-        if (currentSection) {
-          currentSection.displayName = getDisplayName(
-            change.newValue.path,
+        // Update the displayed name if the current chat file is renamed.
+        const oldPath = change.oldValue?.path;
+        const newPath = change.newValue?.path;
+        if (oldPath && newPath) {
+          const oldName = getDisplayName(
+            oldPath,
             widgetConfig.config.defaultDirectory
           );
+          if (chatPanel.current?.name === oldName) {
+            chatPanel.current.name = getDisplayName(
+              newPath,
+              widgetConfig.config.defaultDirectory
+            );
+          }
         }
       }
     });
@@ -958,6 +1042,21 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     if (restorer) {
       restorer.add(chatPanel, 'jupyter-chat');
     }
+
+    /**
+     * Update the chat list when panel is visible, to handle chats creation/deletion
+     *  without event.
+     */
+    let getChatsListInterval: number | undefined;
+    chatPanel.visibilityChanged.connect((_, visible) => {
+      window.clearInterval(getChatsListInterval);
+      if (visible) {
+        getChatsListInterval = window.setInterval(
+          chatPanel.updateChatList,
+          CHAT_LIST_UPDATE_INTERVAL
+        );
+      }
+    });
 
     /*
      * Command to move a chat from the main area to the side panel.
@@ -1065,6 +1164,19 @@ const footerRegistry: JupyterFrontEndPlugin<IMessageFooterRegistry> = {
   }
 };
 
+/**
+ * Extension providing the message preamble registry.
+ */
+const preambleRegistry: JupyterFrontEndPlugin<IMessagePreambleRegistry> = {
+  id: 'jupyterlab-chat/preambleRegistry',
+  description: 'The preamble registry plugin.',
+  autoStart: true,
+  provides: IMessagePreambleRegistry,
+  activate: (): IMessagePreambleRegistry => {
+    return new MessagePreambleRegistry();
+  }
+};
+
 export default [
   activeCellManager,
   attachmentOpeners,
@@ -1076,6 +1188,7 @@ export default [
   docFactories,
   footerRegistry,
   inputToolbarFactory,
+  preambleRegistry,
   selectionWatcher,
   emojiCommandsPlugin,
   mentionCommandsPlugin

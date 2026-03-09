@@ -184,10 +184,6 @@ export async function getJupyterLabTheme(): Promise<Theme> {
       }
     },
     palette: {
-      background: {
-        paper: getCSSVariable('--jp-layout-color1'),
-        default: getCSSVariable('--jp-layout-color1')
-      },
       mode: light ? 'light' : 'dark',
       primary: {
         main: getCSSVariable(`--jp-brand-color${light ? '1' : '2'}`),

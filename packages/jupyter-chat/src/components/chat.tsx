@@ -24,7 +24,8 @@ import { IChatModel } from '../model';
 import {
   IAttachmentOpenerRegistry,
   IChatCommandRegistry,
-  IMessageFooterRegistry
+  IMessageFooterRegistry,
+  IMessagePreambleRegistry
 } from '../registers';
 import { ChatArea } from '../types';
 
@@ -168,6 +169,10 @@ export namespace Chat {
      * The footer registry.
      */
     messageFooterRegistry?: IMessageFooterRegistry;
+    /**
+     * The preamble registry for content above message body.
+     */
+    messagePreambleRegistry?: IMessagePreambleRegistry;
     /**
      * The welcome message.
      */

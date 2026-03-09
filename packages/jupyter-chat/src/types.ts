@@ -62,14 +62,31 @@ export interface IConfig {
 }
 
 /**
+ * Mime model body type, a partial mime bundle model containing at least the data.
+ */
+export type IMimeModelBody = Partial<IRenderMime.IMimeModel> &
+  Pick<IRenderMime.IMimeModel, 'data'>;
+
+/**
+ * An empty interface to describe optional metadata attached to a chat message.
+ * Extensions can augment this interface to add custom fields:
+ *
+ * ```ts
+ * declare module '@jupyter/chat' {
+ *   interface IMessageMetadata {
+ *     myField?: MyType;
+ *   }
+ * }
+ * ```
+ */
+export interface IMessageMetadata {} /* eslint-disable-line @typescript-eslint/no-empty-object-type */
+
+/**
  * The chat message description.
  */
 export type IMessageContent<T = IUser, U = IAttachment> = {
   type: string;
-  body:
-    | string
-    // Should contain at least the data of the mime model.
-    | (Partial<IRenderMime.IMimeModel> & Pick<IRenderMime.IMimeModel, 'data'>);
+  body: string | IMimeModelBody;
   id: string;
   time: number;
   sender: T;
@@ -79,11 +96,9 @@ export type IMessageContent<T = IUser, U = IAttachment> = {
   deleted?: boolean;
   edited?: boolean;
   stacked?: boolean;
+  metadata?: IMessageMetadata;
 };
 
-/**
- *
- */
 export interface IMessage extends IMessageContent {
   /**
    * Update one or several fields of the message.

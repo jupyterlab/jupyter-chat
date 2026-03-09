@@ -104,7 +104,11 @@ export const CommandIDs = {
   /**
    * Rename the current chat.
    */
-  renameChat: 'jupyterlab-chat:renameChat'
+  renameChat: 'jupyterlab-chat:renameChat',
+  /**
+   * Open a chat and send a message into it.
+   */
+  openWithMessage: 'jupyterlab-chat:openWithMessage'
 };
 
 /**

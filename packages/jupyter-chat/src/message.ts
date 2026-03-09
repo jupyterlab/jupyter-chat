@@ -3,9 +3,15 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { IRenderMime } from '@jupyterlab/rendermime';
 import { ISignal, Signal } from '@lumino/signaling';
-import { IAttachment, IMessageContent, IMessage, IUser } from './types';
+import {
+  IAttachment,
+  IMessageContent,
+  IMessage,
+  IMessageMetadata,
+  IUser,
+  IMimeModelBody
+} from './types';
 
 /**
  * The message object.
@@ -33,9 +39,7 @@ export class Message implements IMessage {
   get type(): string {
     return this._content.type;
   }
-  get body():
-    | string
-    | (Partial<IRenderMime.IMimeModel> & Pick<IRenderMime.IMimeModel, 'data'>) {
+  get body(): string | IMimeModelBody {
     return this._content.body;
   }
   get id(): string {
@@ -64,6 +68,9 @@ export class Message implements IMessage {
   }
   get stacked(): boolean | undefined {
     return this._content.stacked;
+  }
+  get metadata(): IMessageMetadata | undefined {
+    return this._content.metadata;
   }
 
   /**

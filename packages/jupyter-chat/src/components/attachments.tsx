@@ -4,11 +4,12 @@
  */
 
 import CloseIcon from '@mui/icons-material/Close';
-import { Box, Button, Tooltip } from '@mui/material';
+import { Box, Tooltip } from '@mui/material';
 import React from 'react';
 import { PathExt } from '@jupyterlab/coreutils';
 import { UUID } from '@lumino/coreutils';
 
+import { TooltippedIconButton } from './mui-extras';
 import { useChatContext } from '../context';
 import { IAttachment } from '../types';
 
@@ -131,28 +132,20 @@ export function AttachmentPreview(props: AttachmentProps): JSX.Element {
         </Box>
       </Tooltip>
       {props.onRemove && (
-        <Tooltip title={remove_tooltip} placement="top" arrow>
-          <span>
-            <Button
-              onClick={() => props.onRemove!(props.attachment)}
-              size="small"
-              className={REMOVE_BUTTON_CLASS}
-              aria-label={remove_tooltip}
-              sx={{
-                minWidth: 'unset',
-                padding: 0,
-                lineHeight: 0,
-                color: 'var(--jp-ui-font-color2)',
-                '&:hover': {
-                  color: 'var(--jp-ui-font-color0)',
-                  backgroundColor: 'transparent'
-                }
-              }}
-            >
-              <CloseIcon fontSize="small" />
-            </Button>
-          </span>
-        </Tooltip>
+        <TooltippedIconButton
+          tooltip={remove_tooltip}
+          onClick={() => props.onRemove!(props.attachment)}
+          className={REMOVE_BUTTON_CLASS}
+          inputToolbar={false}
+          sx={{
+            width: 'unset',
+            minWidth: 'unset',
+            height: 'unset',
+            padding: 0
+          }}
+        >
+          <CloseIcon fontSize="small" />
+        </TooltippedIconButton>
       )}
     </Box>
   );
