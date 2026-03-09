@@ -499,7 +499,13 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
   description: 'The commands to create or open a chat.',
   autoStart: true,
   requires: [ICollaborativeContentProvider, IWidgetConfig, IChatTracker],
-  optional: [IChatPanel, ICommandPalette, IDefaultFileBrowser, ILauncher],
+  optional: [
+    IChatPanel,
+    ICommandPalette,
+    IDefaultFileBrowser,
+    ILauncher,
+    IChatCommandRegistry
+  ],
   activate: (
     app: JupyterFrontEnd,
     drive: ICollaborativeContentProvider,
@@ -508,7 +514,8 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     chatPanel: MultiChatPanel | null,
     commandPalette: ICommandPalette | null,
     filebrowser: IDefaultFileBrowser | null,
-    launcher: ILauncher | null
+    launcher: ILauncher | null,
+    chatCommandRegistry: IChatCommandRegistry | null
   ) => {
     const { commands } = app;
 
@@ -856,6 +863,48 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         category: 'Other'
       });
     }
+
+    // Command to open a chat and send a message into it.
+    commands.addCommand(CommandIDs.openWithMessage, {
+      label: 'Open chat with message',
+      caption: 'Open a chat and send a message',
+      execute: async args => {
+        const name = args.name as string | undefined;
+        const path = args.path as string | undefined;
+        const inSidePanel = (args.inSidePanel as boolean) ?? false;
+        const input = (args.input as string) ?? '';
+        const autoSend = (args.autoSend as boolean) ?? false;
+
+        const widget = await commands.execute(CommandIDs.createAndOpen, {
+          name,
+          path,
+          inSidePanel
+        });
+
+        // Resolve the model from either the widget or the side panel
+        const model =
+          widget instanceof LabChatPanel
+            ? widget.model
+            : inSidePanel && chatPanel?.current
+              ? chatPanel.current.model
+              : null;
+
+        if (model && input.trim()) {
+          await model.ready;
+          model.input.value = input;
+          if (autoSend) {
+            if (chatCommandRegistry) {
+              await chatCommandRegistry.onSubmit(model.input);
+            }
+            model.input.send(model.input.value);
+          } else {
+            model.input.focus();
+          }
+        }
+
+        return widget;
+      }
+    });
   }
 };
 
