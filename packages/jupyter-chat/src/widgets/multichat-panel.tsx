@@ -33,6 +33,7 @@ import {
   IInputToolbarRegistry,
   IInputToolbarRegistryFactory
 } from '../components';
+import { TRANSLATION_DOMAIN } from '../context';
 import { chatIcon, readIcon } from '../icons';
 import { IChatModel } from '../model';
 
@@ -41,8 +42,6 @@ const ADD_BUTTON_CLASS = 'jp-chat-add';
 const OPEN_SELECT_CLASS = 'jp-chat-open';
 const SIDEPANEL_WIDGET_CLASS = 'jp-chat-sidepanel-widget';
 const TOOLBAR_CLASS = 'jp-chat-sidepanel-widget-toolbar';
-
-const TRANSLATION_DOMAIN = 'jupyterlab_chat';
 
 /**
  * Generic sidepanel widget including multiple chats and the add chat button.

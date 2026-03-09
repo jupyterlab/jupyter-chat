@@ -15,6 +15,7 @@ import { Drag } from '@lumino/dragdrop';
 import { Widget } from '@lumino/widgets';
 
 import { Chat, IInputToolbarRegistry, MESSAGE_CLASS } from '../components';
+import { TRANSLATION_DOMAIN } from '../context';
 import { chatIcon } from '../icons';
 import { IChatModel } from '../model';
 import {
@@ -25,8 +26,6 @@ import {
 } from '../types';
 import { ActiveCellManager } from '../active-cell-manager';
 import { IInputModel } from '../input-model';
-
-const TRANSLATION_DOMAIN = 'jupyterlab_chat';
 
 // MIME type constant for file browser drag events
 const FILE_BROWSER_MIME = 'application/x-jupyter-icontentsrich';

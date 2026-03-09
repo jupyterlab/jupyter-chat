@@ -9,9 +9,8 @@ import { Alert, Box } from '@mui/material';
 import React from 'react';
 
 import { JlThemeProvider } from '../components/jl-theme-provider';
+import { TRANSLATION_DOMAIN } from '../context';
 import { chatIcon } from '../icons';
-
-const TRANSLATION_DOMAIN = 'jupyterlab_chat';
 
 export function buildErrorWidget(
   themeManager: IThemeManager | null,

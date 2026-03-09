@@ -20,6 +20,7 @@ import {
   MessageFooterRegistry,
   MessagePreambleRegistry,
   SelectionWatcher,
+  TRANSLATION_DOMAIN,
   chatIcon,
   readIcon,
   IInputToolbarRegistryFactory,
@@ -75,7 +76,6 @@ import { mentionCommandsPlugin } from './chat-commands/providers/user-mention';
 
 const FACTORY = 'Chat';
 const CHAT_LIST_UPDATE_INTERVAL = 2000;
-const TRANSLATION_DOMAIN = 'jupyterlab_chat';
 
 const pluginIds = {
   activeCellManager: 'jupyterlab-chat-extension:activeCellManager',
@@ -360,6 +360,7 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
           user,
           widgetConfig,
           commands: app.commands,
+          translator,
           activeCellManager,
           selectionWatcher,
           documentManager: filebrowser?.model.manager

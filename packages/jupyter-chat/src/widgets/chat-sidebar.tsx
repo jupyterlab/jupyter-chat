@@ -6,10 +6,9 @@
 import { nullTranslator } from '@jupyterlab/translation';
 
 import { Chat } from '../components/chat';
+import { TRANSLATION_DOMAIN } from '../context';
 import { chatIcon } from '../icons';
 import { ChatWidget } from './chat-widget';
-
-const TRANSLATION_DOMAIN = 'jupyterlab_chat';
 
 export function buildChatSidebar(options: Chat.IOptions): ChatWidget {
   const widget = new ChatWidget(options);

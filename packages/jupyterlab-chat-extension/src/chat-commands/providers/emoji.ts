@@ -13,10 +13,9 @@ import {
   IChatCommandProvider,
   IChatCommandRegistry,
   ChatCommand,
-  IInputModel
+  IInputModel,
+  TRANSLATION_DOMAIN
 } from '@jupyter/chat';
-
-const TRANSLATION_DOMAIN = 'jupyterlab_chat';
 
 export class EmojiCommandProvider implements IChatCommandProvider {
   constructor(translator?: ITranslator) {

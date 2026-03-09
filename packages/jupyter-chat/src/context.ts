@@ -8,7 +8,7 @@ import { createContext, useContext } from 'react';
 
 import { Chat } from './components';
 
-const TRANSLATION_DOMAIN = 'jupyterlab_chat';
+export const TRANSLATION_DOMAIN = 'jupyter-chat';
 
 export const ChatReactContext = createContext<Chat.IChatProps | undefined>(
   undefined

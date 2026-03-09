@@ -417,8 +417,8 @@ export class LabChatModel
             const msg: IMessageContent = {
               ...baseMessage,
               sender: this.sharedModel.getUser(sender) || {
-                username: 'User undefined',
-                mention_name: 'User-undefined'
+                username: this._trans.__('User undefined'),
+                mention_name: this._trans.__('User-undefined')
               }
             };
 
@@ -439,8 +439,8 @@ export class LabChatModel
             const mentions: IUser[] = (mentionsIds ?? []).map(
               user =>
                 this.sharedModel.getUser(user) || {
-                  username: 'User undefined',
-                  mention_name: 'User-undefined'
+                  username: this._trans.__('User undefined'),
+                  mention_name: this._trans.__('User-undefined')
                 }
             );
 
@@ -483,8 +483,8 @@ export class LabChatModel
             const mentions: IUser[] = (value as string[]).map(
               user =>
                 this.sharedModel.getUser(user) || {
-                  username: 'User undefined',
-                  mention_name: 'User-undefined'
+                  username: this._trans.__('User undefined'),
+                  mention_name: this._trans.__('User-undefined')
                 }
             );
             if (mentions?.length) {

@@ -4,10 +4,16 @@
  */
 
 import { Button } from '@jupyter/react-components';
-import { nullTranslator, TranslationBundle } from '@jupyterlab/translation';
+import {
+  ITranslator,
+  nullTranslator,
+  TranslationBundle
+} from '@jupyterlab/translation';
 import { closeIcon, ReactWidget } from '@jupyterlab/ui-components';
 import { Message } from '@lumino/messaging';
 import React, { useEffect, useRef } from 'react';
+
+import { TRANSLATION_DOMAIN } from '../context';
 
 const POPUP_CLASS = 'jp-chat-selector-popup';
 const POPUP_LIST_CLASS = 'jp-chat-selector-popup-list';
@@ -15,8 +21,6 @@ const POPUP_ITEM_CLASS = 'jp-chat-selector-popup-item';
 const POPUP_ITEM_ACTIVE_CLASS = 'jp-chat-selector-popup-item-active';
 const POPUP_ITEM_LABEL_CLASS = 'jp-chat-selector-popup-item-label';
 const POPUP_EMPTY_CLASS = 'jp-chat-selector-popup-empty';
-
-const TRANSLATION_DOMAIN = 'jupyterlab_chat';
 
 /**
  * A popup widget for selecting a chat from a filtered list.
@@ -356,9 +360,6 @@ export namespace ChatSelectorPopup {
     translator?: ITranslator;
   }
 }
-
-// Re-export the ITranslator type for use in the namespace
-import { ITranslator } from '@jupyterlab/translation';
 
 /**
  * Props for the ChatSelectorList component.
