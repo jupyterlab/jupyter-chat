@@ -2,6 +2,45 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.20.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/v0.19.0...8c6c97218751fb8a026729f94bbc4e3aab6a0e89))
+
+### Enhancements made
+
+- Add `IMessagePreambleRegistry` extension point and `IMessageMetadata` interface [#363](https://github.com/jupyterlab/jupyter-chat/pull/363) ([@andrii-i](https://github.com/andrii-i), [@SylvainCorlay](https://github.com/SylvainCorlay), [@brichet](https://github.com/brichet), [@dlqqq](https://github.com/dlqqq), [@jtpio](https://github.com/jtpio))
+- Render mime bundle [#349](https://github.com/jupyterlab/jupyter-chat/pull/349) ([@brichet](https://github.com/brichet), [@jtpio](https://github.com/jtpio), [@nakul-py](https://github.com/nakul-py))
+- Refactor mutichat [#343](https://github.com/jupyterlab/jupyter-chat/pull/343) ([@brichet](https://github.com/brichet), [@jtpio](https://github.com/jtpio), [@nakul-py](https://github.com/nakul-py))
+
+### Bugs fixed
+
+- Small fixes to follow up PRs [#377](https://github.com/jupyterlab/jupyter-chat/pull/377) ([@brichet](https://github.com/brichet), [@jtpio](https://github.com/jtpio), [@nakul-py](https://github.com/nakul-py))
+- Fix the attachment component [#376](https://github.com/jupyterlab/jupyter-chat/pull/376) ([@brichet](https://github.com/brichet), [@andrii-i](https://github.com/andrii-i), [@jtpio](https://github.com/jtpio))
+- Clear input immediately after sending message [#365](https://github.com/jupyterlab/jupyter-chat/pull/365) ([@nakul-py](https://github.com/nakul-py), [@brichet](https://github.com/brichet))
+- Improve DOM message management [#362](https://github.com/jupyterlab/jupyter-chat/pull/362) ([@brichet](https://github.com/brichet), [@jtpio](https://github.com/jtpio))
+- Fix flickering 'mark as read' button on update [#360](https://github.com/jupyterlab/jupyter-chat/pull/360) ([@brichet](https://github.com/brichet), [@jtpio](https://github.com/jtpio))
+- Dark mode: use black color for text in buttons [#359](https://github.com/jupyterlab/jupyter-chat/pull/359) ([@brichet](https://github.com/brichet), [@jtpio](https://github.com/jtpio))
+- Capital Tooltip [#357](https://github.com/jupyterlab/jupyter-chat/pull/357) ([@nakul-py](https://github.com/nakul-py), [@brichet](https://github.com/brichet))
+- Prevent Attachment updating when cancelling edition [#356](https://github.com/jupyterlab/jupyter-chat/pull/356) ([@nakul-py](https://github.com/nakul-py), [@brichet](https://github.com/brichet))
+
+### Maintenance and upkeep improvements
+
+- Bump the npm_and_yarn group across 1 directory with 2 updates [#369](https://github.com/jupyterlab/jupyter-chat/pull/369) ([@brichet](https://github.com/brichet))
+- Add a CI to set the author of the PR at opening [#358](https://github.com/jupyterlab/jupyter-chat/pull/358) ([@brichet](https://github.com/brichet))
+- Use more util functions in UI tests [#355](https://github.com/jupyterlab/jupyter-chat/pull/355) ([@nakul-py](https://github.com/nakul-py), [@brichet](https://github.com/brichet))
+- Adding UI-tests on drag and drop attachments [#352](https://github.com/jupyterlab/jupyter-chat/pull/352) ([@nakul-py](https://github.com/nakul-py), [@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-02-10&to=2026-03-02&type=c))
+
+@andrii-i ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Aandrii-i+updated%3A2026-02-10..2026-03-02&type=Issues)) | @brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-02-10..2026-03-02&type=Issues)) | @dlqqq ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2026-02-10..2026-03-02&type=Issues)) | @jtpio ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2026-02-10..2026-03-02&type=Issues)) | @nakul-py ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Anakul-py+updated%3A2026-02-10..2026-03-02&type=Issues)) | @SylvainCorlay ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3ASylvainCorlay+updated%3A2026-02-10..2026-03-02&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.20.0alpha3
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.20.0-alpha.2...43a9bfedcfdf6c4560250555f2ed4dea0509c868))
@@ -18,8 +57,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-02-23&to=2026-02-25&type=c))
 
 @brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-02-23..2026-02-25&type=Issues)) | @jtpio ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2026-02-23..2026-02-25&type=Issues)) | @nakul-py ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Anakul-py+updated%3A2026-02-23..2026-02-25&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.20.0alpha2
 
