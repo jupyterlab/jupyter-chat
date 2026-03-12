@@ -5,44 +5,58 @@
 
 import { JupyterFrontEndPlugin } from '@jupyterlab/application';
 import {
+  ITranslator,
+  nullTranslator,
+  TranslationBundle
+} from '@jupyterlab/translation';
+import {
   IChatCommandProvider,
   IChatCommandRegistry,
   ChatCommand,
-  IInputModel
+  IInputModel,
+  TRANSLATION_DOMAIN
 } from '@jupyter/chat';
 
 export class EmojiCommandProvider implements IChatCommandProvider {
+  constructor(translator?: ITranslator) {
+    const trans = (translator ?? nullTranslator).load(TRANSLATION_DOMAIN);
+    this._trans = trans;
+  }
+
   public id: string = 'jupyter-chat:emoji-commands';
-  private _slash_commands: ChatCommand[] = [
-    {
-      name: ':heart:',
-      replaceWith: '❤',
-      providerId: this.id,
-      description: 'Emoji',
-      icon: '❤'
-    },
-    {
-      name: ':smile:',
-      replaceWith: '🙂',
-      providerId: this.id,
-      description: 'Emoji',
-      icon: '🙂'
-    },
-    {
-      name: ':thinking:',
-      replaceWith: '🤔',
-      providerId: this.id,
-      description: 'Emoji',
-      icon: '🤔'
-    },
-    {
-      name: ':cool:',
-      replaceWith: '😎',
-      providerId: this.id,
-      description: 'Emoji',
-      icon: '😎'
-    }
-  ];
+
+  private _getSlashCommands(): ChatCommand[] {
+    return [
+      {
+        name: ':heart:',
+        replaceWith: '❤',
+        providerId: this.id,
+        description: this._trans.__('Emoji'),
+        icon: '❤'
+      },
+      {
+        name: ':smile:',
+        replaceWith: '🙂',
+        providerId: this.id,
+        description: this._trans.__('Emoji'),
+        icon: '🙂'
+      },
+      {
+        name: ':thinking:',
+        replaceWith: '🤔',
+        providerId: this.id,
+        description: this._trans.__('Emoji'),
+        icon: '🤔'
+      },
+      {
+        name: ':cool:',
+        replaceWith: '😎',
+        providerId: this.id,
+        description: this._trans.__('Emoji'),
+        icon: '😎'
+      }
+    ];
+  }
 
   // regex used to test the current word
   private _regex: RegExp = /^:\w*:?/;
@@ -53,7 +67,7 @@ export class EmojiCommandProvider implements IChatCommandProvider {
       return [];
     }
 
-    const commands = this._slash_commands.filter(cmd =>
+    const commands = this._getSlashCommands().filter(cmd =>
       cmd.name.startsWith(match)
     );
     return commands;
@@ -65,6 +79,8 @@ export class EmojiCommandProvider implements IChatCommandProvider {
     // anything on submission.
     return;
   }
+
+  private _trans: TranslationBundle;
 }
 
 export const emojiCommandsPlugin: JupyterFrontEndPlugin<void> = {
@@ -72,7 +88,12 @@ export const emojiCommandsPlugin: JupyterFrontEndPlugin<void> = {
   description: 'Plugin which adds emoji commands to the chat.',
   autoStart: true,
   requires: [IChatCommandRegistry],
-  activate: (app, registry: IChatCommandRegistry) => {
-    registry.addProvider(new EmojiCommandProvider());
+  optional: [ITranslator],
+  activate: (
+    app,
+    registry: IChatCommandRegistry,
+    translator: ITranslator | null
+  ) => {
+    registry.addProvider(new EmojiCommandProvider(translator ?? undefined));
   }
 };

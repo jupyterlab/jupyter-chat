@@ -4,6 +4,11 @@
  */
 
 import { IDocumentManager } from '@jupyterlab/docmanager';
+import {
+  ITranslator,
+  nullTranslator,
+  TranslationBundle
+} from '@jupyterlab/translation';
 import { ArrayExt } from '@lumino/algorithm';
 import { CommandRegistry } from '@lumino/commands';
 import { PromiseDelegate } from '@lumino/coreutils';
@@ -11,6 +16,7 @@ import { IDisposable } from '@lumino/disposable';
 import { ISignal, Signal } from '@lumino/signaling';
 
 import { IActiveCellManager } from './active-cell-manager';
+import { TRANSLATION_DOMAIN } from './context';
 import { IInputModel, InputModel } from './input-model';
 import { Message } from './message';
 import { ISelectionWatcher } from './selection-watcher';
@@ -236,6 +242,10 @@ export abstract class AbstractChatModel implements IChatModel {
       sendTypingNotification: true,
       ...config
     };
+
+    this._trans = (options.translator ?? nullTranslator).load(
+      TRANSLATION_DOMAIN
+    );
 
     this._inputModel = new InputModel({
       activeCellManager: options.activeCellManager,
@@ -695,14 +705,24 @@ export abstract class AbstractChatModel implements IChatModel {
         this._commands
           .execute('apputils:update-notification', {
             id: this._notificationId,
-            message: `${unreadCount} incoming message(s) ${this._name ? 'in ' + this._name : ''}`
+            message: this._name
+              ? this._trans.__(
+                  '%1 incoming message(s) in %2',
+                  unreadCount,
+                  this._name
+                )
+              : this._trans.__('%1 incoming message(s)', unreadCount)
           })
           .then(success => {
             // Create a new notification only if messages are added.
             if (!success && canCreate) {
               this._commands!.execute('apputils:notify', {
                 type: 'info',
-                message: `${unreadCount} incoming message(s) in ${this._name}`
+                message: this._trans.__(
+                  '%1 incoming message(s) in %2',
+                  unreadCount,
+                  this._name
+                )
               }).then(id => {
                 this._notificationId = id;
               });
@@ -725,6 +745,7 @@ export abstract class AbstractChatModel implements IChatModel {
   private _id: string | undefined;
   private _name: string = '';
   private _config: IConfig;
+  protected _trans: TranslationBundle;
   private _readyDelegate = new PromiseDelegate<void>();
   private _inputModel: IInputModel;
   private _disposed = new Signal<this, void>(this);
@@ -769,6 +790,11 @@ export namespace IChatModel {
      * Commands registry.
      */
     commands?: CommandRegistry;
+
+    /**
+     * The translator for internationalization.
+     */
+    translator?: ITranslator;
 
     /**
      * Active cell manager.
