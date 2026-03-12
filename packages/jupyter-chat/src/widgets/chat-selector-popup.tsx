@@ -4,9 +4,16 @@
  */
 
 import { Button } from '@jupyter/react-components';
+import {
+  ITranslator,
+  nullTranslator,
+  TranslationBundle
+} from '@jupyterlab/translation';
 import { closeIcon, ReactWidget } from '@jupyterlab/ui-components';
 import { Message } from '@lumino/messaging';
 import React, { useEffect, useRef } from 'react';
+
+import { TRANSLATION_DOMAIN } from '../context';
 
 const POPUP_CLASS = 'jp-chat-selector-popup';
 const POPUP_LIST_CLASS = 'jp-chat-selector-popup-list';
@@ -26,6 +33,9 @@ export class ChatSelectorPopup extends ReactWidget {
     this._onSelect = options.onSelect;
     this._onClose = options.onClose;
     this._anchor = options.anchor ?? null;
+    this._trans = (options.translator ?? nullTranslator).load(
+      TRANSLATION_DOMAIN
+    );
 
     // Start hidden
     this.hide();
@@ -181,6 +191,7 @@ export class ChatSelectorPopup extends ReactWidget {
         onSelect={this._handleItemClick}
         onUpdateSelectedName={this._handleUpdateSelectedName}
         onClose={this._handleClose}
+        trans={this._trans}
       />
     );
   }
@@ -319,6 +330,7 @@ export class ChatSelectorPopup extends ReactWidget {
   private _onClose?: (name: string) => void;
   private _anchor: HTMLElement | null = null;
   private _anchorRect: DOMRect | null = null;
+  private _trans: TranslationBundle;
 }
 
 /**
@@ -342,6 +354,10 @@ export namespace ChatSelectorPopup {
      * The element to anchor the popup to.
      */
     anchor?: HTMLElement;
+    /**
+     * The translator for internationalization.
+     */
+    translator?: ITranslator;
   }
 }
 
@@ -355,6 +371,7 @@ interface IChatSelectorListProps {
   onSelect: (name: string) => void;
   onUpdateSelectedName: (name: string) => void;
   onClose: (names: string) => void;
+  trans: TranslationBundle;
 }
 
 /**
@@ -366,7 +383,8 @@ function ChatSelectorList({
   loadedModels,
   onSelect,
   onUpdateSelectedName,
-  onClose
+  onClose,
+  trans
 }: IChatSelectorListProps): JSX.Element {
   const listRef = useRef<HTMLUListElement>(null);
 
@@ -388,7 +406,7 @@ function ChatSelectorList({
   };
 
   if (names.length === 0) {
-    return <div className={POPUP_EMPTY_CLASS}>No chat found</div>;
+    return <div className={POPUP_EMPTY_CLASS}>{trans.__('No chat found')}</div>;
   }
 
   return (
@@ -425,7 +443,7 @@ function ChatSelectorList({
                 <Button
                   onClick={e => handleCloseClick(e, name)}
                   appearance="stealth"
-                  title="Close and dispose this chat"
+                  title={trans.__('Close and dispose this chat')}
                   className="jp-chat-selector-popup-item-close"
                 >
                   <closeIcon.react tag={null} />

@@ -17,7 +17,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { InputToolbarRegistry } from './toolbar-registry';
 import { useChatCommands } from './use-chat-commands';
 import { AttachmentPreviewList } from '../attachments';
-import { useChatContext } from '../../context';
+import { useChatContext, useTranslator } from '../../context';
 import { IInputModel, InputModel } from '../../input-model';
 import { IAttachment } from '../../types';
 
@@ -27,6 +27,7 @@ const INPUT_TOOLBAR_CLASS = 'jp-chat-input-toolbar';
 
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
   const { model } = props;
+  const trans = useTranslator();
   const { area, chatCommandRegistry, inputToolbarRegistry } = useChatContext();
   const chatModel = useChatContext().model;
 
@@ -230,7 +231,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
               multiline
               maxRows={10}
               onKeyDown={handleKeyDown}
-              placeholder="Type a chat message, @ to mention..."
+              placeholder={trans.__('Type a chat message, @ to mention...')}
               inputRef={inputRef}
               onSelect={() =>
                 (model.cursorIndex = inputRef.current?.selectionStart ?? null)

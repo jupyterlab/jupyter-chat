@@ -10,7 +10,7 @@ import { PathExt } from '@jupyterlab/coreutils';
 import { UUID } from '@lumino/coreutils';
 
 import { TooltippedIconButton } from './mui-extras';
-import { useChatContext } from '../context';
+import { useChatContext, useTranslator } from '../context';
 import { IAttachment } from '../types';
 
 const ATTACHMENT_CLASS = 'jp-chat-attachment';
@@ -87,7 +87,7 @@ export type AttachmentProps = AttachmentsProps & {
  * The Attachment component.
  */
 export function AttachmentPreview(props: AttachmentProps): JSX.Element {
-  const remove_tooltip = 'Remove attachment';
+  const trans = useTranslator();
   const { attachmentOpenerRegistry } = useChatContext();
   const isClickable = !!attachmentOpenerRegistry?.get(props.attachment.type);
 
@@ -133,7 +133,7 @@ export function AttachmentPreview(props: AttachmentProps): JSX.Element {
       </Tooltip>
       {props.onRemove && (
         <TooltippedIconButton
-          tooltip={remove_tooltip}
+          tooltip={trans.__('Remove attachment')}
           onClick={() => props.onRemove!(props.attachment)}
           className={REMOVE_BUTTON_CLASS}
           inputToolbar={false}

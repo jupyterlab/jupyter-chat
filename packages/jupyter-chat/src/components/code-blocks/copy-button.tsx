@@ -7,6 +7,7 @@ import { copyIcon } from '@jupyterlab/ui-components';
 import React, { useState, useCallback, useRef } from 'react';
 
 import { TooltippedIconButton } from '../mui-extras';
+import { useTranslator } from '../../context';
 
 enum CopyStatus {
   None,
@@ -15,19 +16,13 @@ enum CopyStatus {
   Disabled
 }
 
-const COPYBTN_TEXT_BY_STATUS: Record<CopyStatus, string> = {
-  [CopyStatus.None]: 'Copy to clipboard',
-  [CopyStatus.Copying]: 'Copying…',
-  [CopyStatus.Copied]: 'Copied!',
-  [CopyStatus.Disabled]: 'Copy to clipboard disabled in insecure context'
-};
-
 type CopyButtonProps = {
   value: string;
   className?: string;
 };
 
 export function CopyButton(props: CopyButtonProps): JSX.Element {
+  const trans = useTranslator();
   const isCopyDisabled = navigator.clipboard === undefined;
   const [copyStatus, setCopyStatus] = useState<CopyStatus>(
     isCopyDisabled ? CopyStatus.Disabled : CopyStatus.None
@@ -58,6 +53,15 @@ export function CopyButton(props: CopyButtonProps): JSX.Element {
     );
   }, [copyStatus, props.value]);
 
+  const COPYBTN_TEXT_BY_STATUS: Record<CopyStatus, string> = {
+    [CopyStatus.None]: trans.__('Copy to clipboard'),
+    [CopyStatus.Copying]: trans.__('Copying…'),
+    [CopyStatus.Copied]: trans.__('Copied!'),
+    [CopyStatus.Disabled]: trans.__(
+      'Copy to clipboard disabled in insecure context'
+    )
+  };
+
   const tooltip = COPYBTN_TEXT_BY_STATUS[copyStatus];
 
   return (
@@ -67,7 +71,7 @@ export function CopyButton(props: CopyButtonProps): JSX.Element {
       tooltip={tooltip}
       placement="top"
       onClick={copy}
-      aria-label="Copy to clipboard"
+      aria-label={trans.__('Copy to clipboard')}
       inputToolbar={false}
     >
       <copyIcon.react height="16px" width="16px" />

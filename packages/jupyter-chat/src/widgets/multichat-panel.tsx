@@ -9,6 +9,7 @@
  */
 
 import { InputDialog } from '@jupyterlab/apputils';
+import { nullTranslator, TranslationBundle } from '@jupyterlab/translation';
 import {
   addIcon,
   closeIcon,
@@ -32,6 +33,7 @@ import {
   IInputToolbarRegistry,
   IInputToolbarRegistryFactory
 } from '../components';
+import { TRANSLATION_DOMAIN } from '../context';
 import { chatIcon, readIcon } from '../icons';
 import { IChatModel } from '../model';
 
@@ -52,7 +54,11 @@ export class MultiChatPanel extends PanelWithToolbar {
     super(options);
     this.id = 'jupyter-chat::multi-chat-panel';
     this.title.icon = chatIcon;
-    this.title.caption = 'Jupyter Chat'; // TODO: i18n/
+
+    const translator = options.translator ?? nullTranslator;
+    this._trans = translator.load(TRANSLATION_DOMAIN);
+
+    this.title.caption = this._trans.__('Jupyter Chat');
 
     this.addClass(SIDEPANEL_CLASS);
 
@@ -72,7 +78,7 @@ export class MultiChatPanel extends PanelWithToolbar {
           this.open(addChatArgs);
         },
         icon: addIcon,
-        tooltip: 'Create a new chat'
+        tooltip: this._trans.__('Create a new chat')
       });
       addChat.addClass(ADD_BUTTON_CLASS);
       this.toolbar.addItem('createChat', addChat);
@@ -85,6 +91,7 @@ export class MultiChatPanel extends PanelWithToolbar {
           selectChat={this._onSelectChat}
           getPopup={() => this._chatSelectorPopup}
           chatOpened={this._chatOpened}
+          trans={this._trans}
         />
       );
       this._openChatWidget.addClass(OPEN_SELECT_CLASS);
@@ -96,7 +103,8 @@ export class MultiChatPanel extends PanelWithToolbar {
         onSelect: this._onSelectChat,
         onClose: (name: string) => {
           this.disposeLoadedModel(name);
-        }
+        },
+        translator
       });
     }
 
@@ -234,7 +242,8 @@ export class MultiChatPanel extends PanelWithToolbar {
       renameChat: this._renameChat,
       onClose: (name: string) => {
         this.disposeLoadedModel(name);
-      }
+      },
+      trans: this._trans
     });
 
     // Add to content panel
@@ -389,6 +398,7 @@ export class MultiChatPanel extends PanelWithToolbar {
   private _currentWidget?: SidePanelWidget;
   private _chatNames: { [name: string]: string } = {};
   private _visibilityChanged = new Signal<MultiChatPanel, boolean>(this);
+  private _trans: TranslationBundle;
 }
 
 /**
@@ -457,6 +467,7 @@ class SidePanelWidget extends PanelWithToolbar {
     super();
     this._chatWidget = options.widget;
     this._displayName = options.displayName ?? options.widget.model.name;
+    const trans = options.trans;
 
     this.addClass(SIDEPANEL_WIDGET_CLASS);
     this.toolbar.addClass(TOOLBAR_CLASS);
@@ -477,7 +488,7 @@ class SidePanelWidget extends PanelWithToolbar {
     // Add toolbar buttons
     this._markAsRead = new ToolbarButton({
       icon: readIcon,
-      iconLabel: 'Mark chat as read',
+      iconLabel: trans.__('Mark chat as read'),
       className: 'jp-mod-styled',
       onClick: () => {
         if (this.model) {
@@ -490,7 +501,7 @@ class SidePanelWidget extends PanelWithToolbar {
     if (options.renameChat) {
       const renameButton = new ToolbarButton({
         iconClass: 'jp-EditIcon',
-        iconLabel: 'Rename chat',
+        iconLabel: trans.__('Rename chat'),
         className: 'jp-mod-styled',
         onClick: async () => {
           if (!options.renameChat) {
@@ -500,9 +511,9 @@ class SidePanelWidget extends PanelWithToolbar {
           if (options.renameChat === true) {
             // If rename chat is true, let's provide a input to select new name.
             const result = await InputDialog.getText({
-              title: 'Rename Chat',
+              title: trans.__('Rename Chat'),
               text: this.model.name,
-              placeholder: 'new-name'
+              placeholder: trans.__('new-name')
             });
             if (!result.button.accept && result.value) {
               return;
@@ -526,7 +537,7 @@ class SidePanelWidget extends PanelWithToolbar {
     if (options.openInMain) {
       const moveToMain = new ToolbarButton({
         icon: launchIcon,
-        iconLabel: 'Move the chat to the main area',
+        iconLabel: trans.__('Move the chat to the main area'),
         className: 'jp-mod-styled',
         onClick: async () => {
           const name = this.model.name;
@@ -540,7 +551,7 @@ class SidePanelWidget extends PanelWithToolbar {
 
     const closeButton = new ToolbarButton({
       icon: closeIcon,
-      iconLabel: 'Close the chat',
+      iconLabel: trans.__('Close the chat'),
       className: 'jp-mod-styled',
       onClick: () => {
         options.onClose(this._displayName);
@@ -668,6 +679,10 @@ namespace SidePanelWidget {
      * The callback to rename the chat.
      */
     renameChat?: boolean | ((oldName: string) => Promise<string | null>);
+    /**
+     * The translation bundle.
+     */
+    trans: TranslationBundle;
   }
 }
 
@@ -684,6 +699,10 @@ type ChatSearchInputProps = {
    * Signal emitting when a chat is opened.
    */
   chatOpened: ISignal<MultiChatPanel, ChatWidget>;
+  /**
+   * The translation bundle.
+   */
+  trans: TranslationBundle;
 };
 
 /**
@@ -692,7 +711,8 @@ type ChatSearchInputProps = {
 function ChatSearchInput({
   selectChat,
   getPopup,
-  chatOpened
+  chatOpened,
+  trans
 }: ChatSearchInputProps): JSX.Element {
   const [query, setQuery] = useState<string>('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -777,7 +797,7 @@ function ChatSearchInput({
     <input
       ref={inputRef}
       type="text"
-      placeholder="Select a chat"
+      placeholder={trans.__('Select a chat')}
       value={query}
       onChange={handleInputChange}
       onFocus={handleInputFocus}

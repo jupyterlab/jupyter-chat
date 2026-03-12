@@ -8,12 +8,14 @@ import { Cell } from '@jupyterlab/cells';
 import { DirListing } from '@jupyterlab/filebrowser';
 import { DocumentWidget } from '@jupyterlab/docregistry';
 import { ICell, isCode, isMarkdown, isRaw } from '@jupyterlab/nbformat';
+import { nullTranslator } from '@jupyterlab/translation';
 import React from 'react';
 import { Message } from '@lumino/messaging';
 import { Drag } from '@lumino/dragdrop';
 import { Widget } from '@lumino/widgets';
 
 import { Chat, IInputToolbarRegistry, MESSAGE_CLASS } from '../components';
+import { TRANSLATION_DOMAIN } from '../context';
 import { chatIcon } from '../icons';
 import { IChatModel } from '../model';
 import {
@@ -42,8 +44,11 @@ export class ChatWidget extends ReactWidget {
   constructor(options: Chat.IOptions) {
     super();
 
+    const trans = (options.translator ?? nullTranslator).load(
+      TRANSLATION_DOMAIN
+    );
     this.title.icon = chatIcon;
-    this.title.caption = 'Jupyter Chat'; // TODO: i18n
+    this.title.caption = trans.__('Jupyter Chat');
 
     this._chatOptions = options;
     this.id = `jupyter-chat::widget::${options.model.name}`;
