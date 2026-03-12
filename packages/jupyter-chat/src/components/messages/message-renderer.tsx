@@ -68,25 +68,10 @@ function MessageRendererBase(props: MessageRendererProps): JSX.Element {
       let mimeModel: IRenderMime.IMimeModel;
 
       // Create the renderer and the mime model.
-      if (typeof message.body === 'string') {
-        // Allow editing content for text messages.
-        setCanEdit(true);
-
-        // Improve users display in markdown content.
-        let mdStr = message.body;
-        message.mentions?.forEach(user => {
-          mdStr = replaceMentionToSpan(mdStr, user);
-        });
-
-        // Body is a string, use the markdown renderer.
-        renderer = rmRegistry.createRenderer(DEFAULT_MIME_TYPE);
-        mimeModel = rmRegistry.createModel({
-          data: { [DEFAULT_MIME_TYPE]: mdStr }
-        });
-      } else {
+      if (message.mime_model) {
         setCanEdit(false);
         // This is a mime bundle.
-        let mimeContent = message.body;
+        let mimeContent = message.mime_model;
         let preferred = rmRegistry.preferredMimeType(
           mimeContent.data,
           'ensure' // Should be changed with 'prefer' if we can handle trusted content.
@@ -121,6 +106,21 @@ function MessageRendererBase(props: MessageRendererProps): JSX.Element {
         }
 
         mimeModel = rmRegistry.createModel(mimeContent);
+      } else {
+        // Allow editing content for text messages.
+        setCanEdit(true);
+
+        // Improve users display in markdown content.
+        let mdStr = message.body;
+        message.mentions?.forEach(user => {
+          mdStr = replaceMentionToSpan(mdStr, user);
+        });
+
+        // Body is a string, use the markdown renderer.
+        renderer = rmRegistry.createRenderer(DEFAULT_MIME_TYPE);
+        mimeModel = rmRegistry.createModel({
+          data: { [DEFAULT_MIME_TYPE]: mdStr }
+        });
       }
       await renderer.renderModel(mimeModel);
 
