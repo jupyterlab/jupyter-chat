@@ -5,6 +5,7 @@
 
 import { IThemeManager } from '@jupyterlab/apputils';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
+import { ITranslator } from '@jupyterlab/translation';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { IconButton } from '@mui/material';
@@ -181,6 +182,10 @@ export namespace Chat {
      * The area where the chat is displayed.
      */
     area?: ChatArea;
+    /**
+     * The translator for internationalization.
+     */
+    translator?: ITranslator;
   }
 
   /**

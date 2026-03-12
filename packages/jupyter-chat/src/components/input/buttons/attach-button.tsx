@@ -9,6 +9,7 @@ import React from 'react';
 
 import { InputToolbarRegistry } from '../toolbar-registry';
 import { TooltippedIconButton } from '../../mui-extras';
+import { useTranslator } from '../../../context';
 
 const ATTACH_BUTTON_CLASS = 'jp-chat-attach-button';
 
@@ -19,7 +20,8 @@ export function AttachButton(
   props: InputToolbarRegistry.IToolbarItemProps
 ): JSX.Element {
   const { model } = props;
-  const tooltip = 'Add attachment';
+  const trans = useTranslator();
+  const tooltip = trans.__('Add attachment');
 
   if (!model.documentManager || !model.addAttachment) {
     return <></>;
@@ -31,7 +33,7 @@ export function AttachButton(
     }
     try {
       const files = await FileDialog.getOpenFiles({
-        title: 'Select files to attach',
+        title: trans.__('Select files to attach'),
         manager: model.documentManager
       });
       if (files.value) {

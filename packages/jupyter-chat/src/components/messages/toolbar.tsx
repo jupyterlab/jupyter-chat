@@ -9,6 +9,7 @@ import { Box } from '@mui/material';
 import React from 'react';
 
 import { TooltippedIconButton } from '../mui-extras';
+import { useTranslator } from '../../context';
 
 const TOOLBAR_CLASS = 'jp-chat-toolbar';
 
@@ -16,14 +17,15 @@ const TOOLBAR_CLASS = 'jp-chat-toolbar';
  * The toolbar attached to a message.
  */
 export function MessageToolbar(props: MessageToolbar.IProps): JSX.Element {
+  const trans = useTranslator();
   const buttons: JSX.Element[] = [];
 
   if (props.edit !== undefined) {
     const editButton = (
       <TooltippedIconButton
-        tooltip={'Edit'}
+        tooltip={trans.__('Edit')}
         onClick={props.edit}
-        aria-label={'Edit'}
+        aria-label={trans.__('Edit')}
         inputToolbar={false}
       >
         <EditIcon />
@@ -34,9 +36,9 @@ export function MessageToolbar(props: MessageToolbar.IProps): JSX.Element {
   if (props.delete !== undefined) {
     const deleteButton = (
       <TooltippedIconButton
-        tooltip={'Delete'}
+        tooltip={trans.__('Delete')}
         onClick={props.delete}
-        aria-label={'Delete'}
+        aria-label={trans.__('Delete')}
         inputToolbar={false}
       >
         <DeleteIcon />

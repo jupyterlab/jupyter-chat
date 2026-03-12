@@ -9,6 +9,7 @@ import React, { useEffect, useState } from 'react';
 
 import { CopyButton } from './copy-button';
 import { TooltippedIconButton } from '../mui-extras';
+import { useTranslator } from '../../context';
 import { IActiveCellManager } from '../../active-cell-manager';
 import { replaceCellIcon } from '../../icons';
 import { IChatModel } from '../../model';
@@ -110,9 +111,10 @@ type ToolbarButtonProps = {
 };
 
 function InsertAboveButton(props: ToolbarButtonProps) {
+  const trans = useTranslator();
   const tooltip = props.activeCellAvailable
-    ? 'Insert above active cell'
-    : 'Insert above active cell (no active cell)';
+    ? trans.__('Insert above active cell')
+    : trans.__('Insert above active cell (no active cell)');
 
   return (
     <TooltippedIconButton
@@ -128,9 +130,10 @@ function InsertAboveButton(props: ToolbarButtonProps) {
 }
 
 function InsertBelowButton(props: ToolbarButtonProps) {
+  const trans = useTranslator();
   const tooltip = props.activeCellAvailable
-    ? 'Insert below active cell'
-    : 'Insert below active cell (no active cell)';
+    ? trans.__('Insert below active cell')
+    : trans.__('Insert below active cell (no active cell)');
 
   return (
     <TooltippedIconButton
@@ -146,11 +149,15 @@ function InsertBelowButton(props: ToolbarButtonProps) {
 }
 
 function ReplaceButton(props: ToolbarButtonProps) {
+  const trans = useTranslator();
   const tooltip = props.selectionExists
-    ? `Replace selection (${props.selectionWatcher?.selection?.numLines} line(s))`
+    ? trans.__(
+        'Replace selection (%1 line(s))',
+        props.selectionWatcher?.selection?.numLines ?? 0
+      )
     : props.activeCellAvailable
-      ? 'Replace selection (active cell)'
-      : 'Replace selection (no selection)';
+      ? trans.__('Replace selection (active cell)')
+      : trans.__('Replace selection (no selection)');
 
   const disabled = !props.activeCellAvailable && !props.selectionExists;
 

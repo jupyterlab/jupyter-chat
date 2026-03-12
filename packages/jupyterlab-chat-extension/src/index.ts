@@ -20,6 +20,7 @@ import {
   MessageFooterRegistry,
   MessagePreambleRegistry,
   SelectionWatcher,
+  TRANSLATION_DOMAIN,
   chatIcon,
   readIcon,
   IInputToolbarRegistryFactory,
@@ -359,6 +360,7 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
           user,
           widgetConfig,
           commands: app.commands,
+          translator,
           activeCellManager,
           selectionWatcher,
           documentManager: filebrowser?.model.manager
@@ -371,9 +373,10 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
 
     // Creating the widget factory to register it so the document manager knows about
     // our new DocumentWidget
+    const trans = translator.load(TRANSLATION_DOMAIN);
     const widgetFactory = new ChatWidgetFactory({
       name: FACTORY,
-      label: 'Chat',
+      label: trans.__('Chat'),
       modelName: 'chat',
       fileTypes: ['chat'],
       defaultFor: ['chat'],
@@ -504,7 +507,8 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     ICommandPalette,
     IDefaultFileBrowser,
     ILauncher,
-    IChatCommandRegistry
+    IChatCommandRegistry,
+    ITranslator
   ],
   activate: (
     app: JupyterFrontEnd,
@@ -515,9 +519,12 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     commandPalette: ICommandPalette | null,
     filebrowser: IDefaultFileBrowser | null,
     launcher: ILauncher | null,
-    chatCommandRegistry: IChatCommandRegistry | null
+    chatCommandRegistry: IChatCommandRegistry | null,
+    translator_: ITranslator | null
   ) => {
     const { commands } = app;
+    const translator = translator_ ?? nullTranslator;
+    const trans = translator.load(TRANSLATION_DOMAIN);
 
     /**
      * Command to create a new chat.
@@ -531,8 +538,9 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
      *                Whether the command is in commands palette or not.
      */
     commands.addCommand(CommandIDs.createChat, {
-      label: args => (args.isPalette ? 'Create a new chat' : 'Chat'),
-      caption: 'Create a chat',
+      label: args =>
+        args.isPalette ? trans.__('Create a new chat') : trans.__('Chat'),
+      caption: trans.__('Create a chat'),
       icon: args => (args.isPalette ? undefined : chatIcon),
       execute: async (args): Promise<string | undefined> => {
         const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
@@ -543,9 +551,9 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         if (!name) {
           name = (
             await InputDialog.getText({
-              label: 'Name',
-              placeholder: 'untitled',
-              title: 'Create a new chat'
+              label: trans.__('Name'),
+              placeholder: trans.__('untitled'),
+              title: trans.__('Create a new chat')
             })
           ).value;
         }
@@ -607,8 +615,8 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
 
           if (!model) {
             showErrorMessage(
-              'Error creating a chat',
-              'An error occurred while creating the chat'
+              trans.__('Error creating a chat'),
+              trans.__('An error occurred while creating the chat')
             );
             return;
           }
@@ -620,8 +628,9 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     });
 
     commands.addCommand(CommandIDs.createAndOpen, {
-      label: args => (args.isPalette ? 'Create a new chat' : 'Chat'),
-      caption: 'Create a chat and open it',
+      label: args =>
+        args.isPalette ? trans.__('Create a new chat') : trans.__('Chat'),
+      caption: trans.__('Create a chat and open it'),
       icon: args => (args.isPalette ? undefined : chatIcon),
       execute: async args => {
         const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
@@ -644,7 +653,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
 
     // The command to mark the chat as read.
     commands.addCommand(CommandIDs.markAsRead, {
-      caption: 'Mark chat as read',
+      caption: trans.__('Mark chat as read'),
       icon: readIcon,
       isEnabled: () =>
         tracker.currentWidget !== null &&
@@ -683,7 +692,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
          *            Whether the command is called during startup restoration.
          */
         commands.addCommand(CommandIDs.openChat, {
-          label: 'Open a chat',
+          label: trans.__('Open a chat'),
           execute: async (args): Promise<any> => {
             const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
             const startup: boolean = (args.startup as boolean) ?? false;
@@ -691,9 +700,9 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
             if (filepath === null) {
               filepath = (
                 await InputDialog.getText({
-                  label: 'File path',
-                  placeholder: '/path/to/the/chat/file',
-                  title: 'Path of the chat'
+                  label: trans.__('File path'),
+                  placeholder: trans.__('/path/to/the/chat/file'),
+                  title: trans.__('Path of the chat')
                 })
               ).value;
             }
@@ -716,8 +725,8 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
                 );
               } else {
                 showErrorMessage(
-                  'Error opening chat',
-                  `'${filepath}' is not a valid path`
+                  trans.__('Error opening chat'),
+                  trans.__("'%1' is not a valid path", filepath)
                 );
               }
               return false;
@@ -766,7 +775,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         // Add the command to the palette
         if (commandPalette) {
           commandPalette.addItem({
-            category: 'Chat',
+            category: trans.__('Chat'),
             command: CommandIDs.openChat
           });
         }
@@ -777,7 +786,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
 
     // Command to rename a chat
     commands.addCommand(CommandIDs.renameChat, {
-      label: 'Rename chat',
+      label: trans.__('Rename chat'),
       execute: async (args: any): Promise<string | null> => {
         let oldPath = args.oldPath as string;
         let newPath = args.newPath as string | null;
@@ -785,7 +794,10 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           if (tracker.currentWidget) {
             oldPath = tracker.currentWidget.model.name;
           } else {
-            showErrorMessage('Error renaming chat', 'Missing old path');
+            showErrorMessage(
+              trans.__('Error renaming chat'),
+              trans.__('Missing old path')
+            );
             return null;
           }
         }
@@ -793,9 +805,9 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         // Ask user if new name not passed in args
         if (!newPath) {
           const result = await InputDialog.getText({
-            title: 'Rename Chat',
+            title: trans.__('Rename Chat'),
             text: PathExt.basename(oldPath).replace(/\.chat$/, ''), // strip extension
-            placeholder: 'new-name'
+            placeholder: trans.__('new-name')
           });
           if (!result.button.accept) {
             return null;
@@ -817,7 +829,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           return getDisplayName(newPath, widgetConfig.config.defaultDirectory);
         } catch (err) {
           console.error('Error renaming chat', err);
-          showErrorMessage('Error renaming chat', `${err}`);
+          showErrorMessage(trans.__('Error renaming chat'), `${err}`);
         }
         return null;
       }
@@ -825,7 +837,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
 
     // The command to focus the input of the current chat widget.
     commands.addCommand(CommandIDs.focusInput, {
-      caption: 'Focus the input of the current chat widget',
+      caption: trans.__('Focus the input of the current chat widget'),
       isEnabled: () => tracker.currentWidget !== null,
       execute: () => {
         const widget = tracker.currentWidget;
@@ -846,12 +858,12 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     // Add the command to the palette
     if (commandPalette) {
       commandPalette.addItem({
-        category: 'Chat',
+        category: trans.__('Chat'),
         command: CommandIDs.createAndOpen,
         args: { isPalette: true }
       });
       commandPalette.addItem({
-        category: 'Chat',
+        category: trans.__('Chat'),
         command: CommandIDs.renameChat
       });
     }
@@ -860,7 +872,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     if (launcher) {
       launcher.add({
         command: CommandIDs.createAndOpen,
-        category: 'Other'
+        category: trans.__('Other')
       });
     }
 
@@ -925,6 +937,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     IMessageFooterRegistry,
     IMessagePreambleRegistry,
     IThemeManager,
+    ITranslator,
     IWelcomeMessage
   ],
   activate: (
@@ -939,9 +952,12 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     messageFooterRegistry: IMessageFooterRegistry,
     messagePreambleRegistry: IMessagePreambleRegistry,
     themeManager: IThemeManager | null,
+    translator_: ITranslator | null,
     welcomeMessage: string
   ): MultiChatPanel => {
     const { commands, serviceManager } = app;
+    const translator = translator_ ?? nullTranslator;
+    const trans = translator.load(TRANSLATION_DOMAIN);
 
     const chatFileExtension = chatFileType.extensions[0];
 
@@ -963,6 +979,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     const chatPanel = new MultiChatPanel({
       rmRegistry,
       themeManager,
+      translator,
       getChatNames,
       createModel: async (path?: string) => {
         return createChatModel(
@@ -1062,8 +1079,8 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
      * Command to move a chat from the main area to the side panel.
      */
     commands.addCommand(CommandIDs.moveToSide, {
-      label: 'Move the chat to the side panel',
-      caption: 'Move the chat to the side panel',
+      label: trans.__('Move the chat to the side panel'),
+      caption: trans.__('Move the chat to the side panel'),
       icon: launchIcon,
       isEnabled: () => commands.hasCommand(CommandIDs.openChat),
       execute: async () => {

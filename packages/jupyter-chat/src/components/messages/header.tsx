@@ -7,6 +7,7 @@ import { Box, Typography } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
 import { Avatar } from '../avatar';
+import { useTranslator } from '../../context';
 import { IMessageContent, IMessage } from '../../types';
 
 const MESSAGE_HEADER_CLASS = 'jp-chat-message-header';
@@ -30,6 +31,7 @@ type ChatMessageHeaderProps = {
  * The message header component.
  */
 export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
+  const trans = useTranslator();
   const [message, setMessage] = useState<IMessageContent>(
     props.message.content
   );
@@ -90,7 +92,9 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
   const avatar = message.stacked ? null : Avatar({ user: sender });
 
   const name =
-    sender.display_name ?? sender.name ?? (sender.username || 'User undefined');
+    sender.display_name ??
+    sender.name ??
+    (sender.username || trans.__('User undefined'));
 
   // Don't render header for stacked messages not deleted or edited.
   return message.stacked && !message.deleted && !message.edited ? (
@@ -136,7 +140,9 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
                 fontSize: 'var(--jp-content-font-size0)'
               }}
             >
-              {message.deleted ? '(message deleted)' : '(edited)'}
+              {message.deleted
+                ? trans.__('(message deleted)')
+                : trans.__('(edited)')}
             </Typography>
           )}
         </Box>
@@ -148,7 +154,7 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
               color: 'var(--jp-ui-font-color2)',
               fontWeight: 300
             }}
-            title={message.raw_time ? 'Unverified time' : ''}
+            title={message.raw_time ? trans.__('Unverified time') : ''}
           >
             {`${datetime[message.time]}${message.raw_time ? '*' : ''}`}
           </Typography>

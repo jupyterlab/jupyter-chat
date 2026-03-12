@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react';
 
 import { InputToolbarRegistry } from '../toolbar-registry';
 import { TooltippedIconButton } from '../../mui-extras';
+import { useTranslator } from '../../../context';
 
 const SAVE_EDIT_BUTTON_CLASS = 'jp-chat-save-edit-button';
 
@@ -18,6 +19,7 @@ export function SaveEditButton(
   props: InputToolbarRegistry.IToolbarItemProps
 ): JSX.Element {
   const { model, chatCommandRegistry, edit } = props;
+  const trans = useTranslator();
 
   // Don't show this button when not in edit mode
   if (!edit) {
@@ -25,7 +27,7 @@ export function SaveEditButton(
   }
 
   const [disabled, setDisabled] = useState(false);
-  const tooltip = 'Save edits';
+  const tooltip = trans.__('Save edits');
 
   useEffect(() => {
     const inputChanged = () => {

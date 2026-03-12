@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react';
 
 import { InputToolbarRegistry } from '../toolbar-registry';
 import { TooltippedIconButton } from '../../mui-extras';
+import { useTranslator } from '../../../context';
 import { IInputModel, InputModel } from '../../../input-model';
 
 const SEND_BUTTON_CLASS = 'jp-chat-send-button';
@@ -19,6 +20,7 @@ export function SendButton(
   props: InputToolbarRegistry.IToolbarItemProps
 ): JSX.Element {
   const { model, chatCommandRegistry, edit } = props;
+  const trans = useTranslator();
 
   // Don't show this button when in edit mode
   if (edit) {
@@ -42,8 +44,8 @@ export function SendButton(
     const configChanged = (_: IInputModel, config: InputModel.IConfig) => {
       setTooltip(
         (config.sendWithShiftEnter ?? false)
-          ? 'Send message (SHIFT+ENTER)'
-          : 'Send message (ENTER)'
+          ? trans.__('Send message (SHIFT+ENTER)')
+          : trans.__('Send message (ENTER)')
       );
     };
     model.configChanged.connect(configChanged);

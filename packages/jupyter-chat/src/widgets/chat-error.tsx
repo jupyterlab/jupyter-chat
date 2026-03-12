@@ -4,15 +4,19 @@
  */
 
 import { IThemeManager, ReactWidget } from '@jupyterlab/apputils';
+import { ITranslator, nullTranslator } from '@jupyterlab/translation';
 import { Alert, Box } from '@mui/material';
 import React from 'react';
 
 import { JlThemeProvider } from '../components/jl-theme-provider';
+import { TRANSLATION_DOMAIN } from '../context';
 import { chatIcon } from '../icons';
 
 export function buildErrorWidget(
-  themeManager: IThemeManager | null
+  themeManager: IThemeManager | null,
+  translator?: ITranslator
 ): ReactWidget {
+  const trans = (translator ?? nullTranslator).load(TRANSLATION_DOMAIN);
   const ErrorWidget = ReactWidget.create(
     <JlThemeProvider themeManager={themeManager}>
       <Box
@@ -27,9 +31,9 @@ export function buildErrorWidget(
       >
         <Box sx={{ padding: 4 }}>
           <Alert severity="error">
-            There seems to be a problem with the Chat backend, please look at
-            the JupyterLab server logs or contact your administrator to correct
-            this problem.
+            {trans.__(
+              'There seems to be a problem with the Chat backend, please look at the JupyterLab server logs or contact your administrator to correct this problem.'
+            )}
           </Alert>
         </Box>
       </Box>
@@ -37,7 +41,7 @@ export function buildErrorWidget(
   );
   ErrorWidget.id = 'jupyter-chat::chat';
   ErrorWidget.title.icon = chatIcon;
-  ErrorWidget.title.caption = 'Jupyter Chat'; // TODO: i18n
+  ErrorWidget.title.caption = trans.__('Jupyter Chat');
 
   return ErrorWidget;
 }
