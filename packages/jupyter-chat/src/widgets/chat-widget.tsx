@@ -339,6 +339,7 @@ export class ChatWidget extends ReactWidget {
         const attachment: INotebookAttachment = {
           type: 'notebook',
           value: notebookPath,
+          mimetype: 'application/x-ipynb+json',
           cells: validCells
         };
         const inputModel = this._getInputFromEvent(event);
