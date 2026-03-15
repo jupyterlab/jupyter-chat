@@ -65,7 +65,7 @@
   transition: opacity 0.15s ease;
   position: absolute;
   right: 0;
-  bottom: -20px;
+  top: -20px;
   font-size: var(--jp-ui-font-size0);
   color: var(--jp-ui-font-color3);
   background-color: var(--jp-layout-color2);
