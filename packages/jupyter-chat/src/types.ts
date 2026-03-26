@@ -85,18 +85,59 @@ export interface IMessageMetadata {} /* eslint-disable-line @typescript-eslint/n
  * The chat message description.
  */
 export type IMessageContent<T = IUser, U = IAttachment> = {
+  /**
+   * The type of the message, usually 'msg' for a regular message.
+   */
   type: string;
-  body: string | IMimeModelBody;
+  /**
+   * The body of the message, markdown formatted.
+   */
+  body: string;
+  /**
+   * The message id (should be unique).
+   */
   id: string;
+  /**
+   * The message timestamp (seconds since epoch).
+   */
   time: number;
+  /**
+   * The sender of the message, default to IUser type.
+   */
   sender: T;
+  /**
+   * The attachment list, default to IAttachment type.
+   */
   attachments?: U[];
+  /**
+   * Optional, list of users mentioned in the message.
+   */
   mentions?: T[];
+  /**
+   * Optional, whether the message time has been verified.
+   */
   raw_time?: boolean;
+  /**
+   * Optional, whether the message has been deleted.
+   */
   deleted?: boolean;
+  /**
+   * Optional, whether the message has been edited.
+   */
   edited?: boolean;
+  /**
+   * Optional, whether the message should be stacked to the previous one.
+   */
   stacked?: boolean;
+  /**
+   * Optional, the metadata of the message.
+   */
   metadata?: IMessageMetadata;
+  /**
+   * Optional, a mime bundle.
+   * If provided, the body won't be displayed in favor of the mime bundle.
+   */
+  mime_model?: IMimeModelBody;
 };
 
 export interface IMessage extends IMessageContent {
