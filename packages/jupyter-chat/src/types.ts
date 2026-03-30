@@ -232,6 +232,10 @@ export interface INotebookAttachment {
    */
   value: string;
   /**
+   * (optional) The MIME type of the attachment.
+   */
+  mimetype?: string;
+  /**
    * (optional) A list of cells in the notebook.
    */
   cells?: INotebookAttachmentCell[];
