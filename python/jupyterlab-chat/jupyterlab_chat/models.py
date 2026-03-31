@@ -11,11 +11,9 @@ def message_asdict_factory(data):
     return dict(x for x in data if x[1] is not None)
 
 
-@dataclass
+@dataclass(kw_only=True)
 class MimeModel:
-    """
-    Model of the mime data
-    """
+    """ Model of the mime data """
 
     data: dict[str, Any]
     """ The data containing the mime bundles. """
@@ -27,7 +25,7 @@ class MimeModel:
     """ Whether the data is trusted """
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Message:
     """ Object representing a message """
 
@@ -45,10 +43,6 @@ class Message:
     """ The message sender unique id """
 
     # optional arguments, with defaults.
-    #
-    # These must be listed after all required arguments, unless `kw_only` is
-    # specified in the `@dataclass` decorator. This can only be done once Python
-    # 3.9 reaches EOL.
     type: Literal["msg"] = "msg"
 
     attachments: Optional[list[str]] = None
@@ -85,7 +79,7 @@ class Message:
     """
 
 
-@dataclass
+@dataclass(kw_only=True)
 class NewMessage:
     """ Object representing a new message """
 
@@ -101,7 +95,7 @@ class NewMessage:
     If provided, it should be prioritized over the body.
     """
 
-@dataclass
+@dataclass(kw_only=True)
 class User(JupyterUser):
     """ Object representing a user """
 
@@ -134,7 +128,7 @@ class User(JupyterUser):
     def mention_name(self, value: str) -> None:
         pass
 
-@dataclass
+@dataclass(kw_only=True)
 class AttachmentSelection:
     start: Tuple[int, int]
     """
@@ -151,7 +145,7 @@ class AttachmentSelection:
     The initial content of the selection.
     """
 
-@dataclass
+@dataclass(kw_only=True)
 class FileAttachment:
     """
     Model of a file attachment.
@@ -177,7 +171,7 @@ class FileAttachment:
     more info.
     """
 
-@dataclass
+@dataclass(kw_only=True)
 class NotebookAttachmentCell:
     """
     Model of a single cell within a notebook attachment.
@@ -201,7 +195,7 @@ class NotebookAttachmentCell:
     more info.
     """
 
-@dataclass
+@dataclass(kw_only=True)
 class NotebookAttachment:
     """
     Model of a notebook attachment.
