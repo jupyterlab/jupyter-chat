@@ -20,10 +20,10 @@ class MimeModel:
     data: dict[str, Any]
     """ The data containing the mime bundles. """
 
-    metadata: Optional[dict]
+    metadata: Optional[dict] = None
     """ The metadata associated to the mime bundle. """
 
-    trusted: Optional[bool]
+    trusted: Optional[bool] = None
     """ Whether the data is trusted """
 
 
