@@ -46,8 +46,9 @@ test.describe('#mime-renderer', () => {
       type: 'msg',
       id: UUID.uuid4(),
       sender: USERNAME,
-      body: { data: bundle.bundle },
-      time: baseTime * 60
+      body: '',
+      time: baseTime * 60,
+      mime_model: { data: bundle.bundle }
     });
     baseTime += 1;
   }

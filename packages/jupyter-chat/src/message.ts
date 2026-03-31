@@ -39,7 +39,7 @@ export class Message implements IMessage {
   get type(): string {
     return this._content.type;
   }
-  get body(): string | IMimeModelBody {
+  get body(): string {
     return this._content.body;
   }
   get id(): string {
@@ -71,6 +71,9 @@ export class Message implements IMessage {
   }
   get metadata(): IMessageMetadata | undefined {
     return this._content.metadata;
+  }
+  get mime_model(): IMimeModelBody | undefined {
+    return this._content.mime_model;
   }
 
   /**

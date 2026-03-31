@@ -2,13 +2,29 @@
 # Distributed under the terms of the Modified BSD License.
 
 from dataclasses import dataclass, field
-from typing import Literal, Optional, Tuple
+from typing import Any, Literal, Optional, Tuple
 from jupyter_server.auth import User as JupyterUser
 
 
 def message_asdict_factory(data):
     """ Remove None values when converting Message to dict """
     return dict(x for x in data if x[1] is not None)
+
+
+@dataclass
+class MimeModel:
+    """
+    Model of the mime data
+    """
+
+    data: dict[str, Any]
+    """ The data containing the mime bundles. """
+
+    metadata: Optional[dict] = None
+    """ The metadata associated to the mime bundle. """
+
+    trusted: Optional[bool] = None
+    """ Whether the data is trusted """
 
 
 @dataclass
@@ -37,7 +53,7 @@ class Message:
 
     attachments: Optional[list[str]] = None
     """ The message attachments, a list of attachment ID """
-    
+
     mentions: list[str] = field(default_factory=list)
     """ Users mentioned in the message """
 
@@ -62,6 +78,12 @@ class Message:
     metadata: Optional[dict] = None
     """ Optional metadata attached to this message. """
 
+    mime_model: Optional[MimeModel] = None
+    """
+    Optional mime model data.
+    If provided, it should be prioritized over the body.
+    """
+
 
 @dataclass
 class NewMessage:
@@ -73,6 +95,11 @@ class NewMessage:
     sender: str
     """ The message sender unique id """
 
+    mime_model: Optional[MimeModel] = None
+    """
+    Optional mime model data.
+    If provided, it should be prioritized over the body.
+    """
 
 @dataclass
 class User(JupyterUser):
@@ -102,7 +129,7 @@ class User(JupyterUser):
         name: str = self.display_name or self.name or self.username
         name = name.replace(" ", "-")
         return name
-    
+
     @mention_name.setter
     def mention_name(self, value: str) -> None:
         pass
@@ -154,20 +181,20 @@ class FileAttachment:
 class NotebookAttachmentCell:
     """
     Model of a single cell within a notebook attachment.
-    
+
     The corresponding frontend model is `INotebookAttachmentCell`.
     """
-    
+
     id: str
     """
     The ID of the cell within the notebook.
     """
-    
+
     input_type: Literal["raw", "markdown", "code"]
     """
     The type of the cell.
     """
-    
+
     selection: Optional[AttachmentSelection] = None
     """
     (optional) A selection range within the cell. See `AttachmentSelection` for
