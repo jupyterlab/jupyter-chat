@@ -108,7 +108,11 @@ export const CommandIDs = {
   /**
    * Open a chat and send a message into it.
    */
-  openWithMessage: 'jupyterlab-chat:openWithMessage'
+  openWithMessage: 'jupyterlab-chat:openWithMessage',
+  /**
+   * Export the current chat as a Markdown file.
+   */
+  exportChat: 'jupyterlab-chat:exportChat'
 };
 
 /**
