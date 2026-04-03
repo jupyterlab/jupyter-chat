@@ -35,7 +35,7 @@ path = "package.json"
 fields = ["description", "authors", "urls"]
 
 [tool.jupyter-releaser.options]
-version-cmd = "cd ../.. && python scripts/bump_version.py --force --skip-if-dirty"
+version-cmd = "cd ../.. && python scripts/bump_version.py --skip-if-dirty"
 python_packages = [
     "python/jupyterlab-chat"
 ]

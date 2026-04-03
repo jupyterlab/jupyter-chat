@@ -52,10 +52,9 @@ def increment_version(current, spec):
 
 
 @click.command()
-@click.option("--force", default=False, is_flag=True)
 @click.option("--skip-if-dirty", default=False, is_flag=True)
 @click.argument("spec", nargs=1)
-def bump(force, skip_if_dirty, spec):
+def bump(skip_if_dirty, spec):
     status = run("git status --porcelain").strip()
     if len(status) > 0:
         if skip_if_dirty:
