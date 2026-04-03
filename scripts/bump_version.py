@@ -8,8 +8,6 @@ import click
 from jupyter_releaser.util import get_version, run
 from packaging.version import parse
 
-LERNA_CMD = "jlpm run lerna version --no-push --force-publish --no-git-tag-version"
-
 VERSION_SPEC = ["major", "minor", "release", "next", "patch"]
 
 
@@ -78,13 +76,27 @@ def bump(force, skip_if_dirty, spec):
         p = p.replace("a", "alpha").replace("b", "beta")
         js_version += f"-{p}.{x}"
 
-    # bump the JS packages
-    lerna_cmd = f"{LERNA_CMD} {js_version}"
-    if force:
-        lerna_cmd += " --yes"
-    run(lerna_cmd)
-
     HERE = Path(__file__).parent.parent.resolve()
+
+    # bump the JS workspace packages
+    workspace_files = list(HERE.glob("packages/*/package.json")) + list(
+        HERE.glob("docs/*/package.json")
+    )
+    local_packages = set()
+    for pkg_file in workspace_files:
+        data = json.loads(pkg_file.read_text())
+        if "name" in data:
+            local_packages.add(data["name"])
+    for pkg_file in workspace_files:
+        data = json.loads(pkg_file.read_text())
+        data["version"] = js_version
+        for dep_field in ("dependencies", "devDependencies", "peerDependencies"):
+            if dep_field in data:
+                for dep_name in list(data[dep_field]):
+                    if dep_name in local_packages:
+                        data[dep_field][dep_name] = f"^{js_version}"
+        with pkg_file.open(mode="w") as f:
+            json.dump(data, f, indent=2)
 
     # bump the Python packages
     for version_file in HERE.glob("python/**/_version.py"):
