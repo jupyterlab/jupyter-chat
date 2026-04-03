@@ -158,7 +158,7 @@ function MessageRendererBase(props: MessageRendererProps): JSX.Element {
     };
 
     renderContent();
-  }, [message.body, message.mentions, rmRegistry]);
+  }, [message.body, message.mime_model, message.mentions, rmRegistry]);
 
   return (
     <>
