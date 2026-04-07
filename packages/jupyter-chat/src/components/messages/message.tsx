@@ -148,14 +148,12 @@ export function ChatMessageBase(props: ChatMessageProps): JSX.Element {
   );
 
   // Empty if the message has been deleted.
-  if (message.deleted) {
+  if (deleted) {
     renderedDelegate.resolve();
     return <div data-index={props.index}></div>;
   }
 
-  return deleted ? (
-    <div data-index={props.index}></div>
-  ) : (
+  return (
     <div data-index={props.index} className={MESSAGE_CONTAINER_CLASS}>
       {edit && canEdit && model.getEditionModel(message.id) ? (
         <ChatInput
