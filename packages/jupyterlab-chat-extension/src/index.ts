@@ -531,7 +531,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
      *
      * args:
      *  name -        optional, the name of the chat to create.
-     *                Open a dialog if not provided.
+     *                Creates an untitled chat if not provided.
      *  inSidePanel - optional (default to false).
      *                Whether to open the chat in side panel or in main area.
      *  isPalette -   optional (default to false).
@@ -546,23 +546,9 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
         const targetDirectory: string | undefined = args.path as string;
 
-        let name: string | null = (args.name as string) ?? null;
+        const name: string = (args.name as string) ?? '';
         let filepath = '';
-        if (!name) {
-          name = (
-            await InputDialog.getText({
-              label: trans.__('Name'),
-              placeholder: trans.__('untitled'),
-              title: trans.__('Create a new chat')
-            })
-          ).value;
-        }
-        // no-op if the dialog has been cancelled.
-        // Fill the filepath if the dialog has been validated with content,
-        // otherwise create a new untitled chat (empty filepath).
-        if (name === null) {
-          return;
-        } else if (name) {
+        if (name) {
           if (name.endsWith(chatFileType.extensions[0])) {
             filepath = name;
           } else {
