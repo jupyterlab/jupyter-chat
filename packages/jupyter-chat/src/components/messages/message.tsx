@@ -4,7 +4,7 @@
  */
 
 import { PromiseDelegate } from '@lumino/coreutils';
-import React, { forwardRef, useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { MessageRenderer } from './message-renderer';
 import { AttachmentPreviewList } from '../attachments';
@@ -33,157 +33,151 @@ type ChatMessageProps = {
 /**
  * The message component body.
  */
-export const ChatMessageBase = forwardRef<HTMLDivElement, ChatMessageProps>(
-  (props, ref): JSX.Element => {
-    const { model } = useChatContext();
-    const [message, setMessage] = useState<IMessageContent>(
-      props.message.content
-    );
-    const [renderedDelegate, setRenderedDelegate] = useState<
-      PromiseDelegate<void>
-    >(props.message.renderedDelegate);
-    const [edit, setEdit] = useState<boolean>(false);
-    const [deleted, setDeleted] = useState<boolean>(false);
-    const [canEdit, setCanEdit] = useState<boolean>(false);
-    const [canDelete, setCanDelete] = useState<boolean>(false);
+export function ChatMessageBase(props: ChatMessageProps): JSX.Element {
+  const { model } = useChatContext();
+  const [message, setMessage] = useState<IMessageContent>(
+    props.message.content
+  );
+  const [renderedDelegate, setRenderedDelegate] = useState<
+    PromiseDelegate<void>
+  >(props.message.renderedDelegate);
+  const [edit, setEdit] = useState<boolean>(false);
+  const [deleted, setDeleted] = useState<boolean>(false);
+  const [canEdit, setCanEdit] = useState<boolean>(false);
+  const [canDelete, setCanDelete] = useState<boolean>(false);
 
-    // Look if the message can be deleted or edited.
-    useEffect(() => {
-      // Init canDelete and canEdit state.
-      setDeleted(message.deleted ?? false);
-      if (model.user !== undefined && !message.deleted) {
-        if (model.user.username === message.sender.username) {
-          setCanEdit(model.updateMessage !== undefined);
-          setCanDelete(model.deleteMessage !== undefined);
-          return;
-        }
-        if (message.sender.bot) {
-          setCanDelete(model.deleteMessage !== undefined);
-        }
-      } else {
-        setCanEdit(false);
-        setCanDelete(false);
-      }
-    }, [model, message]);
-
-    // Listen for changes in the current message.
-    useEffect(() => {
-      function messageChanged() {
-        setMessage(props.message.content);
-        setRenderedDelegate(props.message.renderedDelegate);
-      }
-
-      props.message.changed.connect(messageChanged);
-
-      // Initialize the message when the message is re-rendered.
-      // FIX ? This seems to be required for outofband change, to get the new value,
-      // even if when an outofband change occurs, all the messages are deleted and
-      // recreated.
-      setMessage(props.message.content);
-      return () => {
-        props.message.changed.disconnect(messageChanged);
-      };
-    }, [props.message]);
-
-    // Create an input model only if the message is edited.
-    const startEdition = useCallback((): void => {
-      if (!canEdit || !(typeof message.body === 'string')) {
+  // Look if the message can be deleted or edited.
+  useEffect(() => {
+    // Init canDelete and canEdit state.
+    setDeleted(message.deleted ?? false);
+    if (model.user !== undefined && !message.deleted) {
+      if (model.user.username === message.sender.username) {
+        setCanEdit(model.updateMessage !== undefined);
+        setCanDelete(model.deleteMessage !== undefined);
         return;
       }
-      let body = message.body;
-      message.mentions?.forEach(user => {
-        body = replaceSpanToMention(body, user);
-      });
-      const inputModel = new InputModel({
-        chatContext: model.createChatContext(),
-        onSend: (input: string, model?: IInputModel) =>
-          updateMessage(message.id, input, model),
-        onCancel: () => cancelEdition(),
-        value: body,
-        activeCellManager: model.activeCellManager,
-        selectionWatcher: model.selectionWatcher,
-        documentManager: model.documentManager,
-        config: {
-          sendWithShiftEnter: model.config.sendWithShiftEnter
-        },
-        attachments: structuredClone(message.attachments ?? []),
-        mentions: message.mentions
-      });
-      model.addEditionModel(message.id, inputModel);
-      setEdit(true);
-    }, [canEdit, model, message]);
+      if (message.sender.bot) {
+        setCanDelete(model.deleteMessage !== undefined);
+      }
+    } else {
+      setCanEdit(false);
+      setCanDelete(false);
+    }
+  }, [model, message]);
 
-    // Cancel the current edition of the message.
-    const cancelEdition = useCallback((): void => {
-      model.getEditionModel(message.id)?.dispose();
-      setEdit(false);
-    }, [model, message]);
-
-    // Update the content of the message.
-    const updateMessage = useCallback(
-      (id: string, input: string, inputModel?: IInputModel): void => {
-        if (!canEdit || !inputModel) {
-          return;
-        }
-        // Update the message
-        const updatedMessage = { ...message };
-        updatedMessage.body = input;
-        updatedMessage.attachments = inputModel.attachments;
-        updatedMessage.mentions = inputModel.mentions;
-        model.updateMessage!(id, updatedMessage);
-        model.getEditionModel(message.id)?.dispose();
-        setEdit(false);
-      },
-      [model, message, canEdit]
-    );
-
-    // Delete the message.
-    const deleteMessage = useCallback(
-      (id: string): void => {
-        if (!canDelete) {
-          return;
-        }
-        model.deleteMessage!(id);
-      },
-      [message, canDelete]
-    );
-
-    // Empty if the message has been deleted.
-    if (message.deleted) {
-      renderedDelegate.resolve();
-      return <div ref={ref} data-index={props.index}></div>;
+  // Listen for changes in the current message.
+  useEffect(() => {
+    function messageChanged() {
+      setMessage(props.message.content);
+      setRenderedDelegate(props.message.renderedDelegate);
     }
 
-    return deleted ? (
-      <div ref={ref} data-index={props.index}></div>
-    ) : (
-      <div
-        ref={ref}
-        data-index={props.index}
-        className={MESSAGE_CONTAINER_CLASS}
-      >
-        {edit && canEdit && model.getEditionModel(message.id) ? (
-          <ChatInput
-            onCancel={() => cancelEdition()}
-            model={model.getEditionModel(message.id)!}
-            edit={true}
-          />
-        ) : (
-          <MessageRenderer
-            message={message}
-            edit={canEdit ? startEdition : undefined}
-            delete={canDelete ? () => deleteMessage(message.id) : undefined}
-            rendered={renderedDelegate}
-          />
-        )}
-        {message.attachments && !edit && (
-          // Display the attachments only if message is not edited, otherwise the
-          // input component display them.
-          <AttachmentPreviewList attachments={message.attachments} />
-        )}
-      </div>
-    );
+    props.message.changed.connect(messageChanged);
+
+    // Initialize the message when the message is re-rendered.
+    // FIX ? This seems to be required for outofband change, to get the new value,
+    // even if when an outofband change occurs, all the messages are deleted and
+    // recreated.
+    setMessage(props.message.content);
+    return () => {
+      props.message.changed.disconnect(messageChanged);
+    };
+  }, [props.message]);
+
+  // Create an input model only if the message is edited.
+  const startEdition = useCallback((): void => {
+    if (!canEdit || !(typeof message.body === 'string')) {
+      return;
+    }
+    let body = message.body;
+    message.mentions?.forEach(user => {
+      body = replaceSpanToMention(body, user);
+    });
+    const inputModel = new InputModel({
+      chatContext: model.createChatContext(),
+      onSend: (input: string, model?: IInputModel) =>
+        updateMessage(message.id, input, model),
+      onCancel: () => cancelEdition(),
+      value: body,
+      activeCellManager: model.activeCellManager,
+      selectionWatcher: model.selectionWatcher,
+      documentManager: model.documentManager,
+      config: {
+        sendWithShiftEnter: model.config.sendWithShiftEnter
+      },
+      attachments: structuredClone(message.attachments ?? []),
+      mentions: message.mentions
+    });
+    model.addEditionModel(message.id, inputModel);
+    setEdit(true);
+  }, [canEdit, model, message]);
+
+  // Cancel the current edition of the message.
+  const cancelEdition = useCallback((): void => {
+    model.getEditionModel(message.id)?.dispose();
+    setEdit(false);
+  }, [model, message]);
+
+  // Update the content of the message.
+  const updateMessage = useCallback(
+    (id: string, input: string, inputModel?: IInputModel): void => {
+      if (!canEdit || !inputModel) {
+        return;
+      }
+      // Update the message
+      const updatedMessage = { ...message };
+      updatedMessage.body = input;
+      updatedMessage.attachments = inputModel.attachments;
+      updatedMessage.mentions = inputModel.mentions;
+      model.updateMessage!(id, updatedMessage);
+      model.getEditionModel(message.id)?.dispose();
+      setEdit(false);
+    },
+    [model, message, canEdit]
+  );
+
+  // Delete the message.
+  const deleteMessage = useCallback(
+    (id: string): void => {
+      if (!canDelete) {
+        return;
+      }
+      model.deleteMessage!(id);
+    },
+    [message, canDelete]
+  );
+
+  // Empty if the message has been deleted.
+  if (message.deleted) {
+    renderedDelegate.resolve();
+    return <div data-index={props.index}></div>;
   }
-);
+
+  return deleted ? (
+    <div data-index={props.index}></div>
+  ) : (
+    <div data-index={props.index} className={MESSAGE_CONTAINER_CLASS}>
+      {edit && canEdit && model.getEditionModel(message.id) ? (
+        <ChatInput
+          onCancel={() => cancelEdition()}
+          model={model.getEditionModel(message.id)!}
+          edit={true}
+        />
+      ) : (
+        <MessageRenderer
+          message={message}
+          edit={canEdit ? startEdition : undefined}
+          delete={canDelete ? () => deleteMessage(message.id) : undefined}
+          rendered={renderedDelegate}
+        />
+      )}
+      {message.attachments && !edit && (
+        // Display the attachments only if message is not edited, otherwise the
+        // input component display them.
+        <AttachmentPreviewList attachments={message.attachments} />
+      )}
+    </div>
+  );
+}
 
 export const ChatMessage = React.memo(ChatMessageBase);
