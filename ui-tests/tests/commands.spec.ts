@@ -23,8 +23,8 @@ test.describe('#commandPalette', () => {
     await page.keyboard.press('Control+Shift+c');
   });
 
-  test.afterEach(async ({ page }) => {
-    for (let filename of ['untitled.chat', FILENAME]) {
+  test.afterEach(async ({ page, tmpPath }) => {
+    for (let filename of [`${tmpPath}/untitled.chat`, FILENAME]) {
       if (await page.filebrowser.contents.fileExists(filename)) {
         await page.filebrowser.contents.deleteFile(filename);
       }
@@ -38,7 +38,8 @@ test.describe('#commandPalette', () => {
   });
 
   test('should create an untitled chat from command palette', async ({
-    page
+    page,
+    tmpPath
   }) => {
     await page
       .locator(
@@ -46,7 +47,8 @@ test.describe('#commandPalette', () => {
       )
       .click();
     await page.waitForCondition(
-      async () => await page.filebrowser.contents.fileExists('untitled.chat')
+      async () =>
+        await page.filebrowser.contents.fileExists(`${tmpPath}/untitled.chat`)
     );
     await expect(page.activity.getTabLocator('untitled.chat')).toBeVisible();
   });
@@ -74,15 +76,18 @@ test.describe('#menuNew', () => {
     );
   });
 
-  test('should create a chat from the menu', async ({ page }) => {
+  test('should create a chat from the menu', async ({ page, tmpPath }) => {
     await page.menu.clickMenuItem('File>New>Chat');
     await page.waitForCondition(
-      async () => await page.filebrowser.contents.fileExists('untitled.chat')
+      async () =>
+        await page.filebrowser.contents.fileExists(`${tmpPath}/untitled.chat`)
     );
 
     // Delete chat file
-    if (await page.filebrowser.contents.fileExists('untitled.chat')) {
-      await page.filebrowser.contents.deleteFile('untitled.chat');
+    if (
+      await page.filebrowser.contents.fileExists(`${tmpPath}/untitled.chat`)
+    ) {
+      await page.filebrowser.contents.deleteFile(`${tmpPath}/untitled.chat`);
     }
   });
 });
@@ -98,15 +103,18 @@ test.describe('#launcher', () => {
     expect(await tile.screenshot()).toMatchSnapshot('launcher-tile.png');
   });
 
-  test('should create a chat from the launcher', async ({ page }) => {
+  test('should create a chat from the launcher', async ({ page, tmpPath }) => {
     await page.locator('.jp-LauncherCard').getByTitle('Create a chat').click();
     await page.waitForCondition(
-      async () => await page.filebrowser.contents.fileExists('untitled.chat')
+      async () =>
+        await page.filebrowser.contents.fileExists(`${tmpPath}/untitled.chat`)
     );
 
     // Delete chat file
-    if (await page.filebrowser.contents.fileExists('untitled.chat')) {
-      await page.filebrowser.contents.deleteFile('untitled.chat');
+    if (
+      await page.filebrowser.contents.fileExists(`${tmpPath}/untitled.chat`)
+    ) {
+      await page.filebrowser.contents.deleteFile(`${tmpPath}/untitled.chat`);
     }
   });
 });
