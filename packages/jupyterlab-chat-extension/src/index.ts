@@ -544,7 +544,19 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
       icon: args => (args.isPalette ? undefined : chatIcon),
       execute: async (args): Promise<string | undefined> => {
         const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
-        const targetDirectory: string | undefined = args.path as string;
+        let targetDirectory: string | undefined = args.path as string;
+
+        // Create new chat file in default dir if created from filebrowser
+        // as "Open a chat" dropdown only discovers chat files in default
+        // dir. Create new chat in file browser cwd if created from main
+        // area (launcher, menu, palette).
+        if (targetDirectory === undefined) {
+          if (inSidePanel) {
+            targetDirectory = widgetConfig.config.defaultDirectory ?? '';
+          } else {
+            targetDirectory = filebrowser?.model.path ?? '';
+          }
+        }
 
         const name: string = (args.name as string) ?? '';
         let filepath = '';
@@ -554,22 +566,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           } else {
             filepath = `${name}${chatFileType.extensions[0]}`;
           }
-          // Create new chat file in default dir if created from filebrowser
-          // as "Open a chat" dropdown only discovers chat files in default
-          // dir. Create new chat in file browser cwd if created from main
-          // area (launcher, menu, palette).
-          if (targetDirectory !== undefined) {
-            // Explicit directory provided - use it
-            filepath = PathExt.join(targetDirectory, filepath);
-          } else if (inSidePanel) {
-            // Side panel uses default directory
-            const defaultDir = widgetConfig.config.defaultDirectory ?? '';
-            filepath = PathExt.join(defaultDir, filepath);
-          } else {
-            // Main area uses filebrowser cwd
-            const cwd = filebrowser?.model.path ?? '';
-            filepath = PathExt.join(cwd, filepath);
-          }
+          filepath = PathExt.join(targetDirectory, filepath);
         }
 
         let fileExist = true;
@@ -588,6 +585,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           // Create a new untitled chat.
           let model: Contents.IModel | null =
             await app.serviceManager.contents.newUntitled({
+              path: targetDirectory,
               type: 'file',
               ext: chatFileType.extensions[0]
             });
