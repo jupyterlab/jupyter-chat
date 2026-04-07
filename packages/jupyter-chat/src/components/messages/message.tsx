@@ -4,7 +4,7 @@
  */
 
 import { PromiseDelegate } from '@lumino/coreutils';
-import React, { forwardRef, useEffect, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useState } from 'react';
 
 import { MessageRenderer } from './message-renderer';
 import { AttachmentPreviewList } from '../attachments';
@@ -14,7 +14,7 @@ import { IInputModel, InputModel } from '../../input-model';
 import { IMessageContent, IMessage } from '../../types';
 import { replaceSpanToMention } from '../../utils';
 
-const MESSAGE_CONTAINER_CLASS = 'jp-chat-message-container';
+export const MESSAGE_CONTAINER_CLASS = 'jp-chat-message-container';
 
 /**
  * The message component props.
@@ -28,21 +28,20 @@ type ChatMessageProps = {
    * The index of the message in the list.
    */
   index: number;
-  /**
-   * The promise to resolve when the message is rendered.
-   */
-  renderedPromise: PromiseDelegate<void>;
 };
 
 /**
  * The message component body.
  */
-export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
+export const ChatMessageBase = forwardRef<HTMLDivElement, ChatMessageProps>(
   (props, ref): JSX.Element => {
     const { model } = useChatContext();
     const [message, setMessage] = useState<IMessageContent>(
       props.message.content
     );
+    const [renderedDelegate, setRenderedDelegate] = useState<
+      PromiseDelegate<void>
+    >(props.message.renderedDelegate);
     const [edit, setEdit] = useState<boolean>(false);
     const [deleted, setDeleted] = useState<boolean>(false);
     const [canEdit, setCanEdit] = useState<boolean>(false);
@@ -71,6 +70,7 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
     useEffect(() => {
       function messageChanged() {
         setMessage(props.message.content);
+        setRenderedDelegate(props.message.renderedDelegate);
       }
 
       props.message.changed.connect(messageChanged);
@@ -86,7 +86,7 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
     }, [props.message]);
 
     // Create an input model only if the message is edited.
-    const startEdition = (): void => {
+    const startEdition = useCallback((): void => {
       if (!canEdit || !(typeof message.body === 'string')) {
         return;
       }
@@ -111,42 +111,49 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
       });
       model.addEditionModel(message.id, inputModel);
       setEdit(true);
-    };
+    }, [canEdit, model, message]);
 
     // Cancel the current edition of the message.
-    const cancelEdition = (): void => {
+    const cancelEdition = useCallback((): void => {
       model.getEditionModel(message.id)?.dispose();
       setEdit(false);
-    };
+    }, [model, message]);
 
     // Update the content of the message.
-    const updateMessage = (
-      id: string,
-      input: string,
-      inputModel?: IInputModel
-    ): void => {
-      if (!canEdit || !inputModel) {
-        return;
-      }
-      // Update the message
-      const updatedMessage = { ...message };
-      updatedMessage.body = input;
-      updatedMessage.attachments = inputModel.attachments;
-      updatedMessage.mentions = inputModel.mentions;
-      model.updateMessage!(id, updatedMessage);
-      model.getEditionModel(message.id)?.dispose();
-      setEdit(false);
-    };
+    const updateMessage = useCallback(
+      (id: string, input: string, inputModel?: IInputModel): void => {
+        if (!canEdit || !inputModel) {
+          return;
+        }
+        // Update the message
+        const updatedMessage = { ...message };
+        updatedMessage.body = input;
+        updatedMessage.attachments = inputModel.attachments;
+        updatedMessage.mentions = inputModel.mentions;
+        model.updateMessage!(id, updatedMessage);
+        model.getEditionModel(message.id)?.dispose();
+        setEdit(false);
+      },
+      [model, message, canEdit]
+    );
 
     // Delete the message.
-    const deleteMessage = (id: string): void => {
-      if (!canDelete) {
-        return;
-      }
-      model.deleteMessage!(id);
-    };
+    const deleteMessage = useCallback(
+      (id: string): void => {
+        if (!canDelete) {
+          return;
+        }
+        model.deleteMessage!(id);
+      },
+      [message, canDelete]
+    );
 
     // Empty if the message has been deleted.
+    if (message.deleted) {
+      renderedDelegate.resolve();
+      return <div ref={ref} data-index={props.index}></div>;
+    }
+
     return deleted ? (
       <div ref={ref} data-index={props.index}></div>
     ) : (
@@ -166,7 +173,7 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
             message={message}
             edit={canEdit ? startEdition : undefined}
             delete={canDelete ? () => deleteMessage(message.id) : undefined}
-            rendered={props.renderedPromise}
+            rendered={renderedDelegate}
           />
         )}
         {message.attachments && !edit && (
@@ -178,3 +185,5 @@ export const ChatMessage = forwardRef<HTMLDivElement, ChatMessageProps>(
     );
   }
 );
+
+export const ChatMessage = React.memo(ChatMessageBase);
