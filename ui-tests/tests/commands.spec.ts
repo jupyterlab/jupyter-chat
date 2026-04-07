@@ -19,8 +19,6 @@ const fillModal = async (
 };
 
 test.describe('#commandPalette', () => {
-  const name = FILENAME.replace('.chat', '');
-
   test.beforeEach(async ({ page }) => {
     await page.keyboard.press('Control+Shift+c');
   });
@@ -39,23 +37,6 @@ test.describe('#commandPalette', () => {
     ).toHaveCount(3);
   });
 
-  test('should create a chat with name from command palette', async ({
-    page,
-    tmpPath
-  }) => {
-    await page
-      .locator(
-        '#modal-command-palette li[data-command="jupyterlab-chat:createAndOpen"]'
-      )
-      .click();
-    await fillModal(page, name);
-    await page.waitForCondition(
-      async () =>
-        await page.filebrowser.contents.fileExists(`${tmpPath}/${FILENAME}`)
-    );
-    await expect(page.activity.getTabLocator(FILENAME)).toBeVisible();
-  });
-
   test('should create an untitled chat from command palette', async ({
     page
   }) => {
@@ -64,22 +45,10 @@ test.describe('#commandPalette', () => {
         '#modal-command-palette li[data-command="jupyterlab-chat:createAndOpen"]'
       )
       .click();
-    await fillModal(page);
     await page.waitForCondition(
       async () => await page.filebrowser.contents.fileExists('untitled.chat')
     );
     await expect(page.activity.getTabLocator('untitled.chat')).toBeVisible();
-  });
-
-  test('should not create a chat if modal is cancelled', async ({ page }) => {
-    await page
-      .locator(
-        '#modal-command-palette li[data-command="jupyterlab-chat:createAndOpen"]'
-      )
-      .click();
-    await fillModal(page, '', 'Cancel');
-    const tab = page.getByRole('main').getByRole('tab');
-    await expect(tab).toHaveCount(1);
   });
 
   test('should open an existing chat', async ({ page }) => {
@@ -105,11 +74,16 @@ test.describe('#menuNew', () => {
     );
   });
 
-  test('should open modal create from the menu', async ({ page }) => {
+  test('should create a chat from the menu', async ({ page }) => {
     await page.menu.clickMenuItem('File>New>Chat');
-    await expect(page.locator('dialog .jp-Dialog-header')).toHaveText(
-      'Create a new chat'
+    await page.waitForCondition(
+      async () => await page.filebrowser.contents.fileExists('untitled.chat')
     );
+
+    // Delete chat file
+    if (await page.filebrowser.contents.fileExists('untitled.chat')) {
+      await page.filebrowser.contents.deleteFile('untitled.chat');
+    }
   });
 });
 
@@ -124,11 +98,16 @@ test.describe('#launcher', () => {
     expect(await tile.screenshot()).toMatchSnapshot('launcher-tile.png');
   });
 
-  test('should open modal create from the launcher', async ({ page }) => {
+  test('should create a chat from the launcher', async ({ page }) => {
     await page.locator('.jp-LauncherCard').getByTitle('Create a chat').click();
-    await expect(page.locator('dialog .jp-Dialog-header')).toHaveText(
-      'Create a new chat'
+    await page.waitForCondition(
+      async () => await page.filebrowser.contents.fileExists('untitled.chat')
     );
+
+    // Delete chat file
+    if (await page.filebrowser.contents.fileExists('untitled.chat')) {
+      await page.filebrowser.contents.deleteFile('untitled.chat');
+    }
   });
 });
 
