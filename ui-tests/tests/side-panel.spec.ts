@@ -42,48 +42,12 @@ test.describe('#sidepanel', () => {
   });
 
   test.describe('#creation', () => {
-    const name = FILENAME.replace('.chat', '');
-    let panel: Locator;
-    let dialog: Locator;
-    let addButton: Locator;
-
-    test.beforeEach(async ({ page }) => {
-      panel = await openSidePanel(page);
-      addButton = panel.locator('> .jp-Toolbar .jp-Toolbar-item.jp-chat-add');
+    test('should create an untitled chat', async ({ page }) => {
+      const panel = await openSidePanel(page);
+      const addButton = panel.locator(
+        '> .jp-Toolbar .jp-Toolbar-item.jp-chat-add'
+      );
       await addButton.click();
-
-      dialog = page.locator('.jp-Dialog');
-      await dialog.waitFor();
-    });
-
-    test.afterEach(async ({ page }) => {
-      for (let filename of ['untitled.chat', FILENAME]) {
-        if (await page.filebrowser.contents.fileExists(filename)) {
-          await page.filebrowser.contents.deleteFile(filename);
-        }
-      }
-    });
-
-    test('should create a chat', async ({ page }) => {
-      await dialog.locator('input[type="text"]').pressSequentially(name);
-      await dialog.getByRole('button').getByText('Ok').click();
-      await page.waitForCondition(
-        async () => await page.filebrowser.contents.fileExists(FILENAME)
-      );
-
-      const chatToolbar = panel.locator(
-        '.jp-chat-sidepanel-widget .jp-chat-sidepanel-widget-toolbar'
-      );
-      await expect(chatToolbar).toBeAttached();
-      await expect(
-        chatToolbar.locator('.jp-chat-sidepanel-widget-title')
-      ).toHaveText(name);
-    });
-
-    test('should create an untitled file if no name is provided', async ({
-      page
-    }) => {
-      await dialog.getByRole('button').getByText('Ok').click();
       await page.waitForCondition(
         async () => await page.filebrowser.contents.fileExists('untitled.chat')
       );
@@ -95,13 +59,11 @@ test.describe('#sidepanel', () => {
       await expect(
         chatToolbar.locator('.jp-chat-sidepanel-widget-title')
       ).toHaveText('untitled');
-    });
 
-    test('should not create a chat if dialog is cancelled', async () => {
-      await dialog.getByRole('button').getByText('Cancel').click();
-
-      const content = panel.locator('.jp-chat-sidepanel-widget');
-      await expect(content).not.toBeAttached();
+      // Cleanup files
+      if (await page.filebrowser.contents.fileExists('untitled.chat')) {
+        await page.filebrowser.contents.deleteFile('untitled.chat');
+      }
     });
   });
 
@@ -195,13 +157,9 @@ test.describe('#sidepanel', () => {
         '> .jp-Toolbar .jp-Toolbar-item.jp-chat-add'
       );
       await addButton.click();
-      const dialog = page.locator('.jp-Dialog');
-      await dialog.waitFor();
-      await dialog.locator('input[type="text"]').pressSequentially('new-chat');
-      await dialog.getByRole('button').getByText('Ok').click();
 
       await expect(chatList.locator('li')).toHaveCount(1);
-      await expect(chatList.locator('li').last()).toHaveText(/^new-chat/);
+      await expect(chatList.locator('li').last()).toHaveText(/^untitled/);
 
       // Changing the default directory (to root) should update the chat list.
       await defaultDirectory.clear();
@@ -218,7 +176,7 @@ test.describe('#sidepanel', () => {
 
       await expect(chatList.locator('li')).toHaveCount(2);
       const textRegex = new RegExp(`^${name}.*`);
-      await expect(await chatList.locator('li').last()).toHaveText(textRegex);
+      await expect(chatList.locator('li').last()).toHaveText(textRegex);
     });
   });
 
