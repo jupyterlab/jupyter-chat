@@ -3,6 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { PromiseDelegate } from '@lumino/coreutils';
 import { ISignal } from '@lumino/signaling';
 import { IRenderMime } from '@jupyterlab/rendermime';
 
@@ -153,6 +154,10 @@ export interface IMessage extends IMessageContent {
    * A signal emitting when the message has been updated.
    */
   changed: ISignal<IMessage, void>;
+  /**
+   * A promise delegate that resolve when the message is rendered.
+   */
+  renderedDelegate: PromiseDelegate<void>;
 }
 
 /**
