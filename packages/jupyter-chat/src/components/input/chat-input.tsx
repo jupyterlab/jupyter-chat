@@ -107,7 +107,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     };
   }, [inputToolbarRegistry]);
 
-  const inputExists = !!input.trim();
+  const inputExists = !!input.trim() || attachments.length > 0;
 
   /**
    * `handleKeyDown()`: callback invoked when the user presses any key in the
