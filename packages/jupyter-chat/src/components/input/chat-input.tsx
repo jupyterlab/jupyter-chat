@@ -129,9 +129,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     }
 
     // remainder of this function only handles the "Enter" key.
-    // Ignore Enter keypress during IME composition (e.g. Chinese, Japanese,
-    // Korean input methods), where Enter confirms the candidate selection
-    // rather than sending the message.
+    // Ignore Enter keypress during IME composition 
     if (
       event.key !== 'Enter' ||
       event.nativeEvent.isComposing ||
