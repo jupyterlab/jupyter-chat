@@ -767,7 +767,7 @@ function ChatSearchInput({
       return;
     }
 
-    // Ignore key events during IME composition (e.g. CJK input methods).
+    // Ignore key events during IME composition.
     if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) {
       return;
     }
