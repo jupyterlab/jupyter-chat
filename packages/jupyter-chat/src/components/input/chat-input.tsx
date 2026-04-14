@@ -107,7 +107,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     };
   }, [inputToolbarRegistry]);
 
-  const inputExists = !!input.trim() || attachments.length > 0;
+  const inputExists = !!input.trim();
 
   /**
    * `handleKeyDown()`: callback invoked when the user presses any key in the
@@ -156,18 +156,19 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
      */
     event.stopPropagation();
 
+    const isSendCombination =
+      (sendWithShiftEnter && event.shiftKey) ||
+      (!sendWithShiftEnter && !event.shiftKey);
+
     // Do not send empty messages, and avoid adding new line in empty message.
-    if (!inputExists) {
+    if (!inputExists && (!isSendCombination || attachments.length === 0)) {
       event.stopPropagation();
       event.preventDefault();
       return;
     }
 
     // Finally, send the message when all other conditions are met.
-    if (
-      (sendWithShiftEnter && event.shiftKey) ||
-      (!sendWithShiftEnter && !event.shiftKey)
-    ) {
+    if (isSendCombination) {
       // Run all command providers
       await chatCommandRegistry?.onSubmit(model);
       model.send(model.value);
