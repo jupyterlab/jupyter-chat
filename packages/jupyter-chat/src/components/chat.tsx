@@ -10,7 +10,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { IconButton } from '@mui/material';
 import { Box } from '@mui/system';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import {
   ChatInput,
@@ -33,11 +33,6 @@ import { ChatArea } from '../types';
 export function ChatBody(props: Chat.IChatProps): JSX.Element {
   const { model } = props;
   const [writers, setWriters] = useState<IChatModel.IWriter[]>([]);
-  let { inputToolbarRegistry } = props;
-  if (!inputToolbarRegistry) {
-    inputToolbarRegistry = InputToolbarRegistry.defaultToolbarRegistry();
-  }
-
   /**
    * Handle the changes in the writers list.
    */
@@ -64,10 +59,15 @@ export function ChatBody(props: Chat.IChatProps): JSX.Element {
 
   const horizontalPadding = 4;
 
-  const contextValue: Chat.IChatProps = {
-    ...props,
-    inputToolbarRegistry
-  };
+  const contextValue = useMemo(
+    () => ({
+      ...props,
+      inputToolbarRegistry:
+        props.inputToolbarRegistry ??
+        InputToolbarRegistry.defaultToolbarRegistry()
+    }),
+    [props]
+  );
 
   return (
     <ChatReactContext.Provider value={contextValue}>

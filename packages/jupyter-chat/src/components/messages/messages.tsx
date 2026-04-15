@@ -3,14 +3,13 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { PromiseDelegate } from '@lumino/coreutils';
 import { Box } from '@mui/material';
 import clsx from 'clsx';
 import React, { useEffect, useState, useRef } from 'react';
 
 import { MessageFooterComponent } from './footer';
 import { ChatMessageHeader } from './header';
-import { ChatMessage } from './message';
+import { ChatMessage, MESSAGE_CONTAINER_CLASS } from './message';
 import { MessagePreambleComponent } from './preamble';
 import { Navigation } from './navigation';
 import { WelcomeMessage } from './welcome';
@@ -42,10 +41,6 @@ export function ChatMessages(): JSX.Element {
   const [showDeleted, setShowDeleted] = useState<boolean>(
     model.config.showDeleted ?? false
   );
-
-  // The list of message DOM and their rendered promises.
-  const listRef = useRef<(HTMLDivElement | null)[]>([]);
-  const renderedPromise = useRef<PromiseDelegate<void>[]>([]);
 
   /**
    * Effect: fetch history and config on initial render
@@ -103,9 +98,12 @@ export function ChatMessages(): JSX.Element {
    */
   useEffect(() => {
     const observer = new IntersectionObserver(entries => {
-      // Used on first rendering, to ensure all the message as been rendered once.
+      // Used on first rendering, to ensure all the messages have been rendered once.
       if (!allRendered) {
-        Promise.all(renderedPromise.current.map(p => p.promise)).then(() => {
+        const promises = (
+          showDeleted ? messages : messages.filter(message => !message.deleted)
+        ).map(msg => msg.renderedDelegate.promise);
+        Promise.all(promises).then(() => {
           setAllRendered(true);
         });
       }
@@ -135,7 +133,7 @@ export function ChatMessages(): JSX.Element {
       model.messagesInViewport = inViewport;
 
       // Ensure that all messages are rendered before updating unread messages, otherwise
-      // it can lead to wrong assumption , because more message are in the viewport
+      // it can lead to wrong assumption, because more messages are in the viewport
       // before they are rendered.
       if (allRendered && unreadModified) {
         model.unreadMessages = unread;
@@ -145,20 +143,16 @@ export function ChatMessages(): JSX.Element {
     /**
      * Observe the messages.
      */
-    listRef.current.forEach(item => {
-      if (item) {
+    refMsgBox.current
+      ?.querySelectorAll(`.${MESSAGE_CONTAINER_CLASS}`)
+      .forEach(item => {
         observer.observe(item);
-      }
-    });
+      });
 
     return () => {
-      listRef.current.forEach(item => {
-        if (item) {
-          observer.unobserve(item);
-        }
-      });
+      observer.disconnect();
     };
-  }, [messages, allRendered]);
+  }, [messages, showDeleted, allRendered]);
 
   const horizontalPadding = area === 'main' ? 8 : 4;
   return (
@@ -183,7 +177,6 @@ export function ChatMessages(): JSX.Element {
             ? messages
             : messages.filter(message => !message.deleted)
           ).map((message, i) => {
-            renderedPromise.current[i] = new PromiseDelegate();
             const isCurrentUser =
               model.user !== undefined &&
               model.user.username === message.sender.username;
@@ -212,12 +205,7 @@ export function ChatMessages(): JSX.Element {
                 {messagePreambleRegistry && (
                   <MessagePreambleComponent message={message} />
                 )}
-                <ChatMessage
-                  message={message}
-                  index={i}
-                  renderedPromise={renderedPromise.current[i]}
-                  ref={el => (listRef.current[i] = el)}
-                />
+                <ChatMessage message={message} index={i} />
                 {messageFooterRegistry && (
                   <MessageFooterComponent message={message} />
                 )}
