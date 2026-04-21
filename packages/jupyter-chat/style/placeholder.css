@@ -1,0 +1,34 @@
+/*
+ * Copyright (c) Jupyter Development Team.
+ * Distributed under the terms of the Modified BSD License.
+ */
+
+.jp-chat-placeholder {
+  text-align: center;
+  color: var(--jp-content-font-color2);
+}
+
+.jp-chat-placeholder > h3 {
+  margin-bottom: var(--jp-content-heading-margin-bottom);
+}
+
+.jp-chat-placeholder-hint {
+  display: inline-flex;
+  align-items: center;
+}
+
+.jp-chat-placeholder-chat-item {
+  color: var(--jp-content-font-color1);
+  background: none;
+  border: none;
+  padding: 2px 0;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: none;
+}
+
+.jp-chat-placeholder-chat-item:hover {
+  text-decoration: underline;
+  font-weight: bold;
+}
