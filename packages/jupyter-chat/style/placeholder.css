@@ -12,11 +12,6 @@
   margin-bottom: var(--jp-content-heading-margin-bottom);
 }
 
-.jp-chat-placeholder-hint {
-  display: inline-flex;
-  align-items: center;
-}
-
 .jp-chat-placeholder-chat-item {
   color: var(--jp-content-font-color1);
   background: none;

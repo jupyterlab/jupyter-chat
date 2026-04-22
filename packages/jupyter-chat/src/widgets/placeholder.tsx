@@ -11,6 +11,8 @@ import {
 import { ISignal } from '@lumino/signaling';
 import React, { useEffect, useState } from 'react';
 
+import { useTranslator } from '../context';
+
 /**
  * The default placeholder widget.
  */
@@ -60,6 +62,7 @@ export namespace Placeholder {
  * The default placeholder component.
  */
 const PlaceholderComponent = (props: Placeholder.IProps): JSX.Element => {
+  const trans = useTranslator();
   const [chatNames, setChatNames] = useState<{ [name: string]: string }>(
     props.chatNames
   );
@@ -81,22 +84,21 @@ const PlaceholderComponent = (props: Placeholder.IProps): JSX.Element => {
 
   return (
     <div className="jp-chat-placeholder">
-      <h3>No chat opened</h3>
+      <h3>{trans.__('No chat opened')}</h3>
       {props.onCreate && (
         <div className="jp-chat-placeholder-hint">
-          Click{' '}
           <ToolbarButtonComponent
+            label={trans.__('New chat')}
             icon={addIcon}
             onClick={props.onCreate}
-            tooltip="Create a new chat"
+            tooltip={trans.__('Create a new chat')}
             className="jp-chat-add"
-          />{' '}
-          to create a new chat.
+          />
         </div>
       )}
       {names.length > 0 && (
         <div className="jp-chat-placeholder-list">
-          <p>Open an existing chat:</p>
+          <p>{trans.__('Open an existing chat:')}</p>
           {names.map(name => (
             <div key={name}>
               <button
