@@ -26,8 +26,9 @@ import { ISignal, Signal } from '@lumino/signaling';
 import { Widget } from '@lumino/widgets';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { ChatWidget } from './chat-widget';
 import { ChatSelectorPopup } from './chat-selector-popup';
+import { ChatWidget } from './chat-widget';
+import { defaultPlaceholder, Placeholder } from './placeholder';
 import {
   Chat,
   IInputToolbarRegistry,
@@ -36,7 +37,7 @@ import {
 import { TRANSLATION_DOMAIN } from '../context';
 import { chatIcon, readIcon } from '../icons';
 import { IChatModel } from '../model';
-import { defaultPlaceholder } from './placeholder';
+import { IChatPlaceholderFactory } from '../tokens';
 
 const SIDEPANEL_CLASS = 'jp-chat-sidepanel';
 const ADD_BUTTON_CLASS = 'jp-chat-add';
@@ -70,6 +71,7 @@ export class MultiChatPanel extends PanelWithToolbar {
     this._createModel = options.createModel;
     this._openInMain = options.openInMain;
     this._renameChat = options.renameChat;
+    this._placeholderFactory = options.placeholderFactory;
 
     if (this._createModel) {
       // Add chat button calls the createChat callback
@@ -216,7 +218,7 @@ export class MultiChatPanel extends PanelWithToolbar {
    * Add a placeholder in the panel.
    */
   private _addPlaceholder(): void {
-    const placeholder = new defaultPlaceholder({
+    const props: Placeholder.IProps = {
       chatNames: this._chatNames,
       open: this._onSelectChat,
       onCreate: this._createModel
@@ -226,7 +228,10 @@ export class MultiChatPanel extends PanelWithToolbar {
           }
         : undefined,
       chatNamesChanged: this._chatNamesChanged
-    });
+    };
+    const placeholder = this._placeholderFactory
+      ? this._placeholderFactory.create(props)
+      : new defaultPlaceholder(props);
     this.addWidget(placeholder);
     this._currentWidget = placeholder;
   }
@@ -423,6 +428,7 @@ export class MultiChatPanel extends PanelWithToolbar {
   private _getChatNames?: () => Promise<{ [name: string]: string }>;
   private _openInMain?: (name: string) => Promise<boolean>;
   private _renameChat?: boolean | ((oldName: string) => Promise<string | null>);
+  private _placeholderFactory?: IChatPlaceholderFactory;
   private _openChatWidget?: ReactWidget;
   private _chatSelectorPopup?: ChatSelectorPopup;
   private _loadedModels: Map<string, IChatModel> = new Map();
@@ -474,9 +480,13 @@ export namespace MultiChatPanel {
      */
     renameChat?: boolean | ((oldName: string) => Promise<string | null>);
     /**
-     * An optional placeholder widget, displayed when no chat is opened.
+     * An optional factory to create a placeholder widget displayed when no chat
+     * is opened. Falls back to the default placeholder if not provided.
+     *
+     * @param props - the props passed to the placeholder.
+     * @returns a widget to display as placeholder.
      */
-    placeholder?: Widget;
+    placeholderFactory?: IChatPlaceholderFactory;
   }
   /**
    * The options for the add chat method.
