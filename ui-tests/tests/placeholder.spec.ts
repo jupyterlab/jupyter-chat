@@ -48,8 +48,7 @@ test.describe('#placeholder', () => {
 
     test('should list an existing chat file', async ({ page }) => {
       await page.waitForCondition(
-        async () =>
-          await page.filebrowser.contents.fileExists(FILENAME)
+        async () => await page.filebrowser.contents.fileExists(FILENAME)
       );
 
       const panel = await openSidePanel(page);
