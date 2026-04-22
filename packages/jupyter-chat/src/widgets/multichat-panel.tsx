@@ -227,7 +227,8 @@ export class MultiChatPanel extends PanelWithToolbar {
             this.open(args);
           }
         : undefined,
-      chatNamesChanged: this._chatNamesChanged
+      chatNamesChanged: this._chatNamesChanged,
+      trans: this._trans
     };
     const placeholder = this._placeholderFactory
       ? this._placeholderFactory.create(props)

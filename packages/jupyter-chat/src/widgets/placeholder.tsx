@@ -3,6 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { IRenderMime } from '@jupyterlab/rendermime';
 import {
   addIcon,
   ReactWidget,
@@ -55,6 +56,10 @@ export namespace Placeholder {
      * An optional signal emitting when the chat list changes.
      */
     chatNamesChanged?: ISignal<any, { [name: string]: string }>;
+    /**
+     * An optional translation bundle.
+     */
+    trans?: IRenderMime.TranslationBundle;
   }
 }
 
@@ -62,7 +67,8 @@ export namespace Placeholder {
  * The default placeholder component.
  */
 const PlaceholderComponent = (props: Placeholder.IProps): JSX.Element => {
-  const trans = useTranslator();
+  const trans = props.trans ?? useTranslator();
+
   const [chatNames, setChatNames] = useState<{ [name: string]: string }>(
     props.chatNames
   );
