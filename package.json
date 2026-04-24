@@ -33,8 +33,8 @@
     "clean": "jlpm workspace @jupyter/chat run clean && jlpm workspace jupyterlab-chat run clean && jlpm workspace jupyterlab-chat-extension run clean && jlpm workspace jupyter-chat-example run clean",
     "clean:all": "jlpm workspace @jupyter/chat run clean:all && jlpm workspace jupyterlab-chat run clean:all && jlpm workspace jupyterlab-chat-extension run clean:all && jlpm workspace jupyter-chat-example run clean:all",
     "dev": "jupyter lab --config playground/config.py",
-    "eslint": "eslint . --ext .ts,.tsx --cache --fix",
-    "eslint:check": "eslint . --ext .ts,.tsx",
+    "eslint": "jlpm eslint:check --fix",
+    "eslint:check": "eslint . --cache",
     "install:extension": "jlpm workspace @jupyter/chat run install:extension && jlpm workspace jupyterlab-chat run install:extension && jlpm workspace jupyterlab-chat-extension run install:extension && jlpm workspace jupyter-chat-example run install:extension",
     "lint:check": "jlpm run prettier:check && jlpm run eslint:check",
     "lint": "jlpm run prettier && jlpm run eslint && jlpm stylelint",
@@ -46,19 +46,21 @@
     "watch": "jlpm workspace jupyterlab-chat-extension run watch"
   },
   "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@jupyter/eslint-plugin": "^0.0.3",
     "@stylistic/eslint-plugin": "^3.0.1",
-    "@typescript-eslint/eslint-plugin": "^8.0.0",
-    "@typescript-eslint/parser": "^8.0.0",
-    "eslint": "^8.56.0",
-    "eslint-config-prettier": "^8.8.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
+    "globals": "^15.0.0",
     "prettier": "^3.0.0",
     "style-loader": "^3.3.1",
     "stylelint": "^15.10.1",
     "stylelint-config-recommended": "^13.0.0",
     "stylelint-config-standard": "^34.0.0",
     "stylelint-csstree-validator": "^3.0.0",
-    "stylelint-prettier": "^4.0.0"
+    "stylelint-prettier": "^4.0.0",
+    "typescript-eslint": "^8.0.0"
   },
   "packageManager": "yarn@3.5.0"
 }
