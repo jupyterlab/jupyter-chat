@@ -968,8 +968,8 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
 
     // Command to open a chat and send a message into it.
     commands.addCommand(CommandIDs.openWithMessage, {
-      label: 'Open chat with message',
-      caption: 'Open a chat and send a message',
+      label: trans.__('Open chat with message'),
+      caption: trans.__('Open a chat and send a message'),
       describedBy: {
         args: {
           type: 'object',
