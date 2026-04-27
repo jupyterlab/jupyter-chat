@@ -43,7 +43,7 @@ import {
   showErrorMessage
 } from '@jupyterlab/apputils';
 import { IEditorLanguageRegistry } from '@jupyterlab/codemirror';
-import { PathExt } from '@jupyterlab/coreutils';
+import { PageConfig, PathExt } from '@jupyterlab/coreutils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { IDefaultFileBrowser } from '@jupyterlab/filebrowser';
 import { ILauncher } from '@jupyterlab/launcher';
@@ -190,8 +190,20 @@ const chatConfig: JupyterFrontEndPlugin<IWidgetConfig> = {
     function loadSetting(setting: ISettingRegistry.ISettings): void {
       // Remove the previous directory if it is empty and has changed.
       const previousDirectory = widgetConfig.config.defaultDirectory;
-      const currentDirectory = setting.get('defaultDirectory')
+      let currentDirectory = setting.get('defaultDirectory')
         .composite as string;
+
+      // Fall back to server-configured default if no user setting is set.
+      if (!currentDirectory) {
+        try {
+          const serverConfig = JSON.parse(
+            PageConfig.getOption('jupyterlabChat') || '{}'
+          );
+          currentDirectory = serverConfig.defaultChatDirectory || '';
+        } catch {
+          currentDirectory = '';
+        }
+      }
 
       if (
         drive &&
