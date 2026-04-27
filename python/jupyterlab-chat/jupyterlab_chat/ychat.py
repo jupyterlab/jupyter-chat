@@ -29,9 +29,6 @@ class YChat(YBaseDoc):
         self._ydoc["metadata"] = self._ymetadata = Map()  # type:ignore[var-annotated]
         self._ymessages.observe(self._on_messages_change)
 
-        # Observe the state to initialize the file as soon as the document is not dirty.
-        self._ystate_subscription = self._ystate.observe(self._initialize)
-
         # Lookup table to get message index from its ID.
         self._indexes_by_id: dict[str, int] = {}
 
@@ -309,6 +306,10 @@ class YChat(YBaseDoc):
                 for k, v in contents["metadata"].items():
                     self._ymetadata.update({k: v})
 
+        # Create an ID if not in metadata.
+        if (self.get_id() is None):
+            self.create_task(self.create_id())
+
     def observe(self, callback: Callable[[str, Any], None]) -> None:
         self.unobserve()
         self._subscriptions[self._ystate] = self._ystate.observe(partial(callback, "state"))
@@ -322,17 +323,6 @@ class YChat(YBaseDoc):
         self._subscriptions[self._yattachments] = self._yattachments.observe(
             partial(callback, "attachments")
         )
-
-    def _initialize(self, event: MapEvent) -> None:
-        """
-        Called when the state changes, to create an id if it does not exist.
-        This function should be called only once when the dirty state is set to false.
-        """
-        if self.dirty:
-            return
-        if (self.get_id() is None):
-            self.create_task(self.create_id())
-        self._ystate.unobserve(self._ystate_subscription)
 
     def _on_messages_change(self, event: ArrayEvent) -> None:
         """
