@@ -83,6 +83,9 @@ jobs:
           jlpm install
           jlpm build
 
+      - name: Lint the packages
+        run: jlpm run lint:check
+
       - name: Package extension
         run: |
           set -eux
@@ -96,13 +99,6 @@ jobs:
           name: jupyterlab_chat-artifacts
           path: python/jupyterlab-chat/dist/jupyterlab_chat*
           if-no-files-found: error
-
-  lint-package:
-    runs-on: ubuntu-latest
-    needs: build_extension
-    steps:
-      - name: Lint the packages
-        run: jlpm run lint:check
 
   typing-tests:
     name: Typing test
