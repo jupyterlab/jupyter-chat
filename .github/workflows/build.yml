@@ -26,18 +26,16 @@ jobs:
         run: python -m pip install -U "jupyterlab>=4.0.0,<5"
 
       - name: Build the core package
-        run: jlpm build:core
-
-      - name: Lint the packages
-        run: |
+        run:  |
           set -eux
           jlpm
-          jlpm run lint:check
+          jlpm build:core
+
+      - name: Lint the packages
+        run: jlpm run lint:check
 
       - name: Test the packages
-        run: |
-          set -eux
-          jlpm run test
+        run: jlpm run test
 
   test_extensions:
     name: Python unit tests (Python ${{ matrix.python-version }})
