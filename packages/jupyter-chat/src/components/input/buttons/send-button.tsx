@@ -26,7 +26,7 @@ export function SendButton(
 ): JSX.Element {
   const { model, chatCommandRegistry, edit } = props;
   const { activeCellManager, selectionWatcher } = model;
-  const hideIncludeSelection = !activeCellManager || !selectionWatcher;
+  const supportSelection = !!activeCellManager || !!selectionWatcher;
   const trans = useTranslator();
 
   // Don't show this button when in edit mode
@@ -40,6 +40,9 @@ export function SendButton(
   const [tooltip, setTooltip] = useState<string>('');
   const [selectionTooltip, setSelectionTooltip] = useState<string>('');
   const [disableInclude, setDisableInclude] = useState<boolean>(true);
+  const [showSendWithSelection, setShowSendWithSelection] = useState<boolean>(
+    supportSelection && (model.config.sendWithSelection ?? true)
+  );
 
   const openMenu = useCallback((el: HTMLElement | null) => {
     setMenuAnchorEl(el);
@@ -67,6 +70,9 @@ export function SendButton(
           ? trans.__('Send message (SHIFT+ENTER)')
           : trans.__('Send message (ENTER)')
       );
+      setShowSendWithSelection(
+        supportSelection && (config.sendWithSelection ?? true)
+      );
     };
     model.configChanged.connect(configChanged);
 
@@ -93,7 +99,7 @@ export function SendButton(
       setSelectionTooltip(tip);
     };
 
-    if (!hideIncludeSelection) {
+    if (supportSelection) {
       selectionWatcher?.selectionChanged.connect(toggleIncludeState);
       activeCellManager?.availabilityChanged.connect(toggleIncludeState);
       toggleIncludeState();
@@ -148,9 +154,9 @@ export function SendButton(
         tooltip={tooltip}
         disabled={disabled}
         sx={{
-          borderRadius: hideIncludeSelection
-            ? 'var(--jp-border-radius)'
-            : 'var(--jp-border-radius) 0 0 var(--jp-border-radius) !important'
+          borderRadius: showSendWithSelection
+            ? 'var(--jp-border-radius) 0 0 var(--jp-border-radius) !important'
+            : 'var(--jp-border-radius)'
         }}
         buttonProps={{
           title: tooltip,
@@ -160,7 +166,7 @@ export function SendButton(
       >
         <ArrowUpwardIcon />
       </TooltippedIconButton>
-      {!hideIncludeSelection && (
+      {showSendWithSelection && (
         <>
           <TooltippedIconButton
             onClick={e => openMenu(e.currentTarget)}
