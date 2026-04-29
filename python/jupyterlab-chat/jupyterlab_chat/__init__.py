@@ -1,6 +1,9 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+from traitlets import Unicode
+from traitlets.config.configurable import LoggingConfigurable
+
 try:
     from ._version import __version__
 except ImportError:
@@ -10,6 +13,15 @@ except ImportError:
     import warnings
     warnings.warn("Importing 'jupyterlab_chat' outside a proper installation.")
     __version__ = "dev"
+
+
+class JupyterlabChat(LoggingConfigurable):
+    """Server-side configuration for Jupyter Chat."""
+
+    default_chat_directory = Unicode(
+        default_value="",
+        help="Default directory for chat files. Empty string means the Jupyter root directory.",
+    ).tag(config=True)
 
 
 def _jupyter_labextension_paths():
@@ -34,3 +46,10 @@ def _load_jupyter_server_extension(server_app):
     """
     name = "jupyterlab_chat"
     server_app.log.info(f"Registered {name} server extension")
+
+    config = JupyterlabChat(parent=server_app)
+
+    page_config = server_app.web_app.settings.setdefault("page_config_data", {})
+    page_config["jupyterlabChat"] = {
+        "defaultChatDirectory": config.default_chat_directory,
+    }
