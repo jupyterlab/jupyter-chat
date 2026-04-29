@@ -40,7 +40,9 @@ import {
   InputDialog,
   WidgetTracker,
   createToolbarFactory,
-  showErrorMessage
+  showDialog,
+  showErrorMessage,
+  Dialog
 } from '@jupyterlab/apputils';
 import { IEditorLanguageRegistry } from '@jupyterlab/codemirror';
 import { PageConfig, PathExt } from '@jupyterlab/coreutils';
@@ -832,6 +834,42 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
       }
     });
 
+    commands.addCommand(CommandIDs.deleteChat, {
+      label: trans.__('Delete chat'),
+      execute: async (args: any): Promise<boolean> => {
+        let path = args.path as string;
+        if (!path) {
+          if (tracker.currentWidget) {
+            path = tracker.currentWidget.model.name;
+          } else {
+            return false;
+          }
+        }
+
+        const result = await showDialog({
+          title: trans.__('Delete Chat'),
+          body: trans.__('Are you sure you want to delete "%1"?', path),
+          buttons: [
+            Dialog.cancelButton(),
+            Dialog.warnButton({ label: trans.__('Delete') })
+          ]
+        });
+
+        if (!result.button.accept) {
+          return false;
+        }
+
+        try {
+          await app.serviceManager.contents.delete(path);
+          return true;
+        } catch (err) {
+          console.error('Error deleting chat', err);
+          showErrorMessage(trans.__('Error deleting chat'), `${err}`);
+          return false;
+        }
+      }
+    });
+
     // The command to focus the input of the current chat widget.
     commands.addCommand(CommandIDs.focusInput, {
       caption: trans.__('Focus the input of the current chat widget'),
@@ -997,6 +1035,11 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
         return commands.execute(CommandIDs.renameChat, {
           oldPath
         }) as Promise<string | null>;
+      },
+      deleteChat: (path: string) => {
+        return commands.execute(CommandIDs.deleteChat, {
+          path
+        }) as Promise<boolean>;
       },
       chatCommandRegistry,
       attachmentOpenerRegistry,
