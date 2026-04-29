@@ -1054,6 +1054,17 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     // Update available chats when default directory changed.
     widgetConfig.configChanged.connect((_, config) => {
       if (config.defaultDirectory !== undefined) {
+        // Re-key any loaded models whose display name used the old directory.
+        for (const oldName of chatPanel.getLoadedModelNames()) {
+          const model = chatPanel.getLoadedModel(oldName);
+          if (model) {
+            const newName = getDisplayName(
+              model.name,
+              config.defaultDirectory
+            );
+            chatPanel.renameLoadedModel(oldName, newName);
+          }
+        }
         chatPanel.updateChatList();
       }
     });

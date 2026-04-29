@@ -305,6 +305,26 @@ export class MultiChatPanel extends PanelWithToolbar {
   };
 
   /**
+   * Rename a loaded model's display name key.
+   * Used when the default directory changes and display names need updating.
+   */
+  renameLoadedModel(oldName: string, newName: string): void {
+    if (oldName === newName) {
+      return;
+    }
+    const model = this._loadedModels.get(oldName);
+    if (model) {
+      this._loadedModels.delete(oldName);
+      this._loadedModels.set(newName, model);
+      this._chatSelectorPopup?.setLoadedModels(this.getLoadedModelNames());
+      if (this.current) {
+        this.current.name = newName;
+        this._chatSelectorPopup?.setCurrentChat(newName);
+      }
+    }
+  }
+
+  /**
    * Update the list of available chats.
    */
   private _updateChatList = async (): Promise<void> => {
