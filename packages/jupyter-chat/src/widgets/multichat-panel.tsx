@@ -13,6 +13,7 @@ import { nullTranslator, TranslationBundle } from '@jupyterlab/translation';
 import {
   addIcon,
   closeIcon,
+  deleteIcon,
   launchIcon,
   PanelWithToolbar,
   ReactWidget,
@@ -71,6 +72,7 @@ export class MultiChatPanel extends PanelWithToolbar {
     this._createModel = options.createModel;
     this._openInMain = options.openInMain;
     this._renameChat = options.renameChat;
+    this._deleteChat = options.deleteChat;
     this._placeholderFactory = options.placeholderFactory;
 
     if (this._createModel) {
@@ -272,6 +274,7 @@ export class MultiChatPanel extends PanelWithToolbar {
       displayName: name,
       openInMain: this._openInMain,
       renameChat: this._renameChat,
+      deleteChat: this._deleteChat,
       onClose: (name: string) => {
         this.disposeLoadedModel(name);
       },
@@ -300,6 +303,26 @@ export class MultiChatPanel extends PanelWithToolbar {
   updateChatList = (): void => {
     this._updateChatListDebouncer.invoke();
   };
+
+  /**
+   * Rename a loaded model's display name key.
+   * Used when the default directory changes and display names need updating.
+   */
+  renameLoadedModel(oldName: string, newName: string): void {
+    if (oldName === newName) {
+      return;
+    }
+    const model = this._loadedModels.get(oldName);
+    if (model) {
+      this._loadedModels.delete(oldName);
+      this._loadedModels.set(newName, model);
+      this._chatSelectorPopup?.setLoadedModels(this.getLoadedModelNames());
+      if (this.current) {
+        this.current.name = newName;
+        this._chatSelectorPopup?.setCurrentChat(newName);
+      }
+    }
+  }
 
   /**
    * Update the list of available chats.
@@ -429,6 +452,7 @@ export class MultiChatPanel extends PanelWithToolbar {
   private _getChatNames?: () => Promise<{ [name: string]: string }>;
   private _openInMain?: (name: string) => Promise<boolean>;
   private _renameChat?: boolean | ((oldName: string) => Promise<string | null>);
+  private _deleteChat?: (path: string) => Promise<boolean>;
   private _placeholderFactory?: IChatPlaceholderFactory;
   private _openChatWidget?: ReactWidget;
   private _chatSelectorPopup?: ChatSelectorPopup;
@@ -480,6 +504,13 @@ export namespace MultiChatPanel {
      * @returns - a boolean, whether the chat has been renamed or not.
      */
     renameChat?: boolean | ((oldName: string) => Promise<string | null>);
+    /**
+     * An optional callback to delete a chat.
+     *
+     * @param path - the path of the chat to delete.
+     * @returns - whether the chat was deleted.
+     */
+    deleteChat?: (path: string) => Promise<boolean>;
     /**
      * An optional factory to create a placeholder widget displayed when no chat
      * is opened. Falls back to the default placeholder if not provided.
@@ -593,6 +624,20 @@ class SidePanelWidget extends PanelWithToolbar {
         }
       });
       this.toolbar.addItem('moveMain', moveToMain);
+    }
+
+    if (options.deleteChat) {
+      const deleteButton = new ToolbarButton({
+        icon: deleteIcon,
+        iconLabel: trans.__('Delete chat'),
+        className: 'jp-mod-styled',
+        onClick: async () => {
+          if (await options.deleteChat!(this.model.name)) {
+            options.onClose(this._displayName);
+          }
+        }
+      });
+      this.toolbar.addItem('delete', deleteButton);
     }
 
     const closeButton = new ToolbarButton({
@@ -725,6 +770,10 @@ namespace SidePanelWidget {
      * The callback to rename the chat.
      */
     renameChat?: boolean | ((oldName: string) => Promise<string | null>);
+    /**
+     * The callback to delete the chat.
+     */
+    deleteChat?: (path: string) => Promise<boolean>;
     /**
      * The translation bundle.
      */

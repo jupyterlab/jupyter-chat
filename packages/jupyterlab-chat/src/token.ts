@@ -106,6 +106,10 @@ export const CommandIDs = {
    */
   renameChat: 'jupyterlab-chat:renameChat',
   /**
+   * Delete a chat file.
+   */
+  deleteChat: 'jupyterlab-chat:deleteChat',
+  /**
    * Open a chat and send a message into it.
    */
   openWithMessage: 'jupyterlab-chat:openWithMessage'
