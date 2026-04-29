@@ -38,6 +38,8 @@ export function ChatMessages(): JSX.Element {
 
   const [messages, setMessages] = useState<IMessage[]>(model.messages);
   const refMsgBox = useRef<HTMLDivElement>(null);
+  const previousMessagesCount = useRef<number>(model.messages.length);
+  const shouldScrollToLast = useRef<boolean>(false);
   const [allRendered, setAllRendered] = useState<boolean>(false);
   const [showDeleted, setShowDeleted] = useState<boolean>(
     model.config.showDeleted ?? false
@@ -73,6 +75,13 @@ export function ChatMessages(): JSX.Element {
    */
   useEffect(() => {
     function handleChatEvents() {
+      const previousLastIndex = previousMessagesCount.current - 1;
+      const wasAtBottom =
+        previousLastIndex < 0 ||
+        (model.messagesInViewport ?? []).includes(previousLastIndex);
+      shouldScrollToLast.current =
+        model.messages.length > previousMessagesCount.current && wasAtBottom;
+      previousMessagesCount.current = model.messages.length;
       setMessages([...model.messages]);
     }
     model.messagesUpdated.connect(handleChatEvents);
@@ -81,6 +90,18 @@ export function ChatMessages(): JSX.Element {
       model.messagesUpdated.disconnect(handleChatEvents);
     };
   }, [model]);
+
+  useEffect(() => {
+    if (!shouldScrollToLast.current) {
+      return;
+    }
+    shouldScrollToLast.current = false;
+    refMsgBox.current?.lastElementChild?.scrollIntoView(false);
+  }, [messages]);
+
+  useEffect(() => {
+    previousMessagesCount.current = messages.length;
+  }, [messages.length]);
 
   /**
    * Effect: Listen to the config change.

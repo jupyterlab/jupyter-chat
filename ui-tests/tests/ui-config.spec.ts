@@ -12,7 +12,13 @@ import {
 import { User } from '@jupyterlab/services';
 import { UUID } from '@lumino/coreutils';
 
-import { openChat, openSettings, USER } from './test-utils';
+import {
+  exposeDepsJs,
+  getPlugin,
+  openChat,
+  openSettings,
+  USER
+} from './test-utils';
 
 const FILENAME = 'my-chat.chat';
 const MSG_CONTENT = 'Hello World!';
@@ -80,9 +86,10 @@ test.describe('#stackedMessages', () => {
   };
   const chatContent = {
     messages: [msg1, msg2],
-    users: {}
+    users: {
+      [USERNAME]: USER.identity
+    }
   };
-  chatContent.users[USERNAME] = USER.identity;
 
   test.beforeEach(async ({ page }) => {
     // Create a chat file with content
@@ -328,6 +335,110 @@ test.describe('#typingNotification', () => {
     expect(result?.[1] !== undefined);
     expect(result?.[1] !== result?.[2]);
   });
+
+  test('should keep new message visible while typing indicator is shown', async ({
+    page
+  }) => {
+    type ChatFileMessage = {
+      type: 'msg';
+      id: string;
+      sender: string;
+      body: string;
+      time: number;
+    };
+    type ChatFileContent = {
+      messages: ChatFileMessage[];
+      users: Record<string, User.IIdentity>;
+    };
+
+    const filename = `my-chat-${UUID.uuid4()}.chat`;
+    const baseTime = 1714116341;
+    const messagesList: ChatFileMessage[] = [];
+    for (let i = 0; i < 30; i++) {
+      messagesList.push({
+        type: 'msg',
+        id: UUID.uuid4(),
+        sender: USERNAME,
+        body: `Message ${i}`,
+        time: baseTime + i * 60
+      });
+    }
+    const chatContent: ChatFileContent = {
+      messages: messagesList,
+      users: {
+        [USERNAME]: USER.identity
+      }
+    };
+    await page.filebrowser.contents.uploadContent(
+      JSON.stringify(chatContent),
+      'text',
+      filename
+    );
+
+    await page.evaluate(exposeDepsJs({ getPlugin }));
+
+    const chatPanel = await openChat(page, filename);
+    const messages = chatPanel.locator('.jp-chat-rendered-message');
+    const writers = chatPanel.locator('.jp-chat-writers');
+    await expect(messages).toHaveCount(chatContent.messages.length);
+    await expect(messages.last()).toBeInViewport();
+
+    const typingUser: User.IIdentity = {
+      username: 'jovyan_2',
+      name: 'jovyan_2',
+      display_name: 'jovyan_2',
+      initials: 'JP',
+      color: 'var(--jp-collaborator-color2)'
+    };
+
+    await page.evaluate(async typingUser => {
+      const tracker = await window.getPlugin(
+        'jupyterlab-chat-extension:tracker'
+      );
+      const widget = tracker.currentWidget;
+      widget?.model.updateWriters([
+        {
+          user: typingUser
+        }
+      ]);
+    }, typingUser);
+    await expect(writers).toHaveText(/jovyan_2 is typing/);
+
+    const messageCount = await messages.count();
+    await page.evaluate(
+      async ({
+        id,
+        body,
+        time,
+        sender
+      }: {
+        id: string;
+        body: string;
+        time: number;
+        sender: User.IIdentity;
+      }) => {
+        const tracker = await window.getPlugin(
+          'jupyterlab-chat-extension:tracker'
+        );
+        const widget = tracker.currentWidget;
+        widget?.model.messageAdded({
+          type: 'msg',
+          id,
+          body,
+          time,
+          sender
+        });
+      },
+      {
+        id: UUID.uuid4(),
+        body: MSG_CONTENT,
+        time: baseTime + 60 * 40,
+        sender: typingUser
+      }
+    );
+    await expect(messages).toHaveCount(messageCount + 1);
+    await expect(messages.last()).toBeInViewport();
+  });
 });
 
 test.describe('#showDeletedMessages', () => {
@@ -348,7 +459,9 @@ test.describe('#showDeletedMessages', () => {
   };
   const chatContent = {
     messages: [msg1, msg2],
-    users: {}
+    users: {
+      [USERNAME]: USER.identity
+    }
   };
 
   test.beforeEach(async ({ page }) => {
