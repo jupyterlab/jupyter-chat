@@ -803,7 +803,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         if (!newPath) {
           const result = await InputDialog.getText({
             title: trans.__('Rename Chat'),
-            text: PathExt.basename(oldPath).replace(/\.chat$/, ''), // strip extension
+            text: oldPath.replace(/\.chat$/, ''),
             placeholder: trans.__('new-name')
           });
           if (!result.button.accept) {
