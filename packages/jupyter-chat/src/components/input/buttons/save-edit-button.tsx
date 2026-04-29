@@ -7,6 +7,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import React, { useEffect, useState } from 'react';
 
 import { InputToolbarRegistry } from '../toolbar-registry';
+import { submitInputMessage } from '../submit-message';
 import { TooltippedIconButton } from '../../mui-extras';
 import { useTranslator } from '../../../context';
 
@@ -47,8 +48,7 @@ export function SaveEditButton(
   }, [model]);
 
   async function save() {
-    await chatCommandRegistry?.onSubmit(model);
-    model.send(model.value);
+    await submitInputMessage({ model, chatCommandRegistry });
   }
 
   return (

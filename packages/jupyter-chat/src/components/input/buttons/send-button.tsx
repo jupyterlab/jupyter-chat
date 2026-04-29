@@ -7,6 +7,7 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import React, { useEffect, useState } from 'react';
 
 import { InputToolbarRegistry } from '../toolbar-registry';
+import { submitInputMessage } from '../submit-message';
 import { TooltippedIconButton } from '../../mui-extras';
 import { useTranslator } from '../../../context';
 import { IInputModel, InputModel } from '../../../input-model';
@@ -61,14 +62,12 @@ export function SendButton(
   }, [model]);
 
   async function send() {
-    // Run all command providers
-    await chatCommandRegistry?.onSubmit(model);
-
-    const body = model.value;
-
-    model.value = '';
-    model.send(body);
-    model.focus();
+    await submitInputMessage({
+      model,
+      chatCommandRegistry,
+      clearInputBeforeSend: true,
+      focusInputAfterSend: true
+    });
   }
 
   return (
