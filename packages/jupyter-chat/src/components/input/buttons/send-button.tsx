@@ -99,7 +99,7 @@ export function SendButton(
       setSelectionTooltip(tip);
     };
 
-    if (supportSelection) {
+    if (showSendWithSelection) {
       selectionWatcher?.selectionChanged.connect(toggleIncludeState);
       activeCellManager?.availabilityChanged.connect(toggleIncludeState);
       toggleIncludeState();
@@ -108,7 +108,7 @@ export function SendButton(
       selectionWatcher?.selectionChanged.disconnect(toggleIncludeState);
       activeCellManager?.availabilityChanged.disconnect(toggleIncludeState);
     };
-  }, [activeCellManager, selectionWatcher]);
+  }, [activeCellManager, selectionWatcher, showSendWithSelection]);
 
   async function send() {
     // Run all command providers
