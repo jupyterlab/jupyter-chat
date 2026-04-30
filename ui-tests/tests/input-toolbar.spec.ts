@@ -53,8 +53,7 @@ test.describe('#inputToolbar', () => {
       '.jp-chat-input-container .jp-chat-input-toolbar'
     );
     await expect(inputToolbar).toBeVisible();
-    // send button + send-with-selection opener
-    await expect(inputToolbar.locator('button')).toHaveCount(2);
+    await expect(inputToolbar.locator('button')).toHaveCount(1);
     expect(inputToolbar.locator('.jp-chat-attach-button')).not.toBeAttached();
 
     // The side panel chat input should contain the 'attach' button.
@@ -63,8 +62,7 @@ test.describe('#inputToolbar', () => {
       '.jp-chat-input-container .jp-chat-input-toolbar'
     );
     await expect(inputToolbarSide).toBeVisible();
-    // send button + send-with-selection opener + attach button
-    await expect(inputToolbarSide.locator('button')).toHaveCount(3);
+    await expect(inputToolbarSide.locator('button')).toHaveCount(2);
     expect(inputToolbarSide.locator('.jp-chat-attach-button')).toBeAttached();
   });
 });
