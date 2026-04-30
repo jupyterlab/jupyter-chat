@@ -106,7 +106,8 @@ async function createChatModel(
   app: JupyterFrontEnd,
   contentProvider: ICollaborativeContentProvider,
   path?: string,
-  defaultDirectory?: string
+  defaultDirectory?: string,
+  filebrowser?: IDefaultFileBrowser | null
 ): Promise<MultiChatPanel.IOpenChatArgs> {
   const modelFactory = app.docRegistry.getModelFactory(
     'Chat'
@@ -133,6 +134,15 @@ async function createChatModel(
 
   const chatModel = modelFactory.createNew({
     sharedModel
+  });
+
+  // Set the file browser's current path as the chat's working directory
+  // after the Y.js document has synced, so the update isn't overwritten.
+  chatModel.ready.then(() => {
+    const browserPath = filebrowser?.model.path ?? '';
+    if (browserPath) {
+      sharedModel.ydoc.getMap('metadata').set('cwd', browserPath);
+    }
   });
 
   // Set the name of the model.
@@ -266,6 +276,8 @@ const chatConfig: JupyterFrontEndPlugin<IWidgetConfig> = {
           sendTypingNotification: setting.get('sendTypingNotification')
             .composite as boolean,
           showDeleted: setting.get('showDeleted').composite as boolean,
+          sendWithSelection: setting.get('sendWithSelection')
+            .composite as boolean,
           defaultDirectory: currentDirectory
         };
       });
@@ -557,6 +569,33 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         args.isPalette ? trans.__('Create a new chat') : trans.__('Chat'),
       caption: trans.__('Create a chat'),
       icon: args => (args.isPalette ? undefined : chatIcon),
+      describedBy: {
+        args: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+              description:
+                'The name of the chat to create. Creates an untitled chat if not provided.'
+            },
+            inSidePanel: {
+              type: 'boolean',
+              default: false,
+              description: 'Whether the chat is created from the side panel.'
+            },
+            isPalette: {
+              type: 'boolean',
+              default: false,
+              description:
+                'Whether the command is invoked from the command palette.'
+            },
+            path: {
+              type: 'string',
+              description: 'The directory in which to create the chat file.'
+            }
+          }
+        }
+      },
       execute: async (args): Promise<string | undefined> => {
         const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
         let targetDirectory: string | undefined = args.path as string;
@@ -631,6 +670,33 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         args.isPalette ? trans.__('Create a new chat') : trans.__('Chat'),
       caption: trans.__('Create a chat and open it'),
       icon: args => (args.isPalette ? undefined : chatIcon),
+      describedBy: {
+        args: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+              description:
+                'The name of the chat to create. Creates an untitled chat if not provided.'
+            },
+            inSidePanel: {
+              type: 'boolean',
+              default: false,
+              description: 'Whether to open the chat in the side panel.'
+            },
+            isPalette: {
+              type: 'boolean',
+              default: false,
+              description:
+                'Whether the command is invoked from the command palette.'
+            },
+            path: {
+              type: 'string',
+              description: 'The directory in which to create the chat file.'
+            }
+          }
+        }
+      },
       execute: async args => {
         const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
         const filepath = await commands.execute(CommandIDs.createChat, args);
@@ -654,6 +720,12 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     commands.addCommand(CommandIDs.markAsRead, {
       caption: trans.__('Mark chat as read'),
       icon: readIcon,
+      describedBy: {
+        args: {
+          type: 'object',
+          properties: {}
+        }
+      },
       isEnabled: () =>
         tracker.currentWidget !== null &&
         tracker.currentWidget === app.shell.currentWidget &&
@@ -692,6 +764,28 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
          */
         commands.addCommand(CommandIDs.openChat, {
           label: trans.__('Open a chat'),
+          describedBy: {
+            args: {
+              type: 'object',
+              properties: {
+                filepath: {
+                  type: 'string',
+                  description: 'The path of the chat file to open.'
+                },
+                inSidePanel: {
+                  type: 'boolean',
+                  default: false,
+                  description: 'Whether to open the chat in the side panel.'
+                },
+                startup: {
+                  type: 'boolean',
+                  default: false,
+                  description:
+                    'Whether the command is called during startup restoration.'
+                }
+              }
+            }
+          },
           execute: async (args): Promise<any> => {
             const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
             const startup: boolean = (args.startup as boolean) ?? false;
@@ -755,7 +849,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
                 return true;
               }
 
-              const openChatArgs = await createChatModel(app, drive, filepath);
+              const openChatArgs = await createChatModel(app, drive, filepath, undefined, filebrowser);
 
               // Add a chat widget to the side panel.
               chatPanel.open(openChatArgs);
@@ -786,6 +880,23 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     // Command to rename a chat
     commands.addCommand(CommandIDs.renameChat, {
       label: trans.__('Rename chat'),
+      describedBy: {
+        args: {
+          type: 'object',
+          properties: {
+            oldPath: {
+              type: 'string',
+              description:
+                'The current path of the chat file. Uses the current widget if not provided.'
+            },
+            newPath: {
+              type: 'string',
+              description:
+                'The new path for the chat file. Prompts the user if not provided.'
+            }
+          }
+        }
+      },
       execute: async (args: any): Promise<string | null> => {
         let oldPath = args.oldPath as string;
         let newPath = args.newPath as string | null;
@@ -873,6 +984,12 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     // The command to focus the input of the current chat widget.
     commands.addCommand(CommandIDs.focusInput, {
       caption: trans.__('Focus the input of the current chat widget'),
+      describedBy: {
+        args: {
+          type: 'object',
+          properties: {}
+        }
+      },
       isEnabled: () => tracker.currentWidget !== null,
       execute: () => {
         const widget = tracker.currentWidget;
@@ -913,8 +1030,38 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
 
     // Command to open a chat and send a message into it.
     commands.addCommand(CommandIDs.openWithMessage, {
-      label: 'Open chat with message',
-      caption: 'Open a chat and send a message',
+      label: trans.__('Open chat with message'),
+      caption: trans.__('Open a chat and send a message'),
+      describedBy: {
+        args: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+              description: 'The name of the chat to open or create.'
+            },
+            path: {
+              type: 'string',
+              description: 'The directory in which to create the chat file.'
+            },
+            inSidePanel: {
+              type: 'boolean',
+              default: false,
+              description: 'Whether to open the chat in the side panel.'
+            },
+            input: {
+              type: 'string',
+              default: '',
+              description: 'The message to set in the chat input.'
+            },
+            autoSend: {
+              type: 'boolean',
+              default: false,
+              description: 'Whether to automatically send the message.'
+            }
+          }
+        }
+      },
       execute: async args => {
         const name = args.name as string | undefined;
         const path = args.path as string | undefined;
@@ -967,6 +1114,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
   optional: [
     IAttachmentOpenerRegistry,
     IChatCommandRegistry,
+    IDefaultFileBrowser,
     IInputToolbarRegistryFactory,
     ILayoutRestorer,
     IMessageFooterRegistry,
@@ -983,6 +1131,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     rmRegistry: IRenderMimeRegistry,
     attachmentOpenerRegistry: IAttachmentOpenerRegistry,
     chatCommandRegistry: IChatCommandRegistry,
+    filebrowser: IDefaultFileBrowser | null,
     inputToolbarFactory: IInputToolbarRegistryFactory,
     restorer: ILayoutRestorer | null,
     messageFooterRegistry: IMessageFooterRegistry,
@@ -1023,7 +1172,8 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
           app,
           drive,
           path,
-          widgetConfig.config.defaultDirectory
+          widgetConfig.config.defaultDirectory,
+          filebrowser
         );
       },
       openInMain: path => {
@@ -1136,6 +1286,12 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
       label: trans.__('Move the chat to the side panel'),
       caption: trans.__('Move the chat to the side panel'),
       icon: launchIcon,
+      describedBy: {
+        args: {
+          type: 'object',
+          properties: {}
+        }
+      },
       isEnabled: () => commands.hasCommand(CommandIDs.openChat),
       execute: async () => {
         const widget = app.shell.currentWidget;

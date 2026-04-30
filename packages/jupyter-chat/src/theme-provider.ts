@@ -68,7 +68,7 @@ export async function getJupyterLabTheme(): Promise<Theme> {
             style: {
               backgroundColor: `var(--jp-brand-color${light ? '1' : '2'})`,
               color: 'var(--jp-ui-inverse-font-color1)',
-              borderRadius: '4px',
+              borderRadius: 'var(--jp-border-radius)',
               boxShadow: 'none',
               '&:hover': {
                 backgroundColor: `var(--jp-brand-color${light ? '0' : '1'})`,
@@ -125,7 +125,7 @@ export async function getJupyterLabTheme(): Promise<Theme> {
             style: {
               backgroundColor: `var(--jp-brand-color${light ? '1' : '2'})`,
               color: 'var(--jp-ui-inverse-font-color1)',
-              borderRadius: '4px',
+              borderRadius: 'var(--jp-border-radius)',
               boxShadow: 'none',
               '&:hover': {
                 backgroundColor: `var(--jp-brand-color${light ? '0' : '1'})`,
