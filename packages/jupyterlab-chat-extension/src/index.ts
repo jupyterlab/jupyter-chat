@@ -576,12 +576,8 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
         let targetDirectory: string | undefined = args.path as string;
 
-        // Create new chat file in default dir if created from filebrowser
-        // as "Open a chat" dropdown only discovers chat files in default
-        // dir. Create new chat in file browser cwd if created from main
-        // area (launcher, menu, palette).
         if (targetDirectory === undefined) {
-          if (inSidePanel) {
+          if (inSidePanel || widgetConfig.config.defaultDirectory) {
             targetDirectory = widgetConfig.config.defaultDirectory ?? '';
           } else {
             targetDirectory = filebrowser?.model.path ?? '';
