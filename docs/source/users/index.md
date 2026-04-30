@@ -119,15 +119,30 @@ These settings includes:
 
 - **stackMessages**
 
-  Whether to stack consecutive messages from same user.\
+  Whether or not to stack consecutive messages from same user.\
   Default: true
 
 - **unreadNotifications**
 
-  Whether to enable or not the notifications on unread messages.\
+  Whether or not to enable the notifications on unread messages.\
   Default: true
 
 - **enableCodeToolbar**
 
-  Whether to enable or not the code toolbar.\
+  Whether or not to enable the code toolbar.\
   Default: true
+
+- **sendTypingNotification**
+
+  Whether or not to let collaborators know that you're typing.\
+  Default: true
+
+- **showDeleted**
+
+  Whether or not to display deleted messages in the chat UI.\
+  Default: false
+
+- **sendWithSelection**
+
+  Whether to display the button for adding selected text when sending a message.\
+  Default: false

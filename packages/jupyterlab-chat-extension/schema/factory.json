@@ -46,7 +46,7 @@
     "sendWithSelection": {
       "description": "Show the 'send with selection' button in the chat input.",
       "type": "boolean",
-      "default": true,
+      "default": false,
       "readOnly": false
     },
     "defaultDirectory": {
