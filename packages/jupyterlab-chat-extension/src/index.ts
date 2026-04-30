@@ -104,7 +104,8 @@ async function createChatModel(
   app: JupyterFrontEnd,
   contentProvider: ICollaborativeContentProvider,
   path?: string,
-  defaultDirectory?: string
+  defaultDirectory?: string,
+  filebrowser?: IDefaultFileBrowser | null
 ): Promise<MultiChatPanel.IOpenChatArgs> {
   const modelFactory = app.docRegistry.getModelFactory(
     'Chat'
@@ -131,6 +132,15 @@ async function createChatModel(
 
   const chatModel = modelFactory.createNew({
     sharedModel
+  });
+
+  // Set the file browser's current path as the chat's working directory
+  // after the Y.js document has synced, so the update isn't overwritten.
+  chatModel.ready.then(() => {
+    const browserPath = filebrowser?.model.path ?? '';
+    if (browserPath) {
+      sharedModel.ydoc.getMap('metadata').set('cwd', browserPath);
+    }
   });
 
   // Set the name of the model.
@@ -825,7 +835,13 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
                 return true;
               }
 
-              const openChatArgs = await createChatModel(app, drive, filepath);
+              const openChatArgs = await createChatModel(
+                app,
+                drive,
+                filepath,
+                undefined,
+                filebrowser
+              );
 
               // Add a chat widget to the side panel.
               chatPanel.open(openChatArgs);
@@ -1054,6 +1070,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
   optional: [
     IAttachmentOpenerRegistry,
     IChatCommandRegistry,
+    IDefaultFileBrowser,
     IInputToolbarRegistryFactory,
     ILayoutRestorer,
     IMessageFooterRegistry,
@@ -1070,6 +1087,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     rmRegistry: IRenderMimeRegistry,
     attachmentOpenerRegistry: IAttachmentOpenerRegistry,
     chatCommandRegistry: IChatCommandRegistry,
+    filebrowser: IDefaultFileBrowser | null,
     inputToolbarFactory: IInputToolbarRegistryFactory,
     restorer: ILayoutRestorer | null,
     messageFooterRegistry: IMessageFooterRegistry,
@@ -1110,7 +1128,8 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
           app,
           drive,
           path,
-          widgetConfig.config.defaultDirectory
+          widgetConfig.config.defaultDirectory,
+          filebrowser
         );
       },
       openInMain: path => {
