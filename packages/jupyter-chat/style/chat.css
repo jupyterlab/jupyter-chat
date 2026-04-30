@@ -148,8 +148,13 @@
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
   text-transform: uppercase;
   color: var(--jp-ui-font-color1);
   font-size: var(--jp-ui-font-size0);
   font-weight: bold;
+}
+
+.jp-chat-sidepanel-widget-toolbar > .jp-Toolbar-responsive-opener {
+  margin-left: auto;
 }
