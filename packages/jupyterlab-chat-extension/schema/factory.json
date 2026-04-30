@@ -43,6 +43,12 @@
       "default": false,
       "readOnly": false
     },
+    "sendWithSelection": {
+      "description": "Show the 'send with selection' button in the chat input.",
+      "type": "boolean",
+      "default": false,
+      "readOnly": false
+    },
     "defaultDirectory": {
       "description": "Default directory where to create and look for chat, the jupyter root directory if empty.",
       "type": "string",
