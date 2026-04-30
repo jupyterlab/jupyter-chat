@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { ReactWidget } from '@jupyterlab/apputils';
+import { Notification, ReactWidget } from '@jupyterlab/apputils';
 import { Cell } from '@jupyterlab/cells';
 import { DirListing } from '@jupyterlab/filebrowser';
 import { DocumentWidget } from '@jupyterlab/docregistry';
@@ -295,6 +295,9 @@ export class ChatWidget extends ReactWidget {
       // Get path from first cell as all cells come from same notebook as users can only select or drag cells from one notebook at a time
       if (!cells[0]?.id) {
         console.warn('No valid cells to process');
+        Notification.error(
+          'Failed to attach notebook cells: no valid cell data found.'
+        );
         return false;
       }
 
@@ -302,6 +305,9 @@ export class ChatWidget extends ReactWidget {
       if (!notebookPath) {
         console.warn(
           `Cannot find notebook for dragged cells from ${cells[0].id}`
+        );
+        Notification.error(
+          'Failed to attach notebook cells: source notebook could not be located.'
         );
         return false;
       }
@@ -346,8 +352,15 @@ export class ChatWidget extends ReactWidget {
         inputModel?.addAttachment?.(attachment);
         return !!inputModel;
       }
+
+      Notification.error(
+        'Failed to attach notebook cells: no supported cells were found.'
+      );
     } catch (error) {
       console.error('Failed to process cell drop: ', error);
+      Notification.error(
+        'Failed to attach notebook cells due to an unexpected error.'
+      );
     }
     return false;
   }
