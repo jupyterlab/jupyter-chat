@@ -585,7 +585,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         // area (launcher, menu, palette).
         if (targetDirectory === undefined) {
           const hasPreferredPath = PageConfig.getOption('preferredPath');
-          const preferredPath = hasPreferredPath ? '' + hasPreferredPath : '';
+          const preferredPath = hasPreferredPath ? hasPreferredPath + '/.jupyter/': '';
           if (inSidePanel) {
             const configDir = widgetConfig.config.defaultDirectory;
             targetDirectory = (configDir && configDir.length > 0) ? configDir : preferredPath;
