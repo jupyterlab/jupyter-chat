@@ -43,10 +43,7 @@ import {
   showErrorMessage
 } from '@jupyterlab/apputils';
 import { IEditorLanguageRegistry } from '@jupyterlab/codemirror';
-import {
-  PathExt,
-  PageConfig
-} from '@jupyterlab/coreutils';
+import { PathExt, PageConfig } from '@jupyterlab/coreutils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { IDefaultFileBrowser } from '@jupyterlab/filebrowser';
 import { ILauncher } from '@jupyterlab/launcher';
@@ -585,13 +582,18 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         // area (launcher, menu, palette).
         if (targetDirectory === undefined) {
           const hasPreferredPath = PageConfig.getOption('preferredPath');
-          const preferredPath = hasPreferredPath ? hasPreferredPath + '/.jupyter/': '';
+          const preferredPath = hasPreferredPath
+            ? hasPreferredPath + '/.jupyter/'
+            : '';
           if (inSidePanel) {
             const configDir = widgetConfig.config.defaultDirectory;
-            targetDirectory = (configDir && configDir.length > 0) ? configDir : preferredPath;
+            targetDirectory =
+              configDir && configDir.length > 0 ? configDir : preferredPath;
           } else {
-            targetDirectory = (filebrowser?.model.path && filebrowser.model.path.length > 0) 
-                ? filebrowser.model.path : preferredPath;
+            targetDirectory =
+              filebrowser?.model.path && filebrowser.model.path.length > 0
+                ? filebrowser.model.path
+                : preferredPath;
           }
         }
 
