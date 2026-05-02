@@ -46,7 +46,7 @@ import { IEditorLanguageRegistry } from '@jupyterlab/codemirror';
 import {
   PathExt,
   PageConfig
- } from '@jupyterlab/coreutils';
+} from '@jupyterlab/coreutils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { IDefaultFileBrowser } from '@jupyterlab/filebrowser';
 import { ILauncher } from '@jupyterlab/launcher';
