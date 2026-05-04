@@ -15,8 +15,8 @@ import { ReadonlyJSONObject, UUID } from '@lumino/coreutils';
 import { createChat, openChat, openSettings, USER } from './test-utils';
 import { PathExt } from '@jupyterlab/coreutils';
 
-const CHAT_NAME = 'my-chat';
-const FILENAME = 'my-chat.chat';
+const CHAT_NAME = 'chat-file';
+const FILENAME = `${CHAT_NAME}.chat`;
 const MSG_CONTENT = 'Hello World!';
 const USERNAME = USER.identity.username;
 

@@ -8,7 +8,7 @@ import { UUID } from '@lumino/coreutils';
 
 import { openChat, USER } from './test-utils';
 
-const FILENAME = 'my-chat.chat';
+const FILENAME = 'mime-renderer.chat';
 const USERNAME = USER.identity.username;
 const BUNDLES = [
   {
