@@ -145,6 +145,7 @@
   display: block;
   align-content: center;
   flex: 1 1 0%;
+  max-width: calc(100% - 7rem);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -155,6 +156,7 @@
   font-weight: bold;
 }
 
-.jp-chat-sidepanel-widget-toolbar > .jp-Toolbar-responsive-opener {
+.jp-chat-sidepanel-widget-toolbar
+  > .jp-Toolbar-item.jp-ToolbarButton:first-of-type {
   margin-left: auto;
 }

@@ -44,6 +44,8 @@ const SIDEPANEL_CLASS = 'jp-chat-sidepanel';
 const ADD_BUTTON_CLASS = 'jp-chat-add';
 const OPEN_SELECT_CLASS = 'jp-chat-open';
 const SIDEPANEL_WIDGET_CLASS = 'jp-chat-sidepanel-widget';
+// TODO: Drop this workaround class (and related CSS) once we depend on
+// @jupyterlab/ui-components >= 4.6.0 (refs - jupyterlab/jupyterlab#18824).
 const TOOLBAR_CLASS = 'jp-chat-sidepanel-widget-toolbar';
 
 /**
@@ -533,6 +535,7 @@ class SidePanelWidget extends ReactivePanelWithToolbar {
     const trans = options.trans;
 
     this.addClass(SIDEPANEL_WIDGET_CLASS);
+    // Keep side-panel toolbar baseline sizing from ui-components.
     this.toolbar.addClass('jp-SidePanel-toolbar');
     this.toolbar.addClass(TOOLBAR_CLASS);
     this._updateTitle();
