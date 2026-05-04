@@ -12,7 +12,7 @@ import {
 import { User } from '@jupyterlab/services';
 import { openChat, sendMessage, USER } from './test-utils';
 
-const FILENAME = 'my-chat.chat';
+const FILENAME = 'user-mention.chat';
 
 test.use({
   mockUser: USER
