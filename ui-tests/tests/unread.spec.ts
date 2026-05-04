@@ -14,7 +14,7 @@ import { UUID } from '@lumino/coreutils';
 
 import { openChat, openChatToSide, sendMessage, USER } from './test-utils';
 
-const FILENAME = 'my-chat.chat';
+const FILENAME = 'unread.chat';
 const MSG_CONTENT = 'Hello World!';
 const USERNAME = USER.identity.username;
 

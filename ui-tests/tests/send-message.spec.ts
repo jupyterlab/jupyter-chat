@@ -12,7 +12,7 @@ import {
   splitMainArea
 } from './test-utils';
 
-const FILENAME = 'my-chat.chat';
+const FILENAME = 'send-message.chat';
 const MSG_CONTENT = 'Hello World!';
 
 test.describe('#sendMessages', () => {
