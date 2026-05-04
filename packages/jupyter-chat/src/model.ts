@@ -176,6 +176,11 @@ export interface IChatModel extends IDisposable {
   isDisposed: boolean;
 
   /**
+   * A signal emitting when disposing odf the model.
+   */
+  readonly disposed: ISignal<AbstractChatModel, void>;
+
+  /**
    * Function to call when a message is received.
    *
    * @param message - the message with user information and body.

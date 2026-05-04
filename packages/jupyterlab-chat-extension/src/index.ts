@@ -1113,10 +1113,25 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
           widgetConfig.config.defaultDirectory
         );
       },
-      openInMain: path => {
-        return commands.execute(CommandIDs.openChat, {
-          filepath: path
-        }) as Promise<boolean>;
+      openInMain: async path => {
+        return commands
+          .execute(CommandIDs.openChat, {
+            filepath: path
+          })
+          .then(opened => {
+            // Dispose of the side panel model if the widget has been opened in main.
+            if (opened) {
+              const name = getDisplayName(
+                path,
+                widgetConfig.config.defaultDirectory
+              );
+              chatPanel.getLoadedModel(name)?.dispose();
+            }
+            return opened;
+          })
+          .catch(e => {
+            console.error(`Error opening ${path}`, e);
+          });
       },
       renameChat: (oldPath: string) => {
         return commands.execute(CommandIDs.renameChat, {
@@ -1150,7 +1165,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
             change.oldValue.path,
             widgetConfig.config.defaultDirectory
           );
-          chatPanel.disposeLoadedModel(oldName);
+          chatPanel.unsetLoadedModel(oldName);
         }
       }
       const updateActions = ['new', 'rename'];
