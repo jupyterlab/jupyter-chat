@@ -252,6 +252,8 @@ const chatConfig: JupyterFrontEndPlugin<IWidgetConfig> = {
           sendTypingNotification: setting.get('sendTypingNotification')
             .composite as boolean,
           showDeleted: setting.get('showDeleted').composite as boolean,
+          sendWithSelection: setting.get('sendWithSelection')
+            .composite as boolean,
           defaultDirectory: currentDirectory
         };
       });
