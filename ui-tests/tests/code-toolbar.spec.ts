@@ -17,7 +17,7 @@ test.use({
   }
 });
 
-const FILENAME = 'toolbar.chat';
+const FILENAME = 'code-toolbar.chat';
 const CONTENT = 'print("This is a code cell")';
 const MESSAGE = `\`\`\`\n${CONTENT}\n\`\`\``;
 
