@@ -14,6 +14,7 @@ import {
 } from './test-utils';
 
 const FILENAME = 'my-chat.chat';
+const SIDEPANEL_WIDTH = 420;
 
 test.describe('#sidepanel', () => {
   test.describe('#initialization', () => {
@@ -111,6 +112,7 @@ test.describe('#sidepanel', () => {
 
     test('should open an existing chat and close it', async ({ page }) => {
       panel = await openSidePanel(page);
+      await page.sidebar.setWidth(SIDEPANEL_WIDTH, 'left');
       const chatList = page.locator('.jp-chat-selector-popup');
       await panel
         .locator('> .jp-Toolbar .jp-Toolbar-item.jp-chat-open')
@@ -126,7 +128,9 @@ test.describe('#sidepanel', () => {
         chatToolbar.locator('.jp-chat-sidepanel-widget-title')
       ).toHaveText(name);
 
-      await chatToolbar.getByTitle('Close the chat').click();
+      const closeButton = chatToolbar.getByTitle('Close the chat');
+      await expect(closeButton).toBeVisible();
+      await closeButton.click();
       await expect(chatToolbar).not.toBeVisible();
     });
 
@@ -197,7 +201,7 @@ test.describe('#sidepanel', () => {
     test('main widget toolbar should have a button', async ({ page }) => {
       const chatPanel = await openChat(page, FILENAME);
       const button = chatPanel.getByTitle('Move the chat to the side panel');
-      expect(button).toBeVisible();
+      await expect(button).toBeVisible();
       expect(await button.screenshot()).toMatchSnapshot('moveToSide.png');
     });
 
@@ -245,22 +249,25 @@ test.describe('#sidepanel', () => {
       page
     }) => {
       const sidePanel = await openChatToSide(page, FILENAME);
+      await page.sidebar.setWidth(SIDEPANEL_WIDTH, 'left');
       const chatToolbar = sidePanel
         .locator('.jp-chat-sidepanel-widget .jp-chat-sidepanel-widget-toolbar')
         .first();
       const button = chatToolbar.getByTitle('Move the chat to the main area');
-      expect(button).toBeVisible();
+      await expect(button).toBeVisible();
       expect(await button.screenshot()).toMatchSnapshot('moveToMain.png');
     });
 
     test('chat should move to the main area', async ({ page }) => {
       const sidePanel = await openChatToSide(page, FILENAME);
+      await page.sidebar.setWidth(SIDEPANEL_WIDTH, 'left');
       const chatToolbar = sidePanel
         .locator('.jp-chat-sidepanel-widget .jp-chat-sidepanel-widget-toolbar')
         .first();
       const button = chatToolbar.getByTitle('Move the chat to the main area');
+      await expect(button).toBeVisible();
       await button.click();
-      expect(chatToolbar).not.toBeAttached();
+      await expect(chatToolbar).not.toBeAttached();
 
       await expect(page.activity.getTabLocator(FILENAME)).toBeVisible();
     });
