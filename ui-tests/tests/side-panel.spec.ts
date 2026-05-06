@@ -13,8 +13,12 @@ import {
   openSidePanel
 } from './test-utils';
 
+<<<<<<< fixPanelOverflow
 const FILENAME = 'my-chat.chat';
 const SIDEPANEL_WIDTH = 420;
+=======
+const FILENAME = 'sidepanel.chat';
+>>>>>>> main
 
 test.describe('#sidepanel', () => {
   test.describe('#initialization', () => {
