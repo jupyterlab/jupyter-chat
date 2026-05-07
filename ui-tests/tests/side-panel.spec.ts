@@ -14,7 +14,7 @@ import {
 } from './test-utils';
 
 const FILENAME = 'sidepanel.chat';
-const SIDEPANEL_WIDTH = 420;
+const SIDEPANEL_WIDTH = 560;
 
 test.describe('#sidepanel', () => {
   test.describe('#initialization', () => {
@@ -124,6 +124,7 @@ test.describe('#sidepanel', () => {
         '.jp-chat-sidepanel-widget .jp-chat-sidepanel-widget-toolbar'
       );
       await expect(chatToolbar).toBeVisible();
+      await page.sidebar.setWidth(SIDEPANEL_WIDTH, 'left');
       await expect(
         chatToolbar.locator('.jp-chat-sidepanel-widget-title')
       ).toHaveText(name);
@@ -253,6 +254,7 @@ test.describe('#sidepanel', () => {
       const chatToolbar = sidePanel
         .locator('.jp-chat-sidepanel-widget .jp-chat-sidepanel-widget-toolbar')
         .first();
+      await page.sidebar.setWidth(SIDEPANEL_WIDTH, 'left');
       const button = chatToolbar.getByTitle('Move the chat to the main area');
       await expect(button).toBeVisible();
       expect(await button.screenshot()).toMatchSnapshot('moveToMain.png');
