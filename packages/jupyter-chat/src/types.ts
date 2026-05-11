@@ -60,6 +60,10 @@ export interface IConfig {
    * Whether to display deleted messages.
    */
   showDeleted?: boolean;
+  /**
+   * Whether to display the 'send with selection' button.
+   */
+  sendWithSelection?: boolean;
 }
 
 /**

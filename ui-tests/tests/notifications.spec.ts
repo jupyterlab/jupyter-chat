@@ -15,7 +15,7 @@ import { UUID } from '@lumino/coreutils';
 
 import { openChat, openSettings, sendMessage, USER } from './test-utils';
 
-const FILENAME = 'my-chat.chat';
+const FILENAME = 'notifications.chat';
 const MSG_CONTENT = 'Hello World!';
 const USERNAME = USER.identity.username;
 
@@ -101,7 +101,7 @@ test.skip('#notifications', () => {
     // TODO: fix it, the notification should be info but is 'default'
     // expect(notifications[0].type).toBe('info');
     expect(notifications[0].message).toBe(
-      '1 incoming message(s) in my-chat.chat'
+      `1 incoming message(s) in ${FILENAME}`
     );
   });
 
@@ -142,13 +142,13 @@ test.skip('#notifications', () => {
     expect(notifications).toHaveLength(1);
 
     expect(notifications[0].message).toBe(
-      '1 incoming message(s) in my-chat.chat'
+      `1 incoming message(s) in ${FILENAME}`
     );
 
     await sendMessage(guestPage, FILENAME, MSG_CONTENT);
     notifications = await page.notifications;
     expect(notifications[0].message).toBe(
-      '2 incoming message(s) in my-chat.chat'
+      `2 incoming message(s) in ${FILENAME}`
     );
   });
 

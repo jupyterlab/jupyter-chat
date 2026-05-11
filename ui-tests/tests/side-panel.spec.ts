@@ -13,7 +13,7 @@ import {
   openSidePanel
 } from './test-utils';
 
-const FILENAME = 'my-chat.chat';
+const FILENAME = 'sidepanel.chat';
 
 test.describe('#sidepanel', () => {
   test.describe('#initialization', () => {
