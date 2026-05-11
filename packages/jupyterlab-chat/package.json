@@ -29,8 +29,8 @@
     "url": "https://github.com/jupyterlab/jupyter-chat.git"
   },
   "scripts": {
-    "build": "jlpm build:lib",
-    "build:prod": "jlpm clean && jlpm build:lib:prod",
+    "build": "echo 'Building jupyterlab-chat' && jlpm build:lib",
+    "build:prod": "echo 'Building jupyterlab-chat' && jlpm clean && jlpm build:lib:prod",
     "build:lib": "tsc --sourceMap",
     "build:lib:prod": "tsc",
     "clean": "jlpm clean:lib",
