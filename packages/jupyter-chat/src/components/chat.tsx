@@ -179,6 +179,11 @@ export namespace Chat {
      */
     welcomeMessage?: string;
     /**
+     * Optional factory to create message suggestions shown when the chat has
+     * no messages. 
+     */
+    messageSuggestionsFactory?: import('../tokens').IMessageSuggestionsFactory;
+    /**
      * The area where the chat is displayed.
      */
     area?: ChatArea;
