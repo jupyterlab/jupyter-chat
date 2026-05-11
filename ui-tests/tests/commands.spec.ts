@@ -6,7 +6,7 @@
 import { expect, IJupyterLabPageFixture, test } from '@jupyterlab/galata';
 import { openChat, openChatToSide } from './test-utils';
 
-const FILENAME = 'my-chat.chat';
+const FILENAME = 'commands.chat';
 
 const fillModal = async (
   page: IJupyterLabPageFixture,

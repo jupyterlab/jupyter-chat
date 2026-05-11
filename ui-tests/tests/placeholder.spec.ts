@@ -7,7 +7,7 @@ import { expect, test } from '@jupyterlab/galata';
 
 import { openSidePanel } from './test-utils';
 
-const CHAT_NAME = 'my-chat';
+const CHAT_NAME = 'placeholder';
 const FILENAME = `${CHAT_NAME}.chat`;
 
 test.describe('#placeholder', () => {

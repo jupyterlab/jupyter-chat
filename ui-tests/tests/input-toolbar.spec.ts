@@ -13,7 +13,7 @@ import {
   openChatToSide
 } from './test-utils';
 
-const CHAT = 'test.chat';
+const CHAT = 'input-toolbar.chat';
 
 test.describe('#inputToolbar', () => {
   test('Should hide toolbar item for main area chat only', async ({
