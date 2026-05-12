@@ -6,11 +6,11 @@
 import { RenderMimeRegistry } from '@jupyterlab/rendermime';
 
 import { ChatWidget } from '../widgets/chat-widget';
-import { IMessageSuggestionsFactory } from '../tokens';
+import { IChatBodyPlaceholderFactory } from '../tokens';
 import { IChatModel } from '../model';
 import { MockChatModel } from './mocks';
 
-describe('MessageSuggestions', () => {
+describe('ChatBodyPlaceholder', () => {
   let model: IChatModel;
   let rmRegistry: RenderMimeRegistry;
 
@@ -19,45 +19,45 @@ describe('MessageSuggestions', () => {
     rmRegistry = new RenderMimeRegistry();
   });
 
-  it('should create a widget without messageSuggestionsFactory', () => {
+  it('should create a widget without chatBodyPlaceholderFactory', () => {
     const widget = new ChatWidget({ model, rmRegistry });
     expect(widget).toBeInstanceOf(ChatWidget);
     widget.dispose();
   });
 
-  it('should create a widget with messageSuggestionsFactory', () => {
-    const factory: IMessageSuggestionsFactory = {
+  it('should create a widget with chatBodyPlaceholderFactory', () => {
+    const factory: IChatBodyPlaceholderFactory = {
       create: jest.fn().mockReturnValue(null)
     };
     const widget = new ChatWidget({
       model,
       rmRegistry,
-      messageSuggestionsFactory: factory
+      chatBodyPlaceholderFactory: factory
     });
     expect(widget).toBeInstanceOf(ChatWidget);
     widget.dispose();
   });
 
   it('should call sendMessage when factory onSend is invoked', () => {
-    const factory: IMessageSuggestionsFactory = {
+    const factory: IChatBodyPlaceholderFactory = {
       create: jest.fn().mockReturnValue(null)
     };
 
     const sendSpy = jest.spyOn(model, 'sendMessage');
 
-    // Simulate what MessageSuggestions component does:
+    // Simulate what ChatBodyPlaceholder component does:
     factory.create({ onSend: (body: string) => model.sendMessage({ body }) });
 
     // Invoke the onSend passed to factory
     const props = (factory.create as jest.Mock).mock
-      .calls[0][0] as IMessageSuggestionsFactory.IProps;
+      .calls[0][0] as IChatBodyPlaceholderFactory.IProps;
     props.onSend('Hello world');
 
     expect(sendSpy).toHaveBeenCalledWith({ body: 'Hello world' });
   });
 
   it('should not fail when factory returns null', () => {
-    const factory: IMessageSuggestionsFactory = {
+    const factory: IChatBodyPlaceholderFactory = {
       create: jest.fn().mockReturnValue(null)
     };
 

@@ -54,21 +54,21 @@ export const IChatPlaceholderFactory = new Token<IChatPlaceholderFactory>(
 );
 
 /**
- * The interface for the message suggestions factory.
+ * The interface for the chat body placeholder factory.
  */
-export interface IMessageSuggestionsFactory {
+export interface IChatBodyPlaceholderFactory {
   /**
-   * Create a message suggestions component shown when the chat has no messages.
+   * Create a chat body placeholder component shown when the chat has no messages.
    *
    * @param props - the props passed to the component.
-   * @returns a React element to display as message suggestions.
+   * @returns a React element to display as chat body placeholder.
    */
-  create(props: IMessageSuggestionsFactory.IProps): JSX.Element | null;
+  create(props: IChatBodyPlaceholderFactory.IProps): JSX.Element | null;
 }
 
-export namespace IMessageSuggestionsFactory {
+export namespace IChatBodyPlaceholderFactory {
   /**
-   * The props passed to the message suggestions factory.
+   * The props passed to the chat body placeholder factory.
    */
   export interface IProps {
     /**
@@ -79,12 +79,12 @@ export namespace IMessageSuggestionsFactory {
 }
 
 /**
- * The token for the message suggestions factory.
+ * The token for the chat body placeholder factory.
  * Not provided by default — extensions can provide it to display clickable
- * message suggestions when a chat has no messages.
+ * chat body placeholder when a chat has no messages.
  */
-export const IMessageSuggestionsFactory =
-  new Token<IMessageSuggestionsFactory>(
-    '@jupyter/chat:IMessageSuggestionsFactory',
-    'The message suggestions factory for empty chats'
+export const IChatBodyPlaceholderFactory =
+  new Token<IChatBodyPlaceholderFactory>(
+    '@jupyter/chat:IChatBodyPlaceholderFactory',
+    'The chat body placeholder factory for empty chats'
   );

@@ -6,13 +6,13 @@
 import { useChatContext } from '../../context';
 
 /**
- * Component that renders message suggestions using the factory from context.
+ * Component that renders chat body placeholder using the factory from context.
  * Renders nothing if no factory is provided.
  */
-export function MessageSuggestions(): JSX.Element | null {
-  const { model, messageSuggestionsFactory } = useChatContext();
+export function ChatBodyPlaceholder(): JSX.Element | null {
+  const { model, chatBodyPlaceholderFactory } = useChatContext();
 
-  if (!messageSuggestionsFactory) {
+  if (!chatBodyPlaceholderFactory) {
     return null;
   }
 
@@ -20,5 +20,5 @@ export function MessageSuggestions(): JSX.Element | null {
     model.sendMessage({ body });
   };
 
-  return messageSuggestionsFactory.create({ onSend });
+  return chatBodyPlaceholderFactory.create({ onSend });
 }

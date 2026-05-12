@@ -16,7 +16,7 @@ import {
   IMessageFooterRegistry,
   IMessagePreambleRegistry,
   IChatPlaceholderFactory,
-  IMessageSuggestionsFactory,
+  IChatBodyPlaceholderFactory,
   ISelectionWatcher,
   InputToolbarRegistry,
   MessageFooterRegistry,
@@ -298,7 +298,7 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
     IInputToolbarRegistryFactory,
     IMessageFooterRegistry,
     IMessagePreambleRegistry,
-    IMessageSuggestionsFactory,
+    IChatBodyPlaceholderFactory,
     ISelectionWatcherToken,
     ISettingRegistry,
     IThemeManager,
@@ -319,7 +319,7 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
     inputToolbarFactory: IInputToolbarRegistryFactory,
     messageFooterRegistry: IMessageFooterRegistry,
     messagePreambleRegistry: IMessagePreambleRegistry,
-    messageSuggestionsFactory: IMessageSuggestionsFactory | null,
+    chatBodyPlaceholderFactory: IChatBodyPlaceholderFactory | null,
     selectionWatcher: ISelectionWatcher | null,
     settingRegistry: ISettingRegistry | null,
     themeManager: IThemeManager | null,
@@ -395,7 +395,7 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
       inputToolbarFactory,
       messageFooterRegistry,
       messagePreambleRegistry,
-      messageSuggestionsFactory: messageSuggestionsFactory ?? undefined,
+      chatBodyPlaceholderFactory: chatBodyPlaceholderFactory ?? undefined,
       welcomeMessage
     });
 
@@ -1063,7 +1063,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     IMessageFooterRegistry,
     IMessagePreambleRegistry,
     IChatPlaceholderFactory,
-    IMessageSuggestionsFactory,
+    IChatBodyPlaceholderFactory,
     IThemeManager,
     ITranslator,
     IWelcomeMessage
@@ -1080,7 +1080,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     messageFooterRegistry: IMessageFooterRegistry,
     messagePreambleRegistry: IMessagePreambleRegistry,
     placeholderFactory: IChatPlaceholderFactory | null,
-    messageSuggestionsFactory: IMessageSuggestionsFactory | null,
+    chatBodyPlaceholderFactory: IChatBodyPlaceholderFactory | null,
     themeManager: IThemeManager | null,
     translator_: ITranslator | null,
     welcomeMessage: string
@@ -1136,7 +1136,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
       messagePreambleRegistry,
       welcomeMessage,
       placeholderFactory: placeholderFactory ?? undefined,
-      messageSuggestionsFactory: messageSuggestionsFactory ?? undefined
+      chatBodyPlaceholderFactory: chatBodyPlaceholderFactory ?? undefined
     });
     chatPanel.id = 'JupyterlabChat:sidepanel';
 

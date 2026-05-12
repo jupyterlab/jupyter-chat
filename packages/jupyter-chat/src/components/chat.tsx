@@ -179,10 +179,10 @@ export namespace Chat {
      */
     welcomeMessage?: string;
     /**
-     * Optional factory to create message suggestions shown when the chat has
-     * no messages. 
+     * Optional factory to create chat body placeholder shown when the chat has
+     * no messages.
      */
-    messageSuggestionsFactory?: import('../tokens').IMessageSuggestionsFactory;
+    chatBodyPlaceholderFactory?: import('../tokens').IChatBodyPlaceholderFactory;
     /**
      * The area where the chat is displayed.
      */
