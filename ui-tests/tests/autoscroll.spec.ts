@@ -117,14 +117,16 @@ test.describe('#autoscroll', () => {
     await sendMessage(guestPage, FILENAME, 'New message while scrolled up');
 
     // Wait for the message to be added
-    await expect(
-      chatPanel.locator('.jp-chat-message').last()
-    ).toContainText('New message while scrolled up');
+    await expect(chatPanel.locator('.jp-chat-message').last()).toContainText(
+      'New message while scrolled up'
+    );
 
     // The first message should still be visible (viewport didn't move)
     await expect(messages.first()).toBeInViewport();
     // The new last message should not be visible
-    await expect(chatPanel.locator('.jp-chat-message').last()).not.toBeInViewport();
+    await expect(
+      chatPanel.locator('.jp-chat-message').last()
+    ).not.toBeInViewport();
   });
 
   test('should re-engage auto-scroll when user scrolls back to bottom', async ({

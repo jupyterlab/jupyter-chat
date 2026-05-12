@@ -84,7 +84,8 @@ export function ChatMessages(): JSX.Element {
     function handleChatEvents() {
       const viewport = model.messagesInViewport ?? [];
       const prevLastIdx = model.messages.length - 2;
-      shouldScrollRef.current = prevLastIdx < 0 || viewport.includes(prevLastIdx);
+      shouldScrollRef.current =
+        prevLastIdx < 0 || viewport.includes(prevLastIdx);
       setMessages([...model.messages]);
     }
     model.messagesUpdated.connect(handleChatEvents);
@@ -123,7 +124,11 @@ export function ChatMessages(): JSX.Element {
       shouldScrollRef.current = atBottom;
     };
 
-    observer.observe(el, { childList: true, subtree: true, characterData: true });
+    observer.observe(el, {
+      childList: true,
+      subtree: true,
+      characterData: true
+    });
     el.addEventListener('scroll', handleScroll);
 
     return () => {
