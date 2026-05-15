@@ -245,6 +245,8 @@ export abstract class AbstractChatModel implements IChatModel {
     this._config = {
       stackMessages: true,
       sendTypingNotification: true,
+      autoHideWelcomeMessage: true,
+      hideWelcomeMessage: false,
       ...config
     };
 

@@ -26,6 +26,24 @@ const MESSAGES_BOX_CLASS = 'jp-chat-messages-container';
 const MESSAGE_STACKED_CLASS = 'jp-chat-message-stacked';
 
 /**
+ * Whether the welcome message should be displayed.
+ */
+export function shouldDisplayWelcomeMessage(options: {
+  welcomeMessage?: string;
+  config: IConfig;
+  messageCount: number;
+}): boolean {
+  const { welcomeMessage, config, messageCount } = options;
+  if (!welcomeMessage || (config.hideWelcomeMessage ?? false)) {
+    return false;
+  }
+  if ((config.autoHideWelcomeMessage ?? true) && messageCount > 0) {
+    return false;
+  }
+  return true;
+}
+
+/**
  * The messages list component.
  */
 export function ChatMessages(): JSX.Element {
@@ -40,9 +58,7 @@ export function ChatMessages(): JSX.Element {
   const [messages, setMessages] = useState<IMessage[]>(model.messages);
   const refMsgBox = useRef<HTMLDivElement>(null);
   const [allRendered, setAllRendered] = useState<boolean>(false);
-  const [showDeleted, setShowDeleted] = useState<boolean>(
-    model.config.showDeleted ?? false
-  );
+  const [config, setConfig] = useState<IConfig>(model.config);
 
   // The list of message DOM and their rendered promises.
   const listRef = useRef<(HTMLDivElement | null)[]>([]);
@@ -143,16 +159,14 @@ export function ChatMessages(): JSX.Element {
    */
   useEffect(() => {
     function handleConfigChange(_: IChatModel, config: IConfig) {
-      if (config.showDeleted !== showDeleted) {
-        setShowDeleted(config.showDeleted ?? false);
-      }
+      setConfig(config);
     }
     model.configChanged.connect(handleConfigChange);
 
     return () => {
       model.configChanged.disconnect(handleConfigChange);
     };
-  }, [model, showDeleted]);
+  }, [model]);
 
   /**
    * Observe the messages to update the current viewport and the unread messages.
@@ -217,10 +231,18 @@ export function ChatMessages(): JSX.Element {
   }, [messages, allRendered]);
 
   const horizontalPadding = area === 'main' ? 8 : 4;
+  const showWelcomeMessage = shouldDisplayWelcomeMessage({
+    welcomeMessage,
+    config,
+    messageCount: messages.length
+  });
+
   return (
     <>
       <ScrollContainer ref={scrollContainerRef} sx={{ flexGrow: 1 }}>
-        {welcomeMessage && <WelcomeMessage content={welcomeMessage} />}
+        {showWelcomeMessage && welcomeMessage && (
+          <WelcomeMessage content={welcomeMessage} />
+        )}
         {messages.length === 0 && <ChatBodyPlaceholder />}
         <Box
           sx={{
@@ -236,7 +258,7 @@ export function ChatMessages(): JSX.Element {
           className={clsx(MESSAGES_BOX_CLASS)}
         >
           {/* Filter the deleted message if user don't expect to see it. */}
-          {(showDeleted
+          {(config.showDeleted
             ? messages
             : messages.filter(message => !message.deleted)
           ).map((message, i) => {
