@@ -29,6 +29,7 @@ import {
   IMessagePreambleRegistry
 } from '../registers';
 import { ChatArea } from '../types';
+import { IChatBodyPlaceholderFactory } from '../tokens';
 
 export function ChatBody(props: Chat.IChatProps): JSX.Element {
   const { model } = props;
@@ -182,7 +183,7 @@ export namespace Chat {
      * Optional factory to create chat body placeholder shown when the chat has
      * no messages.
      */
-    chatBodyPlaceholderFactory?: import('../tokens').IChatBodyPlaceholderFactory;
+    chatBodyPlaceholderFactory?: IChatBodyPlaceholderFactory;
     /**
      * The area where the chat is displayed.
      */
