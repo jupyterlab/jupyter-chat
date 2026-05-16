@@ -62,12 +62,14 @@ test.describe('#settings', () => {
     expect(showDeleted).not.toBeChecked();
 
     const autoHideWelcomeMessage = settings.getByRole('checkbox', {
-      name: 'autoHideWelcomeMessage'
+      name: 'autoHideWelcomeMessage',
+      exact: true
     });
     expect(autoHideWelcomeMessage).toBeChecked();
 
     const hideWelcomeMessage = settings.getByRole('checkbox', {
-      name: 'hideWelcomeMessage'
+      name: 'hideWelcomeMessage',
+      exact: true
     });
     expect(hideWelcomeMessage).not.toBeChecked();
   });
