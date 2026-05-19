@@ -14,6 +14,7 @@ import { ChatMessage } from './message';
 import { MessagePreambleComponent } from './preamble';
 import { Navigation } from './navigation';
 import { WelcomeMessage } from './welcome';
+import { ChatBodyPlaceholder } from './chat-body-placeholder';
 import { ScrollContainer } from '../scroll-container';
 import { useChatContext } from '../../context';
 import { Message } from '../../message';
@@ -220,6 +221,7 @@ export function ChatMessages(): JSX.Element {
     <>
       <ScrollContainer ref={scrollContainerRef} sx={{ flexGrow: 1 }}>
         {welcomeMessage && <WelcomeMessage content={welcomeMessage} />}
+        {messages.length === 0 && <ChatBodyPlaceholder />}
         <Box
           sx={{
             paddingLeft: horizontalPadding,
