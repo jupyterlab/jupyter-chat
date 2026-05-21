@@ -70,7 +70,7 @@ jobs:
           assert data['version'] == '2.0.0-alpha.1', f"Expected 2.0.0-alpha.1, got {data['version']}"
           PY
 
-      - name: Test skip-if-dirty with dirty git state
+      - name: Test failure when dirty without --skip-if-dirty
         run: |
           set -eux
           # Restore original state
@@ -81,4 +81,16 @@ jobs:
           output=$(python scripts/bump_version.py 9.9.9 2>&1) && exit 1 || true
           echo "$output" | grep -q "Must be in a clean git state"
           # Verify nothing was changed by the failed command
+          [ -z "$(git diff HEAD -- python/ packages/ package.json)" ]
+
+      - name: Test --skip-if-dirty with dirty git state
+        run: |
+          set -eux
+          # Restore original state
+          git checkout .
+          # Make the git state dirty (touch a file not managed by bump_version)
+          echo "dirty" >> README.md
+          # Run bump with --skip-if-dirty — should exit successfully and make no changes
+          python scripts/bump_version.py --skip-if-dirty 9.9.9
+          # Verify nothing was changed
           [ -z "$(git diff HEAD -- python/ packages/ package.json)" ]
