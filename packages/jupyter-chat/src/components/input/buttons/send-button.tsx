@@ -112,12 +112,7 @@ export function SendButton(
   }, [activeCellManager, selectionWatcher, showSendWithSelection]);
 
   async function send() {
-    await submitInputMessage({
-      model,
-      chatCommandRegistry,
-      clearInputBeforeSend: true,
-      focusInputAfterSend: true
-    });
+    await submitInputMessage({ model, chatCommandRegistry });
   }
 
   async function sendWithSelection() {

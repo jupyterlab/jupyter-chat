@@ -12,26 +12,12 @@ import { IChatCommandRegistry } from '../../registers';
 export async function submitInputMessage(
   options: submitInputMessage.IOptions
 ): Promise<void> {
-  const {
-    model,
-    chatCommandRegistry,
-    clearInputBeforeSend = false,
-    focusInputAfterSend = false
-  } = options;
+  const { model, chatCommandRegistry, body } = options;
 
   await chatCommandRegistry?.onSubmit(model);
 
-  const body = model.value;
-
-  if (clearInputBeforeSend) {
-    model.value = '';
-  }
-
-  model.send(body);
-
-  if (focusInputAfterSend) {
-    model.focus();
-  }
+  model.send(body ?? model.value);
+  model.focus();
 }
 
 export namespace submitInputMessage {
@@ -45,15 +31,8 @@ export namespace submitInputMessage {
      */
     chatCommandRegistry?: IChatCommandRegistry;
     /**
-     * Whether to clear the visible input before calling `model.send()`.
-     *
-     * This preserves existing button-send behavior for any `onSend()`
-     * implementation that reads `model.value` directly.
+     * Optional message body to send instead of the current model value.
      */
-    clearInputBeforeSend?: boolean;
-    /**
-     * Whether to request input focus after sending.
-     */
-    focusInputAfterSend?: boolean;
+    body?: string;
   }
 }
