@@ -20,7 +20,7 @@ import {
   USER
 } from './test-utils';
 
-const FILENAME = 'my-chat.chat';
+const FILENAME = 'ui-config.chat';
 const MSG_CONTENT = 'Hello World!';
 const USERNAME = USER.identity.username;
 

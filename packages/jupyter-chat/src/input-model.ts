@@ -579,6 +579,10 @@ export namespace InputModel {
      * Whether to send a message via Shift-Enter instead of Enter.
      */
     sendWithShiftEnter?: boolean;
+    /**
+     * Whether to display the 'send with selection' button.
+     */
+    sendWithSelection?: boolean;
   }
 }
 

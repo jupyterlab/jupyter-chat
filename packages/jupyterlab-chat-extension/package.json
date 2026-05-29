@@ -1,6 +1,6 @@
 {
   "name": "jupyterlab-chat-extension",
-  "version": "0.21.1",
+  "version": "0.22.0",
   "description": "A chat extension based on shared documents",
   "keywords": [
     "jupyter",
@@ -30,8 +30,8 @@
     "url": "https://github.com/jupyterlab/jupyter-chat.git"
   },
   "scripts": {
-    "build": "jlpm build:lib && jlpm build:labextension:dev",
-    "build:prod": "jlpm clean && jlpm build:lib:prod && jlpm build:labextension",
+    "build": "echo 'Building jupyterlab-chat-extension' && jlpm build:lib && jlpm build:labextension:dev",
+    "build:prod": "echo 'Building jupyterlab-chat-extension' && jlpm clean && jlpm build:lib:prod && jlpm build:labextension",
     "build:labextension": "jupyter labextension build .",
     "build:labextension:dev": "jupyter labextension build --development True .",
     "build:lib": "tsc --sourceMap",
@@ -67,7 +67,7 @@
     "@lumino/coreutils": "^2.2.1",
     "@lumino/signaling": "^2.1.4",
     "@lumino/widgets": "^2.7.0",
-    "jupyterlab-chat": "^0.21.1",
+    "jupyterlab-chat": "^0.22.0",
     "react": "^18.2.0",
     "y-protocols": "^1.0.5",
     "yjs": "^13.5.40"

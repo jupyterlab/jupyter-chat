@@ -8,7 +8,7 @@ import { UUID } from '@lumino/coreutils';
 
 import { openChat, USER, hoverFirstMessage } from './test-utils';
 
-const FILENAME = 'my-chat.chat';
+const FILENAME = 'message-toolbar.chat';
 const MSG_CONTENT = 'Hello World!';
 const USERNAME = USER.identity.username;
 

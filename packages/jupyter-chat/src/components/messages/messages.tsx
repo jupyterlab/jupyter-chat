@@ -14,6 +14,7 @@ import { ChatMessage } from './message';
 import { MessagePreambleComponent } from './preamble';
 import { Navigation } from './navigation';
 import { WelcomeMessage } from './welcome';
+import { ChatBodyPlaceholder } from './chat-body-placeholder';
 import { ScrollContainer } from '../scroll-container';
 import { useChatContext } from '../../context';
 import { Message } from '../../message';
@@ -70,15 +71,26 @@ export function ChatMessages(): JSX.Element {
     fetchHistory();
   }, [model]);
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  // Starts true so the chat scrolls to bottom on first render.
+  const shouldScrollRef = useRef<boolean>(true);
+
   /**
-   * Effect: listen to chat messages.
+   * Effect: listen to chat messages and decide whether to auto-scroll.
+   *
+   * We check `prevLastIdx` (length - 2) because by the time the signal fires,
+   * model.messages already contains the new message. So length - 2 is the
+   * message that WAS last before the new one arrived. If that was visible,
+   * the user was at the bottom and we should follow.
    */
   useEffect(() => {
     function handleChatEvents() {
-      const previousLastIndex = previousMessagesCount.current - 1;
-      const wasAtBottom =
-        previousLastIndex < 0 ||
-        (model.messagesInViewport ?? []).includes(previousLastIndex);
+      const viewport = model.messagesInViewport ?? [];
+      const prevLastIdx = model.messages.length - 2;
+      const wasAtBottom = prevLastIdx < 0 || viewport.includes(prevLastIdx);
+
+      // Keep the streaming observer aligned with current viewport state.
+      shouldScrollRef.current = wasAtBottom;
       shouldScrollToLast.current =
         model.messages.length > previousMessagesCount.current && wasAtBottom;
       previousMessagesCount.current = model.messages.length;
@@ -102,6 +114,48 @@ export function ChatMessages(): JSX.Element {
   useEffect(() => {
     previousMessagesCount.current = messages.length;
   }, [messages.length]);
+
+  /**
+   * Effect: observe DOM mutations in the scroll container to keep the viewport
+   * pinned to the bottom as message content renders asynchronously.
+   *
+   * A single scrollTop assignment on state change isn't enough because message
+   * content (markdown, code blocks, images) renders after the initial DOM
+   * commit. The MutationObserver fires on every subtree change, keeping us
+   * pinned as content streams in or expands.
+   *
+   * The scroll listener lets a user manually scroll to the bottom during
+   * streaming to re-engage auto-scroll, or scroll up to disengage it.
+   */
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) {
+      return;
+    }
+
+    const observer = new MutationObserver(() => {
+      if (shouldScrollRef.current) {
+        el.scrollTop = el.scrollHeight;
+      }
+    });
+
+    const handleScroll = () => {
+      const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+      shouldScrollRef.current = atBottom;
+    };
+
+    observer.observe(el, {
+      childList: true,
+      subtree: true,
+      characterData: true
+    });
+    el.addEventListener('scroll', handleScroll);
+
+    return () => {
+      observer.disconnect();
+      el.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   /**
    * Effect: Listen to the config change.
@@ -184,8 +238,9 @@ export function ChatMessages(): JSX.Element {
   const horizontalPadding = area === 'main' ? 8 : 4;
   return (
     <>
-      <ScrollContainer sx={{ flexGrow: 1 }}>
+      <ScrollContainer ref={scrollContainerRef} sx={{ flexGrow: 1 }}>
         {welcomeMessage && <WelcomeMessage content={welcomeMessage} />}
+        {messages.length === 0 && <ChatBodyPlaceholder />}
         <Box
           sx={{
             paddingLeft: horizontalPadding,
