@@ -116,8 +116,6 @@ export function SendButton(
   }
 
   async function sendWithSelection() {
-    await chatCommandRegistry?.onSubmit(model);
-
     let source = '';
     let language: string | undefined;
 
@@ -135,10 +133,8 @@ export function SendButton(
       body += `\n\n\`\`\`${language ?? ''}\n${source}\n\`\`\`\n`;
     }
 
-    model.value = '';
     closeMenu();
-    model.send(body);
-    model.focus();
+    await submitInputMessage({ model, chatCommandRegistry, body });
   }
 
   return (
