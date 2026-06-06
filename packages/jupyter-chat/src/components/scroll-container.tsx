@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import React, { useMemo } from 'react';
+import React, { forwardRef, useMemo } from 'react';
 import { Box, SxProps, Theme } from '@mui/material';
 
 type ScrollContainerProps = {
@@ -12,39 +12,32 @@ type ScrollContainerProps = {
 };
 
 /**
- * Component that handles intelligent scrolling.
+ * Scrollable container for chat messages. Scroll position is managed
+ * explicitly by the parent (ChatMessages) via a forwarded ref.
  *
- * - If viewport is at the bottom of the overflow container, appending new
- * children keeps the viewport on the bottom of the overflow container.
- *
- * - If viewport is in the middle of the overflow container, appending new
- * children leaves the viewport unaffected.
- *
- * Currently only works for Chrome and Firefox due to reliance on
- * `overflow-anchor`.
- *
- * **References**
- * - https://css-tricks.com/books/greatest-css-tricks/pin-scrolling-to-bottom/
+ * `overflowAnchor: 'none'` disables the browser's built-in scroll anchoring
+ * which caused partial viewport shifts on new content in Chrome/Firefox
+ * and is unsupported in Safari.
  */
-export function ScrollContainer(props: ScrollContainerProps): JSX.Element {
-  const id = useMemo(
-    () => 'jupyter-chat-scroll-container-' + Date.now().toString(),
-    []
-  );
+export const ScrollContainer = forwardRef<HTMLDivElement, ScrollContainerProps>(
+  function ScrollContainer(props, ref) {
+    const id = useMemo(
+      () => 'jupyter-chat-scroll-container-' + Date.now().toString(),
+      []
+    );
 
-  return (
-    <Box
-      id={id}
-      sx={{
-        overflowY: 'scroll',
-        '& *': {
-          overflowAnchor: 'none'
-        },
-        ...props.sx
-      }}
-    >
-      <Box>{props.children}</Box>
-      <Box sx={{ overflowAnchor: 'auto', height: '1px' }} />
-    </Box>
-  );
-}
+    return (
+      <Box
+        ref={ref}
+        id={id}
+        sx={{
+          overflowY: 'scroll',
+          overflowAnchor: 'none',
+          ...props.sx
+        }}
+      >
+        {props.children}
+      </Box>
+    );
+  }
+);
