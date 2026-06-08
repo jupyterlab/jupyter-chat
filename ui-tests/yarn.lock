@@ -1390,7 +1390,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@playwright/test@npm:^1.43.1, @playwright/test@npm:^1.49.0":
+"@playwright/test@npm:^1.43.1, @playwright/test@npm:^1.50.0":
   version: 1.60.0
   resolution: "@playwright/test@npm:1.60.0"
   dependencies:
@@ -2758,7 +2758,7 @@ __metadata:
   resolution: "jupyterlab-chat-ui-tests@workspace:."
   dependencies:
     "@jupyterlab/galata": ^5.0.0
-    "@playwright/test": ^1.49.0
+    "@playwright/test": ^1.50.0
   languageName: unknown
   linkType: soft
 
