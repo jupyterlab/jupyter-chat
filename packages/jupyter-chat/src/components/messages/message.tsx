@@ -79,6 +79,7 @@ export function ChatMessageBase(props: ChatMessageProps): JSX.Element {
     // even if when an outofband change occurs, all the messages are deleted and
     // recreated.
     setMessage(props.message.content);
+    setRenderedDelegate(props.message.renderedDelegate);
     return () => {
       props.message.changed.disconnect(messageChanged);
     };
@@ -144,12 +145,17 @@ export function ChatMessageBase(props: ChatMessageProps): JSX.Element {
       }
       model.deleteMessage!(id);
     },
-    [message, canDelete]
+    [model, canDelete]
   );
+
+  useEffect(() => {
+    if (deleted) {
+      renderedDelegate.resolve();
+    }
+  }, [deleted, renderedDelegate]);
 
   // Empty if the message has been deleted.
   if (deleted) {
-    renderedDelegate.resolve();
     return <div data-index={props.index}></div>;
   }
 

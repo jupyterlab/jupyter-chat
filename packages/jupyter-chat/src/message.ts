@@ -95,8 +95,27 @@ export class Message implements IMessage {
    * Update one or several fields of the message.
    */
   update(updated: Partial<IMessageContent>) {
+    // Check if the message will be rendered again.
+    const triggerRerender = new Set([
+      'body',
+      'deleted',
+      'mentions',
+      'mime_model'
+    ] as (keyof IMessageContent)[]);
+    const updatedAttributes = Object.keys(updated) as (keyof IMessageContent)[];
+    const shouldRerender = updatedAttributes.some(
+      attribute =>
+        triggerRerender.has(attribute) &&
+        updated[attribute] !== this._content[attribute]
+    );
+
+    // Update the message content.
     this._content = { ...this._content, ...updated };
-    this._rendered = new PromiseDelegate<void>();
+
+    // Update the promise delegate if the message will be rendered again.
+    if (shouldRerender) {
+      this._rendered = new PromiseDelegate<void>();
+    }
     this._changed.emit();
   }
 
