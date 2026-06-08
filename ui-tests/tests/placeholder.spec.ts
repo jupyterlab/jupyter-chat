@@ -52,9 +52,8 @@ test.describe('#placeholder', () => {
       );
 
       const panel = await openSidePanel(page);
-      const items = panel.locator('.jp-chat-placeholder-chat-item');
-      await expect(items).toHaveCount(1);
-      await expect(items.first()).toHaveText(CHAT_NAME);
+      const item = panel.getByRole('button', { name: CHAT_NAME });
+      await expect(item).toHaveCount(1);
     });
 
     test('should list multiple chat files sorted alphabetically', async ({
@@ -65,6 +64,7 @@ test.describe('#placeholder', () => {
         await page.filebrowser.contents.uploadContent('{}', 'text', file);
       }
       await page.waitForCondition(async () => {
+        await page.filebrowser.contents.fileExists(FILENAME);
         for (const file of files) {
           if (!(await page.filebrowser.contents.fileExists(file))) {
             return false;
@@ -94,7 +94,7 @@ test.describe('#placeholder', () => {
       );
 
       const panel = await openSidePanel(page);
-      await panel.locator('.jp-chat-placeholder-chat-item').first().click();
+      await panel.getByRole('button', { name: CHAT_NAME }).first().click();
 
       const chatToolbar = panel.locator(
         '.jp-chat-sidepanel-widget .jp-chat-sidepanel-widget-toolbar'
@@ -113,7 +113,7 @@ test.describe('#placeholder', () => {
       );
 
       const panel = await openSidePanel(page);
-      await panel.locator('.jp-chat-placeholder-chat-item').first().click();
+      await panel.getByRole('button', { name: CHAT_NAME }).first().click();
 
       await expect(panel.locator('.jp-chat-placeholder')).not.toBeAttached();
     });
@@ -130,7 +130,7 @@ test.describe('#placeholder', () => {
       page
     }) => {
       const panel = await openSidePanel(page);
-      const items = panel.locator('.jp-chat-placeholder-chat-item');
+      const items = panel.getByRole('button', { name: CHAT_NAME });
 
       // No chat initially.
       await expect(items).toHaveCount(0);
