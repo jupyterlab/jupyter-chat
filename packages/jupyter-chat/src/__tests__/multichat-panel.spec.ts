@@ -331,7 +331,9 @@ describe('MultiChatPanel', () => {
       panel.open({ model: model2, displayName: 'chat2' });
 
       expect(create).toHaveBeenCalledTimes(2);
-      expect(create.mock.results[0].value).not.toBe(create.mock.results[1].value);
+      expect(create.mock.results[0].value).not.toBe(
+        create.mock.results[1].value
+      );
       panel.dispose();
     });
   });
