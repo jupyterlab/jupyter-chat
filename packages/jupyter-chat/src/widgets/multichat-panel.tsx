@@ -458,6 +458,10 @@ export namespace MultiChatPanel {
      * Factory that creates the toolbar widget for a given chat widget.
      */
     create: (chatWidget: ChatWidget) => Widget;
+    /**
+     * Insert the button before another one.
+     */
+    before?: string;
   }
 
   /**
@@ -617,12 +621,6 @@ class SidePanelWidget extends PanelWithToolbar {
       this.toolbar.addItem('moveMain', moveToMain);
     }
 
-    if (options.toolbarItems) {
-      for (const item of options.toolbarItems) {
-        this.toolbar.addItem(item.name, item.create(this._chatWidget));
-      }
-    }
-
     const closeButton = new ToolbarButton({
       icon: closeIcon,
       iconLabel: trans.__('Close the chat'),
@@ -632,6 +630,16 @@ class SidePanelWidget extends PanelWithToolbar {
       }
     });
     this.toolbar.addItem('close', closeButton);
+
+    if (options.toolbarItems) {
+      for (const item of options.toolbarItems) {
+        this.toolbar.insertBefore(
+          item.before ?? 'close',
+          item.name,
+          item.create(this._chatWidget)
+        );
+      }
+    }
 
     // Update mark as read button state
     this.model.unreadChanged?.connect(this._unreadChanged);
