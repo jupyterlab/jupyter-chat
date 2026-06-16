@@ -696,6 +696,20 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
       }
     });
 
+    const createChatInFolder = 'jupyterlab-chat:create-in-folder';
+    commands.addCommand(createChatInFolder, {
+      label: trans.__('New Chat'),
+      icon: chatIcon,
+      execute: () => {
+        const selected = filebrowser?.selectedItems().next().value;
+        const path =
+          selected?.type === 'directory'
+            ? selected.path
+            : (filebrowser?.model.path ?? '');
+        return commands.execute(CommandIDs.createAndOpen, { path });
+      }
+    });
+
     // The command to mark the chat as read.
     commands.addCommand(CommandIDs.markAsRead, {
       caption: trans.__('Mark chat as read'),
