@@ -2,6 +2,135 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.22.1
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.22.0...0b113e5b4d530aa4dad8e04118c8e1621917f515))
+
+### Bugs fixed
+
+- add space around mentions in span [#441](https://github.com/jupyterlab/jupyter-chat/pull/441) ([@minrk](https://github.com/minrk), [@brichet](https://github.com/brichet))
+
+### Maintenance and upkeep improvements
+
+- Add tests on scripts/bump_version.py [#401](https://github.com/jupyterlab/jupyter-chat/pull/401) ([@brichet](https://github.com/brichet), [@Copilot](https://github.com/Copilot), [@jtpio](https://github.com/jtpio))
+
+### Other merged PRs
+
+- Bump the npm_and_yarn group across 2 directories with 3 updates [#438](https://github.com/jupyterlab/jupyter-chat/pull/438) ([@brichet](https://github.com/brichet))
+- Bump systeminformation from 5.31.1 to 5.31.6 in /ui-tests in the npm_and_yarn group across 1 directory [#435](https://github.com/jupyterlab/jupyter-chat/pull/435) ([@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-05-18&to=2026-06-05&type=c))
+
+@brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-05-18..2026-06-05&type=Issues)) | @Copilot ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3ACopilot+updated%3A2026-05-18..2026-06-05&type=Issues)) | @jtpio ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2026-05-18..2026-06-05&type=Issues)) | @minrk ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Aminrk+updated%3A2026-05-18..2026-06-05&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
+## 0.22.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.21.1...eca0dce217ba704c08511264dc389906a7ad460a))
+
+### Enhancements made
+
+- Add placeholder widget for empty chat files to provide customizable widgets. [#433](https://github.com/jupyterlab/jupyter-chat/pull/433) ([@bhavana-nair](https://github.com/bhavana-nair), [@brichet](https://github.com/brichet), [@dlqqq](https://github.com/dlqqq))
+- add error notification on failed cell drag drop [#417](https://github.com/jupyterlab/jupyter-chat/pull/417) ([@MUFFANUJ](https://github.com/MUFFANUJ), [@brichet](https://github.com/brichet))
+- Restore send with selection [#416](https://github.com/jupyterlab/jupyter-chat/pull/416) ([@brichet](https://github.com/brichet), [@jtpio](https://github.com/jtpio))
+- Add a placeholder widget in side panel [#409](https://github.com/jupyterlab/jupyter-chat/pull/409) ([@brichet](https://github.com/brichet), [@krassowski](https://github.com/krassowski))
+- New chat default to untitled [#402](https://github.com/jupyterlab/jupyter-chat/pull/402) ([@brichet](https://github.com/brichet), [@jtpio](https://github.com/jtpio))
+
+### Bugs fixed
+
+- [Bug] Fix chat auto-scroll on new messages and streaming content [#434](https://github.com/jupyterlab/jupyter-chat/pull/434) ([@Zsailer](https://github.com/Zsailer), [@brichet](https://github.com/brichet))
+- Fix chat input when it's an attachment [#405](https://github.com/jupyterlab/jupyter-chat/pull/405) ([@Yahiewi](https://github.com/Yahiewi), [@brichet](https://github.com/brichet))
+
+### Maintenance and upkeep improvements
+
+- Add log when building packages [#425](https://github.com/jupyterlab/jupyter-chat/pull/425) ([@brichet](https://github.com/brichet))
+- Fix flaky tests by avoiding duplicate file names [#424](https://github.com/jupyterlab/jupyter-chat/pull/424) ([@brichet](https://github.com/brichet))
+- Bump eslint to v9 and use @jupyter/eslint-plugin [#410](https://github.com/jupyterlab/jupyter-chat/pull/410) ([@brichet](https://github.com/brichet), [@krassowski](https://github.com/krassowski))
+- Drop lerna dependency [#396](https://github.com/jupyterlab/jupyter-chat/pull/396) ([@brichet](https://github.com/brichet), [@jtpio](https://github.com/jtpio))
+
+### Other merged PRs
+
+- Bump the npm_and_yarn group across 1 directory with 2 updates [#429](https://github.com/jupyterlab/jupyter-chat/pull/429) ([@brichet](https://github.com/brichet))
+- Bump @tootallnate/once from 2.0.0 to 2.0.1 in the npm_and_yarn group across 1 directory [#427](https://github.com/jupyterlab/jupyter-chat/pull/427) ([@brichet](https://github.com/brichet))
+- Bump the npm_and_yarn group across 2 directories with 1 update [#414](https://github.com/jupyterlab/jupyter-chat/pull/414) ([@brichet](https://github.com/brichet))
+- Bump the npm_and_yarn group across 1 directory with 2 updates [#400](https://github.com/jupyterlab/jupyter-chat/pull/400) ([@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-04-03&to=2026-05-18&type=c))
+
+@bhavana-nair ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abhavana-nair+updated%3A2026-04-03..2026-05-18&type=Issues)) | @brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-04-03..2026-05-18&type=Issues)) | @dlqqq ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2026-04-03..2026-05-18&type=Issues)) | @jtpio ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2026-04-03..2026-05-18&type=Issues)) | @krassowski ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Akrassowski+updated%3A2026-04-03..2026-05-18&type=Issues)) | @MUFFANUJ ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3AMUFFANUJ+updated%3A2026-04-03..2026-05-18&type=Issues)) | @Yahiewi ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3AYahiewi+updated%3A2026-04-03..2026-05-18&type=Issues)) | @Zsailer ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3AZsailer+updated%3A2026-04-03..2026-05-18&type=Issues))
+
+## 0.21.1
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.21.0...29f5c676964f637df52d5f4e5535536e0f1617f0))
+
+### Bugs fixed
+
+- Rerender the message when mime model is updated [#397](https://github.com/jupyterlab/jupyter-chat/pull/397) ([@brichet](https://github.com/brichet), [@jtpio](https://github.com/jtpio))
+
+### Maintenance and upkeep improvements
+
+- Drop python 3.9, test build on 3.14 [#393](https://github.com/jupyterlab/jupyter-chat/pull/393) ([@brichet](https://github.com/brichet), [@jtpio](https://github.com/jtpio))
+
+### Other merged PRs
+
+- Bump the npm_and_yarn group across 2 directories with 1 update [#395](https://github.com/jupyterlab/jupyter-chat/pull/395) ([@brichet](https://github.com/brichet))
+- Bump the npm_and_yarn group across 2 directories with 1 update [#394](https://github.com/jupyterlab/jupyter-chat/pull/394) ([@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-03-31&to=2026-04-03&type=c))
+
+@brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-03-31..2026-04-03&type=Issues)) | @jtpio ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2026-03-31..2026-04-03&type=Issues))
+
+## 0.21.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.20.0...25ced8aabefbf8d1ac64c47df4f2d2fa4e045659))
+
+### API and Breaking Changes
+
+- Server side mime model [#386](https://github.com/jupyterlab/jupyter-chat/pull/386) ([@brichet](https://github.com/brichet), [@andrii-i](https://github.com/andrii-i))
+
+### Enhancements made
+
+- Emitting a signal from the chat model when a message is updated [#389](https://github.com/jupyterlab/jupyter-chat/pull/389) ([@brichet](https://github.com/brichet), [@jtpio](https://github.com/jtpio))
+- Add mimetype field to INotebookAttachment [#383](https://github.com/jupyterlab/jupyter-chat/pull/383) ([@erkin98](https://github.com/erkin98), [@andrii-i](https://github.com/andrii-i), [@brichet](https://github.com/brichet))
+- Add `openWithMessage` command to open chat with a pre-filled message [#381](https://github.com/jupyterlab/jupyter-chat/pull/381) ([@bhavana-nair](https://github.com/bhavana-nair), [@andrii-i](https://github.com/andrii-i), [@brichet](https://github.com/brichet), [@jtpio](https://github.com/jtpio), [@nakul-py](https://github.com/nakul-py))
+- Localize user facing strings [#380](https://github.com/jupyterlab/jupyter-chat/pull/380) ([@jtpio](https://github.com/jtpio), [@andrii-i](https://github.com/andrii-i), [@brichet](https://github.com/brichet))
+
+### Maintenance and upkeep improvements
+
+- Bump pycrdt minimum to 0.12.48 [#385](https://github.com/jupyterlab/jupyter-chat/pull/385) ([@erkin98](https://github.com/erkin98), [@brichet](https://github.com/brichet))
+- Bump minimatch from 9.0.6 to 9.0.9 in /ui-tests in the npm_and_yarn group across 1 directory [#379](https://github.com/jupyterlab/jupyter-chat/pull/379) ([@brichet](https://github.com/brichet))
+
+### Other merged PRs
+
+- Bump the npm_and_yarn group across 2 directories with 1 update [#392](https://github.com/jupyterlab/jupyter-chat/pull/392) ([@brichet](https://github.com/brichet))
+- Bump handlebars from 4.7.8 to 4.7.9 in the npm_and_yarn group across 1 directory [#391](https://github.com/jupyterlab/jupyter-chat/pull/391) ([@brichet](https://github.com/brichet))
+- Bump the npm_and_yarn group across 1 directory with 2 updates [#390](https://github.com/jupyterlab/jupyter-chat/pull/390) ([@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-03-02&to=2026-03-31&type=c))
+
+@andrii-i ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Aandrii-i+updated%3A2026-03-02..2026-03-31&type=Issues)) | @bhavana-nair ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abhavana-nair+updated%3A2026-03-02..2026-03-31&type=Issues)) | @brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-03-02..2026-03-31&type=Issues)) | @erkin98 ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Aerkin98+updated%3A2026-03-02..2026-03-31&type=Issues)) | @jtpio ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2026-03-02..2026-03-31&type=Issues)) | @nakul-py ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Anakul-py+updated%3A2026-03-02..2026-03-31&type=Issues))
+
 ## 0.20.0
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/v0.19.0...8c6c97218751fb8a026729f94bbc4e3aab6a0e89))
@@ -38,8 +167,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-02-10&to=2026-03-02&type=c))
 
 @andrii-i ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Aandrii-i+updated%3A2026-02-10..2026-03-02&type=Issues)) | @brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-02-10..2026-03-02&type=Issues)) | @dlqqq ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2026-02-10..2026-03-02&type=Issues)) | @jtpio ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2026-02-10..2026-03-02&type=Issues)) | @nakul-py ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Anakul-py+updated%3A2026-02-10..2026-03-02&type=Issues)) | @SylvainCorlay ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3ASylvainCorlay+updated%3A2026-02-10..2026-03-02&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.20.0alpha3
 

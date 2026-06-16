@@ -8,7 +8,7 @@ import { UUID } from '@lumino/coreutils';
 
 import { openChat, USER } from './test-utils';
 
-const FILENAME = 'my-chat.chat';
+const FILENAME = 'mime-renderer.chat';
 const USERNAME = USER.identity.username;
 const BUNDLES = [
   {
@@ -46,8 +46,9 @@ test.describe('#mime-renderer', () => {
       type: 'msg',
       id: UUID.uuid4(),
       sender: USERNAME,
-      body: { data: bundle.bundle },
-      time: baseTime * 60
+      body: '',
+      time: baseTime * 60,
+      mime_model: { data: bundle.bundle }
     });
     baseTime += 1;
   }

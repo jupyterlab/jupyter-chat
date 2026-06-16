@@ -15,6 +15,8 @@ import {
   IChatTracker,
   IMessageFooterRegistry,
   IMessagePreambleRegistry,
+  IChatPlaceholderFactory,
+  IChatBodyPlaceholderFactory,
   ISelectionWatcher,
   InputToolbarRegistry,
   MessageFooterRegistry,
@@ -251,6 +253,8 @@ const chatConfig: JupyterFrontEndPlugin<IWidgetConfig> = {
           sendTypingNotification: setting.get('sendTypingNotification')
             .composite as boolean,
           showDeleted: setting.get('showDeleted').composite as boolean,
+          sendWithSelection: setting.get('sendWithSelection')
+            .composite as boolean,
           defaultDirectory: currentDirectory
         };
       });
@@ -294,6 +298,7 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
     IInputToolbarRegistryFactory,
     IMessageFooterRegistry,
     IMessagePreambleRegistry,
+    IChatBodyPlaceholderFactory,
     ISelectionWatcherToken,
     ISettingRegistry,
     IThemeManager,
@@ -314,6 +319,7 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
     inputToolbarFactory: IInputToolbarRegistryFactory,
     messageFooterRegistry: IMessageFooterRegistry,
     messagePreambleRegistry: IMessagePreambleRegistry,
+    chatBodyPlaceholderFactory: IChatBodyPlaceholderFactory | null,
     selectionWatcher: ISelectionWatcher | null,
     settingRegistry: ISettingRegistry | null,
     themeManager: IThemeManager | null,
@@ -389,6 +395,7 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
       inputToolbarFactory,
       messageFooterRegistry,
       messagePreambleRegistry,
+      chatBodyPlaceholderFactory: chatBodyPlaceholderFactory ?? undefined,
       welcomeMessage
     });
 
@@ -531,7 +538,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
      *
      * args:
      *  name -        optional, the name of the chat to create.
-     *                Open a dialog if not provided.
+     *                Creates an untitled chat if not provided.
      *  inSidePanel - optional (default to false).
      *                Whether to open the chat in side panel or in main area.
      *  isPalette -   optional (default to false).
@@ -542,48 +549,58 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         args.isPalette ? trans.__('Create a new chat') : trans.__('Chat'),
       caption: trans.__('Create a chat'),
       icon: args => (args.isPalette ? undefined : chatIcon),
+      describedBy: {
+        args: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+              description:
+                'The name of the chat to create. Creates an untitled chat if not provided.'
+            },
+            inSidePanel: {
+              type: 'boolean',
+              default: false,
+              description: 'Whether the chat is created from the side panel.'
+            },
+            isPalette: {
+              type: 'boolean',
+              default: false,
+              description:
+                'Whether the command is invoked from the command palette.'
+            },
+            path: {
+              type: 'string',
+              description: 'The directory in which to create the chat file.'
+            }
+          }
+        }
+      },
       execute: async (args): Promise<string | undefined> => {
         const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
-        const targetDirectory: string | undefined = args.path as string;
+        let targetDirectory: string | undefined = args.path as string;
 
-        let name: string | null = (args.name as string) ?? null;
-        let filepath = '';
-        if (!name) {
-          name = (
-            await InputDialog.getText({
-              label: trans.__('Name'),
-              placeholder: trans.__('untitled'),
-              title: trans.__('Create a new chat')
-            })
-          ).value;
+        // Create new chat file in default dir if created from filebrowser
+        // as "Open a chat" dropdown only discovers chat files in default
+        // dir. Create new chat in file browser cwd if created from main
+        // area (launcher, menu, palette).
+        if (targetDirectory === undefined) {
+          if (inSidePanel) {
+            targetDirectory = widgetConfig.config.defaultDirectory ?? '';
+          } else {
+            targetDirectory = filebrowser?.model.path ?? '';
+          }
         }
-        // no-op if the dialog has been cancelled.
-        // Fill the filepath if the dialog has been validated with content,
-        // otherwise create a new untitled chat (empty filepath).
-        if (name === null) {
-          return;
-        } else if (name) {
+
+        const name: string = (args.name as string) ?? '';
+        let filepath = '';
+        if (name) {
           if (name.endsWith(chatFileType.extensions[0])) {
             filepath = name;
           } else {
             filepath = `${name}${chatFileType.extensions[0]}`;
           }
-          // Create new chat file in default dir if created from filebrowser
-          // as "Open a chat" dropdown only discovers chat files in default
-          // dir. Create new chat in file browser cwd if created from main
-          // area (launcher, menu, palette).
-          if (targetDirectory !== undefined) {
-            // Explicit directory provided - use it
-            filepath = PathExt.join(targetDirectory, filepath);
-          } else if (inSidePanel) {
-            // Side panel uses default directory
-            const defaultDir = widgetConfig.config.defaultDirectory ?? '';
-            filepath = PathExt.join(defaultDir, filepath);
-          } else {
-            // Main area uses filebrowser cwd
-            const cwd = filebrowser?.model.path ?? '';
-            filepath = PathExt.join(cwd, filepath);
-          }
+          filepath = PathExt.join(targetDirectory, filepath);
         }
 
         let fileExist = true;
@@ -602,6 +619,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           // Create a new untitled chat.
           let model: Contents.IModel | null =
             await app.serviceManager.contents.newUntitled({
+              path: targetDirectory,
               type: 'file',
               ext: chatFileType.extensions[0]
             });
@@ -632,6 +650,33 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         args.isPalette ? trans.__('Create a new chat') : trans.__('Chat'),
       caption: trans.__('Create a chat and open it'),
       icon: args => (args.isPalette ? undefined : chatIcon),
+      describedBy: {
+        args: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+              description:
+                'The name of the chat to create. Creates an untitled chat if not provided.'
+            },
+            inSidePanel: {
+              type: 'boolean',
+              default: false,
+              description: 'Whether to open the chat in the side panel.'
+            },
+            isPalette: {
+              type: 'boolean',
+              default: false,
+              description:
+                'Whether the command is invoked from the command palette.'
+            },
+            path: {
+              type: 'string',
+              description: 'The directory in which to create the chat file.'
+            }
+          }
+        }
+      },
       execute: async args => {
         const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
         const filepath = await commands.execute(CommandIDs.createChat, args);
@@ -655,6 +700,12 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     commands.addCommand(CommandIDs.markAsRead, {
       caption: trans.__('Mark chat as read'),
       icon: readIcon,
+      describedBy: {
+        args: {
+          type: 'object',
+          properties: {}
+        }
+      },
       isEnabled: () =>
         tracker.currentWidget !== null &&
         tracker.currentWidget === app.shell.currentWidget &&
@@ -693,6 +744,28 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
          */
         commands.addCommand(CommandIDs.openChat, {
           label: trans.__('Open a chat'),
+          describedBy: {
+            args: {
+              type: 'object',
+              properties: {
+                filepath: {
+                  type: 'string',
+                  description: 'The path of the chat file to open.'
+                },
+                inSidePanel: {
+                  type: 'boolean',
+                  default: false,
+                  description: 'Whether to open the chat in the side panel.'
+                },
+                startup: {
+                  type: 'boolean',
+                  default: false,
+                  description:
+                    'Whether the command is called during startup restoration.'
+                }
+              }
+            }
+          },
           execute: async (args): Promise<any> => {
             const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
             const startup: boolean = (args.startup as boolean) ?? false;
@@ -787,6 +860,23 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     // Command to rename a chat
     commands.addCommand(CommandIDs.renameChat, {
       label: trans.__('Rename chat'),
+      describedBy: {
+        args: {
+          type: 'object',
+          properties: {
+            oldPath: {
+              type: 'string',
+              description:
+                'The current path of the chat file. Uses the current widget if not provided.'
+            },
+            newPath: {
+              type: 'string',
+              description:
+                'The new path for the chat file. Prompts the user if not provided.'
+            }
+          }
+        }
+      },
       execute: async (args: any): Promise<string | null> => {
         let oldPath = args.oldPath as string;
         let newPath = args.newPath as string | null;
@@ -838,6 +928,12 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     // The command to focus the input of the current chat widget.
     commands.addCommand(CommandIDs.focusInput, {
       caption: trans.__('Focus the input of the current chat widget'),
+      describedBy: {
+        args: {
+          type: 'object',
+          properties: {}
+        }
+      },
       isEnabled: () => tracker.currentWidget !== null,
       execute: () => {
         const widget = tracker.currentWidget;
@@ -878,8 +974,38 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
 
     // Command to open a chat and send a message into it.
     commands.addCommand(CommandIDs.openWithMessage, {
-      label: 'Open chat with message',
-      caption: 'Open a chat and send a message',
+      label: trans.__('Open chat with message'),
+      caption: trans.__('Open a chat and send a message'),
+      describedBy: {
+        args: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+              description: 'The name of the chat to open or create.'
+            },
+            path: {
+              type: 'string',
+              description: 'The directory in which to create the chat file.'
+            },
+            inSidePanel: {
+              type: 'boolean',
+              default: false,
+              description: 'Whether to open the chat in the side panel.'
+            },
+            input: {
+              type: 'string',
+              default: '',
+              description: 'The message to set in the chat input.'
+            },
+            autoSend: {
+              type: 'boolean',
+              default: false,
+              description: 'Whether to automatically send the message.'
+            }
+          }
+        }
+      },
       execute: async args => {
         const name = args.name as string | undefined;
         const path = args.path as string | undefined;
@@ -936,6 +1062,8 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     ILayoutRestorer,
     IMessageFooterRegistry,
     IMessagePreambleRegistry,
+    IChatPlaceholderFactory,
+    IChatBodyPlaceholderFactory,
     IThemeManager,
     ITranslator,
     IWelcomeMessage
@@ -951,6 +1079,8 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     restorer: ILayoutRestorer | null,
     messageFooterRegistry: IMessageFooterRegistry,
     messagePreambleRegistry: IMessagePreambleRegistry,
+    placeholderFactory: IChatPlaceholderFactory | null,
+    chatBodyPlaceholderFactory: IChatBodyPlaceholderFactory | null,
     themeManager: IThemeManager | null,
     translator_: ITranslator | null,
     welcomeMessage: string
@@ -1004,7 +1134,9 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
       inputToolbarFactory,
       messageFooterRegistry,
       messagePreambleRegistry,
-      welcomeMessage
+      welcomeMessage,
+      placeholderFactory: placeholderFactory ?? undefined,
+      chatBodyPlaceholderFactory: chatBodyPlaceholderFactory ?? undefined
     });
     chatPanel.id = 'JupyterlabChat:sidepanel';
 
@@ -1082,6 +1214,12 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
       label: trans.__('Move the chat to the side panel'),
       caption: trans.__('Move the chat to the side panel'),
       icon: launchIcon,
+      describedBy: {
+        args: {
+          type: 'object',
+          properties: {}
+        }
+      },
       isEnabled: () => commands.hasCommand(CommandIDs.openChat),
       execute: async () => {
         const widget = app.shell.currentWidget;

@@ -8,3 +8,4 @@ export * from './chat-selector-popup';
 export * from './chat-sidebar';
 export * from './chat-widget';
 export * from './multichat-panel';
+export * from './placeholder';

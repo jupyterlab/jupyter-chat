@@ -26,8 +26,9 @@ import { ISignal, Signal } from '@lumino/signaling';
 import { Widget } from '@lumino/widgets';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { ChatWidget } from './chat-widget';
 import { ChatSelectorPopup } from './chat-selector-popup';
+import { ChatWidget } from './chat-widget';
+import { defaultPlaceholder, Placeholder } from './placeholder';
 import {
   Chat,
   IInputToolbarRegistry,
@@ -36,6 +37,7 @@ import {
 import { TRANSLATION_DOMAIN } from '../context';
 import { chatIcon, readIcon } from '../icons';
 import { IChatModel } from '../model';
+import { IChatPlaceholderFactory } from '../tokens';
 
 const SIDEPANEL_CLASS = 'jp-chat-sidepanel';
 const ADD_BUTTON_CLASS = 'jp-chat-add';
@@ -69,6 +71,7 @@ export class MultiChatPanel extends PanelWithToolbar {
     this._createModel = options.createModel;
     this._openInMain = options.openInMain;
     this._renameChat = options.renameChat;
+    this._placeholderFactory = options.placeholderFactory;
 
     if (this._createModel) {
       // Add chat button calls the createChat callback
@@ -111,13 +114,18 @@ export class MultiChatPanel extends PanelWithToolbar {
     // Insert the toolbar as first child.
     this.insertWidget(0, this.toolbar);
     this._updateChatListDebouncer = new Debouncer(this._updateChatList, 200);
+
+    // Add the placeholder by default.
+    this._addPlaceholder();
   }
 
   /**
    * The currently displayed chat widget.
    */
   get current(): SidePanelWidget | undefined {
-    return this._currentWidget;
+    return this._currentWidget instanceof SidePanelWidget
+      ? this._currentWidget
+      : undefined;
   }
 
   /**
@@ -178,15 +186,16 @@ export class MultiChatPanel extends PanelWithToolbar {
     const model = this._loadedModels.get(name);
     if (model) {
       // If this is the currently displayed chat, remove it.
-      if (this._currentWidget?.model === model) {
-        this._currentWidget.nameChanged.disconnect(this._modelNameChanged);
-        this._currentWidget.dispose();
+      if (this.current?.model === model) {
+        this.current.nameChanged.disconnect(this._modelNameChanged);
+        this.current.dispose();
         this._currentWidget = undefined;
 
         // Clear current chat in selector
         if (this._chatSelectorPopup) {
           this._chatSelectorPopup.setCurrentChat(null);
         }
+        this._addPlaceholder();
       }
 
       model.dispose();
@@ -206,6 +215,29 @@ export class MultiChatPanel extends PanelWithToolbar {
   }
 
   /**
+   * Add a placeholder in the panel.
+   */
+  private _addPlaceholder(): void {
+    const props: Placeholder.IProps = {
+      chatNames: this._chatNames,
+      open: this._onSelectChat,
+      onCreate: this._createModel
+        ? async () => {
+            const args = await this._createModel!();
+            this.open(args);
+          }
+        : undefined,
+      chatNamesChanged: this._chatNamesChanged,
+      trans: this._trans
+    };
+    const placeholder = this._placeholderFactory
+      ? this._placeholderFactory.create(props)
+      : new defaultPlaceholder(props);
+    this.addWidget(placeholder);
+    this._currentWidget = placeholder;
+  }
+
+  /**
    * Open a specific chat by name, creating a new sidepanel widget.
    */
   private _open(name: string): ChatWidget | undefined {
@@ -214,9 +246,9 @@ export class MultiChatPanel extends PanelWithToolbar {
       return;
     }
 
-    // Dispose current chat widget if any
+    // Dispose of the current chat widget or placeholder.
     if (this._currentWidget) {
-      this._currentWidget.nameChanged.disconnect(this._modelNameChanged);
+      this.current?.nameChanged.disconnect(this._modelNameChanged);
       this._currentWidget.dispose();
     }
 
@@ -251,7 +283,7 @@ export class MultiChatPanel extends PanelWithToolbar {
     this.update();
     this._currentWidget = widget;
 
-    this._currentWidget.nameChanged.connect(this._modelNameChanged);
+    this.current?.nameChanged.connect(this._modelNameChanged);
 
     // Update selector to show current chat
     if (this._chatSelectorPopup) {
@@ -283,6 +315,7 @@ export class MultiChatPanel extends PanelWithToolbar {
       ) {
         this._chatNames = chatNames ?? {};
         this._chatSelectorPopup?.updateChats(Object.keys(this._chatNames));
+        this._chatNamesChanged.emit(this._chatNames);
       }
     } catch (e) {
       console.error('Error getting chat files', e);
@@ -355,7 +388,7 @@ export class MultiChatPanel extends PanelWithToolbar {
       this._loadedModels.set(change.new, model);
       this._loadedModels.delete(change.old);
       this._chatSelectorPopup?.setLoadedModels(this.getLoadedModelNames());
-      if (this._currentWidget?.model.name === model.name) {
+      if (this.current?.model.name === model.name) {
         this._chatSelectorPopup?.setCurrentChat(change.new);
       }
     }
@@ -382,6 +415,10 @@ export class MultiChatPanel extends PanelWithToolbar {
   };
 
   private _chatOpened = new Signal<MultiChatPanel, ChatWidget>(this);
+  private _chatNamesChanged = new Signal<
+    MultiChatPanel,
+    { [name: string]: string }
+  >(this);
   private _chatOptions: Omit<Chat.IOptions, 'model' | 'inputToolbarRegistry'>;
   private _inputToolbarFactory?: IInputToolbarRegistryFactory;
   private _updateChatListDebouncer: Debouncer;
@@ -392,10 +429,11 @@ export class MultiChatPanel extends PanelWithToolbar {
   private _getChatNames?: () => Promise<{ [name: string]: string }>;
   private _openInMain?: (name: string) => Promise<boolean>;
   private _renameChat?: boolean | ((oldName: string) => Promise<string | null>);
+  private _placeholderFactory?: IChatPlaceholderFactory;
   private _openChatWidget?: ReactWidget;
   private _chatSelectorPopup?: ChatSelectorPopup;
   private _loadedModels: Map<string, IChatModel> = new Map();
-  private _currentWidget?: SidePanelWidget;
+  private _currentWidget?: SidePanelWidget | Widget;
   private _chatNames: { [name: string]: string } = {};
   private _visibilityChanged = new Signal<MultiChatPanel, boolean>(this);
   private _trans: TranslationBundle;
@@ -442,6 +480,14 @@ export namespace MultiChatPanel {
      * @returns - a boolean, whether the chat has been renamed or not.
      */
     renameChat?: boolean | ((oldName: string) => Promise<string | null>);
+    /**
+     * An optional factory to create a placeholder widget displayed when no chat
+     * is opened. Falls back to the default placeholder if not provided.
+     *
+     * @param props - the props passed to the placeholder.
+     * @returns a widget to display as placeholder.
+     */
+    placeholderFactory?: IChatPlaceholderFactory;
   }
   /**
    * The options for the add chat method.

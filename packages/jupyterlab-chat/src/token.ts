@@ -5,14 +5,14 @@
 
 import {
   IConfig,
-  chatIcon,
   IActiveCellManager,
-  ISelectionWatcher
+  ISelectionWatcher,
+  MultiChatPanel,
+  chatIcon
 } from '@jupyter/chat';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { Token } from '@lumino/coreutils';
 import { ISignal } from '@lumino/signaling';
-import { MultiChatPanel } from '@jupyter/chat';
 import { ChatWidgetFactory } from './factory';
 
 /**

@@ -20,6 +20,7 @@ import { User } from '@jupyterlab/services';
 import { PartialJSONObject, UUID } from '@lumino/coreutils';
 import { ISignal, Signal } from '@lumino/signaling';
 
+import { enforceAutosaveEnabled } from './autosave';
 import { IWidgetConfig } from './token';
 import { IChatChanges, IYmessage, YChat } from './ychat';
 
@@ -114,6 +115,8 @@ export class LabChatModel
     });
 
     this.sharedModel.awareness.on('change', this.onAwarenessChange);
+    this.sharedModel.awareness.on('change', this._enforceAutosaveEnabled);
+    this._enforceAutosaveEnabled();
 
     this.input.valueChanged.connect((_, value) => this.onInputChanged(value));
     this.messageEditionAdded.connect(this.onMessageEditionAdded);
@@ -163,6 +166,8 @@ export class LabChatModel
       return;
     }
     super.dispose();
+    this.sharedModel.awareness.off('change', this.onAwarenessChange);
+    this.sharedModel.awareness.off('change', this._enforceAutosaveEnabled);
     this._sharedModel.dispose();
     Signal.clearData(this);
   }
@@ -277,10 +282,10 @@ export class LabChatModel
     }
 
     // Update the mentioned users (text messages only).
-    const mentions =
-      typeof updatedMessage.body === 'string'
-        ? this._buildMentionList(updatedMessage.mentions, updatedMessage.body)
-        : [];
+    const mentions = this._buildMentionList(
+      updatedMessage.mentions,
+      updatedMessage.body
+    );
     if (mentions.length) {
       message.mentions = mentions;
     } else {
@@ -396,6 +401,10 @@ export class LabChatModel
     awareness.setLocalState(states);
     this._timeoutWriting = null;
   }
+
+  private _enforceAutosaveEnabled = () => {
+    enforceAutosaveEnabled(this.sharedModel.awareness);
+  };
 
   private _onchange = async (_: YChat, changes: IChatChanges) => {
     if (changes.messageListChanges) {

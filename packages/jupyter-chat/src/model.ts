@@ -119,6 +119,11 @@ export interface IChatModel extends IDisposable {
   readonly writersChanged?: ISignal<IChatModel, IChatModel.IWriter[]>;
 
   /**
+   * A signal emitting when a message has been updated.
+   */
+  readonly messageChanged: ISignal<IChatModel, IMessage>;
+
+  /**
    * A signal emitting when the message edition input changed change.
    */
   readonly messageEditionAdded: ISignal<IChatModel, IChatModel.IMessageEdition>;
@@ -504,6 +509,13 @@ export abstract class AbstractChatModel implements IChatModel {
   }
 
   /**
+   * A signal emitting when a message has been updated.
+   */
+  get messageChanged(): ISignal<IChatModel, IMessage> {
+    return this._messageChanged;
+  }
+
+  /**
    * A signal emitting when the message edition input changed change.
    */
   get messageEditionAdded(): ISignal<IChatModel, IChatModel.IMessageEdition> {
@@ -538,6 +550,7 @@ export abstract class AbstractChatModel implements IChatModel {
     }
     this._isDisposed = true;
     this._disposed.emit();
+    Signal.clearData(this);
   }
 
   /**
@@ -590,7 +603,9 @@ export abstract class AbstractChatModel implements IChatModel {
     // Format the messages.
     messages.forEach((message, idx) => {
       const formattedMessage = this.formatChatMessage(message);
-      formattedMessages.push(new Message(formattedMessage));
+      const msg = new Message(formattedMessage);
+      msg.changed.connect(this._onMessageChanged, this);
+      formattedMessages.push(msg);
       if (message.time > this.lastRead) {
         unreadIndexes.push(index + idx);
       }
@@ -623,7 +638,9 @@ export abstract class AbstractChatModel implements IChatModel {
    * @param count - the number of messages to delete.
    */
   messagesDeleted(index: number, count: number): void {
-    this._messages.splice(index, count);
+    this._messages.splice(index, count).forEach(msg => {
+      msg.changed.disconnect(this._onMessageChanged, this);
+    });
     this._messagesUpdated.emit();
   }
 
@@ -738,6 +755,10 @@ export abstract class AbstractChatModel implements IChatModel {
     }
   }
 
+  private _onMessageChanged(msg: IMessage): void {
+    this._messageChanged.emit(msg);
+  }
+
   private _messages: IMessage[] = [];
   private _unreadMessages: number[] = [];
   private _lastRead: number = 0;
@@ -758,6 +779,7 @@ export abstract class AbstractChatModel implements IChatModel {
   private _writers: IChatModel.IWriter[] = [];
   private _messageEditions = new Map<string, IInputModel>();
   private _messagesUpdated = new Signal<IChatModel, void>(this);
+  private _messageChanged = new Signal<IChatModel, IMessage>(this);
   private _configChanged = new Signal<IChatModel, IConfig>(this);
   private _unreadChanged = new Signal<IChatModel, number[]>(this);
   private _viewportChanged = new Signal<IChatModel, number[]>(this);

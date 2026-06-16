@@ -2,7 +2,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 from dataclasses import dataclass, field
-from typing import Literal, Optional, Tuple
+from typing import Any, Literal, Optional, Tuple
 from jupyter_server.auth import User as JupyterUser
 
 
@@ -11,7 +11,21 @@ def message_asdict_factory(data):
     return dict(x for x in data if x[1] is not None)
 
 
-@dataclass
+@dataclass(kw_only=True)
+class MimeModel:
+    """ Model of the mime data """
+
+    data: dict[str, Any]
+    """ The data containing the mime bundles. """
+
+    metadata: Optional[dict] = None
+    """ The metadata associated to the mime bundle. """
+
+    trusted: Optional[bool] = None
+    """ Whether the data is trusted """
+
+
+@dataclass(kw_only=True)
 class Message:
     """ Object representing a message """
 
@@ -29,15 +43,11 @@ class Message:
     """ The message sender unique id """
 
     # optional arguments, with defaults.
-    #
-    # These must be listed after all required arguments, unless `kw_only` is
-    # specified in the `@dataclass` decorator. This can only be done once Python
-    # 3.9 reaches EOL.
     type: Literal["msg"] = "msg"
 
     attachments: Optional[list[str]] = None
     """ The message attachments, a list of attachment ID """
-    
+
     mentions: list[str] = field(default_factory=list)
     """ Users mentioned in the message """
 
@@ -62,8 +72,14 @@ class Message:
     metadata: Optional[dict] = None
     """ Optional metadata attached to this message. """
 
+    mime_model: Optional[MimeModel] = None
+    """
+    Optional mime model data.
+    If provided, it should be prioritized over the body.
+    """
 
-@dataclass
+
+@dataclass(kw_only=True)
 class NewMessage:
     """ Object representing a new message """
 
@@ -73,8 +89,13 @@ class NewMessage:
     sender: str
     """ The message sender unique id """
 
+    mime_model: Optional[MimeModel] = None
+    """
+    Optional mime model data.
+    If provided, it should be prioritized over the body.
+    """
 
-@dataclass
+@dataclass(kw_only=True)
 class User(JupyterUser):
     """ Object representing a user """
 
@@ -102,12 +123,12 @@ class User(JupyterUser):
         name: str = self.display_name or self.name or self.username
         name = name.replace(" ", "-")
         return name
-    
+
     @mention_name.setter
     def mention_name(self, value: str) -> None:
         pass
 
-@dataclass
+@dataclass(kw_only=True)
 class AttachmentSelection:
     start: Tuple[int, int]
     """
@@ -124,7 +145,7 @@ class AttachmentSelection:
     The initial content of the selection.
     """
 
-@dataclass
+@dataclass(kw_only=True)
 class FileAttachment:
     """
     Model of a file attachment.
@@ -150,31 +171,31 @@ class FileAttachment:
     more info.
     """
 
-@dataclass
+@dataclass(kw_only=True)
 class NotebookAttachmentCell:
     """
     Model of a single cell within a notebook attachment.
-    
+
     The corresponding frontend model is `INotebookAttachmentCell`.
     """
-    
+
     id: str
     """
     The ID of the cell within the notebook.
     """
-    
+
     input_type: Literal["raw", "markdown", "code"]
     """
     The type of the cell.
     """
-    
+
     selection: Optional[AttachmentSelection] = None
     """
     (optional) A selection range within the cell. See `AttachmentSelection` for
     more info.
     """
 
-@dataclass
+@dataclass(kw_only=True)
 class NotebookAttachment:
     """
     Model of a notebook attachment.
@@ -188,6 +209,11 @@ class NotebookAttachment:
     """
 
     type: Literal['notebook'] = 'notebook'
+
+    mimetype: Optional[str] = None
+    """
+    (optional) The mime type of the notebook. Defaults to `None`.
+    """
 
     cells: Optional[list[NotebookAttachmentCell]] = None
     """

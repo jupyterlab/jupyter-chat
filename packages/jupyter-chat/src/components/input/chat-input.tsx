@@ -15,6 +15,7 @@ import clsx from 'clsx';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { InputToolbarRegistry } from './toolbar-registry';
+import { submitInputMessage } from './submit-message';
 import { useChatCommands } from './use-chat-commands';
 import { AttachmentPreviewList } from '../attachments';
 import { useChatContext, useTranslator } from '../../context';
@@ -156,21 +157,20 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
      */
     event.stopPropagation();
 
+    const isSendCombination =
+      (sendWithShiftEnter && event.shiftKey) ||
+      (!sendWithShiftEnter && !event.shiftKey);
+
     // Do not send empty messages, and avoid adding new line in empty message.
-    if (!inputExists) {
+    if (!inputExists && (!isSendCombination || attachments.length === 0)) {
       event.stopPropagation();
       event.preventDefault();
       return;
     }
 
     // Finally, send the message when all other conditions are met.
-    if (
-      (sendWithShiftEnter && event.shiftKey) ||
-      (!sendWithShiftEnter && !event.shiftKey)
-    ) {
-      // Run all command providers
-      await chatCommandRegistry?.onSubmit(model);
-      model.send(model.value);
+    if (isSendCombination) {
+      await submitInputMessage({ model, chatCommandRegistry });
       event.stopPropagation();
       event.preventDefault();
     }

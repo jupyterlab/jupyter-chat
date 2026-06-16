@@ -30,7 +30,9 @@ type ChatMessageHeaderProps = {
 /**
  * The message header component.
  */
-export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
+export function ChatMessageHeaderBase(
+  props: ChatMessageHeaderProps
+): JSX.Element {
   const trans = useTranslator();
   const [message, setMessage] = useState<IMessageContent>(
     props.message.content
@@ -163,3 +165,5 @@ export function ChatMessageHeader(props: ChatMessageHeaderProps): JSX.Element {
     </Box>
   );
 }
+
+export const ChatMessageHeader = React.memo(ChatMessageHeaderBase);

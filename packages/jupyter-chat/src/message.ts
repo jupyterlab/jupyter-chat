@@ -3,6 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { PromiseDelegate } from '@lumino/coreutils';
 import { ISignal, Signal } from '@lumino/signaling';
 import {
   IAttachment,
@@ -39,7 +40,7 @@ export class Message implements IMessage {
   get type(): string {
     return this._content.type;
   }
-  get body(): string | IMimeModelBody {
+  get body(): string {
     return this._content.body;
   }
   get id(): string {
@@ -72,6 +73,9 @@ export class Message implements IMessage {
   get metadata(): IMessageMetadata | undefined {
     return this._content.metadata;
   }
+  get mime_model(): IMimeModelBody | undefined {
+    return this._content.mime_model;
+  }
 
   /**
    * A signal emitting when the message has been updated.
@@ -81,13 +85,41 @@ export class Message implements IMessage {
   }
 
   /**
+   * A promise delegate that resolve when the message is rendered.
+   */
+  get renderedDelegate(): PromiseDelegate<void> {
+    return this._rendered;
+  }
+
+  /**
    * Update one or several fields of the message.
    */
   update(updated: Partial<IMessageContent>) {
+    // Check if the message will be rendered again.
+    const triggerRerender = new Set([
+      'body',
+      'deleted',
+      'mentions',
+      'mime_model'
+    ] as (keyof IMessageContent)[]);
+    const updatedAttributes = Object.keys(updated) as (keyof IMessageContent)[];
+    const shouldRerender = updatedAttributes.some(
+      attribute =>
+        triggerRerender.has(attribute) &&
+        updated[attribute] !== this._content[attribute]
+    );
+
+    // Update the message content.
     this._content = { ...this._content, ...updated };
+
+    // Update the promise delegate if the message will be rendered again.
+    if (shouldRerender) {
+      this._rendered = new PromiseDelegate<void>();
+    }
     this._changed.emit();
   }
 
   private _content: IMessageContent;
   private _changed = new Signal<IMessage, void>(this);
+  private _rendered = new PromiseDelegate<void>();
 }

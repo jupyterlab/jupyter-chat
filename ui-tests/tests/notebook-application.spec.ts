@@ -20,7 +20,7 @@ test.use({
   viewport: { width: 1024, height: 900 }
 });
 
-const NAME = 'my_chat';
+const NAME = 'notebook';
 const FILENAME = `${NAME}.chat`;
 
 test.describe('#NotebookApp', () => {

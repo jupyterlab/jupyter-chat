@@ -3,6 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { PromiseDelegate } from '@lumino/coreutils';
 import { ISignal } from '@lumino/signaling';
 import { IRenderMime } from '@jupyterlab/rendermime';
 
@@ -59,6 +60,10 @@ export interface IConfig {
    * Whether to display deleted messages.
    */
   showDeleted?: boolean;
+  /**
+   * Whether to display the 'send with selection' button.
+   */
+  sendWithSelection?: boolean;
 }
 
 /**
@@ -85,18 +90,59 @@ export interface IMessageMetadata {} /* eslint-disable-line @typescript-eslint/n
  * The chat message description.
  */
 export type IMessageContent<T = IUser, U = IAttachment> = {
+  /**
+   * The type of the message, usually 'msg' for a regular message.
+   */
   type: string;
-  body: string | IMimeModelBody;
+  /**
+   * The body of the message, markdown formatted.
+   */
+  body: string;
+  /**
+   * The message id (should be unique).
+   */
   id: string;
+  /**
+   * The message timestamp (seconds since epoch).
+   */
   time: number;
+  /**
+   * The sender of the message, default to IUser type.
+   */
   sender: T;
+  /**
+   * The attachment list, default to IAttachment type.
+   */
   attachments?: U[];
+  /**
+   * Optional, list of users mentioned in the message.
+   */
   mentions?: T[];
+  /**
+   * Optional, whether the message time has been verified.
+   */
   raw_time?: boolean;
+  /**
+   * Optional, whether the message has been deleted.
+   */
   deleted?: boolean;
+  /**
+   * Optional, whether the message has been edited.
+   */
   edited?: boolean;
+  /**
+   * Optional, whether the message should be stacked to the previous one.
+   */
   stacked?: boolean;
+  /**
+   * Optional, the metadata of the message.
+   */
   metadata?: IMessageMetadata;
+  /**
+   * Optional, a mime bundle.
+   * If provided, the body won't be displayed in favor of the mime bundle.
+   */
+  mime_model?: IMimeModelBody;
 };
 
 export interface IMessage extends IMessageContent {
@@ -112,6 +158,10 @@ export interface IMessage extends IMessageContent {
    * A signal emitting when the message has been updated.
    */
   changed: ISignal<IMessage, void>;
+  /**
+   * A promise delegate that resolve when the message is rendered.
+   */
+  renderedDelegate: PromiseDelegate<void>;
 }
 
 /**
@@ -190,6 +240,10 @@ export interface INotebookAttachment {
    * The local path of the notebook, relative to `ContentsManager.root_dir`.
    */
   value: string;
+  /**
+   * (optional) The MIME type of the attachment.
+   */
+  mimetype?: string;
   /**
    * (optional) A list of cells in the notebook.
    */
