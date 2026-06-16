@@ -124,14 +124,14 @@ test.describe('#contextMenu', () => {
     page,
     tmpPath
   }) => {
-    // Right-click on empty file browser area.
+    // Right-click on empty file browser area, then wait for the Lumino menu
+    // to render before clicking its items.
     await page.locator('.jp-DirListing-content').click({ button: 'right' });
+    await page.locator('.lm-Menu').waitFor({ state: 'visible' });
 
     // Click "New Chat" in the context menu.
     await page
-      .locator(
-        '.lm-Menu-item[data-command="jupyterlab-chat:create-in-folder"]'
-      )
+      .locator('.lm-Menu-item[data-command="jupyterlab-chat:create-in-folder"]')
       .click();
 
     // Chat should be created in the file browser CWD.
@@ -154,22 +154,21 @@ test.describe('#contextMenu', () => {
     tmpPath
   }) => {
     const folderName = 'subfolder';
-    await page.filebrowser.contents.createDirectory(
-      `${tmpPath}/${folderName}`
-    );
+    await page.filebrowser.contents.createDirectory(`${tmpPath}/${folderName}`);
     await page.filebrowser.refresh();
 
-    // Right-click the folder item — JupyterLab selects the item before showing
-    // the context menu, so the create-in-folder command sees it as selected.
-    await page
-      .locator(`.jp-DirListing-item:has-text("${folderName}")`)
-      .click({ button: 'right' });
+    // Click the folder first to select it (so filebrowser.selectedItems()
+    // returns it), then right-click to open the context menu.
+    const folder = page.locator(
+      `.jp-DirListing-item:has-text("${folderName}")`
+    );
+    await folder.click();
+    await folder.click({ button: 'right' });
+    await page.locator('.lm-Menu').waitFor({ state: 'visible' });
 
     // Click "New Chat" in the context menu.
     await page
-      .locator(
-        '.lm-Menu-item[data-command="jupyterlab-chat:create-in-folder"]'
-      )
+      .locator('.lm-Menu-item[data-command="jupyterlab-chat:create-in-folder"]')
       .click();
 
     // Chat should be created INSIDE the selected folder, not in the CWD.
@@ -191,9 +190,7 @@ test.describe('#contextMenu', () => {
         `${tmpPath}/${folderName}/untitled.chat`
       );
     }
-    await page.filebrowser.contents.deleteDirectory(
-      `${tmpPath}/${folderName}`
-    );
+    await page.filebrowser.contents.deleteDirectory(`${tmpPath}/${folderName}`);
   });
 });
 
