@@ -700,6 +700,12 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     commands.addCommand(createChatInFolder, {
       label: trans.__('New Chat'),
       icon: chatIcon,
+      describedBy: {
+        args: {
+          type: 'object',
+          properties: {}
+        }
+      },
       execute: () => {
         const selected = filebrowser?.selectedItems().next().value;
         const path =
