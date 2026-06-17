@@ -126,7 +126,9 @@ test.describe('#contextMenu', () => {
   }) => {
     // Right-click on empty file browser area, then wait for the Lumino menu
     // to render before clicking its items.
-    await page.locator('.jp-FileBrowser-Panel .jp-DirListing-content').click({ button: 'right' });
+    await page
+      .locator('.jp-FileBrowser-Panel .jp-DirListing-content')
+      .click({ button: 'right' });
     await page.locator('.lm-Menu').waitFor({ state: 'visible' });
 
     // Click "New Chat" in the context menu.
