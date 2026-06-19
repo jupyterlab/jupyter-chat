@@ -109,6 +109,14 @@ export class YChat extends YDocument<IChatChanges> {
     return (this._metadata.get('id') as string) || '';
   }
 
+  set id(value: string) {
+    if (!this._metadata.get('id')) {
+      this.transact(() => {
+        this._metadata.set('id', value);
+      });
+    }
+  }
+
   get users(): Record<string, IUser> {
     const userDict = JSONExt.deepCopy(this._users.toJSON()) as Record<
       string,
