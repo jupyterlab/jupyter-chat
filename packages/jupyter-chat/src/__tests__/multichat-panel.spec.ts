@@ -132,4 +132,20 @@ describe('MultiChatPanel', () => {
       panel.dispose();
     });
   });
+
+  describe('side panel toolbar', () => {
+    it('should include the responsive toolbar opener for overflow actions', async () => {
+      const panel = new MultiChatPanel({ rmRegistry });
+      const { MockChatModel } = await import('./mocks');
+
+      panel.open({ model: new MockChatModel(), displayName: 'test-chat' });
+
+      const opener = panel.current?.toolbar.node.querySelector(
+        '.jp-Toolbar-responsive-opener'
+      );
+      expect(opener).not.toBeNull();
+
+      panel.dispose();
+    });
+  });
 });

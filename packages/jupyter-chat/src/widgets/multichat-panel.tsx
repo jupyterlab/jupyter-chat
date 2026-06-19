@@ -15,15 +15,16 @@ import {
   closeIcon,
   launchIcon,
   PanelWithToolbar,
+  ReactiveToolbar,
   ReactWidget,
   Spinner,
   ToolbarButton
 } from '@jupyterlab/ui-components';
 import { ArrayExt } from '@lumino/algorithm';
-import { Message } from '@lumino/messaging';
+import { Message, MessageLoop } from '@lumino/messaging';
 import { Debouncer } from '@lumino/polling';
 import { ISignal, Signal } from '@lumino/signaling';
-import { Widget } from '@lumino/widgets';
+import { Panel, Widget } from '@lumino/widgets';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { ChatSelectorPopup } from './chat-selector-popup';
@@ -43,7 +44,25 @@ const SIDEPANEL_CLASS = 'jp-chat-sidepanel';
 const ADD_BUTTON_CLASS = 'jp-chat-add';
 const OPEN_SELECT_CLASS = 'jp-chat-open';
 const SIDEPANEL_WIDGET_CLASS = 'jp-chat-sidepanel-widget';
+// TODO: Drop this workaround class (and related CSS) once we depend on
+// @jupyterlab/ui-components >= 4.6.0 (refs - jupyterlab/jupyterlab#18824).
 const TOOLBAR_CLASS = 'jp-chat-sidepanel-widget-toolbar';
+
+/**
+ * A panel widget with a reactive toolbar.
+ */
+class ReactivePanelWithToolbar extends Panel {
+  constructor() {
+    super();
+    this._toolbar = new ReactiveToolbar({ noFocusOnClick: true });
+  }
+
+  get toolbar(): ReactiveToolbar {
+    return this._toolbar;
+  }
+
+  private _toolbar: ReactiveToolbar;
+}
 
 /**
  * Generic sidepanel widget including multiple chats and the add chat button.
@@ -508,7 +527,7 @@ export namespace MultiChatPanel {
 /**
  * A widget containing the chat and its toolbar.
  */
-class SidePanelWidget extends PanelWithToolbar {
+class SidePanelWidget extends ReactivePanelWithToolbar {
   constructor(options: SidePanelWidget.IOptions) {
     super();
     this._chatWidget = options.widget;
@@ -516,6 +535,8 @@ class SidePanelWidget extends PanelWithToolbar {
     const trans = options.trans;
 
     this.addClass(SIDEPANEL_WIDGET_CLASS);
+    // Keep side-panel toolbar baseline sizing from ui-components.
+    this.toolbar.addClass('jp-SidePanel-toolbar');
     this.toolbar.addClass(TOOLBAR_CLASS);
     this._updateTitle();
 
@@ -610,6 +631,16 @@ class SidePanelWidget extends PanelWithToolbar {
     this._markAsRead.enabled = (this.model?.unreadMessages.length ?? 0) > 0;
   }
 
+  protected onAfterAttach(msg: Message): void {
+    super.onAfterAttach(msg);
+    requestAnimationFrame(() => this._updateReactiveToolbar());
+  }
+
+  protected onResize(msg: Widget.ResizeMessage): void {
+    super.onResize(msg);
+    this._updateReactiveToolbar();
+  }
+
   /**
    * The chat widget embedded in the sidepanel widget.
    */
@@ -686,6 +717,21 @@ class SidePanelWidget extends PanelWithToolbar {
   private _unreadChanged = (_: IChatModel, unread: number[]) => {
     this._markAsRead.enabled = unread.length > 0;
   };
+
+  /**
+   * Trigger reactive toolbar overflow computation from rendered toolbar size.
+   */
+  private _updateReactiveToolbar(): void {
+    const toolbarWidth = this.toolbar.node.offsetWidth;
+    if (toolbarWidth <= 0) {
+      return;
+    }
+    const toolbarHeight = this.toolbar.node.offsetHeight;
+    MessageLoop.sendMessage(
+      this.toolbar,
+      new Widget.ResizeMessage(toolbarWidth, toolbarHeight)
+    );
+  }
 
   private _chatWidget: ChatWidget;
   private _markAsRead: ToolbarButton;
