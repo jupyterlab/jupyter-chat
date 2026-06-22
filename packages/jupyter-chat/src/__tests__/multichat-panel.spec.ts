@@ -126,7 +126,7 @@ describe('MultiChatPanel', () => {
       const { MockChatModel } = await import('./mocks');
       const model = new MockChatModel();
       panel.open({ model, displayName: 'test-chat' });
-      panel.disposeLoadedModel('test-chat');
+      panel.unsetLoadedModel('test-chat');
 
       expect(factory.create).toHaveBeenCalledTimes(2);
       panel.dispose();
