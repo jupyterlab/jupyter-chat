@@ -176,7 +176,7 @@ export interface IChatModel extends IDisposable {
   isDisposed: boolean;
 
   /**
-   * A signal emitting when disposing odf the model.
+   * A signal emitting when disposing of the model.
    */
   readonly disposed: ISignal<AbstractChatModel, void>;
 
@@ -311,6 +311,9 @@ export abstract class AbstractChatModel implements IChatModel {
     this._name = value;
   }
 
+  /**
+   * A signal emitting when disposing of the model.
+   */
   get disposed(): ISignal<AbstractChatModel, void> {
     return this._disposed;
   }
