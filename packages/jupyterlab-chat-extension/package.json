@@ -1,6 +1,6 @@
 {
   "name": "jupyterlab-chat-extension",
-  "version": "0.21.1",
+  "version": "0.22.1",
   "description": "A chat extension based on shared documents",
   "keywords": [
     "jupyter",
@@ -30,10 +30,10 @@
     "url": "https://github.com/jupyterlab/jupyter-chat.git"
   },
   "scripts": {
-    "build": "jlpm build:lib && jlpm build:labextension:dev",
-    "build:prod": "jlpm clean && jlpm build:lib:prod && jlpm build:labextension",
-    "build:labextension": "jupyter labextension build .",
-    "build:labextension:dev": "jupyter labextension build --development True .",
+    "build": "echo 'Building jupyterlab-chat-extension' && jlpm build:lib && jlpm build:labextension:dev",
+    "build:prod": "echo 'Building jupyterlab-chat-extension' && jlpm clean && jlpm build:lib:prod && jlpm build:labextension",
+    "build:labextension": "jupyter-builder build .",
+    "build:labextension:dev": "jupyter-builder build --development True .",
     "build:lib": "tsc --sourceMap",
     "build:lib:prod": "tsc",
     "clean": "jlpm clean:lib",
@@ -44,12 +44,12 @@
     "install:extension": "jlpm build",
     "watch": "run-p watch:src watch:labextension",
     "watch:src": "tsc -w --sourceMap",
-    "watch:labextension": "jupyter labextension watch ."
+    "watch:labextension": "jupyter-builder watch ."
   },
   "dependencies": {
     "@jupyter-notebook/application": "^7.4.0",
     "@jupyter/collaborative-drive": "^4.0.2",
-    "@jupyter/ydoc": "^3.0.0",
+    "@jupyter/ydoc": "^3.0.0 || ^4.0.0",
     "@jupyterlab/application": "^4.4.0",
     "@jupyterlab/apputils": "^4.5.0",
     "@jupyterlab/codemirror": "^4.4.0",
@@ -67,13 +67,13 @@
     "@lumino/coreutils": "^2.2.1",
     "@lumino/signaling": "^2.1.4",
     "@lumino/widgets": "^2.7.0",
-    "jupyterlab-chat": "^0.21.1",
+    "jupyterlab-chat": "^0.22.1",
     "react": "^18.2.0",
     "y-protocols": "^1.0.5",
     "yjs": "^13.5.40"
   },
   "devDependencies": {
-    "@jupyterlab/builder": "^4.2.0",
+    "@jupyter/builder": "^1.0.2",
     "@types/json-schema": "^7.0.11",
     "@types/react": "^18.2.0",
     "@types/react-addons-linked-state-mixin": "^0.14.22",
@@ -83,7 +83,7 @@
     "rimraf": "^5.0.1",
     "source-map-loader": "^1.0.2",
     "style-loader": "^3.3.1",
-    "typescript": "~5.5.4",
+    "typescript": "~5.9.3",
     "yjs": "^13.5.0"
   },
   "sideEffects": [

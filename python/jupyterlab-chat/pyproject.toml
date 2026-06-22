@@ -2,7 +2,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 [build-system]
-requires = ["hatchling>=1.5.0", "jupyterlab>=4.0.0,<5"]
+requires = ["hatchling>=1.5.0", "jupyter-builder>=1.0.2"]
 build-backend = "hatchling.build"
 
 [project]
@@ -29,8 +29,8 @@ classifiers = [
 dependencies = [
     "jupyter_collaboration>=4,<5",
     "jupyter_server>=2.0.1,<3",
-    "jupyter_ydoc>=3.0.0,<4.0.0",
-    "pycrdt>=0.12.48,<0.13.0",
+    "jupyter_ydoc>=3.0.0,<5.0.0",
+    "pycrdt>=0.12.48,<0.14.0",
 ]
 keywords = ["jupyter", "jupyterlab", "jupyterlab-extension"]
 authors = [

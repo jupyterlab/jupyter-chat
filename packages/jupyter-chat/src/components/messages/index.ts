@@ -12,3 +12,4 @@ export * from './navigation';
 export * from './preamble';
 export * from './toolbar';
 export * from './welcome';
+export * from './chat-body-placeholder';

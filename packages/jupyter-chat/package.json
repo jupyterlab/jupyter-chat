@@ -1,6 +1,6 @@
 {
   "name": "@jupyter/chat",
-  "version": "0.21.1",
+  "version": "0.22.1",
   "description": "A package that provides UI components that can be used to create a chat in a Jupyterlab extension.",
   "keywords": [
     "jupyter",
@@ -30,8 +30,8 @@
     "url": "https://github.com/jupyterlab/jupyter-chat.git"
   },
   "scripts": {
-    "build": "jlpm build:lib",
-    "build:prod": "jlpm clean && jlpm build:lib:prod",
+    "build": "echo 'Building @jupyter/chat' && jlpm build:lib",
+    "build:prod": "echo 'Building @jupyter/chat' && jlpm clean && jlpm build:lib:prod",
     "build:lib": "tsc --sourceMap",
     "build:lib:prod": "tsc",
     "clean": "jlpm clean:lib",
@@ -84,7 +84,7 @@
     "rimraf": "^5.0.1",
     "source-map-loader": "^1.0.2",
     "style-loader": "^3.3.1",
-    "typescript": "~5.0.2"
+    "typescript": "~5.9.3"
   },
   "sideEffects": [
     "style/*.css",

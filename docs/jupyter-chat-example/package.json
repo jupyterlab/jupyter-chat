@@ -1,6 +1,6 @@
 {
   "name": "jupyter-chat-example",
-  "version": "0.21.1",
+  "version": "0.22.1",
   "description": "A chat extension providing a chat as example",
   "keywords": [
     "jupyter",
@@ -30,10 +30,10 @@
     "url": "https://github.com/jupyterlab/jupyter-chat.git"
   },
   "scripts": {
-    "build": "jlpm build:lib && jlpm build:labextension:dev",
-    "build:prod": "jlpm clean && jlpm build:lib:prod && jlpm build:labextension",
-    "build:labextension": "jupyter labextension build .",
-    "build:labextension:dev": "jupyter labextension build --development True .",
+    "build": "echo 'Building jupyter-chat-example' && jlpm build:lib && jlpm build:labextension:dev",
+    "build:prod": "echo 'Building jupyter-chat-example' && jlpm clean && jlpm build:lib:prod && jlpm build:labextension",
+    "build:labextension": "jupyter-builder build .",
+    "build:labextension:dev": "jupyter-builder build --development True .",
     "build:lib": "tsc --sourceMap",
     "build:lib:prod": "tsc",
     "clean": "jlpm clean:lib",
@@ -44,7 +44,7 @@
     "install:extension": "jlpm build"
   },
   "dependencies": {
-    "@jupyter/chat": "^0.21.1",
+    "@jupyter/chat": "^0.22.1",
     "@jupyterlab/application": "^4.2.0",
     "@jupyterlab/apputils": "^4.3.0",
     "@jupyterlab/notebook": "^4.2.0",
@@ -53,7 +53,7 @@
     "@lumino/coreutils": "^2.0.0"
   },
   "devDependencies": {
-    "@jupyterlab/builder": "^4.2.0",
+    "@jupyter/builder": "^1.0.2",
     "@types/json-schema": "^7.0.11",
     "@types/react": "^18.2.0",
     "@types/react-addons-linked-state-mixin": "^0.14.22",
@@ -63,7 +63,7 @@
     "rimraf": "^5.0.1",
     "source-map-loader": "^1.0.2",
     "style-loader": "^3.3.1",
-    "typescript": "~5.0.2"
+    "typescript": "~5.9.3"
   },
   "sideEffects": [
     "style/*.css",

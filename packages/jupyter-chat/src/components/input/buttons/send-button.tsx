@@ -9,6 +9,7 @@ import { Box, Menu, MenuItem, Typography } from '@mui/material';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { InputToolbarRegistry } from '../toolbar-registry';
+import { submitInputMessage } from '../submit-message';
 import { TooltippedIconButton } from '../../mui-extras';
 import { useTranslator } from '../../../context';
 import { includeSelectionIcon } from '../../../icons';
@@ -111,19 +112,10 @@ export function SendButton(
   }, [activeCellManager, selectionWatcher, showSendWithSelection]);
 
   async function send() {
-    // Run all command providers
-    await chatCommandRegistry?.onSubmit(model);
-
-    const body = model.value;
-
-    model.value = '';
-    model.send(body);
-    model.focus();
+    await submitInputMessage({ model, chatCommandRegistry });
   }
 
   async function sendWithSelection() {
-    await chatCommandRegistry?.onSubmit(model);
-
     let source = '';
     let language: string | undefined;
 
@@ -141,10 +133,8 @@ export function SendButton(
       body += `\n\n\`\`\`${language ?? ''}\n${source}\n\`\`\`\n`;
     }
 
-    model.value = '';
     closeMenu();
-    model.send(body);
-    model.focus();
+    await submitInputMessage({ model, chatCommandRegistry, body });
   }
 
   return (
