@@ -5,7 +5,13 @@
 import { PathExt } from '@jupyterlab/coreutils';
 import { expect, test } from '@jupyterlab/galata';
 
-import { createChat, exposeDepsJs, getPlugin, openChat } from './test-utils';
+import {
+  createChat,
+  exposeDepsJs,
+  getPlugin,
+  openChat,
+  openChatToSide
+} from './test-utils';
 
 const CHAT = 'attachments.chat';
 const NOTEBOOK = 'test.ipynb';
@@ -139,6 +145,74 @@ test.describe('#attachments', () => {
     await page.waitForCondition(
       async () => await page.activity.isTabActive('untitled.md')
     );
+  });
+
+  test('Should select cells when opening a notebook attachment with cells', async ({
+    page
+  }) => {
+    // Open the notebook created in beforeEach and add 2 more cells.
+    await page.notebook.open(NOTEBOOK);
+    await page.notebook.addCell('code', 'print("cell 1")');
+    await page.notebook.addCell('code', 'print("cell 2")');
+
+    // Open chat in the side panel so both notebook and chat are visible.
+    const chatPanel = await openChatToSide(page, chatPath);
+    const input = chatPanel.locator('.jp-chat-input-container');
+    await expect(input).toBeVisible();
+
+    // Focus the notebook to drag cells from it.
+    await page.activity.activateTab(NOTEBOOK);
+
+    const inputBox = await input.boundingBox();
+
+    // Drag cell at index 1 to the chat input.
+    const cell1Prompt = page
+      .locator('.jp-Cell')
+      .nth(1)
+      .locator('.jp-InputPrompt');
+    const cell1Box = await cell1Prompt.boundingBox();
+    await page.mouse.move(cell1Box!.x + 10, cell1Box!.y + 10);
+    await page.mouse.down();
+    await page.mouse.move(inputBox!.x + inputBox!.width / 2, inputBox!.y + 10);
+    await page.mouse.up();
+
+    // Drag cell at index 2 to the chat input.
+    const cell2Prompt = page
+      .locator('.jp-Cell')
+      .nth(2)
+      .locator('.jp-InputPrompt');
+    const cell2Box = await cell2Prompt.boundingBox();
+    await page.mouse.move(cell2Box!.x + 10, cell2Box!.y + 10);
+    await page.mouse.down();
+    await page.mouse.move(inputBox!.x + inputBox!.width / 2, inputBox!.y + 10);
+    await page.mouse.up();
+
+    // The attachment should show the notebook name (both cells merged into one).
+    const attachments = input.locator('.jp-chat-attachment');
+    await expect(attachments).toHaveCount(1);
+    await expect(attachments.first()).toContainText(NOTEBOOK);
+
+    // Send the message.
+    await input.locator('.jp-chat-send-button').click();
+
+    // close the notebook
+    await page.notebook.save();
+    await page.notebook.close();
+
+    // Click the attachment in the sent message.
+    const message = chatPanel
+      .locator('.jp-chat-messages-container .jp-chat-message')
+      .first();
+    await message.locator('.jp-chat-attachment-clickable').click();
+
+    // Cells 1 and 2 should be selected; cell 0 should not be selected.
+    await page.waitForCondition(
+      async () => await page.activity.isTabActive(NOTEBOOK)
+    );
+    const cells = page.locator('.jp-Notebook .jp-Cell');
+    await expect(cells.nth(0)).not.toHaveClass(/jp-mod-selected/);
+    await expect(cells.nth(1)).toHaveClass(/jp-mod-selected/);
+    await expect(cells.nth(2)).toHaveClass(/jp-mod-selected/);
   });
 });
 

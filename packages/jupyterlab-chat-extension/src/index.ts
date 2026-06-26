@@ -48,7 +48,7 @@ import { PathExt } from '@jupyterlab/coreutils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { IDefaultFileBrowser } from '@jupyterlab/filebrowser';
 import { ILauncher } from '@jupyterlab/launcher';
-import { INotebookTracker } from '@jupyterlab/notebook';
+import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 import { IObservableList } from '@jupyterlab/observables';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { Contents } from '@jupyterlab/services';
@@ -154,13 +154,63 @@ const attachmentOpeners: JupyterFrontEndPlugin<IAttachmentOpenerRegistry> = {
   activate: (app: JupyterFrontEnd): IAttachmentOpenerRegistry => {
     const attachmentOpenerRegistry = new AttachmentOpenerRegistry();
 
+    // Whether the list of number is continue or not.
+    function isContinuous(numbers: number[]): boolean {
+      if (numbers.length <= 1) {
+        return true;
+      }
+
+      for (let i = 1; i < numbers.length; i++) {
+        if (numbers[i] !== numbers[i - 1] + 1) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
     attachmentOpenerRegistry.set('file', (attachment: IAttachment) => {
       app.commands.execute('docmanager:open', { path: attachment.value });
     });
 
-    attachmentOpenerRegistry.set('notebook', (attachment: IAttachment) => {
-      app.commands.execute('docmanager:open', { path: attachment.value });
-    });
+    attachmentOpenerRegistry.set(
+      'notebook',
+      async (attachment: IAttachment) => {
+        // Reveal the notebook.
+        const widget = await app.commands.execute('docmanager:open', {
+          path: attachment.value
+        });
+
+        // Check if cells are attached.
+        if (
+          widget &&
+          attachment.type === 'notebook' &&
+          attachment.cells?.length
+        ) {
+          const panel = widget as NotebookPanel;
+          await panel.context.ready;
+
+          // Get the attached cell indexes in order.
+          const cellList = panel.context.model.cells;
+          const cellIds = attachment.cells.map(cell => cell.id);
+          const range: number[] = [];
+          for (let i = 0; i < cellList.length; i++) {
+            if (cellIds.includes(cellList.get(i).id)) {
+              range.push(i);
+            }
+          }
+          range.sort();
+
+          // Set the first cell as active.
+          panel.content.activeCellIndex = range[0];
+
+          // If cells are contiguous, select all of them.
+          if (isContinuous(range)) {
+            panel.content.extendContiguousSelectionTo(range[range.length - 1]);
+          }
+        }
+      }
+    );
 
     return attachmentOpenerRegistry;
   }
