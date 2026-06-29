@@ -66,6 +66,7 @@ export class MultiChatPanel extends PanelWithToolbar {
 
     this._chatOptions = options;
     this._inputToolbarFactory = options.inputToolbarFactory;
+    this._chatToolbarItems = options.chatToolbarItems;
 
     this._getChatNames = options.getChatNames;
     this._createModel = options.createModel;
@@ -272,6 +273,7 @@ export class MultiChatPanel extends PanelWithToolbar {
       displayName: name,
       openInMain: this._openInMain,
       renameChat: this._renameChat,
+      toolbarItems: this._chatToolbarItems,
       onClose: (name: string) => {
         this.disposeLoadedModel(name);
       },
@@ -421,6 +423,7 @@ export class MultiChatPanel extends PanelWithToolbar {
   >(this);
   private _chatOptions: Omit<Chat.IOptions, 'model' | 'inputToolbarRegistry'>;
   private _inputToolbarFactory?: IInputToolbarRegistryFactory;
+  private _chatToolbarItems?: MultiChatPanel.IChatToolbarItem[];
   private _updateChatListDebouncer: Debouncer;
 
   private _createModel?: (
@@ -444,6 +447,24 @@ export class MultiChatPanel extends PanelWithToolbar {
  */
 export namespace MultiChatPanel {
   /**
+   * A toolbar item to add to each chat's toolbar in the sidepanel.
+   */
+  export interface IChatToolbarItem {
+    /**
+     * The unique name of the toolbar item.
+     */
+    name: string;
+    /**
+     * Factory that creates the toolbar widget for a given chat widget.
+     */
+    create: (chatWidget: ChatWidget) => Widget;
+    /**
+     * Insert the button before another one.
+     */
+    before?: string;
+  }
+
+  /**
    * Options of the constructor of the chat panel.
    */
   export interface IOptions
@@ -453,6 +474,11 @@ export namespace MultiChatPanel {
      * The input toolbar factory;
      */
     inputToolbarFactory?: IInputToolbarRegistryFactory;
+    /**
+     * Optional toolbar items to add to each opened chat's toolbar.
+     * Items are inserted before the close button.
+     */
+    chatToolbarItems?: IChatToolbarItem[];
     /**
      * An optional callback to create a chat model.
      *
@@ -605,6 +631,16 @@ class SidePanelWidget extends PanelWithToolbar {
     });
     this.toolbar.addItem('close', closeButton);
 
+    if (options.toolbarItems) {
+      for (const item of options.toolbarItems) {
+        this.toolbar.insertBefore(
+          item.before ?? 'close',
+          item.name,
+          item.create(this._chatWidget)
+        );
+      }
+    }
+
     // Update mark as read button state
     this.model.unreadChanged?.connect(this._unreadChanged);
     this._markAsRead.enabled = (this.model?.unreadMessages.length ?? 0) > 0;
@@ -725,6 +761,10 @@ namespace SidePanelWidget {
      * The callback to rename the chat.
      */
     renameChat?: boolean | ((oldName: string) => Promise<string | null>);
+    /**
+     * Optional toolbar items to add before the close button.
+     */
+    toolbarItems?: MultiChatPanel.IChatToolbarItem[];
     /**
      * The translation bundle.
      */
