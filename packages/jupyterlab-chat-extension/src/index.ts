@@ -154,7 +154,7 @@ const attachmentOpeners: JupyterFrontEndPlugin<IAttachmentOpenerRegistry> = {
   activate: (app: JupyterFrontEnd): IAttachmentOpenerRegistry => {
     const attachmentOpenerRegistry = new AttachmentOpenerRegistry();
 
-    // Whether the list of number is continue or not.
+    // Whether the list of numbers is continuous.
     function isContinuous(numbers: number[]): boolean {
       if (numbers.length <= 1) {
         return true;

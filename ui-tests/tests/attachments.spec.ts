@@ -164,13 +164,16 @@ test.describe('#attachments', () => {
     await page.activity.activateTab(NOTEBOOK);
 
     const inputBox = await input.boundingBox();
+    expect(inputBox).not.toBeNull();
 
     // Drag cell at index 1 to the chat input.
     const cell1Prompt = page
       .locator('.jp-Cell')
       .nth(1)
       .locator('.jp-InputPrompt');
+    await expect(cell1Prompt).toBeVisible();
     const cell1Box = await cell1Prompt.boundingBox();
+    expect(cell1Box).not.toBeNull();
     await page.mouse.move(cell1Box!.x + 10, cell1Box!.y + 10);
     await page.mouse.down();
     await page.mouse.move(inputBox!.x + inputBox!.width / 2, inputBox!.y + 10);
@@ -181,8 +184,9 @@ test.describe('#attachments', () => {
       .locator('.jp-Cell')
       .nth(2)
       .locator('.jp-InputPrompt');
+    await expect(cell2Prompt).toBeVisible();
     const cell2Box = await cell2Prompt.boundingBox();
-    await page.mouse.move(cell2Box!.x + 10, cell2Box!.y + 10);
+    expect(cell2Box).not.toBeNull();
     await page.mouse.down();
     await page.mouse.move(inputBox!.x + inputBox!.width / 2, inputBox!.y + 10);
     await page.mouse.up();
