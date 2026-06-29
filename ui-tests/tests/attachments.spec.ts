@@ -187,6 +187,7 @@ test.describe('#attachments', () => {
     await expect(cell2Prompt).toBeVisible();
     const cell2Box = await cell2Prompt.boundingBox();
     expect(cell2Box).not.toBeNull();
+    await page.mouse.move(cell2Box!.x + 10, cell2Box!.y + 10);
     await page.mouse.down();
     await page.mouse.move(inputBox!.x + inputBox!.width / 2, inputBox!.y + 10);
     await page.mouse.up();
