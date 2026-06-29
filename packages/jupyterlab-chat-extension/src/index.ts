@@ -192,14 +192,19 @@ const attachmentOpeners: JupyterFrontEndPlugin<IAttachmentOpenerRegistry> = {
 
           // Get the attached cell indexes in order.
           const cellList = panel.context.model.cells;
-          const cellIds = attachment.cells.map(cell => cell.id);
+          const cellIds = new Set(attachment.cells.map(cell => cell.id));
           const range: number[] = [];
           for (let i = 0; i < cellList.length; i++) {
-            if (cellIds.includes(cellList.get(i).id)) {
+            if (cellIds.has(cellList.get(i).id)) {
               range.push(i);
             }
           }
           range.sort();
+
+          // Nothing to select (e.g., the notebook changed since the attachment was created).
+          if (!range.length) {
+            return;
+          }
 
           // Set the first cell as active.
           panel.content.activeCellIndex = range[0];
