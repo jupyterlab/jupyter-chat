@@ -1140,24 +1140,25 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
         );
       },
       openInMain: async path => {
-        return commands
-          .execute(CommandIDs.openChat, {
+        try {
+          const opened = (await commands.execute(CommandIDs.openChat, {
             filepath: path
-          })
-          .then(opened => {
-            // Dispose of the side panel model if the widget has been opened in main.
-            if (opened) {
-              const name = getDisplayName(
-                path,
-                widgetConfig.config.defaultDirectory
-              );
-              chatPanel.getLoadedModel(name)?.dispose();
-            }
-            return opened;
-          })
-          .catch(e => {
-            console.error(`Error opening ${path}`, e);
-          });
+          })) as boolean;
+
+          // Dispose of the side panel model if the widget has been opened in main.
+          if (opened) {
+            const name = getDisplayName(
+              path,
+              widgetConfig.config.defaultDirectory
+            );
+            chatPanel.getLoadedModel(name)?.dispose();
+          }
+
+          return opened;
+        } catch (e) {
+          console.error(`Error opening ${path}`, e);
+          return false;
+        }
       },
       renameChat: (oldPath: string) => {
         return commands.execute(CommandIDs.renameChat, {
