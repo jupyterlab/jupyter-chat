@@ -12,7 +12,6 @@ from jupyter_ydoc.ybasedoc import YBaseDoc
 from typing import Any, Callable, Optional, Set, Union
 from uuid import uuid4
 from pycrdt import Array, ArrayEvent, Map, MapEvent
-import re
 
 from .models import message_asdict_factory, FileAttachment, NotebookAttachment, Message, NewMessage, User
 from .utils import find_mentions
