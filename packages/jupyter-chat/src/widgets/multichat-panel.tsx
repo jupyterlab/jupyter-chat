@@ -816,6 +816,11 @@ function ChatSearchInput({
       return;
     }
 
+    // Ignore key events during IME composition.
+    if (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229) {
+      return;
+    }
+
     let value: string | null;
     switch (event.key) {
       case 'ArrowDown':
