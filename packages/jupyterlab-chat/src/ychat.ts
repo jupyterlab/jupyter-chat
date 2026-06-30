@@ -110,11 +110,11 @@ export class YChat extends YDocument<IChatChanges> {
   }
 
   set id(value: string) {
-    if (!this._metadata.get('id')) {
-      this.transact(() => {
+    this.transact(() => {
+      if (!this._metadata.get('id')) {
         this._metadata.set('id', value);
-      });
-    }
+      }
+    });
   }
 
   get users(): Record<string, IUser> {
