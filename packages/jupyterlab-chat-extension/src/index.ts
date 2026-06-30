@@ -56,6 +56,7 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { ITranslator, nullTranslator } from '@jupyterlab/translation';
 import { launchIcon } from '@jupyterlab/ui-components';
 import { PromiseDelegate } from '@lumino/coreutils';
+import { Widget } from '@lumino/widgets';
 import {
   ChatWidgetFactory,
   CommandIDs,
@@ -732,7 +733,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           }
         }
       },
-      execute: async args => {
+      execute: async (args): Promise<Widget | null> => {
         const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
         const filepath = await commands.execute(CommandIDs.createChat, args);
 
@@ -742,11 +743,12 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
             inSidePanel
           });
         } else {
-          return commands.execute('docmanager:open', {
+          const widget = await commands.execute('docmanager:open', {
             // TODO: support JCollab v3 by optionally prefixing 'RTC:'
             path: `${filepath}`,
             factory: FACTORY
           });
+          return widget ?? null;
         }
       }
     });
@@ -841,7 +843,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
               }
             }
           },
-          execute: async (args): Promise<any> => {
+          execute: async (args): Promise<Widget | null> => {
             const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
             const startup: boolean = (args.startup as boolean) ?? false;
             let filepath: string | null = (args.filepath as string) ?? null;
@@ -856,7 +858,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
             }
 
             if (!filepath) {
-              return false;
+              return null;
             }
 
             let fileExist = true;
@@ -877,7 +879,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
                   trans.__("'%1' is not a valid path", filepath)
                 );
               }
-              return false;
+              return null;
             }
 
             if (inSidePanel && chatPanel) {
@@ -901,7 +903,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
               }
 
               if (chatPanel.openIfLoaded(filepath)) {
-                return true;
+                return chatPanel.current ?? null;
               }
 
               const openChatArgs = await createChatModel(app, drive, filepath);
@@ -911,12 +913,13 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
             } else {
               // The chat is opened in the main area
               // TODO: support JCollab v3 by optionally prefixing 'RTC:'
-              return commands.execute('docmanager:open', {
+              const widget = commands.execute('docmanager:open', {
                 path: `${filepath}`,
                 factory: FACTORY
               });
+              return widget ?? null;
             }
-            return false;
+            return null;
           }
         });
 
@@ -1194,12 +1197,12 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
           widgetConfig.config.defaultDirectory
         );
       },
-      openInMain: async path => {
+      openInMain: async (path): Promise<boolean> => {
         try {
-          const opened = (await commands.execute(CommandIDs.openChat, {
+          const widget = await commands.execute(CommandIDs.openChat, {
             filepath: path
-          })) as boolean;
-
+          });
+          const opened = widget !== null;
           // Dispose of the side panel model if the widget has been opened in main.
           if (opened) {
             const name = getDisplayName(
