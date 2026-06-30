@@ -311,6 +311,10 @@ const chatConfig: JupyterFrontEndPlugin<IWidgetConfig> = {
           showDeleted: setting.get('showDeleted').composite as boolean,
           sendWithSelection: setting.get('sendWithSelection')
             .composite as boolean,
+          autoHideWelcomeMessage: setting.get('autoHideWelcomeMessage')
+            .composite as boolean,
+          hideWelcomeMessage: setting.get('hideWelcomeMessage')
+            .composite as boolean,
           defaultDirectory: currentDirectory
         };
       });
