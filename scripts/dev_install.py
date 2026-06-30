@@ -16,7 +16,7 @@ def install_dev() -> None:
 
     execute("pip uninstall jupyterlab_chat -y")
     execute("pip install -e python/jupyterlab-chat[test]")
-    execute("jupyter labextension develop --overwrite python/jupyterlab-chat --overwrite")
+    execute("jupyter-builder develop python/jupyterlab-chat --overwrite")
 
 
 if __name__ == "__main__":

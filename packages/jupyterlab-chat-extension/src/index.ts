@@ -48,7 +48,7 @@ import { PathExt } from '@jupyterlab/coreutils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { IDefaultFileBrowser } from '@jupyterlab/filebrowser';
 import { ILauncher } from '@jupyterlab/launcher';
-import { INotebookTracker } from '@jupyterlab/notebook';
+import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 import { IObservableList } from '@jupyterlab/observables';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { Contents } from '@jupyterlab/services';
@@ -56,6 +56,7 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { ITranslator, nullTranslator } from '@jupyterlab/translation';
 import { launchIcon } from '@jupyterlab/ui-components';
 import { PromiseDelegate } from '@lumino/coreutils';
+import { Widget } from '@lumino/widgets';
 import {
   ChatWidgetFactory,
   CommandIDs,
@@ -154,13 +155,68 @@ const attachmentOpeners: JupyterFrontEndPlugin<IAttachmentOpenerRegistry> = {
   activate: (app: JupyterFrontEnd): IAttachmentOpenerRegistry => {
     const attachmentOpenerRegistry = new AttachmentOpenerRegistry();
 
+    // Whether the list of numbers is continuous.
+    function isContinuous(numbers: number[]): boolean {
+      if (numbers.length <= 1) {
+        return true;
+      }
+
+      for (let i = 1; i < numbers.length; i++) {
+        if (numbers[i] !== numbers[i - 1] + 1) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
     attachmentOpenerRegistry.set('file', (attachment: IAttachment) => {
       app.commands.execute('docmanager:open', { path: attachment.value });
     });
 
-    attachmentOpenerRegistry.set('notebook', (attachment: IAttachment) => {
-      app.commands.execute('docmanager:open', { path: attachment.value });
-    });
+    attachmentOpenerRegistry.set(
+      'notebook',
+      async (attachment: IAttachment) => {
+        // Reveal the notebook.
+        const widget = await app.commands.execute('docmanager:open', {
+          path: attachment.value
+        });
+
+        // Check if cells are attached.
+        if (
+          widget &&
+          attachment.type === 'notebook' &&
+          attachment.cells?.length
+        ) {
+          const panel = widget as NotebookPanel;
+          await panel.context.ready;
+
+          // Get the attached cell indexes in order.
+          const cellList = panel.context.model.cells;
+          const cellIds = new Set(attachment.cells.map(cell => cell.id));
+          const range: number[] = [];
+          for (let i = 0; i < cellList.length; i++) {
+            if (cellIds.has(cellList.get(i).id)) {
+              range.push(i);
+            }
+          }
+          range.sort();
+
+          // Nothing to select (e.g., the notebook changed since the attachment was created).
+          if (!range.length) {
+            return;
+          }
+
+          // Set the first cell as active.
+          panel.content.activeCellIndex = range[0];
+
+          // If cells are contiguous, select all of them.
+          if (isContinuous(range)) {
+            panel.content.extendContiguousSelectionTo(range[range.length - 1]);
+          }
+        }
+      }
+    );
 
     return attachmentOpenerRegistry;
   }
@@ -677,7 +733,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           }
         }
       },
-      execute: async args => {
+      execute: async (args): Promise<Widget | null> => {
         const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
         const filepath = await commands.execute(CommandIDs.createChat, args);
 
@@ -687,12 +743,33 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
             inSidePanel
           });
         } else {
-          return commands.execute('docmanager:open', {
+          const widget = await commands.execute('docmanager:open', {
             // TODO: support JCollab v3 by optionally prefixing 'RTC:'
             path: `${filepath}`,
             factory: FACTORY
           });
+          return widget ?? null;
         }
+      }
+    });
+
+    const createChatInFolder = 'jupyterlab-chat:create-in-folder';
+    commands.addCommand(createChatInFolder, {
+      label: trans.__('New Chat'),
+      icon: chatIcon,
+      describedBy: {
+        args: {
+          type: 'object',
+          properties: {}
+        }
+      },
+      execute: () => {
+        const selected = filebrowser?.selectedItems().next().value;
+        const path =
+          selected?.type === 'directory'
+            ? selected.path
+            : (filebrowser?.model.path ?? '');
+        return commands.execute(CommandIDs.createAndOpen, { path });
       }
     });
 
@@ -766,7 +843,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
               }
             }
           },
-          execute: async (args): Promise<any> => {
+          execute: async (args): Promise<Widget | null> => {
             const inSidePanel: boolean = (args.inSidePanel as boolean) ?? false;
             const startup: boolean = (args.startup as boolean) ?? false;
             let filepath: string | null = (args.filepath as string) ?? null;
@@ -781,7 +858,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
             }
 
             if (!filepath) {
-              return false;
+              return null;
             }
 
             let fileExist = true;
@@ -802,7 +879,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
                   trans.__("'%1' is not a valid path", filepath)
                 );
               }
-              return false;
+              return null;
             }
 
             if (inSidePanel && chatPanel) {
@@ -826,7 +903,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
               }
 
               if (chatPanel.openIfLoaded(filepath)) {
-                return true;
+                return chatPanel.current ?? null;
               }
 
               const openChatArgs = await createChatModel(app, drive, filepath);
@@ -836,12 +913,13 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
             } else {
               // The chat is opened in the main area
               // TODO: support JCollab v3 by optionally prefixing 'RTC:'
-              return commands.execute('docmanager:open', {
+              const widget = commands.execute('docmanager:open', {
                 path: `${filepath}`,
                 factory: FACTORY
               });
+              return widget ?? null;
             }
-            return false;
+            return null;
           }
         });
 
@@ -1119,10 +1197,26 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
           widgetConfig.config.defaultDirectory
         );
       },
-      openInMain: path => {
-        return commands.execute(CommandIDs.openChat, {
-          filepath: path
-        }) as Promise<boolean>;
+      openInMain: async (path): Promise<boolean> => {
+        try {
+          const widget = await commands.execute(CommandIDs.openChat, {
+            filepath: path
+          });
+          const opened = widget !== null;
+          // Dispose of the side panel model if the widget has been opened in main.
+          if (opened) {
+            const name = getDisplayName(
+              path,
+              widgetConfig.config.defaultDirectory
+            );
+            chatPanel.getLoadedModel(name)?.dispose();
+          }
+
+          return opened;
+        } catch (e) {
+          console.error(`Error opening ${path}`, e);
+          return false;
+        }
       },
       renameChat: (oldPath: string) => {
         return commands.execute(CommandIDs.renameChat, {
@@ -1157,7 +1251,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
             change.oldValue.path,
             widgetConfig.config.defaultDirectory
           );
-          chatPanel.disposeLoadedModel(oldName);
+          chatPanel.unsetLoadedModel(oldName);
         }
       }
       const updateActions = ['new', 'rename'];

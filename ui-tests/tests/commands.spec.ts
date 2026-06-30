@@ -119,6 +119,83 @@ test.describe('#launcher', () => {
   });
 });
 
+test.describe('#contextMenu', () => {
+  test('should create a chat from file browser empty space', async ({
+    page,
+    tmpPath
+  }) => {
+    // Right-click on empty file browser area, then wait for the Lumino menu
+    // to render before clicking its items.
+    await page
+      .locator('.jp-FileBrowser-Panel .jp-DirListing-content')
+      .click({ button: 'right' });
+    await page.locator('.lm-Menu').waitFor({ state: 'visible' });
+
+    // Click "New Chat" in the context menu.
+    await page
+      .locator('.lm-Menu-item[data-command="jupyterlab-chat:create-in-folder"]')
+      .click();
+
+    // Chat should be created in the file browser CWD.
+    await page.waitForCondition(
+      async () =>
+        await page.filebrowser.contents.fileExists(`${tmpPath}/untitled.chat`)
+    );
+    await expect(page.activity.getTabLocator('untitled.chat')).toBeVisible();
+
+    // Cleanup.
+    if (
+      await page.filebrowser.contents.fileExists(`${tmpPath}/untitled.chat`)
+    ) {
+      await page.filebrowser.contents.deleteFile(`${tmpPath}/untitled.chat`);
+    }
+  });
+
+  test('should create a chat inside a selected folder', async ({
+    page,
+    tmpPath
+  }) => {
+    const folderName = 'subfolder';
+    await page.filebrowser.contents.createDirectory(`${tmpPath}/${folderName}`);
+    await page.filebrowser.refresh();
+
+    // Click the folder first to select it (so filebrowser.selectedItems()
+    // returns it), then right-click to open the context menu.
+    const folder = page.locator(
+      `.jp-DirListing-item:has-text("${folderName}")`
+    );
+    await folder.click();
+    await folder.click({ button: 'right' });
+    await page.locator('.lm-Menu').waitFor({ state: 'visible' });
+
+    // Click "New Chat" in the context menu.
+    await page
+      .locator('.lm-Menu-item[data-command="jupyterlab-chat:create-in-folder"]')
+      .click();
+
+    // Chat should be created INSIDE the selected folder, not in the CWD.
+    await page.waitForCondition(
+      async () =>
+        await page.filebrowser.contents.fileExists(
+          `${tmpPath}/${folderName}/untitled.chat`
+        )
+    );
+    await expect(page.activity.getTabLocator('untitled.chat')).toBeVisible();
+
+    // Cleanup.
+    if (
+      await page.filebrowser.contents.fileExists(
+        `${tmpPath}/${folderName}/untitled.chat`
+      )
+    ) {
+      await page.filebrowser.contents.deleteFile(
+        `${tmpPath}/${folderName}/untitled.chat`
+      );
+    }
+    await page.filebrowser.contents.deleteDirectory(`${tmpPath}/${folderName}`);
+  });
+});
+
 test.describe('#focusInput', () => {
   test.beforeEach(async ({ page }) => {
     // Create a chat file
