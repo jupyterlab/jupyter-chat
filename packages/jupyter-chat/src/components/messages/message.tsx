@@ -10,8 +10,8 @@ import { MessageRenderer } from './message-renderer';
 import { AttachmentPreviewList } from '../attachments';
 import { ChatInput } from '../input';
 import { useChatContext } from '../../context';
-import { IInputModel, InputModel } from '../../input-model';
-import { IMessageContent, IMessage } from '../../types';
+import { InputModel } from '../../input-model';
+import { IMessageContent, IMessage, INewMessage } from '../../types';
 import { replaceSpanToMention } from '../../utils';
 
 export const MESSAGE_CONTAINER_CLASS = 'jp-chat-message-container';
@@ -96,8 +96,8 @@ export function ChatMessageBase(props: ChatMessageProps): JSX.Element {
     });
     const inputModel = new InputModel({
       chatContext: model.createChatContext(),
-      onSend: (input: string, model?: IInputModel) =>
-        updateMessage(message.id, input, model),
+      onSend: (newMessage: INewMessage) =>
+        updateMessage(message.id, newMessage),
       onCancel: () => cancelEdition(),
       value: body,
       activeCellManager: model.activeCellManager,
@@ -121,17 +121,27 @@ export function ChatMessageBase(props: ChatMessageProps): JSX.Element {
 
   // Update the content of the message.
   const updateMessage = useCallback(
-    (id: string, input: string, inputModel?: IInputModel): void => {
-      if (!canEdit || !inputModel) {
+    (id: string, newMessage: INewMessage): void => {
+      const inputModel = model.getEditionModel(id);
+      if (!canEdit || !inputModel || !model.updateMessage) {
+        setEdit(false);
         return;
       }
+
       // Update the message
       const updatedMessage = { ...message };
-      updatedMessage.body = input;
-      updatedMessage.attachments = inputModel.attachments;
-      updatedMessage.mentions = inputModel.mentions;
-      model.updateMessage!(id, updatedMessage);
-      model.getEditionModel(message.id)?.dispose();
+      if (newMessage.body) {
+        updatedMessage.body = newMessage.body;
+      }
+      if (newMessage.attachments) {
+        updatedMessage.attachments = newMessage.attachments;
+      }
+      if (newMessage.mentions) {
+        updatedMessage.mentions = newMessage.mentions;
+      }
+
+      model.updateMessage(id, updatedMessage);
+      inputModel.dispose();
       setEdit(false);
     },
     [model, message, canEdit]

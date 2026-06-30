@@ -264,7 +264,7 @@ export abstract class AbstractChatModel implements IChatModel {
       config: {
         sendWithShiftEnter: config.sendWithShiftEnter
       },
-      onSend: (input: string) => this.sendMessage({ body: input })
+      onSend: this.sendMessage.bind(this)
     });
 
     this._commands = options.commands;
