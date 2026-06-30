@@ -176,6 +176,11 @@ export interface IChatModel extends IDisposable {
   isDisposed: boolean;
 
   /**
+   * A signal emitting when disposing of the model.
+   */
+  readonly disposed: ISignal<IChatModel, void>;
+
+  /**
    * Function to call when a message is received.
    *
    * @param message - the message with user information and body.
@@ -306,7 +311,10 @@ export abstract class AbstractChatModel implements IChatModel {
     this._name = value;
   }
 
-  get disposed(): ISignal<AbstractChatModel, void> {
+  /**
+   * A signal emitting when disposing of the model.
+   */
+  get disposed(): ISignal<IChatModel, void> {
     return this._disposed;
   }
 
@@ -769,7 +777,7 @@ export abstract class AbstractChatModel implements IChatModel {
   protected _trans: TranslationBundle;
   private _readyDelegate = new PromiseDelegate<void>();
   private _inputModel: IInputModel;
-  private _disposed = new Signal<this, void>(this);
+  private _disposed = new Signal<IChatModel, void>(this);
   private _isDisposed = false;
   private _commands?: CommandRegistry;
   private _activeCellManager: IActiveCellManager | null;
