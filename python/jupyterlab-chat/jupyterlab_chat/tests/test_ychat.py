@@ -1,9 +1,6 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-# import jupyter_ydoc before YChat to avoid circular error
-import jupyter_ydoc
-
 from dataclasses import asdict
 import pytest
 from uuid import uuid4
