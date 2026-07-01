@@ -174,10 +174,9 @@ export interface IChatHistory {
 /**
  * The content of a new message.
  */
-export interface INewMessage {
-  body: string;
-  id?: string;
-}
+export type INewMessage<T = IUser, U = IAttachment> = Partial<
+  IMessageContent<T, U>
+>;
 
 /**
  * The attachment type. Jupyter Chat allows for two types of attachments

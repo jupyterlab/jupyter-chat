@@ -10,7 +10,7 @@ import { ISignal, Signal } from '@lumino/signaling';
 import { IActiveCellManager } from './active-cell-manager';
 import { ISelectionWatcher } from './selection-watcher';
 import { IChatContext } from './model';
-import { IAttachment, INotebookAttachment, IUser } from './types';
+import { IAttachment, INewMessage, INotebookAttachment, IUser } from './types';
 
 /**
  * The chat input interface.
@@ -194,8 +194,27 @@ export class InputModel implements IInputModel {
    * Function to send a message.
    */
   send = (input: string): void => {
-    this._onSend(input, this);
+    const message: INewMessage = {
+      body: input
+    };
+
+    // Add the attachments
+    if (this.attachments.length) {
+      message.attachments = [...this.attachments];
+    }
+
+    // Add the mentions
+    if (this.mentions.length) {
+      message.mentions = [...this.mentions];
+    }
+
+    // Send the message
+    this._onSend(message);
+
+    // Clear the input
     this.value = '';
+    this.clearAttachments();
+    this.clearMentions();
   };
 
   /**
@@ -486,7 +505,7 @@ export class InputModel implements IInputModel {
   }
 
   private _id: string;
-  private _onSend: (input: string, model?: InputModel) => void;
+  private _onSend: (message: INewMessage) => void;
   private _chatContext?: IChatContext;
   private _value: string;
   private _cursorIndex: number | null = null;
@@ -519,7 +538,7 @@ export namespace InputModel {
      * @param content - the content of the message.
      * @param model - the model of the input sending the message.
      */
-    onSend: (content: string, model?: InputModel) => void;
+    onSend: (message: INewMessage) => void;
 
     /**
      * Function that should cancel the message edition.
