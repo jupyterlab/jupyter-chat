@@ -21,6 +21,13 @@
           }
         ]
       }
+    ],
+    "context": [
+      {
+        "command": "jupyterlab-chat:create-in-folder",
+        "selector": ".jp-DirListing-content",
+        "rank": 53
+      }
     ]
   },
   "jupyter.lab.shortcuts": [

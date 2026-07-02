@@ -124,7 +124,7 @@ export class MultiChatPanel extends PanelWithToolbar {
         chatNames: [],
         onSelect: this._onSelectChat,
         onClose: (name: string) => {
-          this.disposeLoadedModel(name);
+          this.unsetLoadedModel(name);
         },
         translator
       });
@@ -199,9 +199,10 @@ export class MultiChatPanel extends PanelWithToolbar {
   }
 
   /**
-   * Dispose a model, removing it from loaded models.
+   * Removing a model from loaded list.
+   * Dispose of the widget and optionally dispose of the model.
    */
-  disposeLoadedModel(name: string): void {
+  unsetLoadedModel(name: string, dispose = true): void {
     const model = this._loadedModels.get(name);
     if (model) {
       // If this is the currently displayed chat, remove it.
@@ -217,7 +218,9 @@ export class MultiChatPanel extends PanelWithToolbar {
         this._addPlaceholder();
       }
 
-      model.dispose();
+      if (dispose) {
+        model.dispose();
+      }
       this._loadedModels.delete(name);
       this._chatSelectorPopup?.setLoadedModels(this.getLoadedModelNames());
     }
@@ -291,8 +294,8 @@ export class MultiChatPanel extends PanelWithToolbar {
       displayName: name,
       openInMain: this._openInMain,
       renameChat: this._renameChat,
-      onClose: (name: string) => {
-        this.disposeLoadedModel(name);
+      onClose: (name: string, disposeModel = true) => {
+        this.unsetLoadedModel(name, disposeModel);
       },
       trans: this._trans
     });
@@ -609,7 +612,7 @@ class SidePanelWidget extends ReactivePanelWithToolbar {
         onClick: async () => {
           const name = this.model.name;
           if (await options.openInMain?.(name)) {
-            options.onClose(this._displayName);
+            options.onClose(this._displayName, false);
           }
         }
       });
@@ -758,7 +761,7 @@ namespace SidePanelWidget {
     /**
      * The callback when closing the chat.
      */
-    onClose: (name: string) => void;
+    onClose: (name: string, disposeModel?: boolean) => void;
     /**
      * The displayed name of the chat.
      */

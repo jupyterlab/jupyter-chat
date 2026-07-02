@@ -15,6 +15,7 @@ import clsx from 'clsx';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { InputToolbarRegistry } from './toolbar-registry';
+import { submitInputMessage } from './submit-message';
 import { useChatCommands } from './use-chat-commands';
 import { AttachmentPreviewList } from '../attachments';
 import { useChatContext, useTranslator } from '../../context';
@@ -169,9 +170,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
 
     // Finally, send the message when all other conditions are met.
     if (isSendCombination) {
-      // Run all command providers
-      await chatCommandRegistry?.onSubmit(model);
-      model.send(model.value);
+      await submitInputMessage({ model, chatCommandRegistry });
       event.stopPropagation();
       event.preventDefault();
     }

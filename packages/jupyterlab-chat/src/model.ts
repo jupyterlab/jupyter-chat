@@ -20,6 +20,7 @@ import { User } from '@jupyterlab/services';
 import { PartialJSONObject, UUID } from '@lumino/coreutils';
 import { ISignal, Signal } from '@lumino/signaling';
 
+import { enforceAutosaveEnabled } from './autosave';
 import { IWidgetConfig } from './token';
 import { IChatChanges, IYmessage, YChat } from './ychat';
 
@@ -105,7 +106,7 @@ export class LabChatModel
       this._sharedModel = YChat.create();
     }
 
-    this.sharedModel.changed.connect(this._onchange, this);
+    this._sharedModel.changed.connect(this._onchange, this);
 
     this.config = widgetConfig.config;
 
@@ -114,6 +115,8 @@ export class LabChatModel
     });
 
     this.sharedModel.awareness.on('change', this.onAwarenessChange);
+    this.sharedModel.awareness.on('change', this._enforceAutosaveEnabled);
+    this._enforceAutosaveEnabled();
 
     this.input.valueChanged.connect((_, value) => this.onInputChanged(value));
     this.messageEditionAdded.connect(this.onMessageEditionAdded);
@@ -163,6 +166,8 @@ export class LabChatModel
       return;
     }
     super.dispose();
+    this.sharedModel.awareness.off('change', this.onAwarenessChange);
+    this.sharedModel.awareness.off('change', this._enforceAutosaveEnabled);
     this._sharedModel.dispose();
     Signal.clearData(this);
   }
@@ -397,6 +402,10 @@ export class LabChatModel
     this._timeoutWriting = null;
   }
 
+  private _enforceAutosaveEnabled = () => {
+    enforceAutosaveEnabled(this.sharedModel.awareness);
+  };
+
   private _onchange = async (_: YChat, changes: IChatChanges) => {
     if (changes.messageListChanges) {
       const msgDelta = changes.messageListChanges;
@@ -529,6 +538,17 @@ export class LabChatModel
           this._user = change.newValue;
         }
       });
+    }
+
+    // Create a chat ID if not created when the document is not dirty.
+    if (changes.stateChange && !this._sharedModel.id) {
+      if (
+        changes.stateChange.some(
+          change => change.name === 'dirty' && !change.newValue
+        )
+      ) {
+        this._sharedModel.id = UUID.uuid4();
+      }
     }
   };
 
