@@ -204,7 +204,7 @@ export class LabChatModel
   }
 
   sendMessage(message: INewMessage): Promise<boolean | void> | boolean | void {
-    if (!message.body && !message.mime_model) {
+    if (!message.body && !message.mime_model && !message.attachments?.length) {
       return false;
     }
     this._resetWritingStatus();
@@ -223,6 +223,11 @@ export class LabChatModel
       sender: user.username,
       raw_time: true
     };
+
+    // Add the MIME model if provided.
+    if (message.mime_model) {
+      msg.mime_model = message.mime_model;
+    }
 
     // Add the user if it does not exist
     if (!this.sharedModel.getUser(user.username)) {
