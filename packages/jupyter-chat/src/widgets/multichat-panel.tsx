@@ -18,6 +18,7 @@ import {
   ReactiveToolbar,
   ReactWidget,
   Spinner,
+  Toolbar,
   ToolbarButton
 } from '@jupyterlab/ui-components';
 import { ArrayExt } from '@lumino/algorithm';
@@ -542,6 +543,7 @@ class SidePanelWidget extends ReactivePanelWithToolbar {
     this.toolbar.addClass('jp-SidePanel-toolbar');
     this.toolbar.addClass(TOOLBAR_CLASS);
     this._updateTitle();
+    this.toolbar.addItem('titleSpacer', Toolbar.createSpacerItem());
 
     this.addWidget(this.toolbar);
 
