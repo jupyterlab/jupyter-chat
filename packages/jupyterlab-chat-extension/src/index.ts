@@ -12,6 +12,7 @@ import {
   IAttachment,
   IAttachmentOpenerRegistry,
   IChatCommandRegistry,
+  IChatPanel,
   IChatTracker,
   IMessageFooterRegistry,
   IMessagePreambleRegistry,
@@ -62,7 +63,7 @@ import {
   CommandIDs,
   IActiveCellManagerToken,
   IChatFactory,
-  IChatPanel,
+  IMultiChatPanel,
   ISelectionWatcherToken,
   IWelcomeMessage,
   IWidgetConfig,
@@ -388,7 +389,7 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
     // Declare the toolbar factory.
     let toolbarFactory:
       | ((
-          widget: LabChatPanel
+          widget: IChatPanel
         ) =>
           | DocumentRegistry.IToolbarItem[]
           | IObservableList<DocumentRegistry.IToolbarItem>)
@@ -471,7 +472,7 @@ const chatTracker: JupyterFrontEndPlugin<IChatTracker> = {
   autoStart: true,
   provides: IChatTracker,
   requires: [IChatFactory],
-  optional: [IChatPanel, ILayoutRestorer],
+  optional: [IMultiChatPanel, ILayoutRestorer],
   activate: (
     app: JupyterFrontEnd,
     factory: ChatWidgetFactory,
@@ -482,7 +483,7 @@ const chatTracker: JupyterFrontEndPlugin<IChatTracker> = {
     const namespace = 'chat';
 
     // Creating the tracker for the chat widgets.
-    const tracker = new WidgetTracker<ChatWidget | LabChatPanel>({
+    const tracker = new WidgetTracker<IChatPanel>({
       namespace
     });
 
@@ -566,7 +567,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
   autoStart: true,
   requires: [ICollaborativeContentProvider, IWidgetConfig, IChatTracker],
   optional: [
-    IChatPanel,
+    IMultiChatPanel,
     ICommandPalette,
     IDefaultFileBrowser,
     ILauncher,
@@ -1131,7 +1132,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
   id: pluginIds.chatPanel,
   description: 'The chat panel widget.',
   autoStart: true,
-  provides: IChatPanel,
+  provides: IMultiChatPanel,
   requires: [IWidgetConfig, ICollaborativeContentProvider, IRenderMimeRegistry],
   optional: [
     IAttachmentOpenerRegistry,

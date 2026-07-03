@@ -39,7 +39,8 @@ import {
 import { TRANSLATION_DOMAIN } from '../context';
 import { chatIcon, readIcon } from '../icons';
 import { IChatModel } from '../model';
-import { IChatPlaceholderFactory } from '../tokens';
+import { IChatPanel, IChatPlaceholderFactory } from '../tokens';
+import { ChatArea } from '../types';
 
 const SIDEPANEL_CLASS = 'jp-chat-sidepanel';
 const ADD_BUTTON_CLASS = 'jp-chat-add';
@@ -150,9 +151,9 @@ export class MultiChatPanel extends PanelWithToolbar {
   }
 
   /**
-   * A signal emitting when a chat widget is opened in the panel.
+   * A signal emitting when a chat panel is opened in the sidepanel.
    */
-  get chatOpened(): ISignal<MultiChatPanel, ChatWidget> {
+  get chatOpened(): ISignal<MultiChatPanel, IChatPanel> {
     return this._chatOpened;
   }
 
@@ -315,7 +316,7 @@ export class MultiChatPanel extends PanelWithToolbar {
       this._chatSelectorPopup.setCurrentChat(name);
     }
 
-    this._chatOpened.emit(chatWidget);
+    this._chatOpened.emit(widget);
     return chatWidget;
   }
 
@@ -439,7 +440,7 @@ export class MultiChatPanel extends PanelWithToolbar {
     this._chatSelectorPopup?.hide();
   };
 
-  private _chatOpened = new Signal<MultiChatPanel, ChatWidget>(this);
+  private _chatOpened = new Signal<MultiChatPanel, IChatPanel>(this);
   private _chatNamesChanged = new Signal<
     MultiChatPanel,
     { [name: string]: string }
@@ -557,7 +558,7 @@ export namespace MultiChatPanel {
 /**
  * A widget containing the chat and its toolbar.
  */
-class SidePanelWidget extends ReactivePanelWithToolbar {
+class SidePanelWidget extends ReactivePanelWithToolbar implements IChatPanel {
   constructor(options: SidePanelWidget.IOptions) {
     super();
     this._chatWidget = options.widget;
@@ -680,6 +681,13 @@ class SidePanelWidget extends ReactivePanelWithToolbar {
   protected onResize(msg: Widget.ResizeMessage): void {
     super.onResize(msg);
     this._updateReactiveToolbar();
+  }
+
+  /**
+   * The area of the widget.
+   */
+  get area(): ChatArea {
+    return 'sidebar';
   }
 
   /**
@@ -835,7 +843,7 @@ type ChatSearchInputProps = {
   /**
    * Signal emitting when a chat is opened.
    */
-  chatOpened: ISignal<MultiChatPanel, ChatWidget>;
+  chatOpened: ISignal<MultiChatPanel, IChatPanel>;
   /**
    * The translation bundle.
    */

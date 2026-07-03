@@ -3,24 +3,36 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { IWidgetTracker, MainAreaWidget } from '@jupyterlab/apputils';
+import { IWidgetTracker } from '@jupyterlab/apputils';
 import { Token } from '@lumino/coreutils';
 import { Widget } from '@lumino/widgets';
 
 import { ChatWidget, Placeholder } from './widgets';
 import { IChatModel } from './model';
+import { ChatArea } from './types';
 
 /**
- * The main area chat widget type.
+ * The interface for any widget displaying a chat (main area or side panel).
  */
-export type MainAreaChat = MainAreaWidget<ChatWidget> & {
+export interface IChatPanel extends Widget {
+  /**
+   * The chat widget embedded in the panel.
+   */
+  widget: ChatWidget;
+  /**
+   * The model of the chat widget.
+   */
   model: IChatModel;
-};
+  /**
+   * The area of the panel.
+   */
+  area: ChatArea;
+}
 
 /**
  * the chat tracker type.
  */
-export type IChatTracker = IWidgetTracker<ChatWidget | MainAreaChat>;
+export type IChatTracker = IWidgetTracker<IChatPanel>;
 
 /**
  * A chat tracker token.

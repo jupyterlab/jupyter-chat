@@ -112,10 +112,10 @@ export const CommandIDs = {
 };
 
 /**
- * The chat panel token.
+ * The multi-chat panel token.
  */
-export const IChatPanel = new Token<MultiChatPanel>(
-  'jupyterlab-chat:IChatPanel'
+export const IMultiChatPanel = new Token<MultiChatPanel>(
+  'jupyterlab-chat:IMultiChatPanel'
 );
 
 /**
