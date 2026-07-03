@@ -325,7 +325,7 @@ describe('MultiChatPanel', () => {
       });
       const model1 = new MockChatModel();
       panel.open({ model: model1, displayName: 'chat1' });
-      panel.disposeLoadedModel('chat1');
+      panel.unsetLoadedModel('chat1');
 
       const model2 = new MockChatModel();
       panel.open({ model: model2, displayName: 'chat2' });
