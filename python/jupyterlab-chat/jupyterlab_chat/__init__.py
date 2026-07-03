@@ -1,6 +1,18 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+# Import `jupyter_ydoc` before anything imports `jupyterlab_chat.ychat`.
+#
+# `jupyter_ydoc`'s package init eagerly loads every registered `jupyter_ydoc`
+# entry point, one of which is `chat = jupyterlab_chat.ychat:YChat`. If
+# `jupyterlab_chat.ychat` is the first module to touch `jupyter_ydoc` (via its
+# top-level `from jupyter_ydoc.ybasedoc import YBaseDoc`), that eager load
+# re-enters the still-initializing `ychat` module before `YChat` is defined and
+# raises a circular-import AttributeError. Importing `jupyter_ydoc` here forces
+# its entry-point registry to finish first, since this package `__init__` always
+# runs before the `ychat` submodule.
+import jupyter_ydoc  # noqa: F401
+
 try:
     from ._version import __version__
 except ImportError:
