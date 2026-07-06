@@ -106,7 +106,7 @@ export class LabChatModel
       this._sharedModel = YChat.create();
     }
 
-    this.sharedModel.changed.connect(this._onchange, this);
+    this._sharedModel.changed.connect(this._onchange, this);
 
     this.config = widgetConfig.config;
 
@@ -538,6 +538,17 @@ export class LabChatModel
           this._user = change.newValue;
         }
       });
+    }
+
+    // Create a chat ID if not created when the document is not dirty.
+    if (changes.stateChange && !this._sharedModel.id) {
+      if (
+        changes.stateChange.some(
+          change => change.name === 'dirty' && !change.newValue
+        )
+      ) {
+        this._sharedModel.id = UUID.uuid4();
+      }
     }
   };
 
