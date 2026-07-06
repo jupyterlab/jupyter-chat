@@ -180,7 +180,7 @@ export const openSidePanel = async (
   if (!(await panel?.isVisible())) {
     const chatIcon = page.locator('.jp-SideBar').getByTitle('Jupyter Chat');
     await chatIcon.click();
-    page.waitForCondition(async () => await panel.isVisible());
+    await page.waitForCondition(async () => await panel.isVisible());
   }
   return panel.first();
 };
