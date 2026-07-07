@@ -21,8 +21,7 @@ def test_ychat_collected_after_unobserve():
 
     ref = weakref.ref(ychat)
     del ychat
-    for _ in range(3):
-        gc.collect()
+    gc.collect()
 
     assert ref() is None, "YChat leaked after unobserve() (observers not removed)"
 
@@ -40,8 +39,7 @@ def test_ychat_collected_after_observe_then_unobserve():
 
     ref = weakref.ref(ychat)
     del ychat
-    for _ in range(3):
-        gc.collect()
+    gc.collect()
 
     assert ref() is None, "YChat leaked after observe() then unobserve()"
 
@@ -58,7 +56,6 @@ def test_ychat_collected_after_unobserve_while_dirty():
 
     ref = weakref.ref(ychat)
     del ychat
-    for _ in range(3):
-        gc.collect()
+    gc.collect()
 
     assert ref() is None, "YChat leaked after unobserve() while dirty"
