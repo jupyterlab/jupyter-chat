@@ -2,6 +2,49 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.23.0alpha0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.22.1...e8e1a1e19d11317be4704768e38923f941e31b78))
+
+### Enhancements made
+
+- Improve the cell attachment opener [#450](https://github.com/jupyterlab/jupyter-chat/pull/450) ([@brichet](https://github.com/brichet), [@Copilot](https://github.com/Copilot), [@nakul-py](https://github.com/nakul-py))
+- Add "New Chat" entry to the file browser context menu [#447](https://github.com/jupyterlab/jupyter-chat/pull/447) ([@vincentye38](https://github.com/vincentye38), [@brichet](https://github.com/brichet), [@claude](https://github.com/claude), [@krassowski](https://github.com/krassowski))
+- Create the chat ID from frontend if not yet created [#439](https://github.com/jupyterlab/jupyter-chat/pull/439) ([@brichet](https://github.com/brichet), [@Copilot](https://github.com/Copilot), [@Zsailer](https://github.com/Zsailer))
+- Unify chat message submit logic across input handlers [#419](https://github.com/jupyterlab/jupyter-chat/pull/419) ([@MUFFANUJ](https://github.com/MUFFANUJ), [@brichet](https://github.com/brichet))
+- Improve messages rendering [#403](https://github.com/jupyterlab/jupyter-chat/pull/403) ([@brichet](https://github.com/brichet), [@jtpio](https://github.com/jtpio))
+- [FIX] Message toolbar buttons overlaps with text. [#378](https://github.com/jupyterlab/jupyter-chat/pull/378) ([@nakul-py](https://github.com/nakul-py), [@andrii-i](https://github.com/andrii-i), [@brichet](https://github.com/brichet))
+
+### Bugs fixed
+
+- Fix circular import when importing jupyterlab_chat.ychat first [#457](https://github.com/jupyterlab/jupyter-chat/pull/457) ([@dlqqq](https://github.com/dlqqq), [@brichet](https://github.com/brichet))
+- Ensure chat files autosave independently [#442](https://github.com/jupyterlab/jupyter-chat/pull/442) ([@MUFFANUJ](https://github.com/MUFFANUJ), [@brichet](https://github.com/brichet))
+- Do not dispose of the model when moving the widget from side to main [#423](https://github.com/jupyterlab/jupyter-chat/pull/423) ([@brichet](https://github.com/brichet), [@Copilot](https://github.com/Copilot))
+- Fix chat sidepanel toolbar overflow behavior [#415](https://github.com/jupyterlab/jupyter-chat/pull/415) ([@MUFFANUJ](https://github.com/MUFFANUJ), [@brichet](https://github.com/brichet))
+
+### Maintenance and upkeep improvements
+
+- Bump @jupyterlab and @lumino dependencies [#453](https://github.com/jupyterlab/jupyter-chat/pull/453) ([@brichet](https://github.com/brichet), [@Zsailer](https://github.com/Zsailer))
+- Compatibility to Jupyterlab 4.6.0 [#452](https://github.com/jupyterlab/jupyter-chat/pull/452) ([@brichet](https://github.com/brichet), [@krassowski](https://github.com/krassowski))
+- Fix the UI tests on placeholder by improving the locator [#444](https://github.com/jupyterlab/jupyter-chat/pull/444) ([@brichet](https://github.com/brichet))
+- Faster playwright setup on CI [#443](https://github.com/jupyterlab/jupyter-chat/pull/443) ([@brichet](https://github.com/brichet))
+
+### Other merged PRs
+
+- Bump the npm_and_yarn group across 2 directories with 3 updates [#448](https://github.com/jupyterlab/jupyter-chat/pull/448) ([@brichet](https://github.com/brichet))
+- Bump shell-quote from 1.8.1 to 1.8.4 in the npm_and_yarn group across 1 directory [#446](https://github.com/jupyterlab/jupyter-chat/pull/446) ([@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-06-05&to=2026-07-07&type=c))
+
+@andrii-i ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Aandrii-i+updated%3A2026-06-05..2026-07-07&type=Issues)) | @brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-06-05..2026-07-07&type=Issues)) | @claude ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Aclaude+updated%3A2026-06-05..2026-07-07&type=Issues)) | @Copilot ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3ACopilot+updated%3A2026-06-05..2026-07-07&type=Issues)) | @dlqqq ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2026-06-05..2026-07-07&type=Issues)) | @jtpio ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2026-06-05..2026-07-07&type=Issues)) | @krassowski ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Akrassowski+updated%3A2026-06-05..2026-07-07&type=Issues)) | @MUFFANUJ ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3AMUFFANUJ+updated%3A2026-06-05..2026-07-07&type=Issues)) | @nakul-py ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Anakul-py+updated%3A2026-06-05..2026-07-07&type=Issues)) | @vincentye38 ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Avincentye38+updated%3A2026-06-05..2026-07-07&type=Issues)) | @Zsailer ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3AZsailer+updated%3A2026-06-05..2026-07-07&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.22.1
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.22.0...0b113e5b4d530aa4dad8e04118c8e1621917f515))
@@ -27,8 +70,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-05-18&to=2026-06-05&type=c))
 
 @brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-05-18..2026-06-05&type=Issues)) | @Copilot ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3ACopilot+updated%3A2026-05-18..2026-06-05&type=Issues)) | @jtpio ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2026-05-18..2026-06-05&type=Issues)) | @minrk ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Aminrk+updated%3A2026-05-18..2026-06-05&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.22.0
 
