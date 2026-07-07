@@ -1136,7 +1136,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
       execute: () => {
         const widget = tracker.currentWidget;
         if (widget) {
-          if (widget instanceof ChatWidget && chatPanel) {
+          if (widget.area === 'sidebar' && chatPanel) {
             // The chat is the side panel.
             app.shell.activateById(chatPanel.id);
             chatPanel.openIfLoaded(widget.model.name);
