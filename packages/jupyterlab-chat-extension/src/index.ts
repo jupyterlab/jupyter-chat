@@ -7,7 +7,6 @@ import { NotebookShell } from '@jupyter-notebook/application';
 import {
   ActiveCellManager,
   AttachmentOpenerRegistry,
-  ChatWidget,
   IActiveCellManager,
   IAttachment,
   IAttachmentOpenerRegistry,
