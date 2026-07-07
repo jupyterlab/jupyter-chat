@@ -6,11 +6,14 @@
 import {
   IConfig,
   IActiveCellManager,
+  IChatPanel,
   ISelectionWatcher,
   MultiChatPanel,
   chatIcon
 } from '@jupyter/chat';
+import { ToolbarRegistry } from '@jupyterlab/apputils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
+import { IObservableList } from '@jupyterlab/observables';
 import { Token } from '@lumino/coreutils';
 import { ISignal } from '@lumino/signaling';
 import { ChatWidgetFactory } from './factory';
@@ -33,6 +36,22 @@ export const chatFileType: DocumentRegistry.IFileType = {
  */
 export const IChatFactory = new Token<ChatWidgetFactory>(
   'jupyterlab-chat:IChatFactory'
+);
+
+/**
+ * The type for the chat toolbar factory.
+ * Given a chat panel, returns an observable list of toolbar items.
+ */
+export type ChatToolbarFactory = (
+  panel: IChatPanel
+) => IObservableList<ToolbarRegistry.IToolbarItem>;
+
+/**
+ * The token providing the chat toolbar factory, shared by the main area
+ * and side panel so that toolbar items are registered only once.
+ */
+export const IChatToolbarFactory = new Token<ChatToolbarFactory>(
+  'jupyterlab-chat:IChatToolbarFactory'
 );
 
 /**
@@ -90,9 +109,9 @@ export const CommandIDs = {
    */
   createAndOpen: 'jupyterlab-chat:createAndOpen',
   /**
-   * Move a main widget to the side panel.
+   * Move a chat between main area and side panel.
    */
-  moveToSide: 'jupyterlab-chat:moveToSide',
+  moveChat: 'jupyterlab-chat:moveChat',
   /**
    * Mark as read.
    */

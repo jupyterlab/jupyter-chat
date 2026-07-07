@@ -26,6 +26,7 @@ import {
   TRANSLATION_DOMAIN,
   chatIcon,
   readIcon,
+  injectAreaArg,
   IInputToolbarRegistryFactory,
   MultiChatPanel
 } from '@jupyter/chat';
@@ -46,11 +47,9 @@ import {
 } from '@jupyterlab/apputils';
 import { IEditorLanguageRegistry } from '@jupyterlab/codemirror';
 import { PathExt } from '@jupyterlab/coreutils';
-import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { IDefaultFileBrowser } from '@jupyterlab/filebrowser';
 import { ILauncher } from '@jupyterlab/launcher';
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
-import { IObservableList } from '@jupyterlab/observables';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { Contents } from '@jupyterlab/services';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
@@ -60,9 +59,11 @@ import { PromiseDelegate } from '@lumino/coreutils';
 import { Widget } from '@lumino/widgets';
 import {
   ChatWidgetFactory,
+  ChatToolbarFactory,
   CommandIDs,
   IActiveCellManagerToken,
   IChatFactory,
+  IChatToolbarFactory,
   IMultiChatPanel,
   ISelectionWatcherToken,
   IWelcomeMessage,
@@ -86,6 +87,7 @@ const pluginIds = {
   attachmentOpenerRegistry: 'jupyterlab-chat-extension:attachmentOpener',
   chatCommands: 'jupyterlab-chat-extension:commands',
   chatPanel: 'jupyterlab-chat-extension:chat-panel',
+  chatToolbarFactory: 'jupyterlab-chat-extension:toolbar-factory',
   chatTracker: 'jupyterlab-chat-extension:tracker',
   docFactories: 'jupyterlab-chat-extension:factory',
   inputToolbarFactory: 'jupyterlab-chat-extension:inputToolbarFactory',
@@ -339,6 +341,42 @@ const chatConfig: JupyterFrontEndPlugin<IWidgetConfig> = {
 };
 
 /**
+ * Plugin providing the shared chat toolbar factory.
+ * Both the main area and side panel consume this token so that toolbar items
+ * are registered once and every CommandToolbarButton automatically receives
+ * the panel area as an arg via `injectAreaArg`.
+ */
+const chatToolbarFactoryPlugin: JupyterFrontEndPlugin<ChatToolbarFactory | null> =
+  {
+    id: pluginIds.chatToolbarFactory,
+    description: 'The shared chat toolbar factory.',
+    autoStart: true,
+    provides: IChatToolbarFactory,
+    optional: [ISettingRegistry, IToolbarWidgetRegistry, ITranslator],
+    activate: (
+      app: JupyterFrontEnd,
+      settingRegistry: ISettingRegistry | null,
+      toolbarRegistry: IToolbarWidgetRegistry | null,
+      translator_: ITranslator | null
+    ): ChatToolbarFactory | null => {
+      if (!settingRegistry || !toolbarRegistry) {
+        return null;
+      }
+      const translator = translator_ ?? nullTranslator;
+      return injectAreaArg(
+        createToolbarFactory(
+          toolbarRegistry,
+          settingRegistry,
+          FACTORY,
+          pluginIds.docFactories,
+          translator
+        ) as ChatToolbarFactory,
+        app.commands
+      );
+    }
+  };
+
+/**
  * Extension registering the chat file type.
  */
 const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
@@ -350,6 +388,7 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
     IActiveCellManagerToken,
     IAttachmentOpenerRegistry,
     IChatCommandRegistry,
+    IChatToolbarFactory,
     ICollaborativeContentProvider,
     IDefaultFileBrowser,
     IInputToolbarRegistryFactory,
@@ -357,9 +396,7 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
     IMessagePreambleRegistry,
     IChatBodyPlaceholderFactory,
     ISelectionWatcherToken,
-    ISettingRegistry,
     IThemeManager,
-    IToolbarWidgetRegistry,
     ITranslator,
     IWelcomeMessage
   ],
@@ -371,6 +408,7 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
     activeCellManager: IActiveCellManager | null,
     attachmentOpenerRegistry: IAttachmentOpenerRegistry,
     chatCommandRegistry: IChatCommandRegistry,
+    toolbarFactory: ChatToolbarFactory | null,
     drive: ICollaborativeContentProvider | null,
     filebrowser: IDefaultFileBrowser | null,
     inputToolbarFactory: IInputToolbarRegistryFactory,
@@ -378,35 +416,11 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
     messagePreambleRegistry: IMessagePreambleRegistry,
     chatBodyPlaceholderFactory: IChatBodyPlaceholderFactory | null,
     selectionWatcher: ISelectionWatcher | null,
-    settingRegistry: ISettingRegistry | null,
     themeManager: IThemeManager | null,
-    toolbarRegistry: IToolbarWidgetRegistry | null,
     translator_: ITranslator | null,
     welcomeMessage: string
   ): ChatWidgetFactory => {
     const translator = translator_ ?? nullTranslator;
-
-    // Declare the toolbar factory.
-    let toolbarFactory:
-      | ((
-          widget: IChatPanel
-        ) =>
-          | DocumentRegistry.IToolbarItem[]
-          | IObservableList<DocumentRegistry.IToolbarItem>)
-      | undefined;
-
-    if (settingRegistry) {
-      // Create the main area widget toolbar factory.
-      if (toolbarRegistry) {
-        toolbarFactory = createToolbarFactory(
-          toolbarRegistry,
-          settingRegistry,
-          FACTORY,
-          pluginIds.docFactories,
-          translator
-        );
-      }
-    }
 
     app.docRegistry.addFileType(chatFileType);
 
@@ -445,7 +459,7 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
       defaultFor: ['chat'],
       themeManager,
       rmRegistry,
-      toolbarFactory,
+      toolbarFactory: toolbarFactory ?? undefined,
       translator,
       chatCommandRegistry,
       attachmentOpenerRegistry,
@@ -774,6 +788,84 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
       }
     });
 
+    /*
+     * Command to move a chat between the main area and the side panel.
+     * The direction is determined by the 'area' arg passed from the toolbar factory.
+     */
+    commands.addCommand(CommandIDs.moveChat, {
+      icon: launchIcon,
+      caption: args =>
+        (args.area as string) === 'sidebar'
+          ? trans.__('Move the chat to the main area')
+          : trans.__('Move the chat to the side panel'),
+      describedBy: {
+        args: {
+          type: 'object',
+          properties: {
+            area: {
+              type: 'string',
+              description: 'The area of the chat panel (main or sidebar).'
+            }
+          }
+        }
+      },
+      isEnabled: args => {
+        if ((args.area as string) === 'sidebar' && !!chatPanel) {
+          return chatPanel.current !== null;
+        }
+        return (
+          app.shell.currentWidget instanceof LabChatPanel &&
+          Array.from(app.shell.widgets('main')).includes(
+            app.shell.currentWidget
+          )
+        );
+      },
+      execute: async args => {
+        if ((args.area as string) === 'sidebar' && !!chatPanel) {
+          // Move from side panel to main area.
+          const current = chatPanel.current;
+          if (!current) {
+            return;
+          }
+          const path = current.model.name;
+          try {
+            const widget = await commands.execute(CommandIDs.openChat, {
+              filepath: path
+            });
+            if (widget !== null) {
+              const name = getDisplayName(
+                path,
+                widgetConfig.config.defaultDirectory
+              );
+              chatPanel.unsetLoadedModel(name);
+            }
+          } catch (e) {
+            console.error(`Error moving chat to main area`, e);
+          }
+        } else {
+          // Move from main area to side panel.
+          const widget = app.shell.currentWidget;
+          if (
+            !widget ||
+            !(widget instanceof LabChatPanel) ||
+            !Array.from(app.shell.widgets('main')).includes(widget)
+          ) {
+            console.error(
+              `The command '${CommandIDs.moveChat}' should be executed from the toolbar button only`
+            );
+            return;
+          }
+          // Remove potential drive prefix.
+          const filepath = widget.context.path.split(':').pop();
+          commands.execute(CommandIDs.openChat, {
+            filepath,
+            inSidePanel: true
+          });
+          widget.dispose();
+        }
+      }
+    });
+
     // The command to mark the chat as read.
     commands.addCommand(CommandIDs.markAsRead, {
       caption: trans.__('Mark chat as read'),
@@ -781,14 +873,32 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
       describedBy: {
         args: {
           type: 'object',
-          properties: {}
+          properties: {
+            area: {
+              type: 'string',
+              description: 'The area of the chat panel (main or sidebar).'
+            }
+          }
         }
       },
-      isEnabled: () =>
-        tracker.currentWidget !== null &&
-        tracker.currentWidget === app.shell.currentWidget &&
-        tracker.currentWidget.model.unreadMessages.length > 0,
+      isEnabled: args => {
+        if ((args.area as string) === 'sidebar') {
+          return (chatPanel?.current?.model.unreadMessages.length ?? 0) > 0;
+        }
+        const widget = app.shell.currentWidget;
+        return (
+          !!widget &&
+          widget instanceof LabChatPanel &&
+          widget.model.unreadMessages.length > 0
+        );
+      },
       execute: async args => {
+        if ((args.area as string) === 'sidebar') {
+          if (chatPanel?.current) {
+            chatPanel.current.model.unreadMessages = [];
+          }
+          return;
+        }
         const widget = app.shell.currentWidget;
         // Ensure widget is a LabChatPanel and is in main area
         if (
@@ -808,6 +918,15 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     // Update the 'markAsRead' command status when the current widget changes.
     tracker.currentChanged.connect(() => {
       commands.notifyCommandChanged(CommandIDs.markAsRead);
+    });
+
+    // Update the 'markAsRead' command status when a side panel chat is opened
+    // or its unread count changes.
+    chatPanel?.chatOpened.connect((_, panel) => {
+      commands.notifyCommandChanged(CommandIDs.markAsRead);
+      panel.model.unreadChanged?.connect(() => {
+        commands.notifyCommandChanged(CommandIDs.markAsRead);
+      });
     });
 
     app.serviceManager.ready
@@ -956,7 +1075,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           }
         }
       },
-      execute: async (args: any): Promise<string | null> => {
+      execute: async (args): Promise<string | null> => {
         let oldPath = args.oldPath as string;
         let newPath = args.newPath as string | null;
         if (!oldPath) {
@@ -1137,6 +1256,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
   optional: [
     IAttachmentOpenerRegistry,
     IChatCommandRegistry,
+    IChatToolbarFactory,
     IInputToolbarRegistryFactory,
     ILayoutRestorer,
     IMessageFooterRegistry,
@@ -1154,6 +1274,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     rmRegistry: IRenderMimeRegistry,
     attachmentOpenerRegistry: IAttachmentOpenerRegistry,
     chatCommandRegistry: IChatCommandRegistry,
+    chatToolbarFactory: ChatToolbarFactory | null,
     inputToolbarFactory: IInputToolbarRegistryFactory,
     restorer: ILayoutRestorer | null,
     messageFooterRegistry: IMessageFooterRegistry,
@@ -1166,7 +1287,6 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
   ): MultiChatPanel => {
     const { commands, serviceManager } = app;
     const translator = translator_ ?? nullTranslator;
-    const trans = translator.load(TRANSLATION_DOMAIN);
 
     const chatFileExtension = chatFileType.extensions[0];
 
@@ -1198,27 +1318,6 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
           widgetConfig.config.defaultDirectory
         );
       },
-      openInMain: async (path): Promise<boolean> => {
-        try {
-          const widget = await commands.execute(CommandIDs.openChat, {
-            filepath: path
-          });
-          const opened = widget !== null;
-          // Dispose of the side panel model if the widget has been opened in main.
-          if (opened) {
-            const name = getDisplayName(
-              path,
-              widgetConfig.config.defaultDirectory
-            );
-            chatPanel.getLoadedModel(name)?.dispose();
-          }
-
-          return opened;
-        } catch (e) {
-          console.error(`Error opening ${path}`, e);
-          return false;
-        }
-      },
       renameChat: (oldPath: string) => {
         return commands.execute(CommandIDs.renameChat, {
           oldPath
@@ -1231,7 +1330,8 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
       messagePreambleRegistry,
       welcomeMessage,
       placeholderFactory: placeholderFactory ?? undefined,
-      chatBodyPlaceholderFactory: chatBodyPlaceholderFactory ?? undefined
+      chatBodyPlaceholderFactory: chatBodyPlaceholderFactory ?? undefined,
+      chatToolbarFactory: chatToolbarFactory ?? undefined
     });
     chatPanel.id = 'JupyterlabChat:sidepanel';
 
@@ -1299,43 +1399,6 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
           chatPanel.updateChatList,
           CHAT_LIST_UPDATE_INTERVAL
         );
-      }
-    });
-
-    /*
-     * Command to move a chat from the main area to the side panel.
-     */
-    commands.addCommand(CommandIDs.moveToSide, {
-      label: trans.__('Move the chat to the side panel'),
-      caption: trans.__('Move the chat to the side panel'),
-      icon: launchIcon,
-      describedBy: {
-        args: {
-          type: 'object',
-          properties: {}
-        }
-      },
-      isEnabled: () => commands.hasCommand(CommandIDs.openChat),
-      execute: async () => {
-        const widget = app.shell.currentWidget;
-        // Ensure widget is a LabChatPanel and is in main area
-        if (
-          !widget ||
-          !(widget instanceof LabChatPanel) ||
-          !Array.from(app.shell.widgets('main')).includes(widget)
-        ) {
-          console.error(
-            `The command '${CommandIDs.moveToSide}' should be executed from the toolbar button only`
-          );
-          return;
-        }
-        // Remove potential drive prefix
-        const filepath = widget.context.path.split(':').pop();
-        commands.execute(CommandIDs.openChat, {
-          filepath,
-          inSidePanel: true
-        });
-        widget.dispose();
       }
     });
 
@@ -1434,6 +1497,7 @@ export default [
   chatCommands,
   chatCommandRegistryPlugin,
   chatPanel,
+  chatToolbarFactoryPlugin,
   chatTracker,
   docFactories,
   footerRegistry,

@@ -1,12 +1,12 @@
 {
   "title": "Jupyterlab chat",
-  "description": "Configuration for the chat commands",
+  "description": "Set the toolbar items for main area and side panel chats",
   "type": "object",
   "jupyter.lab.toolbars": {
     "Chat": [
       {
-        "name": "moveToSide",
-        "command": "jupyterlab-chat:moveToSide"
+        "name": "moveChat",
+        "command": "jupyterlab-chat:moveChat"
       },
       {
         "name": "markAsRead",

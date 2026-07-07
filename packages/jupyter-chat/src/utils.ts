@@ -3,13 +3,17 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { CommandToolbarButton, ToolbarRegistry } from '@jupyterlab/apputils';
 import { CodeEditor } from '@jupyterlab/codeeditor';
 import { CodeMirrorEditor } from '@jupyterlab/codemirror';
 import { DocumentWidget } from '@jupyterlab/docregistry';
 import { FileEditor } from '@jupyterlab/fileeditor';
 import { Notebook } from '@jupyterlab/notebook';
+import { IObservableList, ObservableList } from '@jupyterlab/observables';
+import { CommandRegistry } from '@lumino/commands';
 import { Widget } from '@lumino/widgets';
 
+import { IChatPanel } from './tokens';
 import { IUser } from './types';
 
 const MENTION_CLASS = 'jp-chat-mention';
@@ -80,4 +84,59 @@ export function replaceSpanToMention(content: string, user: IUser): string {
   const mentionEl = `<span class="${MENTION_CLASS}"> ${mention} </span>`;
   const regex = new RegExp(mentionEl, 'g');
   return content.replace(regex, mention);
+}
+
+/**
+ * Wraps a toolbar factory so that every CommandToolbarButton it creates
+ * automatically receives the panel's area as an arg.
+ * This lets commands branch on `args.area` without each plugin having to
+ * register a per-item toolbarRegistry.addFactory call.
+ */
+export function injectAreaArg(
+  baseFactory: (
+    panel: IChatPanel
+  ) => IObservableList<ToolbarRegistry.IToolbarItem>,
+  commands: CommandRegistry
+): (panel: IChatPanel) => IObservableList<ToolbarRegistry.IToolbarItem> {
+  return (panel: IChatPanel) => {
+    const base = baseFactory(panel);
+
+    const inject = (
+      item: ToolbarRegistry.IToolbarItem
+    ): ToolbarRegistry.IToolbarItem => {
+      const { widget } = item;
+      if (!(widget instanceof CommandToolbarButton)) {
+        return item;
+      }
+      return {
+        name: item.name,
+        widget: new CommandToolbarButton({
+          commands,
+          id: widget.commandId,
+          args: { area: panel.area }
+        })
+      };
+    };
+
+    const wrapped = new ObservableList<ToolbarRegistry.IToolbarItem>({
+      values: Array.from({ length: base.length }, (_, i) => inject(base.get(i)))
+    });
+
+    base.changed.connect((_, change) => {
+      if (change.type === 'add') {
+        wrapped.insertAll(change.newIndex, change.newValues.map(inject));
+      } else if (change.type === 'remove') {
+        wrapped.removeRange(
+          change.oldIndex,
+          change.oldIndex + change.oldValues.length
+        );
+      } else if (change.type === 'set') {
+        change.newValues.forEach((item, i) =>
+          wrapped.set(change.newIndex + i, inject(item))
+        );
+      }
+    });
+
+    return wrapped;
+  };
 }

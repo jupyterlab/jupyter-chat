@@ -3,9 +3,10 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { ToolbarButton } from '@jupyterlab/ui-components';
+import { ToolbarRegistry } from '@jupyterlab/apputils';
 import { RenderMimeRegistry } from '@jupyterlab/rendermime';
-import { PanelWithToolbar } from '@jupyterlab/ui-components';
+import { ObservableList } from '@jupyterlab/observables';
+import { ToolbarButton, PanelWithToolbar } from '@jupyterlab/ui-components';
 import { Widget } from '@lumino/widgets';
 
 import { IChatPlaceholderFactory } from '../tokens';
@@ -76,40 +77,6 @@ describe('MultiChatPanel', () => {
       panel.unsetLoadedModel('test-chat', false);
 
       expect(panel.getLoadedModel('test-chat')).toBeUndefined();
-      model.dispose();
-      panel.dispose();
-    });
-  });
-
-  describe('openInMain', () => {
-    it('should not dispose the model when moving to main area', async () => {
-      const { MockChatModel } = await import('./mocks');
-      const model = new MockChatModel();
-      const openInMain = jest.fn().mockResolvedValue(true);
-
-      const panel = new MultiChatPanel({ rmRegistry, openInMain });
-      panel.open({ model, displayName: 'test-chat' });
-
-      // Find the 'moveMain' toolbar button by name and invoke its click handler directly.
-      // ToolbarButton stores the onClick handler independently of DOM/React rendering,
-      // so this works without attaching the widget to the document.
-      const toolbar = panel.current!.toolbar;
-      const names = Array.from(toolbar.names());
-      const moveMainIdx = names.indexOf('moveMain');
-      expect(moveMainIdx).toBeGreaterThan(-1);
-
-      const moveButton = (toolbar.layout as any).widgets[
-        moveMainIdx
-      ] as ToolbarButton;
-
-      moveButton.onClick();
-      // Wait for the async onClick handler: openInMain resolves, then onClose is called.
-      await Promise.resolve();
-
-      expect(openInMain).toHaveBeenCalledWith(model.name);
-      expect(model.isDisposed).toBe(false);
-      expect(panel.getLoadedModel('test-chat')).toBeUndefined();
-
       model.dispose();
       panel.dispose();
     });
@@ -245,83 +212,79 @@ describe('MultiChatPanel', () => {
     });
   });
 
-  describe('chatToolbarItems', () => {
-    it('should call create with the ChatWidget when a chat is opened', () => {
-      const customWidget = new Widget();
-      const create = jest.fn().mockReturnValue(customWidget);
+  describe('chatToolbarFactory', () => {
+    const makeFactory = (items: ToolbarRegistry.IToolbarItem[]) =>
+      jest.fn().mockReturnValue(new ObservableList({ values: items }));
+
+    it('should call factory with the panel when a chat is opened', () => {
+      const factory = makeFactory([{ name: 'myButton', widget: new Widget() }]);
       const panel = new MultiChatPanel({
         rmRegistry,
-        chatToolbarItems: [{ name: 'myButton', create }]
+        chatToolbarFactory: factory
       });
       const model = new MockChatModel();
       const chatWidget = panel.open({ model, displayName: 'test' });
-      expect(create).toHaveBeenCalledTimes(1);
-      expect(create).toHaveBeenCalledWith(chatWidget);
+      expect(factory).toHaveBeenCalledTimes(1);
+      expect(factory.mock.calls[0][0].widget).toBe(chatWidget);
       panel.dispose();
     });
 
     it('should add the created widget to the chat toolbar', () => {
       const panel = new MultiChatPanel({
         rmRegistry,
-        chatToolbarItems: [{ name: 'myButton', create: () => new Widget() }]
+        chatToolbarFactory: makeFactory([
+          { name: 'myButton', widget: new Widget() }
+        ])
       });
       const model = new MockChatModel();
       panel.open({ model, displayName: 'test' });
-      const toolbar = (panel.current as PanelWithToolbar).toolbar;
+      const toolbar = (panel.current as unknown as PanelWithToolbar).toolbar;
       expect(Array.from(toolbar.names())).toContain('myButton');
       panel.dispose();
     });
 
-    it('should insert the item before "close" by default', () => {
+    it('should insert the item before "close"', () => {
       const panel = new MultiChatPanel({
         rmRegistry,
-        chatToolbarItems: [{ name: 'myButton', create: () => new Widget() }]
+        chatToolbarFactory: makeFactory([
+          { name: 'myButton', widget: new Widget() }
+        ])
       });
       const model = new MockChatModel();
       panel.open({ model, displayName: 'test' });
-      const toolbar = (panel.current as PanelWithToolbar).toolbar;
+      const toolbar = (panel.current as unknown as PanelWithToolbar).toolbar;
       const names = Array.from(toolbar.names());
       expect(names.indexOf('myButton')).toBeLessThan(names.indexOf('close'));
       panel.dispose();
     });
 
-    it('should insert before the specified item when `before` is set', () => {
+    it('should add all items when factory returns multiple items', () => {
       const panel = new MultiChatPanel({
         rmRegistry,
-        chatToolbarItems: [
-          { name: 'myButton', create: () => new Widget(), before: 'markRead' }
-        ]
+        chatToolbarFactory: makeFactory([
+          { name: 'item1', widget: new Widget() },
+          { name: 'item2', widget: new Widget() }
+        ])
       });
       const model = new MockChatModel();
       panel.open({ model, displayName: 'test' });
-      const toolbar = (panel.current as PanelWithToolbar).toolbar;
-      const names = Array.from(toolbar.names());
-      expect(names.indexOf('myButton')).toBeLessThan(names.indexOf('markRead'));
-      panel.dispose();
-    });
-
-    it('should add all items when multiple chatToolbarItems are provided', () => {
-      const panel = new MultiChatPanel({
-        rmRegistry,
-        chatToolbarItems: [
-          { name: 'item1', create: () => new Widget() },
-          { name: 'item2', create: () => new Widget() }
-        ]
-      });
-      const model = new MockChatModel();
-      panel.open({ model, displayName: 'test' });
-      const toolbar = (panel.current as PanelWithToolbar).toolbar;
+      const toolbar = (panel.current as unknown as PanelWithToolbar).toolbar;
       const names = Array.from(toolbar.names());
       expect(names).toContain('item1');
       expect(names).toContain('item2');
       panel.dispose();
     });
 
-    it('should call create again for each newly opened chat', () => {
-      const create = jest.fn().mockImplementation(() => new Widget());
+    it('should call factory again for each newly opened chat', () => {
+      const factory = jest.fn().mockImplementation(
+        () =>
+          new ObservableList<ToolbarRegistry.IToolbarItem>({
+            values: [{ name: 'myButton', widget: new Widget() }]
+          })
+      );
       const panel = new MultiChatPanel({
         rmRegistry,
-        chatToolbarItems: [{ name: 'myButton', create }]
+        chatToolbarFactory: factory
       });
       const model1 = new MockChatModel();
       panel.open({ model: model1, displayName: 'chat1' });
@@ -330,9 +293,9 @@ describe('MultiChatPanel', () => {
       const model2 = new MockChatModel();
       panel.open({ model: model2, displayName: 'chat2' });
 
-      expect(create).toHaveBeenCalledTimes(2);
-      expect(create.mock.results[0].value).not.toBe(
-        create.mock.results[1].value
+      expect(factory).toHaveBeenCalledTimes(2);
+      expect(factory.mock.results[0].value).not.toBe(
+        factory.mock.results[1].value
       );
       panel.dispose();
     });
