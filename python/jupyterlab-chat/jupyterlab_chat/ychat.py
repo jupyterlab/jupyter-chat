@@ -11,7 +11,7 @@ from functools import partial
 from jupyter_ydoc.ybasedoc import YBaseDoc
 from typing import Any, Callable, Optional, Set, Union
 from uuid import uuid4
-from pycrdt import Array, ArrayEvent, Map, MapEvent
+from pycrdt import Array, ArrayEvent, Map, MapEvent, Subscription
 
 from .models import message_asdict_factory, FileAttachment, NotebookAttachment, Message, NewMessage, User
 from .utils import find_mentions
@@ -26,10 +26,14 @@ class YChat(YBaseDoc):
         self._ydoc["messages"] = self._ymessages = Array()  # type:ignore[var-annotated]
         self._ydoc["attachments"] = self._yattachments = Map()  # type:ignore[var-annotated]
         self._ydoc["metadata"] = self._ymetadata = Map()  # type:ignore[var-annotated]
-        self._ymessages_subscription = self._ymessages.observe(self._on_messages_change)
+        self._ymessages_subscription: Optional[Subscription] = self._ymessages.observe(
+            self._on_messages_change
+        )
 
         # Observe the state to initialize the file as soon as the document is not dirty.
-        self._ystate_subscription = self._ystate.observe(self._initialize)
+        self._ystate_subscription: Optional[Subscription] = self._ystate.observe(
+            self._initialize
+        )
 
         # Lookup table to get message index from its ID.
         self._indexes_by_id: dict[str, int] = {}
