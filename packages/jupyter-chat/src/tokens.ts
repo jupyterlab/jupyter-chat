@@ -27,6 +27,10 @@ export interface IChatPanel extends Widget {
    * The area of the panel.
    */
   area: ChatArea;
+  /**
+   * The chat panel toolbar.
+   */
+  toolbar: Widget;
 }
 
 /**
