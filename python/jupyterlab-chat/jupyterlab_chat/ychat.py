@@ -26,7 +26,7 @@ class YChat(YBaseDoc):
         self._ydoc["messages"] = self._ymessages = Array()  # type:ignore[var-annotated]
         self._ydoc["attachments"] = self._yattachments = Map()  # type:ignore[var-annotated]
         self._ydoc["metadata"] = self._ymetadata = Map()  # type:ignore[var-annotated]
-        self._ymessages.observe(self._on_messages_change)
+        self._ymessages_subscription = self._ymessages.observe(self._on_messages_change)
 
         # Observe the state to initialize the file as soon as the document is not dirty.
         self._ystate_subscription = self._ystate.observe(self._initialize)
@@ -309,7 +309,10 @@ class YChat(YBaseDoc):
                     self._ymetadata.update({k: v})
 
     def observe(self, callback: Callable[[str, Any], None]) -> None:
-        self.unobserve()
+        # Only clear the subscriptions registered by a previous observe() call;
+        # the observers registered in __init__ must persist for the lifetime of
+        # the document (they are removed by unobserve() at teardown).
+        super().unobserve()
         self._subscriptions[self._ystate] = self._ystate.observe(partial(callback, "state"))
         self._subscriptions[self._ymetadata] = self._ymetadata.observe(
             partial(callback, "metadata")
@@ -322,6 +325,24 @@ class YChat(YBaseDoc):
             partial(callback, "attachments")
         )
 
+    def unobserve(self) -> None:
+        """
+        Unsubscribes to document changes.
+
+        In addition to the subscriptions registered via ``observe()`` (removed by
+        the base class), this removes the observers registered in ``__init__()``.
+        Those callbacks are bound methods that hold a reference to ``self``, so
+        leaving them registered would prevent the ``YChat`` from being garbage
+        collected.
+        """
+        super().unobserve()
+        if self._ymessages_subscription is not None:
+            self._ymessages.unobserve(self._ymessages_subscription)
+            self._ymessages_subscription = None
+        if self._ystate_subscription is not None:
+            self._ystate.unobserve(self._ystate_subscription)
+            self._ystate_subscription = None
+
     def _initialize(self, event: MapEvent) -> None:
         """
         Called when the state changes, to create an id if it does not exist.
@@ -331,7 +352,9 @@ class YChat(YBaseDoc):
             return
         if (self.get_id() is None):
             self.create_task(self.create_id())
-        self._ystate.unobserve(self._ystate_subscription)
+        if self._ystate_subscription is not None:
+            self._ystate.unobserve(self._ystate_subscription)
+            self._ystate_subscription = None
 
     def _on_messages_change(self, event: ArrayEvent) -> None:
         """
