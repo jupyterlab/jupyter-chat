@@ -2,6 +2,26 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.23.0alpha2
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.23.0-alpha.1...d23734554226ae1115e46abfdd208b3bbb7ce500))
+
+### Bugs fixed
+
+- Remove all observers on `YChat.unobserve()` [#463](https://github.com/jupyterlab/jupyter-chat/pull/463) ([@dlqqq](https://github.com/dlqqq), [@brichet](https://github.com/brichet))
+- Allow Jupyter Collaboration v5 alpha (Jupyter YDoc v4 support) [#462](https://github.com/jupyterlab/jupyter-chat/pull/462) ([@dlqqq](https://github.com/dlqqq), [@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-07-07&to=2026-07-08&type=c))
+
+@brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-07-07..2026-07-08&type=Issues)) | @dlqqq ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2026-07-07..2026-07-08&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.23.0alpha1
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.23.0-alpha.0...626252d1cf3ee167c4a621ee451a0980981f0cba))
@@ -22,8 +42,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-07-07&to=2026-07-07&type=c))
 
 @dlqqq ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2026-07-07..2026-07-07&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.23.0alpha0
 
