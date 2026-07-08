@@ -61,17 +61,22 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
-        run: python -m pip install -U "${{ matrix.collaboration.jupyterlab-spec }}"
-
-      - name: Build the extensions
+      - name: Install JupyterLab and build the frontend
         run: |
           set -eux
-          python ./scripts/dev_install.py
+          python -m pip install -U "${{ matrix.collaboration.jupyterlab-spec }}"
+          jlpm install
+          jlpm build:prod
 
-      - name: Pin JupyterLab and Jupyter Collaboration for this matrix cell
+      - name: Install the extension for this matrix cell
         run: |
           set -eux
+          # Pin JupyterLab and Jupyter Collaboration to the versions under test.
+          # `jupyter-builder develop` is intentionally not run: it requires
+          # jupyter-builder (bundled only with JupyterLab >=4.6) and only sets up
+          # the frontend labextension symlink, which the Python unit tests do not
+          # need.
+          python -m pip install -e "python/jupyterlab-chat[test]"
           python -m pip install -U "${{ matrix.collaboration.jupyterlab-spec }}" "${{ matrix.collaboration.collaboration-spec }}"
           python -m pip list | grep -iE "jupyterlab |jupyter-collaboration|jupyter-ydoc|pycrdt"
 
