@@ -58,9 +58,12 @@ class MyChatModel extends AbstractChatModel {
   sendMessage(
     newMessage: INewMessage
   ): Promise<boolean | void> | boolean | void {
+    if (!newMessage.body) {
+      return;
+    }
     const message: IMessageContent = {
       body: newMessage.body,
-      id: newMessage.id ?? UUID.uuid4(),
+      id: UUID.uuid4(),
       type: 'msg',
       time: Date.now() / 1000,
       sender: { username: 'me', mention_name: 'me' },

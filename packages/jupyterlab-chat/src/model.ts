@@ -204,40 +204,54 @@ export class LabChatModel
   }
 
   sendMessage(message: INewMessage): Promise<boolean | void> | boolean | void {
+    if (!message.body && !message.mime_model && !message.attachments?.length) {
+      return false;
+    }
     this._resetWritingStatus();
     if (this._timeoutWriting !== null) {
       window.clearTimeout(this._timeoutWriting);
     }
 
+    const body = message.body ?? '';
+    const user = message.sender ?? this._user;
+
     const msg: IYmessage = {
       type: 'msg',
       id: UUID.uuid4(),
-      body: message.body,
+      body,
       time: Date.now() / 1000,
-      sender: this._user.username,
+      sender: user.username,
       raw_time: true
     };
 
-    // Add the user if it does not exist or has changed
-    if (!(this.sharedModel.getUser(this._user.username) === this._user)) {
-      this.sharedModel.setUser(this._user);
+    // Add the MIME model if provided.
+    if (message.mime_model) {
+      msg.mime_model = message.mime_model;
+    }
+
+    // Add the user if it does not exist
+    if (!this.sharedModel.getUser(user.username)) {
+      this.sharedModel.setUser(user);
     }
 
     // Add the attachments to the message.
-    const attachmentIds = this.input.attachments?.map(attachment =>
+    const attachmentIds = message.attachments?.map(attachment =>
       this.sharedModel.setAttachment(attachment)
     );
     if (attachmentIds?.length) {
       msg.attachments = attachmentIds;
     }
-    this.input.clearAttachments();
 
     // Add the mentioned users.
-    const mentions = this._buildMentionList(this.input.mentions, message.body);
+    const mentions = this._buildMentionList(message.mentions, body);
     if (mentions.length) {
       msg.mentions = mentions;
     }
-    this.input.clearMentions();
+
+    // Add the metadata if provided.
+    if (message.metadata) {
+      msg.metadata = message.metadata;
+    }
 
     this.sharedModel.addMessage(msg);
   }
