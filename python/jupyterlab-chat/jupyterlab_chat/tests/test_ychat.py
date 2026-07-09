@@ -231,3 +231,48 @@ def test_indexes_by_id():
         id: 0,
         id2: 1
     }
+
+
+def _observer_count(chat: YChat) -> int:
+    """Total number of observers registered on the chat's shared types."""
+    shared_types = [
+        chat._ystate,
+        chat._ymetadata,
+        chat._ymessages,
+        chat._yusers,
+        chat._yattachments,
+    ]
+    return sum(len(ytype._subscriptions) for ytype in shared_types)
+
+
+def test_unobserve_removes_init_observers():
+    """unobserve() must remove the observers registered in __init__.
+
+    __init__ registers `_on_messages_change` and `_initialize` observers whose
+    bound-method callbacks hold a reference to `self`. If unobserve() does not
+    remove them, the YChat cannot be released (memory leak).
+    """
+    chat = YChat()
+    # __init__ registers observers on messages and state.
+    assert _observer_count(chat) > 0
+
+    chat.unobserve()
+    assert _observer_count(chat) == 0
+
+
+def test_unobserve_removes_all_observers():
+    """unobserve() must remove observers added by observe() and __init__."""
+    chat = YChat()
+    chat.observe(lambda *args: None)
+    assert _observer_count(chat) > 0
+
+    chat.unobserve()
+    assert _observer_count(chat) == 0
+
+
+def test_unobserve_is_idempotent():
+    """Calling unobserve() twice must not raise (guards against double-drop)."""
+    chat = YChat()
+    chat.unobserve()
+    chat.unobserve()
+    assert _observer_count(chat) == 0
