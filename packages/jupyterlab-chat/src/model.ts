@@ -248,6 +248,11 @@ export class LabChatModel
       msg.mentions = mentions;
     }
 
+    // Add the metadata if provided.
+    if (message.metadata) {
+      msg.metadata = message.metadata;
+    }
+
     this.sharedModel.addMessage(msg);
   }
 

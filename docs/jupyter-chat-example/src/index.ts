@@ -63,7 +63,7 @@ class MyChatModel extends AbstractChatModel {
     }
     const message: IMessageContent = {
       body: newMessage.body,
-      id: newMessage.id ?? UUID.uuid4(),
+      id: UUID.uuid4(),
       type: 'msg',
       time: Date.now() / 1000,
       sender: { username: 'me', mention_name: 'me' },

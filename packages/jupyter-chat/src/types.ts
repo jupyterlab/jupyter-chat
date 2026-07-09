@@ -175,7 +175,10 @@ export interface IChatHistory {
  * The content of a new message.
  */
 export type INewMessage<T = IUser, U = IAttachment> = Partial<
-  IMessageContent<T, U>
+  Pick<
+    IMessageContent<T, U>,
+    'body' | 'attachments' | 'mentions' | 'metadata' | 'mime_model' | 'sender'
+  >
 >;
 
 /**
