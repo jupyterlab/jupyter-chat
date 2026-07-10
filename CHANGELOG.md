@@ -2,6 +2,30 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.23.0alpha3
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.23.0-alpha.2...151de083be84ca8b4d713f410e989b4c10b7e2f8))
+
+### API and Breaking Changes
+
+- Use partial message content to send message [#455](https://github.com/jupyterlab/jupyter-chat/pull/455) ([@brichet](https://github.com/brichet), [@dlqqq](https://github.com/dlqqq))
+- Configurable chat toolbar in side panel [#445](https://github.com/jupyterlab/jupyter-chat/pull/445) ([@brichet](https://github.com/brichet), [@dlqqq](https://github.com/dlqqq))
+
+### Enhancements made
+
+- Add message metadata to the input model [#465](https://github.com/jupyterlab/jupyter-chat/pull/465) ([@dlqqq](https://github.com/dlqqq), [@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-07-08&to=2026-07-10&type=c))
+
+@brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-07-08..2026-07-10&type=Issues)) | @dlqqq ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2026-07-08..2026-07-10&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.23.0alpha2
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.23.0-alpha.1...d23734554226ae1115e46abfdd208b3bbb7ce500))
@@ -19,8 +43,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-07-07&to=2026-07-08&type=c))
 
 @brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-07-07..2026-07-08&type=Issues)) | @dlqqq ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2026-07-07..2026-07-08&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.23.0alpha1
 
