@@ -165,6 +165,11 @@ export interface IInputModel extends IDisposable {
 
   /**
    * Merge a patch into the metadata to attach to the next message to send.
+   *
+   * This is a *shallow* merge: each key in `patch` replaces the existing value
+   * at that key wholesale, rather than being merged recursively. To change a
+   * nested field, pass the whole new value for its top-level key. The patch is
+   * deep-copied, so mutating it afterwards won't affect the stored metadata.
    */
   updateMetadata(patch: IMessageMetadata): void;
 
@@ -520,9 +525,18 @@ export class InputModel implements IInputModel {
 
   /**
    * Merge a patch into the metadata to attach to the next message to send.
+   *
+   * This is a *shallow* merge: each key in `patch` replaces the existing value
+   * at that key wholesale, rather than being merged recursively. To change a
+   * nested field, pass the whole new value for its top-level key. The patch is
+   * deep-copied, so mutating it afterwards won't affect the stored metadata.
    */
   updateMetadata = (patch: IMessageMetadata): void => {
-    this._metadata = { ...this._metadata, ...patch };
+    // Deep-copy the patch so a caller mutating a nested field afterwards can't
+    // reach into the stored metadata. `this._metadata` only ever holds values
+    // that were themselves deep-copied on the way in, so a shallow spread of it
+    // is safe.
+    this._metadata = { ...this._metadata, ...structuredClone(patch) };
     this._metadataChanged.emit(this._metadata);
   };
 

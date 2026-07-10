@@ -38,6 +38,23 @@ describe('test input model', () => {
       expect(model.getMetadata()).toEqual({ persona: 'jupyternaut' });
     });
 
+    it('should shallow-merge: a top-level key replaces the whole value', () => {
+      const model = new InputModel({ onSend: jest.fn() });
+      model.updateMetadata({ model: { id: 'a' } });
+      // Passing `model` again replaces it wholesale (no recursive merge).
+      model.updateMetadata({ model: { id: 'b' } });
+      expect(model.getMetadata()).toEqual({ model: { id: 'b' } });
+    });
+
+    it('should not be mutated by later changes to a patch', () => {
+      const model = new InputModel({ onSend: jest.fn() });
+      const patch = { model: { id: 'a' } };
+      model.updateMetadata(patch);
+      // Mutating the patch after the fact must not reach into stored metadata.
+      patch.model.id = 'tampered';
+      expect(model.getMetadata()).toEqual({ model: { id: 'a' } });
+    });
+
     it('should clear metadata', () => {
       const model = new InputModel({ onSend: jest.fn() });
       model.updateMetadata({ persona: 'kiro' });
@@ -100,7 +117,10 @@ describe('test input model', () => {
   });
 });
 
-// Extend IMessageMetadata so the tests above can use arbitrary fields.
+// `IMessageMetadata` is intentionally empty in the source; consumers augment it
+// with their own fields via module augmentation. We do the same here purely so
+// the tests can exercise `updateMetadata` with representative fields — this
+// stays in the test file and no consumer-specific fields leak into the source.
 declare module '../types' {
   interface IMessageMetadata {
     persona?: string;
