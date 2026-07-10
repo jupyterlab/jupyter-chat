@@ -14,3 +14,12 @@ global.IntersectionObserver = class IntersectionObserver {
   observe() {}
   unobserve() {}
 };
+
+/*
+ * `structuredClone` is a standard global in the browser (and Node), but the
+ * jsdom test environment doesn't expose it. Provide it so code that relies on
+ * it (e.g. input-model metadata, message cloning) can be unit-tested.
+ */
+if (typeof global.structuredClone !== 'function') {
+  global.structuredClone = value => JSON.parse(JSON.stringify(value));
+}

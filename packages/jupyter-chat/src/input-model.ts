@@ -10,7 +10,13 @@ import { ISignal, Signal } from '@lumino/signaling';
 import { IActiveCellManager } from './active-cell-manager';
 import { ISelectionWatcher } from './selection-watcher';
 import { IChatContext } from './model';
-import { IAttachment, INewMessage, INotebookAttachment, IUser } from './types';
+import {
+  IAttachment,
+  IMessageMetadata,
+  INewMessage,
+  INotebookAttachment,
+  IUser
+} from './types';
 
 /**
  * The chat input interface.
@@ -153,6 +159,31 @@ export interface IInputModel extends IDisposable {
   clearMentions(): void;
 
   /**
+   * Get the metadata to attach to the next message to send.
+   */
+  getMetadata(): IMessageMetadata;
+
+  /**
+   * Merge a patch into the metadata to attach to the next message to send.
+   *
+   * This is a *shallow* merge: each key in `patch` replaces the existing value
+   * at that key wholesale, rather than being merged recursively. To change a
+   * nested field, pass the whole new value for its top-level key. The patch is
+   * deep-copied, so mutating it afterwards won't affect the stored metadata.
+   */
+  updateMetadata(patch: IMessageMetadata): void;
+
+  /**
+   * Clear the metadata.
+   */
+  clearMetadata(): void;
+
+  /**
+   * A signal emitting when the metadata has changed.
+   */
+  readonly metadataChanged?: ISignal<IInputModel, IMessageMetadata>;
+
+  /**
    * A signal emitting when disposing of the model.
    */
   readonly onDisposed: ISignal<InputModel, void>;
@@ -169,6 +200,7 @@ export class InputModel implements IInputModel {
     this._value = options.value || '';
     this._attachments = options.attachments || [];
     this._mentions = options.mentions || [];
+    this._metadata = options.metadata || {};
     this.cursorIndex = options.cursorIndex || this.value.length;
     this._activeCellManager = options.activeCellManager ?? null;
     this._selectionWatcher = options.selectionWatcher ?? null;
@@ -206,6 +238,11 @@ export class InputModel implements IInputModel {
     // Add the mentions
     if (this.mentions.length) {
       message.mentions = [...this.mentions];
+    }
+
+    // Add the metadata
+    if (Object.keys(this._metadata).length) {
+      message.metadata = { ...this._metadata };
     }
 
     // Send the message
@@ -480,6 +517,45 @@ export class InputModel implements IInputModel {
   };
 
   /**
+   * Get the metadata to attach to the next message to send.
+   */
+  getMetadata(): IMessageMetadata {
+    return this._metadata;
+  }
+
+  /**
+   * Merge a patch into the metadata to attach to the next message to send.
+   *
+   * This is a *shallow* merge: each key in `patch` replaces the existing value
+   * at that key wholesale, rather than being merged recursively. To change a
+   * nested field, pass the whole new value for its top-level key. The patch is
+   * deep-copied, so mutating it afterwards won't affect the stored metadata.
+   */
+  updateMetadata = (patch: IMessageMetadata): void => {
+    // Deep-copy the patch so a caller mutating a nested field afterwards can't
+    // reach into the stored metadata. `this._metadata` only ever holds values
+    // that were themselves deep-copied on the way in, so a shallow spread of it
+    // is safe.
+    this._metadata = { ...this._metadata, ...structuredClone(patch) };
+    this._metadataChanged.emit(this._metadata);
+  };
+
+  /**
+   * Clear the metadata.
+   */
+  clearMetadata = (): void => {
+    this._metadata = {};
+    this._metadataChanged.emit(this._metadata);
+  };
+
+  /**
+   * A signal emitting when the metadata has changed.
+   */
+  get metadataChanged(): ISignal<IInputModel, IMessageMetadata> {
+    return this._metadataChanged;
+  }
+
+  /**
    * Dispose the input model.
    */
   dispose(): void {
@@ -512,6 +588,7 @@ export class InputModel implements IInputModel {
   private _currentWord: string | null = null;
   private _attachments: IAttachment[];
   private _mentions: IUser[];
+  private _metadata: IMessageMetadata;
   private _activeCellManager: IActiveCellManager | null;
   private _selectionWatcher: ISelectionWatcher | null;
   private _documentManager: IDocumentManager | null;
@@ -522,6 +599,7 @@ export class InputModel implements IInputModel {
   private _configChanged = new Signal<IInputModel, InputModel.IConfig>(this);
   private _focusInputSignal = new Signal<InputModel, void>(this);
   private _attachmentsChanged = new Signal<InputModel, IAttachment[]>(this);
+  private _metadataChanged = new Signal<InputModel, IMessageMetadata>(this);
   private _onDisposed = new Signal<InputModel, void>(this);
   private _isDisposed = false;
 }
@@ -559,6 +637,11 @@ export namespace InputModel {
      * The initial mentions.
      */
     mentions?: IUser[];
+
+    /**
+     * The initial metadata.
+     */
+    metadata?: IMessageMetadata;
 
     /**
      * The current cursor index.
