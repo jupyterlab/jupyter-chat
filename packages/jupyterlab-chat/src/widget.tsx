@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { ChatArea, ChatWidget, IChatModel } from '@jupyter/chat';
+import { ChatArea, ChatWidget, IChatModel, IChatPanel } from '@jupyter/chat';
 import { DocumentWidget } from '@jupyterlab/docregistry';
 
 import { LabChatModel } from './model';
@@ -14,7 +14,10 @@ const TITLE_UNREAD_CLASS = 'jp-lab-chat-title-unread';
 /**
  * DocumentWidget: widget that represents the view or editor for a file type.
  */
-export class LabChatPanel extends DocumentWidget<ChatWidget, LabChatModel> {
+export class LabChatPanel
+  extends DocumentWidget<ChatWidget, LabChatModel>
+  implements IChatPanel
+{
   constructor(options: DocumentWidget.IOptions<ChatWidget, LabChatModel>) {
     super(options);
     this.addClass(MAIN_PANEL_CLASS);
@@ -33,6 +36,13 @@ export class LabChatPanel extends DocumentWidget<ChatWidget, LabChatModel> {
   }
 
   /**
+   * The chat widget.
+   */
+  get widget(): ChatWidget {
+    return this.content;
+  }
+
+  /**
    * The model for the widget.
    */
   get model(): LabChatModel {
@@ -42,8 +52,8 @@ export class LabChatPanel extends DocumentWidget<ChatWidget, LabChatModel> {
   /**
    * The area of the widget.
    */
-  get area(): ChatArea | undefined {
-    return this.content.area;
+  get area(): ChatArea {
+    return 'main';
   }
 
   /**

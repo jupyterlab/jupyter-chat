@@ -8,12 +8,12 @@
  * Originally adapted from jupyterlab-chat's ChatPanel
  */
 
-import { InputDialog } from '@jupyterlab/apputils';
+import { InputDialog, ToolbarRegistry } from '@jupyterlab/apputils';
+import { IObservableList } from '@jupyterlab/observables';
 import { nullTranslator, TranslationBundle } from '@jupyterlab/translation';
 import {
   addIcon,
   closeIcon,
-  launchIcon,
   PanelWithToolbar,
   ReactiveToolbar,
   ReactWidget,
@@ -37,9 +37,10 @@ import {
   IInputToolbarRegistryFactory
 } from '../components';
 import { TRANSLATION_DOMAIN } from '../context';
-import { chatIcon, readIcon } from '../icons';
+import { chatIcon } from '../icons';
 import { IChatModel } from '../model';
-import { IChatPlaceholderFactory } from '../tokens';
+import { IChatPanel, IChatPlaceholderFactory } from '../tokens';
+import { ChatArea } from '../types';
 
 const SIDEPANEL_CLASS = 'jp-chat-sidepanel';
 const ADD_BUTTON_CLASS = 'jp-chat-add';
@@ -86,10 +87,10 @@ export class MultiChatPanel extends PanelWithToolbar {
 
     this._chatOptions = options;
     this._inputToolbarFactory = options.inputToolbarFactory;
+    this._chatToolbarFactory = options.chatToolbarFactory;
 
     this._getChatNames = options.getChatNames;
     this._createModel = options.createModel;
-    this._openInMain = options.openInMain;
     this._renameChat = options.renameChat;
     this._placeholderFactory = options.placeholderFactory;
 
@@ -149,9 +150,9 @@ export class MultiChatPanel extends PanelWithToolbar {
   }
 
   /**
-   * A signal emitting when a chat widget is opened in the panel.
+   * A signal emitting when a chat panel is opened in the sidepanel.
    */
-  get chatOpened(): ISignal<MultiChatPanel, ChatWidget> {
+  get chatOpened(): ISignal<MultiChatPanel, IChatPanel> {
     return this._chatOpened;
   }
 
@@ -293,8 +294,8 @@ export class MultiChatPanel extends PanelWithToolbar {
     const widget = new SidePanelWidget({
       widget: chatWidget,
       displayName: name,
-      openInMain: this._openInMain,
       renameChat: this._renameChat,
+      toolbarFactory: this._chatToolbarFactory,
       onClose: (name: string, disposeModel = true) => {
         this.unsetLoadedModel(name, disposeModel);
       },
@@ -313,7 +314,7 @@ export class MultiChatPanel extends PanelWithToolbar {
       this._chatSelectorPopup.setCurrentChat(name);
     }
 
-    this._chatOpened.emit(chatWidget);
+    this._chatOpened.emit(widget);
     return chatWidget;
   }
 
@@ -437,20 +438,22 @@ export class MultiChatPanel extends PanelWithToolbar {
     this._chatSelectorPopup?.hide();
   };
 
-  private _chatOpened = new Signal<MultiChatPanel, ChatWidget>(this);
+  private _chatOpened = new Signal<MultiChatPanel, IChatPanel>(this);
   private _chatNamesChanged = new Signal<
     MultiChatPanel,
     { [name: string]: string }
   >(this);
   private _chatOptions: Omit<Chat.IOptions, 'model' | 'inputToolbarRegistry'>;
   private _inputToolbarFactory?: IInputToolbarRegistryFactory;
+  private _chatToolbarFactory?: (
+    panel: IChatPanel
+  ) => IObservableList<ToolbarRegistry.IToolbarItem>;
   private _updateChatListDebouncer: Debouncer;
 
   private _createModel?: (
     name?: string
   ) => Promise<MultiChatPanel.IOpenChatArgs>;
   private _getChatNames?: () => Promise<{ [name: string]: string }>;
-  private _openInMain?: (name: string) => Promise<boolean>;
   private _renameChat?: boolean | ((oldName: string) => Promise<string | null>);
   private _placeholderFactory?: IChatPlaceholderFactory;
   private _openChatWidget?: ReactWidget;
@@ -477,6 +480,12 @@ export namespace MultiChatPanel {
      */
     inputToolbarFactory?: IInputToolbarRegistryFactory;
     /**
+     * An optional toolbar factory for each opened chat.
+     */
+    chatToolbarFactory?: (
+      panel: IChatPanel
+    ) => IObservableList<ToolbarRegistry.IToolbarItem>;
+    /**
      * An optional callback to create a chat model.
      *
      * @param name - the name of the chat, optional.
@@ -489,12 +498,6 @@ export namespace MultiChatPanel {
      * @returns an object mapping chat display names to identifiers.
      */
     getChatNames?: () => Promise<{ [name: string]: string }>;
-    /**
-     * An optional callback to open the chat in the main area.
-     *
-     * @param name - the name of the chat to move.
-     */
-    openInMain?: (name: string) => Promise<boolean>;
     /**
      * An optional callback to rename a chat.
      *
@@ -531,7 +534,7 @@ export namespace MultiChatPanel {
 /**
  * A widget containing the chat and its toolbar.
  */
-class SidePanelWidget extends ReactivePanelWithToolbar {
+class SidePanelWidget extends ReactivePanelWithToolbar implements IChatPanel {
   constructor(options: SidePanelWidget.IOptions) {
     super();
     this._chatWidget = options.widget;
@@ -556,19 +559,6 @@ class SidePanelWidget extends ReactivePanelWithToolbar {
 
     // Add the chat widget
     this.addWidget(this._chatWidget);
-
-    // Add toolbar buttons
-    this._markAsRead = new ToolbarButton({
-      icon: readIcon,
-      iconLabel: trans.__('Mark chat as read'),
-      className: 'jp-mod-styled',
-      onClick: () => {
-        if (this.model) {
-          this.model.unreadMessages = [];
-        }
-      }
-    });
-    this.toolbar.addItem('markRead', this._markAsRead);
 
     if (options.renameChat) {
       const renameButton = new ToolbarButton({
@@ -606,21 +596,6 @@ class SidePanelWidget extends ReactivePanelWithToolbar {
       this.toolbar.addItem('rename', renameButton);
     }
 
-    if (options.openInMain) {
-      const moveToMain = new ToolbarButton({
-        icon: launchIcon,
-        iconLabel: trans.__('Move the chat to the main area'),
-        className: 'jp-mod-styled',
-        onClick: async () => {
-          const name = this.model.name;
-          if (await options.openInMain?.(name)) {
-            options.onClose(this._displayName, false);
-          }
-        }
-      });
-      this.toolbar.addItem('moveMain', moveToMain);
-    }
-
     const closeButton = new ToolbarButton({
       icon: closeIcon,
       iconLabel: trans.__('Close the chat'),
@@ -631,9 +606,24 @@ class SidePanelWidget extends ReactivePanelWithToolbar {
     });
     this.toolbar.addItem('close', closeButton);
 
-    // Update mark as read button state
-    this.model.unreadChanged?.connect(this._unreadChanged);
-    this._markAsRead.enabled = (this.model?.unreadMessages.length ?? 0) > 0;
+    if (options.toolbarFactory) {
+      const items = options.toolbarFactory(this);
+      for (let i = 0; i < items.length; i++) {
+        const { name, widget } = items.get(i);
+        this.toolbar.insertBefore('close', name, widget);
+      }
+      items.changed.connect((_, change) => {
+        if (change.type === 'add') {
+          for (const { name, widget } of change.newValues) {
+            this.toolbar.insertBefore('close', name, widget);
+          }
+        } else if (change.type === 'remove') {
+          for (const { widget } of change.oldValues) {
+            widget.dispose();
+          }
+        }
+      });
+    }
   }
 
   protected onAfterAttach(msg: Message): void {
@@ -644,6 +634,13 @@ class SidePanelWidget extends ReactivePanelWithToolbar {
   protected onResize(msg: Widget.ResizeMessage): void {
     super.onResize(msg);
     this._updateReactiveToolbar();
+  }
+
+  /**
+   * The area of the widget.
+   */
+  get area(): ChatArea {
+    return 'sidebar';
   }
 
   /**
@@ -687,10 +684,6 @@ class SidePanelWidget extends ReactivePanelWithToolbar {
    * Dispose of the resources held by the widget.
    */
   dispose(): void {
-    const model = this.model;
-    if (model) {
-      model.unreadChanged?.disconnect(this._unreadChanged);
-    }
     super.dispose();
   }
 
@@ -717,13 +710,6 @@ class SidePanelWidget extends ReactivePanelWithToolbar {
   }
 
   /**
-   * Enable/disable unread icon.
-   */
-  private _unreadChanged = (_: IChatModel, unread: number[]) => {
-    this._markAsRead.enabled = unread.length > 0;
-  };
-
-  /**
    * Trigger reactive toolbar overflow computation from rendered toolbar size.
    */
   private _updateReactiveToolbar(): void {
@@ -739,7 +725,6 @@ class SidePanelWidget extends ReactivePanelWithToolbar {
   }
 
   private _chatWidget: ChatWidget;
-  private _markAsRead: ToolbarButton;
   private _displayName: string;
   private _titleWidget: Widget | undefined;
   private _nameChanged = new Signal<
@@ -769,13 +754,15 @@ namespace SidePanelWidget {
      */
     displayName?: string;
     /**
-     * The callback to open the chat in main area.
-     */
-    openInMain?: (name: string) => Promise<boolean>;
-    /**
      * The callback to rename the chat.
      */
     renameChat?: boolean | ((oldName: string) => Promise<string | null>);
+    /**
+     * An optional toolbar factory.
+     */
+    toolbarFactory?: (
+      panel: IChatPanel
+    ) => IObservableList<ToolbarRegistry.IToolbarItem>;
     /**
      * The translation bundle.
      */
@@ -795,7 +782,7 @@ type ChatSearchInputProps = {
   /**
    * Signal emitting when a chat is opened.
    */
-  chatOpened: ISignal<MultiChatPanel, ChatWidget>;
+  chatOpened: ISignal<MultiChatPanel, IChatPanel>;
   /**
    * The translation bundle.
    */
