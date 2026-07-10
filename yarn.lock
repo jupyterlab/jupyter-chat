@@ -2369,6 +2369,7 @@ __metadata:
     "@jupyterlab/filebrowser": ^4.6.0
     "@jupyterlab/fileeditor": ^4.6.0
     "@jupyterlab/notebook": ^4.6.0
+    "@jupyterlab/observables": ^5.6.0
     "@jupyterlab/rendermime": ^4.6.0
     "@jupyterlab/testing": ^4.6.0
     "@jupyterlab/translation": ^4.6.0
