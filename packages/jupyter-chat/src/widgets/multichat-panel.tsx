@@ -102,6 +102,7 @@ export class MultiChatPanel extends PanelWithToolbar {
           this.open(addChatArgs);
         },
         icon: addIcon,
+        label: this._trans.__('New chat'),
         tooltip: this._trans.__('Create a new chat')
       });
       addChat.addClass(ADD_BUTTON_CLASS);
