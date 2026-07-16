@@ -9,6 +9,7 @@ import {
   nullTranslator,
   TranslationBundle
 } from '@jupyterlab/translation';
+import type { IAwareness } from '@jupyter/ydoc';
 import { ArrayExt } from '@lumino/algorithm';
 import { CommandRegistry } from '@lumino/commands';
 import { PromiseDelegate } from '@lumino/coreutils';
@@ -52,6 +53,14 @@ export interface IChatModel extends IDisposable {
    * The promise resolving when the model is ready.
    */
   readonly ready: Promise<void>;
+
+  /**
+   * The awareness channel of the underlying shared document, when the chat is
+   * backed by one. Lets extensions read collaborative state attached to the
+   * chat (e.g. session information published by AI personas) through a
+   * supported API instead of reaching into a concrete implementation.
+   */
+  readonly awareness?: IAwareness;
 
   /**
    * The indexes list of the messages currently in the viewport.
@@ -894,6 +903,11 @@ export interface IChatContext {
    * Current user connected with the chat panel
    */
   readonly user: IUser | undefined;
+  /**
+   * The awareness channel of the underlying shared document, when the chat is
+   * backed by one.
+   */
+  readonly awareness?: IAwareness;
 }
 
 /**
@@ -915,6 +929,10 @@ export abstract class AbstractChatContext implements IChatContext {
 
   get user(): IUser | undefined {
     return this._model?.user;
+  }
+
+  get awareness(): IAwareness | undefined {
+    return this._model.awareness;
   }
 
   /**

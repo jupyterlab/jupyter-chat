@@ -2360,6 +2360,7 @@ __metadata:
     "@emotion/react": ^11.10.5
     "@emotion/styled": ^11.10.5
     "@jupyter/react-components": ^0.15.2
+    "@jupyter/ydoc": ^3.0.0 || ^4.0.0
     "@jupyterlab/application": ^4.6.0
     "@jupyterlab/apputils": ^4.7.0
     "@jupyterlab/codeeditor": ^4.6.0
