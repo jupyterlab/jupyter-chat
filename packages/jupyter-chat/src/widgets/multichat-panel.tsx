@@ -25,7 +25,7 @@ import { ArrayExt } from '@lumino/algorithm';
 import { Message, MessageLoop } from '@lumino/messaging';
 import { Debouncer } from '@lumino/polling';
 import { ISignal, Signal } from '@lumino/signaling';
-import { Panel, Widget } from '@lumino/widgets';
+import { Widget } from '@lumino/widgets';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { ChatSelectorPopup } from './chat-selector-popup';
@@ -46,25 +46,7 @@ const SIDEPANEL_CLASS = 'jp-chat-sidepanel';
 const ADD_BUTTON_CLASS = 'jp-chat-add';
 const OPEN_SELECT_CLASS = 'jp-chat-open';
 const SIDEPANEL_WIDGET_CLASS = 'jp-chat-sidepanel-widget';
-// TODO: Drop this workaround class (and related CSS) once we depend on
-// @jupyterlab/ui-components >= 4.6.0 (refs - jupyterlab/jupyterlab#18824).
 const TOOLBAR_CLASS = 'jp-chat-sidepanel-widget-toolbar';
-
-/**
- * A panel widget with a reactive toolbar.
- */
-class ReactivePanelWithToolbar extends Panel {
-  constructor() {
-    super();
-    this._toolbar = new ReactiveToolbar({ noFocusOnClick: true });
-  }
-
-  get toolbar(): ReactiveToolbar {
-    return this._toolbar;
-  }
-
-  private _toolbar: ReactiveToolbar;
-}
 
 /**
  * Generic sidepanel widget including multiple chats and the add chat button.
@@ -535,9 +517,9 @@ export namespace MultiChatPanel {
 /**
  * A widget containing the chat and its toolbar.
  */
-class SidePanelWidget extends ReactivePanelWithToolbar implements IChatPanel {
+class SidePanelWidget extends PanelWithToolbar implements IChatPanel {
   constructor(options: SidePanelWidget.IOptions) {
-    super();
+    super({ toolbar: new ReactiveToolbar({ noFocusOnClick: true }) });
     this._chatWidget = options.widget;
     this._displayName = options.displayName ?? options.widget.model.name;
     const trans = options.trans;

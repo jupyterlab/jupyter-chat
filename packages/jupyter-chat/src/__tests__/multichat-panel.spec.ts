@@ -238,7 +238,7 @@ describe('MultiChatPanel', () => {
       });
       const model = new MockChatModel();
       panel.open({ model, displayName: 'test' });
-      const toolbar = (panel.current as unknown as PanelWithToolbar).toolbar;
+      const toolbar = (panel.current as PanelWithToolbar).toolbar;
       expect(Array.from(toolbar.names())).toContain('myButton');
       panel.dispose();
     });
@@ -252,7 +252,7 @@ describe('MultiChatPanel', () => {
       });
       const model = new MockChatModel();
       panel.open({ model, displayName: 'test' });
-      const toolbar = (panel.current as unknown as PanelWithToolbar).toolbar;
+      const toolbar = (panel.current as PanelWithToolbar).toolbar;
       const names = Array.from(toolbar.names());
       expect(names.indexOf('myButton')).toBeLessThan(names.indexOf('close'));
       panel.dispose();
@@ -268,7 +268,7 @@ describe('MultiChatPanel', () => {
       });
       const model = new MockChatModel();
       panel.open({ model, displayName: 'test' });
-      const toolbar = (panel.current as unknown as PanelWithToolbar).toolbar;
+      const toolbar = (panel.current as PanelWithToolbar).toolbar;
       const names = Array.from(toolbar.names());
       expect(names).toContain('item1');
       expect(names).toContain('item2');
