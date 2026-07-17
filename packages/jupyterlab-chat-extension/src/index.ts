@@ -72,7 +72,8 @@ import {
   WidgetConfig,
   YChat,
   chatFileType,
-  getDisplayName
+  getDisplayName,
+  resolveChatRenamePath
 } from 'jupyterlab-chat';
 import { chatCommandRegistryPlugin } from './chat-commands/plugins';
 import { emojiCommandsPlugin } from './chat-commands/providers/emoji';
@@ -1106,10 +1107,8 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           return null;
         }
 
-        // Ensure `.chat` extension
-        if (!newPath.endsWith(chatFileType.extensions[0])) {
-          newPath = `${newPath}${chatFileType.extensions[0]}`;
-        }
+        // Ensure `.chat` extension and keep the chat in its current directory.
+        newPath = resolveChatRenamePath(oldPath, newPath);
 
         try {
           await app.serviceManager.contents.rename(oldPath, newPath);
