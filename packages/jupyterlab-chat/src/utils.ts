@@ -45,7 +45,10 @@ export function getDisplayName(
  * @returns - the resolved path, with the `.chat` extension ensured and the
  *   original directory preserved when `newName` has no directory component.
  */
-export function resolveChatRenamePath(oldPath: string, newName: string): string {
+export function resolveChatRenamePath(
+  oldPath: string,
+  newName: string
+): string {
   let newPath = newName;
 
   // Ensure the `.chat` extension.
