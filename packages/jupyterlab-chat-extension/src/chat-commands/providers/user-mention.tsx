@@ -139,6 +139,13 @@ class MentionCommandProvider implements IChatCommandProvider {
         return;
       }
 
+      // Skip bots (e.g. AI personas): they are not mentionable. This map also
+      // resolves mentions on submit, so a hand-typed bot mention stays plain
+      // text.
+      if (user.bot) {
+        return;
+      }
+
       if (!user.mention_name) {
         console.error(
           `No 'mention_name' property for user '${user.username}'. ` +
