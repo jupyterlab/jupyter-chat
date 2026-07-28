@@ -2,7 +2,7 @@ name: jupyterlab-chat
 channels:
   - conda-forge
 dependencies:
-  - jupyterlab >=4.0.0
+  - jupyterlab >=4.6.0
   - nodejs >=18,<19
   - python >=3.13,<3.14
   - yarn >=3,<4
