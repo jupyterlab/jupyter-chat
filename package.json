@@ -45,6 +45,9 @@
     "test": "jlpm workspace @jupyter/chat run test && jlpm workspace jupyterlab-chat run test",
     "watch": "jlpm workspace jupyterlab-chat-extension run watch"
   },
+  "resolutions": {
+    "webpack": "5.106.2"
+  },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
     "@jupyter/eslint-plugin": "^0.0.5",
