@@ -35,11 +35,18 @@ jobs:
             # that install only so JupyterLab stays on a stable release (a bare
             # --pre with "<4.7" would otherwise pull a 4.7 alpha).
             collab_pre: '--pre'
+            # Reference snapshots for JupyterLab >=4.6 live at the top level of
+            # each *-snapshots directory (empty subdir preserves the existing
+            # paths). See snapshotPathTemplate in ui-tests/playwright.config.js.
+            snapshot_subdir: ''
           - label: '>=4.2,<4.6'
             jupyterlab: '>=4.2,<4.6'
             jupyter_collaboration: '~=4.0'
             galata: '~5.5.10'
             collab_pre: ''
+            # JupyterLab <4.6 renders a few reference snapshots slightly
+            # differently, so it keeps its own snapshot subfolder.
+            snapshot_subdir: 'jupyterlab-lt-4.6'
 
     env:
       PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/pw-browsers
@@ -91,6 +98,8 @@ jobs:
 
       - name: Execute integration tests
         working-directory: ui-tests
+        env:
+          JLAB_SNAPSHOT_SUBDIR: ${{ matrix.snapshot_subdir }}
         run: |
           jlpm test --retries=2
 
