@@ -1,6 +1,6 @@
 {
   "name": "jupyter-chat-example",
-  "version": "0.23.0-alpha.3",
+  "version": "0.23.1",
   "description": "A chat extension providing a chat as example",
   "keywords": [
     "jupyter",
@@ -32,8 +32,8 @@
   "scripts": {
     "build": "echo 'Building jupyter-chat-example' && jlpm build:lib && jlpm build:labextension:dev",
     "build:prod": "echo 'Building jupyter-chat-example' && jlpm clean && jlpm build:lib:prod && jlpm build:labextension",
-    "build:labextension": "jupyter-builder build .",
-    "build:labextension:dev": "jupyter-builder build --development True .",
+    "build:labextension": "jupyter labextension build .",
+    "build:labextension:dev": "jupyter labextension build --development True .",
     "build:lib": "tsc --sourceMap",
     "build:lib:prod": "tsc",
     "clean": "jlpm clean:lib",
@@ -44,7 +44,7 @@
     "install:extension": "jlpm build"
   },
   "dependencies": {
-    "@jupyter/chat": "^0.23.0-alpha.3",
+    "@jupyter/chat": "^0.23.1",
     "@jupyterlab/application": "^4.2.0",
     "@jupyterlab/apputils": "^4.3.0",
     "@jupyterlab/notebook": "^4.2.0",
@@ -53,7 +53,7 @@
     "@lumino/coreutils": "^2.0.0"
   },
   "devDependencies": {
-    "@jupyter/builder": "^1.0.2",
+    "@jupyterlab/builder": "^4.2.0",
     "@types/json-schema": "^7.0.11",
     "@types/react": "^18.2.0",
     "@types/react-addons-linked-state-mixin": "^0.14.22",

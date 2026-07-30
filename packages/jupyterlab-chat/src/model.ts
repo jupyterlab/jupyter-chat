@@ -14,6 +14,7 @@ import {
   INewMessage,
   IUser
 } from '@jupyter/chat';
+import type { IAwareness } from '@jupyter/ydoc';
 import { IChangedArgs } from '@jupyterlab/coreutils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { User } from '@jupyterlab/services';
@@ -130,6 +131,13 @@ export class LabChatModel
 
   get sharedModel(): YChat {
     return this._sharedModel;
+  }
+
+  /**
+   * The awareness channel of the shared model.
+   */
+  get awareness(): IAwareness {
+    return this._sharedModel.awareness;
   }
 
   get contentChanged(): ISignal<this, void> {

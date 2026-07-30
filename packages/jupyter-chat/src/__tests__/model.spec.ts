@@ -7,6 +7,8 @@
  * Example of [Jest](https://jestjs.io/docs/getting-started) unit tests
  */
 
+import type { IAwareness } from '@jupyter/ydoc';
+
 import { AbstractChatModel, IChatContext, IChatModel } from '../model';
 import { IMessage, IMessageContent, INewMessage } from '../types';
 import { MockChatModel, MockChatContext } from './mocks';
@@ -147,6 +149,22 @@ describe('test chat model', () => {
     it('should allow config', () => {
       const model = new MockChatModel({ config: { sendWithShiftEnter: true } });
       expect(model.config.sendWithShiftEnter).toBeTruthy();
+    });
+  });
+
+  describe('awareness', () => {
+    it('should surface the model awareness on the context', () => {
+      class AwareChatModel extends MockChatModel {
+        readonly awareness = {} as IAwareness;
+      }
+      const model = new AwareChatModel();
+      const context = new MockChatContext({ model });
+      expect(context.awareness).toBe(model.awareness);
+    });
+
+    it('should be undefined when the model has no awareness', () => {
+      const context = new MockChatContext({ model: new MockChatModel() });
+      expect(context.awareness).toBeUndefined();
     });
   });
 });
