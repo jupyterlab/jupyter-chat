@@ -55,11 +55,9 @@ class MyChatModel extends AbstractChatModel {
     this.setReady();
   }
 
-  sendMessage(
-    newMessage: INewMessage
-  ): Promise<boolean | void> | boolean | void {
+  sendMessage(newMessage: INewMessage): string | null {
     if (!newMessage.body) {
-      return;
+      return null;
     }
     const message: IMessageContent = {
       body: newMessage.body,
@@ -71,6 +69,7 @@ class MyChatModel extends AbstractChatModel {
     };
     this.messageAdded(message);
     this.input.clearAttachments();
+    return message.id;
   }
 
   createChatContext(): IChatContext {
