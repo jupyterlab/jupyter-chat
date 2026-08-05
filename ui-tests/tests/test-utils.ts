@@ -19,6 +19,92 @@ export const USER: User.IUser = {
   permissions: {}
 };
 
+/**
+ * Wait until every chat currently attached to the shell has finished loading.
+ *
+ * A chat model resolves `ready` when its id becomes known, which happens either
+ * as soon as the document's `metadata.id` arrives, or - for a chat that does not
+ * carry one yet - only after the shared document reports a transition *out of*
+ * the dirty state, since that is what triggers generating an id. A fully
+ * synchronized document is therefore not necessarily a ready one.
+ *
+ * Until the model is ready, the input has no chat context, so `@`-mention
+ * completions resolve against an empty user list and dropped attachments are
+ * discarded. Neither the panel being visible nor the input container being
+ * present are usable signals: the input is in the DOM roughly 120ms after the
+ * chat is opened, whereas a chat without a stored id only becomes ready around
+ * 1.2s in.
+ *
+ * `model.input.chatContext` is assigned exactly when `model.ready` resolves,
+ * which makes it a synchronously observable proxy for readiness.
+ */
+export const waitForChatReady = async (
+  page: IJupyterLabPageFixture
+): Promise<void> => {
+  await page.waitForFunction(
+    () => {
+      const app = (window as any).jupyterapp;
+      const models: any[] = [];
+      for (const area of ['main', 'left', 'right']) {
+        for (const widget of app.shell.widgets(area)) {
+          // A chat in the main area exposes its model directly, whereas the
+          // side panel wraps each chat in a child widget.
+          for (const candidate of [widget, ...(widget.widgets ?? [])]) {
+            const model = candidate?.model;
+            if (model?.input && model.ready instanceof Promise) {
+              models.push(model);
+            }
+          }
+        }
+      }
+      return (
+        models.length > 0 && models.every(model => !!model.input.chatContext)
+      );
+    },
+    undefined,
+    { timeout: 30000 }
+  );
+};
+
+/**
+ * Wait until `username` is known to every loaded chat.
+ *
+ * Mention completions are computed from the chat context when the user types,
+ * and are not recomputed when the user list changes afterwards. A test that
+ * types `@` before a peer has been synchronized therefore gets no suggestion,
+ * and retrying the assertion cannot recover from it.
+ */
+export const waitForChatUser = async (
+  page: IJupyterLabPageFixture,
+  username: string
+): Promise<void> => {
+  await waitForChatReady(page);
+  await page.waitForFunction(
+    (name: string) => {
+      const app = (window as any).jupyterapp;
+      const contexts: any[] = [];
+      for (const area of ['main', 'left', 'right']) {
+        for (const widget of app.shell.widgets(area)) {
+          for (const candidate of [widget, ...(widget.widgets ?? [])]) {
+            const context = candidate?.model?.input?.chatContext;
+            if (context) {
+              contexts.push(context);
+            }
+          }
+        }
+      }
+      return (
+        contexts.length > 0 &&
+        contexts.every(context =>
+          context.users.some((user: any) => user.username === name)
+        )
+      );
+    },
+    username,
+    { timeout: 30000 }
+  );
+};
+
 export const createChat = async (
   page: IJupyterLabPageFixture,
   filename: string,
@@ -51,6 +137,7 @@ export const openChat = async (
 ): Promise<Locator> => {
   let panel = await page.activity.getPanelLocator(filename);
   if (panel !== null && (await panel.count())) {
+    await waitForChatReady(page);
     return panel;
   }
 
@@ -65,6 +152,7 @@ export const openChat = async (
     async () => await page.activity.isTabActive(tabName)
   );
   panel = await page.activity.getPanelLocator(tabName);
+  await waitForChatReady(page);
 
   // If a content is provided, wait for all the messages to be rendered
   if (content) {
@@ -99,6 +187,7 @@ export const openChatToSide = async (
     });
   }, filename);
   await page.waitForCondition(() => panel.isVisible());
+  await waitForChatReady(page);
 
   // If a content is provided, wait for all the messages to be rendered
   if (content) {

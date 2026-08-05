@@ -10,7 +10,7 @@ import {
   test
 } from '@jupyterlab/galata';
 import { User } from '@jupyterlab/services';
-import { openChat, sendMessage, USER } from './test-utils';
+import { openChat, sendMessage, USER, waitForChatUser } from './test-utils';
 
 const FILENAME = 'user-mention.chat';
 
@@ -64,6 +64,7 @@ test.describe('#user-mention', () => {
 
     // Send a message from guest to make sure users are populated
     await sendMessage(guestPage, FILENAME, 'Hello from guest');
+    await waitForChatUser(page, 'jovyan_2');
 
     // Check mentions on main page
     const input = chatPanel
@@ -80,6 +81,7 @@ test.describe('#user-mention', () => {
 
     // Send a message from guest.
     await sendMessage(guestPage, FILENAME, 'test');
+    await waitForChatUser(page, 'jovyan_2');
 
     const input = chatPanel
       .locator('.jp-chat-input-container')
@@ -106,6 +108,7 @@ test.describe('#user-mention', () => {
 
     // Send a message from guest.
     await sendMessage(guestPage, FILENAME, 'test');
+    await waitForChatUser(page, 'jovyan_2');
 
     const input = chatPanel
       .locator('.jp-chat-input-container')
