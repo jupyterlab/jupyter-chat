@@ -141,6 +141,17 @@ async function createChatModel(
   // Set the name of the model.
   chatModel.name = model.path;
 
+  // Chats opened in the side panel have no document context, so the provider
+  // created above is what tells us when the document has been loaded. Without
+  // this the chat would only become usable when the document first becomes
+  // clean, which can be a second later (or never).
+  const provider = contentProvider.providers.get(
+    `${model.format}:${chatFileType.contentType}:${model.path}`
+  );
+  provider?.ready
+    .then(() => chatModel.markDocumentSynced())
+    .catch(e => console.error('The chat document failed to load', e));
+
   return {
     model: chatModel,
     displayName: getDisplayName(model.path, defaultDirectory)

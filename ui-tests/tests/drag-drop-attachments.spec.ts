@@ -75,6 +75,14 @@ test.describe('#drag-drop-attachments', () => {
     await page.notebook.open(NOTEBOOK);
     await page.notebook.setCell(0, 'code', MSG_CONTENT);
 
+    const chatPanel = await openChatToSide(page, chatPath);
+    const input = chatPanel.locator('.jp-chat-input-container');
+    await expect(input).toBeVisible();
+
+    await page.activity.activateTab(CHAT);
+
+    // Measure both ends of the drag only once the side panel is in its final
+    // state, otherwise the coordinates are stale by the time the drag starts.
     const cell = page.locator('.jp-Cell').first();
     await expect(cell).toBeVisible();
 
@@ -83,12 +91,6 @@ test.describe('#drag-drop-attachments', () => {
 
     const cellBox = await prompt.boundingBox();
     expect(cellBox).not.toBeNull();
-
-    const chatPanel = await openChatToSide(page, chatPath);
-    const input = chatPanel.locator('.jp-chat-input-container');
-    await expect(input).toBeVisible();
-
-    await page.activity.activateTab(CHAT);
 
     const inputBox = await input.boundingBox();
     expect(inputBox).not.toBeNull();
@@ -111,17 +113,19 @@ test.describe('#drag-drop-attachments', () => {
     await page.filebrowser.openDirectory(tmpPath);
     await page.filebrowser.open(FILE);
 
-    const tab = page
-      .locator('.lm-TabBar-tab')
-      .filter({ hasText: FILE })
-      .first();
-    await expect(tab).toBeVisible();
-
     const chatPanel = await openChatToSide(page, chatPath);
     const input = chatPanel.locator('.jp-chat-input-container');
     await expect(input).toBeVisible();
 
     await page.activity.activateTab(CHAT);
+
+    // Measure both ends of the drag only once the side panel is in its final
+    // state, otherwise the coordinates are stale by the time the drag starts.
+    const tab = page
+      .locator('.lm-TabBar-tab')
+      .filter({ hasText: FILE })
+      .first();
+    await expect(tab).toBeVisible();
 
     const tabBox = await tab.boundingBox();
     const inputBox = await input.boundingBox();
