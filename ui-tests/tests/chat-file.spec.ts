@@ -259,10 +259,7 @@ test.describe('#outofband', () => {
       FILENAME
     );
 
-    // The room briefly holds a duplicate of the pre-existing message while it
-    // overwrites its content from disk, so the count converges on 2 rather than
-    // reaching it directly. Allow more than the default assertion window.
-    await expect(messages).toHaveCount(2, { timeout: 30000 });
+    await expect(messages).toHaveCount(2);
     await expect(
       messages.last().locator('.jp-chat-rendered-message')
     ).toHaveText(newMsgContent);

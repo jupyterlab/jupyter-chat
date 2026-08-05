@@ -23,6 +23,11 @@ export class LabChatPanel
     this.addClass(MAIN_PANEL_CLASS);
     this.model.name = this.context.localPath;
     this.model.unreadChanged.connect(this._unreadChanged);
+    // The context is ready once the document content has been loaded, which is
+    // when the chat can be given an ID and become usable.
+    this.context.ready
+      .then(() => this.model.markDocumentSynced())
+      .catch(e => console.error('The chat document failed to load', e));
   }
 
   /**
