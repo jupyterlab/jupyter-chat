@@ -72,7 +72,8 @@ import {
   WidgetConfig,
   YChat,
   chatFileType,
-  getDisplayName
+  getDisplayName,
+  resolveChatRenamePath
 } from 'jupyterlab-chat';
 import { chatCommandRegistryPlugin } from './chat-commands/plugins';
 import { emojiCommandsPlugin } from './chat-commands/providers/emoji';
@@ -139,6 +140,17 @@ async function createChatModel(
 
   // Set the name of the model.
   chatModel.name = model.path;
+
+  // Chats opened in the side panel have no document context, so the provider
+  // created above is what tells us when the document has been loaded. Without
+  // this the chat would only become usable when the document first becomes
+  // clean, which can be a second later (or never).
+  const provider = contentProvider.providers.get(
+    `${model.format}:${chatFileType.contentType}:${model.path}`
+  );
+  provider?.ready
+    .then(() => chatModel.markDocumentSynced())
+    .catch(e => console.error('The chat document failed to load', e));
 
   return {
     model: chatModel,
@@ -1106,10 +1118,8 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           return null;
         }
 
-        // Ensure `.chat` extension
-        if (!newPath.endsWith(chatFileType.extensions[0])) {
-          newPath = `${newPath}${chatFileType.extensions[0]}`;
-        }
+        // Ensure `.chat` extension and keep the chat in its current directory.
+        newPath = resolveChatRenamePath(oldPath, newPath);
 
         try {
           await app.serviceManager.contents.rename(oldPath, newPath);
