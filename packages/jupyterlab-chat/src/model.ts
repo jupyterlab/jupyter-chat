@@ -233,9 +233,9 @@ export class LabChatModel
     });
   }
 
-  sendMessage(message: INewMessage): Promise<boolean | void> | boolean | void {
+  sendMessage(message: INewMessage): string | null {
     if (!message.body && !message.mime_model && !message.attachments?.length) {
-      return false;
+      return null;
     }
     this._resetWritingStatus();
     if (this._timeoutWriting !== null) {
@@ -284,6 +284,7 @@ export class LabChatModel
     }
 
     this.sharedModel.addMessage(msg);
+    return msg.id;
   }
 
   /**
