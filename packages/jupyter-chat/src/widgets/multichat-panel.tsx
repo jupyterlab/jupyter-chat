@@ -607,16 +607,29 @@ class SidePanelWidget extends ReactivePanelWithToolbar implements IChatPanel {
     });
     this.toolbar.addItem('close', closeButton);
 
+    /**
+     * Fix the insertBefore() method of the ReactiveToolbar.
+     * To remove after https://github.com/jupyterlab/jupyterlab/issues/19226
+     */
+    const insertBeforeClose = (name: string, widget: Widget) => {
+      let closeIndex = 0;
+      for (const itemName of this.toolbar.names()) {
+        if (itemName === 'close') break;
+        closeIndex++;
+      }
+      this.toolbar.insertItem(closeIndex, name, widget);
+    };
+
     if (options.toolbarFactory) {
       const items = options.toolbarFactory(this);
       for (let i = 0; i < items.length; i++) {
         const { name, widget } = items.get(i);
-        this.toolbar.insertBefore('close', name, widget);
+        insertBeforeClose(name, widget);
       }
       items.changed.connect((_, change) => {
         if (change.type === 'add') {
           for (const { name, widget } of change.newValues) {
-            this.toolbar.insertBefore('close', name, widget);
+            insertBeforeClose(name, widget);
           }
         } else if (change.type === 'remove') {
           for (const { widget } of change.oldValues) {
