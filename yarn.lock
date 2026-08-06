@@ -4891,12 +4891,12 @@ __metadata:
   linkType: hard
 
 "brace-expansion@npm:^1.1.7":
-  version: 1.1.16
-  resolution: "brace-expansion@npm:1.1.16"
+  version: 1.1.18
+  resolution: "brace-expansion@npm:1.1.18"
   dependencies:
     balanced-match: ^1.0.0
     concat-map: 0.0.1
-  checksum: 11ab2d5b39d61bc0d0de9240a5d08a5f210a5650885ca4876271ef5996b4c5d172d697b501d673fe099ab721aa8bf0348507ad23a6148e169856209d2f9cab94
+  checksum: aa84023a4118f9185b6f8c71ca3467c945878b141ba340261de209676442f81b08db5b7c7c119707cdecb7322fcfcdb71d8ffea55db9d1aad673d7c65469211f
   languageName: node
   linkType: hard
 
@@ -6280,9 +6280,9 @@ __metadata:
   linkType: hard
 
 "fast-uri@npm:^3.0.1":
-  version: 3.1.2
-  resolution: "fast-uri@npm:3.1.2"
-  checksum: 73a6e1b04e6fcf7a09ed93316e72d643ef177d26969973784690708612141f2c2f74657120bab75bf5bbc26bfd535a32c90a8c3bc50aca50584cf01f98815afe
+  version: 3.1.5
+  resolution: "fast-uri@npm:3.1.5"
+  checksum: 8a95af13e0730ac5c3abeb7f3939dee9fa95f2652e0ebac7a072b5597f836200084340c9bc2030f392318cdb49ec04e3fd6f558fa24c58d6d373557b9c01d7fb
   languageName: node
   linkType: hard
 
@@ -7925,14 +7925,14 @@ __metadata:
   linkType: hard
 
 "js-yaml@npm:^3.13.1":
-  version: 3.14.2
-  resolution: "js-yaml@npm:3.14.2"
+  version: 3.15.1
+  resolution: "js-yaml@npm:3.15.1"
   dependencies:
     argparse: ^1.0.7
     esprima: ^4.0.0
   bin:
     js-yaml: bin/js-yaml.js
-  checksum: 626fc207734a3452d6ba84e1c8c226240e6d431426ed94d0ab043c50926d97c509629c08b1d636f5d27815833b7cfd225865631da9fb33cb957374490bf3e90b
+  checksum: 536cfb984b61d1544dbdbe394254dd13481a94171cb3a61608572d9112a63cbace9dd900cb83a4e530ac36427fff77d9e1cb6734917c6fea951d00b4f7bbb163
   languageName: node
   linkType: hard
 
@@ -8805,7 +8805,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nanoid@npm:^3.3.11, nanoid@npm:^3.3.7":
+"nanoid@npm:^3.3.17":
+  version: 3.3.17
+  resolution: "nanoid@npm:3.3.17"
+  bin:
+    nanoid: bin/nanoid.cjs
+  checksum: dbbfd5ccc15a9bce602797ee75b98ee5ad377bd217782b8d2e7438e6e0ba0c54529a9f60437910aa00e263224b3c074b51a1aa3e21084a3cb56347a6cbacc275
+  languageName: node
+  linkType: hard
+
+"nanoid@npm:^3.3.7":
   version: 3.3.11
   resolution: "nanoid@npm:3.3.11"
   bin:
@@ -9339,13 +9348,13 @@ __metadata:
   linkType: hard
 
 "postcss@npm:^8.3.11, postcss@npm:^8.4.28, postcss@npm:^8.4.33":
-  version: 8.5.12
-  resolution: "postcss@npm:8.5.12"
+  version: 8.5.26
+  resolution: "postcss@npm:8.5.26"
   dependencies:
-    nanoid: ^3.3.11
+    nanoid: ^3.3.17
     picocolors: ^1.1.1
     source-map-js: ^1.2.1
-  checksum: e11818908d9f1693438bd7c6e3af99431552f5c9b3f400ebe76af3f25bd1b1efb26bc4c13533f3dcff45540a66ad4e84c62e06491f88003bbfa4ef35b6175f55
+  checksum: 719b1acd7db117cffa1514a6ed47e71ba4159ebddd1be2616b65dc1580a6bb9289abb8a78d26e08b45ab5a03277662483a6413e4b08325df0260831f4c2bc11b
   languageName: node
   linkType: hard
 
@@ -9975,9 +9984,9 @@ __metadata:
   linkType: hard
 
 "shell-quote@npm:^1.6.1":
-  version: 1.8.4
-  resolution: "shell-quote@npm:1.8.4"
-  checksum: 082dc836baa8ade01144ee3068af487ea45ba570ea6ab13a5eddc11ab16a976b8857b51ef2caf7dc9a1e173ff0aea685b8f78b4f6f5a0a1ef24c7b17c51350e2
+  version: 1.10.0
+  resolution: "shell-quote@npm:1.10.0"
+  checksum: d4bc0757ae0e493d0f6e3327c93be7d5af1d39e9969eb4332ed4e40bb2c3f9112ec31e979d713d302605f7e3431d9f5f061719e0e177077ffd9c03c0b9cc5f73
   languageName: node
   linkType: hard
 

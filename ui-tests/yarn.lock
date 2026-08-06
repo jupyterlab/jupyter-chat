@@ -2584,11 +2584,11 @@ __metadata:
   linkType: hard
 
 "brace-expansion@npm:^2.0.2":
-  version: 2.1.2
-  resolution: "brace-expansion@npm:2.1.2"
+  version: 2.1.4
+  resolution: "brace-expansion@npm:2.1.4"
   dependencies:
     balanced-match: ^1.0.0
-  checksum: 90ae144540b4dc988c787ef32dc5c00d44aa48472681baf99f967272366cf30c6eddb837a30b4f20ba3205a38348f1bb295c86ae2750da13e7fe25c42fcfb00a
+  checksum: a2e0b87c1d348fe7a424f8e383e113ac9c4f111753dba60069aa22d55de6855695bf83f56d9a96c92fb14f42be17e272d5a2761eac7e25ca6687fa2b6efa44a8
   languageName: node
   linkType: hard
 
@@ -3330,14 +3330,14 @@ __metadata:
   linkType: hard
 
 "dompurify@npm:^3.3.1":
-  version: 3.4.11
-  resolution: "dompurify@npm:3.4.11"
+  version: 3.4.13
+  resolution: "dompurify@npm:3.4.13"
   dependencies:
     "@types/trusted-types": ^2.0.7
   dependenciesMeta:
     "@types/trusted-types":
       optional: true
-  checksum: f96ec0f1ea763779ee0c08e05015422d600c14d4e0a6dd4b21cfb4ac30082c333534c2092206d55fcf9597f9750622facdaf295463b3f826b38569c928d16f19
+  checksum: e4d3c08e453521098557118ffaaa6e2ab42f9222edd57ab592b69946d76127973640df13a9c260da3cf89b6c525ccaa58bf398d0b3aff01c3b7bc3fa589b7260
   languageName: node
   linkType: hard
 
@@ -4505,7 +4505,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nanoid@npm:^3.3.11, nanoid@npm:^3.3.7":
+"nanoid@npm:^3.3.17":
+  version: 3.3.17
+  resolution: "nanoid@npm:3.3.17"
+  bin:
+    nanoid: bin/nanoid.cjs
+  checksum: dbbfd5ccc15a9bce602797ee75b98ee5ad377bd217782b8d2e7438e6e0ba0c54529a9f60437910aa00e263224b3c074b51a1aa3e21084a3cb56347a6cbacc275
+  languageName: node
+  linkType: hard
+
+"nanoid@npm:^3.3.7":
   version: 3.3.11
   resolution: "nanoid@npm:3.3.11"
   bin:
@@ -4716,13 +4725,13 @@ __metadata:
   linkType: hard
 
 "postcss@npm:^8.3.11":
-  version: 8.5.12
-  resolution: "postcss@npm:8.5.12"
+  version: 8.5.26
+  resolution: "postcss@npm:8.5.26"
   dependencies:
-    nanoid: ^3.3.11
+    nanoid: ^3.3.17
     picocolors: ^1.1.1
     source-map-js: ^1.2.1
-  checksum: e11818908d9f1693438bd7c6e3af99431552f5c9b3f400ebe76af3f25bd1b1efb26bc4c13533f3dcff45540a66ad4e84c62e06491f88003bbfa4ef35b6175f55
+  checksum: 719b1acd7db117cffa1514a6ed47e71ba4159ebddd1be2616b65dc1580a6bb9289abb8a78d26e08b45ab5a03277662483a6413e4b08325df0260831f4c2bc11b
   languageName: node
   linkType: hard
 
