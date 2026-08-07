@@ -3,12 +3,28 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { expect, test } from '@jupyterlab/galata';
+import { expect, galata, test } from '@jupyterlab/galata';
 
 import { openSidePanel } from './test-utils';
 
 const CHAT_NAME = 'placeholder';
 const FILENAME = `${CHAT_NAME}.chat`;
+
+// The chat list is populated from the chats in `defaultDirectory`. The UI tests
+// share a single Jupyter server across parallel workers, so using the (shared)
+// root directory would let chat files created by other test files leak into the
+// counts asserted here. Scoping this suite to its own directory keeps the chat
+// list deterministic. See https://github.com/jupyterlab/jupyter-chat/issues/471.
+const CHAT_DIR = 'placeholder-chats';
+
+test.use({
+  mockSettings: {
+    ...galata.DEFAULT_SETTINGS,
+    'jupyterlab-chat-extension:factory': {
+      defaultDirectory: CHAT_DIR
+    }
+  }
+});
 
 test.describe('#placeholder', () => {
   test.describe('#initialization', () => {
@@ -36,19 +52,21 @@ test.describe('#placeholder', () => {
   });
 
   test.describe('#chatList', () => {
+    const CHAT_PATH = `${CHAT_DIR}/${FILENAME}`;
+
     test.beforeEach(async ({ page }) => {
-      await page.filebrowser.contents.uploadContent('{}', 'text', FILENAME);
+      await page.filebrowser.contents.uploadContent('{}', 'text', CHAT_PATH);
     });
 
     test.afterEach(async ({ page }) => {
-      if (await page.filebrowser.contents.fileExists(FILENAME)) {
-        await page.filebrowser.contents.deleteFile(FILENAME);
+      if (await page.filebrowser.contents.directoryExists(CHAT_DIR)) {
+        await page.filebrowser.contents.deleteDirectory(CHAT_DIR);
       }
     });
 
     test('should list an existing chat file', async ({ page }) => {
       await page.waitForCondition(
-        async () => await page.filebrowser.contents.fileExists(FILENAME)
+        async () => await page.filebrowser.contents.fileExists(CHAT_PATH)
       );
 
       const panel = await openSidePanel(page);
@@ -61,12 +79,20 @@ test.describe('#placeholder', () => {
     }) => {
       const files = ['charlie.chat', 'alpha.chat', 'bravo.chat'];
       for (const file of files) {
-        await page.filebrowser.contents.uploadContent('{}', 'text', file);
+        await page.filebrowser.contents.uploadContent(
+          '{}',
+          'text',
+          `${CHAT_DIR}/${file}`
+        );
       }
       await page.waitForCondition(async () => {
-        await page.filebrowser.contents.fileExists(FILENAME);
+        if (!(await page.filebrowser.contents.fileExists(CHAT_PATH))) {
+          return false;
+        }
         for (const file of files) {
-          if (!(await page.filebrowser.contents.fileExists(file))) {
+          if (
+            !(await page.filebrowser.contents.fileExists(`${CHAT_DIR}/${file}`))
+          ) {
             return false;
           }
         }
@@ -80,17 +106,13 @@ test.describe('#placeholder', () => {
       await expect(items.nth(1)).toHaveText('bravo');
       await expect(items.nth(2)).toHaveText('charlie');
       await expect(items.nth(3)).toHaveText(CHAT_NAME);
-
-      for (const file of files) {
-        await page.filebrowser.contents.deleteFile(file);
-      }
     });
 
     test('should open a chat when clicking its name in the list', async ({
       page
     }) => {
       await page.waitForCondition(
-        async () => await page.filebrowser.contents.fileExists(FILENAME)
+        async () => await page.filebrowser.contents.fileExists(CHAT_PATH)
       );
 
       const panel = await openSidePanel(page);
@@ -109,7 +131,7 @@ test.describe('#placeholder', () => {
       page
     }) => {
       await page.waitForCondition(
-        async () => await page.filebrowser.contents.fileExists(FILENAME)
+        async () => await page.filebrowser.contents.fileExists(CHAT_PATH)
       );
 
       const panel = await openSidePanel(page);
@@ -120,9 +142,18 @@ test.describe('#placeholder', () => {
   });
 
   test.describe('#dynamicUpdate', () => {
+    const CHAT_PATH = `${CHAT_DIR}/${FILENAME}`;
+
+    test.beforeEach(async ({ page }) => {
+      // Ensure the (isolated) default directory exists but is empty.
+      if (!(await page.filebrowser.contents.directoryExists(CHAT_DIR))) {
+        await page.filebrowser.contents.createDirectory(CHAT_DIR);
+      }
+    });
+
     test.afterEach(async ({ page }) => {
-      if (await page.filebrowser.contents.fileExists(FILENAME)) {
-        await page.filebrowser.contents.deleteFile(FILENAME);
+      if (await page.filebrowser.contents.directoryExists(CHAT_DIR)) {
+        await page.filebrowser.contents.deleteDirectory(CHAT_DIR);
       }
     });
 
@@ -136,12 +167,12 @@ test.describe('#placeholder', () => {
       await expect(items).toHaveCount(0);
 
       // Create a chat file and expect the list to update.
-      await page.filebrowser.contents.uploadContent('{}', 'text', FILENAME);
+      await page.filebrowser.contents.uploadContent('{}', 'text', CHAT_PATH);
       await expect(items).toHaveCount(1);
       await expect(items.first()).toHaveText(CHAT_NAME);
 
       // Delete the file and expect the list to update.
-      await page.filebrowser.contents.deleteFile(FILENAME);
+      await page.filebrowser.contents.deleteFile(CHAT_PATH);
       await expect(items).toHaveCount(0);
     });
   });

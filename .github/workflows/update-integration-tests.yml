@@ -14,6 +14,25 @@ jobs:
 
     if: github.event.issue.pull_request && contains(github.event.comment.body, 'please update snapshots')
 
+    # Snapshots are version-specific and stored per JupyterLab line (see
+    # snapshotPathTemplate in ui-tests/playwright.config.js). Mirror the matrix
+    # used by the UI tests workflow so both sets of references are regenerated.
+    strategy:
+      # Avoid concurrent pushes to the PR branch from parallel matrix jobs.
+      max-parallel: 1
+      matrix:
+        include:
+          - jupyterlab: '>=4.6,<4.7'
+            jupyter_collaboration: '==5.0.0a0'
+            galata: '^5.6.0'
+            collab_pre: '--pre'
+            snapshot_subdir: ''
+          - jupyterlab: '>=4.2,<4.6'
+            jupyter_collaboration: '~=4.0'
+            galata: '~5.5.10'
+            collab_pre: ''
+            snapshot_subdir: 'jupyterlab-lt-4.6'
+
     steps:
       - uses: jupyterlab/maintainer-tools/.github/actions/update-snapshots-checkout@main
         with:
@@ -22,13 +41,26 @@ jobs:
       - name: Base Setup
         uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
 
-      - name: Install dependencies
-        run: python -m pip install -U "jupyterlab>=4.0.0,<5"
-
       - name: Install extension
         run: python ./scripts/dev_install.py
 
+      - name: Pin JupyterLab and jupyter_collaboration for this matrix entry
+        run: |
+          set -eux
+          python -m pip install "jupyterlab${{ matrix.jupyterlab }}"
+          python -m pip install ${{ matrix.collab_pre }} \
+            "jupyter_collaboration${{ matrix.jupyter_collaboration }}"
+
+      - name: Pin Galata for this matrix entry
+        working-directory: ui-tests
+        env:
+          YARN_ENABLE_IMMUTABLE_INSTALLS: 0
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+        run: jlpm add --dev "@jupyterlab/galata@${{ matrix.galata }}"
+
       - uses: jupyterlab/maintainer-tools/.github/actions/update-snapshots@v1
+        env:
+          JLAB_SNAPSHOT_SUBDIR: ${{ matrix.snapshot_subdir }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           # Playwright knows how to start JupyterLab server

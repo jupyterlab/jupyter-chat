@@ -69,22 +69,41 @@ test.describe('#sidepanel', () => {
   });
 
   test.describe('#openingClosing', () => {
-    test.use({ autoGoto: false });
+    // The chat list is populated from the chats in `defaultDirectory`. The UI
+    // tests share a single Jupyter server across parallel workers, so relying on
+    // the (shared) root directory would let chat files created by other test
+    // files leak into the counts asserted here. Scoping this suite to its own
+    // directory keeps the chat list deterministic.
+    // See https://github.com/jupyterlab/jupyter-chat/issues/471.
+    const CHAT_DIR = 'sidepanel-chats';
+
+    test.use({
+      autoGoto: false,
+      mockSettings: {
+        ...galata.DEFAULT_SETTINGS,
+        'jupyterlab-chat-extension:factory': {
+          defaultDirectory: CHAT_DIR
+        }
+      }
+    });
 
     const name = FILENAME.replace('.chat', '');
+    const CHAT_PATH = `${CHAT_DIR}/${FILENAME}`;
     const NEW_DIR = 'chats_dir';
     let panel: Locator;
 
     test.beforeEach(async ({ page }) => {
-      await page.filebrowser.contents.uploadContent('{}', 'text', FILENAME);
+      await page.filebrowser.contents.uploadContent('{}', 'text', CHAT_PATH);
       await page.waitForCondition(
-        async () => await page.filebrowser.contents.fileExists(FILENAME)
+        async () => await page.filebrowser.contents.fileExists(CHAT_PATH)
       );
       await page.goto();
     });
 
     test.afterEach(async ({ page }) => {
-      await page.filebrowser.contents.deleteFile(FILENAME);
+      if (await page.filebrowser.contents.directoryExists(CHAT_DIR)) {
+        await page.filebrowser.contents.deleteDirectory(CHAT_DIR);
+      }
       if (await page.filebrowser.contents.directoryExists(NEW_DIR)) {
         await page.filebrowser.contents.deleteDirectory(NEW_DIR);
       }
@@ -144,7 +163,9 @@ test.describe('#sidepanel', () => {
       const defaultDirectory = settings.locator(
         'input[label="defaultDirectory"]'
       );
-      await defaultDirectory.pressSequentially(NEW_DIR);
+      // Replace the (isolated) default directory with an empty one. Use fill()
+      // to replace the existing value (the input is pre-populated with CHAT_DIR).
+      await defaultDirectory.fill(NEW_DIR);
       // wait for the settings to be saved
       await expect(page.activity.getTabLocator('Settings')).toHaveAttribute(
         'class',
@@ -166,8 +187,10 @@ test.describe('#sidepanel', () => {
       await expect(chatList.locator('li')).toHaveCount(1);
       await expect(chatList.locator('li').last()).toHaveText(/^untitled/);
 
-      // Changing the default directory (to root) should update the chat list.
-      await defaultDirectory.clear();
+      // Switching the default directory back to the initial one (which already
+      // contains a chat) should update the chat list: it then shows both the
+      // still-open untitled chat and the chat living in CHAT_DIR.
+      await defaultDirectory.fill(CHAT_DIR);
 
       // wait for the settings to be saved
       await expect(page.activity.getTabLocator('Settings')).toHaveAttribute(
