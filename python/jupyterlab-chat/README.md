@@ -15,7 +15,7 @@ chat widget in the front end.
 
 ## Requirements
 
-- JupyterLab >= 4.0.0
+- JupyterLab >= 4.6.0
 
 ## Install
 
