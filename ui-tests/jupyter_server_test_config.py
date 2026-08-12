@@ -13,5 +13,10 @@ configure_jupyter_server(c)
 
 c.FileContentsManager.delete_to_trash = False
 
+# Each UI test runs in its own temporary directory, but all documents handled by
+# the server otherwise share the same SQLite YStore. Use one temporary file per
+# document so parallel tests do not contend for a database lock.
+c.YDocExtension.ystore_class = "jupyter_server_ydoc.stores.TempFileYStore"
+
 # Uncomment to set server log level to debug level
 # c.ServerApp.log_level = "DEBUG"
