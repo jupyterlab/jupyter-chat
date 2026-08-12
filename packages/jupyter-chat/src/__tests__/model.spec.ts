@@ -33,10 +33,9 @@ describe('test chat model', () => {
         message.body = 'formatted msg';
         return message;
       }
-      sendMessage(
-        message: INewMessage
-      ): Promise<boolean | void> | boolean | void {
+      sendMessage(message: INewMessage): null {
         // No-op
+        return null;
       }
 
       createChatContext(): IChatContext {

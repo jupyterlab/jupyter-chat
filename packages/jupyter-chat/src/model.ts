@@ -142,9 +142,9 @@ export interface IChatModel extends IDisposable {
    * Default to no-op.
    *
    * @param message - the message to send.
-   * @returns whether the message has been sent or not, or nothing if not needed.
+   * @returns the message id if sent, or null.
    */
-  sendMessage(message: INewMessage): Promise<boolean | void> | boolean | void;
+  sendMessage(message: INewMessage): Promise<string | null> | string | null;
 
   /**
    * Clear the message list.
@@ -548,7 +548,7 @@ export abstract class AbstractChatModel implements IChatModel {
    */
   abstract sendMessage(
     message: INewMessage
-  ): Promise<boolean | void> | boolean | void;
+  ): Promise<string | null> | string | null;
 
   /**
    * Clear the message list.
