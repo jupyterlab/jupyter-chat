@@ -57,7 +57,7 @@
         "watch:labextension": "jupyter labextension watch ."
     },
     "dependencies": {
-        "@jupyter/chat": "^0.5.0",
+        "@jupyter/chat": "^0.23.0",
         "@jupyterlab/apputils": "^4.3.0",
         "@jupyterlab/coreutils": "^6.2.0",
         "@jupyterlab/notebook": "^4.2.0",

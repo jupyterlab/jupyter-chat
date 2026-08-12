@@ -4,9 +4,11 @@
  */
 
 import {
-  ChatModel,
+  AbstractChatModel,
+  IChatContext,
   IChatHistory,
-  IChatMessage,
+  IChatModel,
+  IMessageContent,
   INewMessage,
   IUser
 } from '@jupyter/chat';
@@ -33,7 +35,7 @@ export interface IWsUser extends IUser {
 /**
  * The type for a chat message, which includes an ID to the sender.
  */
-export type IWsMessage = IChatMessage<IWsUser>;
+export type IWsMessage = IMessageContent<IWsUser> & { type: 'msg' };
 
 export type ConnectionMessage = {
   type: 'connection';
@@ -45,7 +47,7 @@ type GenericMessage = IWsMessage | ConnectionMessage;
 /**
  * An implementation of the chat model based on websocket handler.
  */
-export class WebSocketHandler extends ChatModel {
+export class WebSocketHandler extends AbstractChatModel {
   /**
    * The server settings used to make API requests.
    */
@@ -85,11 +87,22 @@ export class WebSocketHandler extends ChatModel {
    * Sends a message across the WebSocket. Promise resolves to the message ID
    * when the server sends the same message back, acknowledging receipt.
    */
-  sendMessage(message: INewMessage): Promise<boolean> {
-    message.id = UUID.uuid4();
+  async sendMessage(message: INewMessage): Promise<boolean> {
+    if (!message.body && !message.mime_model && !message.attachments?.length) {
+      return false;
+    }
+    const body = message.body ?? '';
+
+    const msg: Partial<IMessageContent> = {
+      type: 'msg',
+      id: UUID.uuid4(),
+      time: Date.now() / 1000,
+      body
+    };
+
     return new Promise(resolve => {
-      this._socket?.send(JSON.stringify(message));
-      this._sendResolverQueue.set(message.id!, resolve);
+      this._socket?.send(JSON.stringify(msg));
+      this._sendResolverQueue.set(msg.id!, resolve);
     });
   }
 
@@ -123,17 +136,28 @@ export class WebSocketHandler extends ChatModel {
     }
   }
 
-  messageAdded(message: GenericMessage): void {
+  messageAdded(message: IMessageContent): void {
+    const wsMessage = message as GenericMessage;
     // resolve promise from `sendMessage()`
-    if (message.type === 'msg') {
-      if (message.sender.id === this.userId) {
-        this._sendResolverQueue.get(message.id)?.(true);
+    if (wsMessage.type === 'msg') {
+      if (wsMessage.sender.id === this.userId) {
+        this._sendResolverQueue.get(wsMessage.id)?.(true);
       }
-      super.messageAdded(message);
-    } else if (message.type === 'connection') {
-      this.userId = message.client_id;
+
+      super.messageAdded(wsMessage);
+    } else if (wsMessage.type === 'connection') {
+      this.userId = (wsMessage as ConnectionMessage).client_id;
       this._connectionInitialized.resolve(true);
     }
+  }
+
+  createChatContext(): IChatContext {
+    return {
+      name: this.name,
+      messages: this.messages,
+      user: { username: this.userId },
+      users: []
+    };
   }
 
   private _onClose(e: CloseEvent) {
@@ -192,7 +216,7 @@ export namespace WebSocketHandler {
   /**
    * The instantiation options for a data registry handler.
    */
-  export interface IOptions extends ChatModel.IOptions {
+  export interface IOptions extends IChatModel.IOptions {
     serverSettings?: ServerConnection.ISettings;
   }
 }

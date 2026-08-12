@@ -5,8 +5,8 @@
 
 import {
   ActiveCellManager,
-  AutocompletionRegistry,
-  IAutocompletionRegistry,
+  ChatCommandRegistry,
+  IChatCommandRegistry,
   SelectionWatcher,
   buildChatSidebar,
   buildErrorWidget
@@ -24,20 +24,20 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { WebSocketHandler } from './handlers/websocket-handler';
 
 const pluginIds = {
-  autocompletionRegistry: 'jupyterlab-ws-chat:autocompletionRegistry',
-  chat: 'jupyterlab-ws-chat:chat'
+  chatCommandRegistry: 'jupyterlab-ws-chat-extension:chat-command-registry',
+  chat: 'jupyterlab-ws-chat-extension:chat'
 };
 
 /**
  * Extension providing the autocompletion registry.
  */
-const autocompletionPlugin: JupyterFrontEndPlugin<IAutocompletionRegistry> = {
-  id: pluginIds.autocompletionRegistry,
-  description: 'An autocompletion registry',
+const chatCommandPlugin: JupyterFrontEndPlugin<IChatCommandRegistry> = {
+  id: pluginIds.chatCommandRegistry,
+  description: 'The chat command registry',
   autoStart: true,
-  provides: IAutocompletionRegistry,
-  activate: (app: JupyterFrontEnd): IAutocompletionRegistry => {
-    return new AutocompletionRegistry();
+  provides: IChatCommandRegistry,
+  activate: (app: JupyterFrontEnd): IChatCommandRegistry => {
+    return new ChatCommandRegistry();
   }
 };
 
@@ -50,7 +50,7 @@ const chat: JupyterFrontEndPlugin<void> = {
   autoStart: true,
   requires: [IRenderMimeRegistry],
   optional: [
-    IAutocompletionRegistry,
+    IChatCommandRegistry,
     ILayoutRestorer,
     INotebookTracker,
     ISettingRegistry,
@@ -59,7 +59,7 @@ const chat: JupyterFrontEndPlugin<void> = {
   activate: async (
     app: JupyterFrontEnd,
     rmRegistry: IRenderMimeRegistry,
-    autocompletionRegistry: IAutocompletionRegistry,
+    chatCommandRegistry: IChatCommandRegistry,
     restorer: ILayoutRestorer | null,
     notebookTracker: INotebookTracker,
     settingsRegistry: ISettingRegistry | null,
@@ -140,7 +140,7 @@ const chat: JupyterFrontEndPlugin<void> = {
         model: chatHandler,
         themeManager,
         rmRegistry,
-        autocompletionRegistry
+        chatCommandRegistry
       });
     } catch (e) {
       chatWidget = buildErrorWidget(themeManager);
@@ -162,11 +162,11 @@ const chat: JupyterFrontEndPlugin<void> = {
       execute: async () => {
         if (chatWidget !== null) {
           app.shell.activateById(chatWidget.id);
-          chatHandler.focusInput();
+          chatHandler.input.focus();
         }
       }
     });
   }
 };
 
-export default [autocompletionPlugin, chat];
+export default [chatCommandPlugin, chat];

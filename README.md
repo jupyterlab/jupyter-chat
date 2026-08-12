@@ -72,7 +72,7 @@ available:
 ### Chat settings
 
 Some jupyterlab settings are available for the chats in the setting panel
-(menu `Settings->Settings Editor`), with the entry *Chat*.
+(menu `Settings->Settings Editor`), with the entry _Chat_.
 
 These settings includes:
 
