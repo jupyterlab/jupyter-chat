@@ -114,7 +114,7 @@
         "singleton": true
       },
       "@jupyter/collaborative-drive": {
-        "bundled": false,
+        "bundled": true,
         "singleton": true
       },
       "jupyterlab-chat": {

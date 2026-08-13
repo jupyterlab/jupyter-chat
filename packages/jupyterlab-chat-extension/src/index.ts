@@ -70,6 +70,7 @@ import {
   LabChatModelFactory,
   LabChatPanel,
   WidgetConfig,
+  WsChatModel,
   YChat,
   chatFileType,
   getDisplayName,
@@ -96,25 +97,26 @@ const pluginIds = {
 };
 
 /**
- * A function that create a LabChatModel model.
+ * Create a chat model for a given file path.
+ *
+ * When `contentProvider` is available (jupyter-collaboration installed) a
+ * collaborative `LabChatModel` backed by a Yjs shared document is returned.
+ * Otherwise a `WsChatModel` backed by a plain WebSocket is returned.
  *
  * @param app - the frontend application.
- * @param contentProvider - the collaborative content provider.
+ * @param widgetConfig - the shared widget configuration.
+ * @param collaborativeContentProvider - the collaborative content provider, or null.
  * @param path - the path of the chat file (optional).
  *   If not provided, a new file will be created.
  * @param defaultDirectory - the default directory where to create chats.
- * @returns
  */
 async function createChatModel(
   app: JupyterFrontEnd,
-  contentProvider: ICollaborativeContentProvider,
+  widgetConfig: IWidgetConfig,
+  collaborativeContentProvider: ICollaborativeContentProvider | null,
   path?: string,
   defaultDirectory?: string
 ): Promise<MultiChatPanel.IOpenChatArgs> {
-  const modelFactory = app.docRegistry.getModelFactory(
-    'Chat'
-  ) as LabChatModelFactory;
-
   if (!path) {
     path = (await app.commands.execute(CommandIDs.createChat, {
       inSidePanel: true
@@ -125,36 +127,53 @@ async function createChatModel(
     }
   }
 
-  const model = await app.serviceManager.contents.get(path);
-  // Create a share model from the chat file
-  const sharedModel = contentProvider.sharedModelFactory.createNew({
-    path: model.path,
-    format: model.format,
-    contentType: chatFileType.contentType,
-    collaborative: true
-  }) as YChat;
+  if (collaborativeContentProvider) {
+    const modelFactory = app.docRegistry.getModelFactory(
+      'Chat'
+    ) as LabChatModelFactory;
 
-  const chatModel = modelFactory.createNew({
-    sharedModel
+    const model = await app.serviceManager.contents.get(path);
+    const sharedModel =
+      collaborativeContentProvider.sharedModelFactory.createNew({
+        path: model.path,
+        format: model.format,
+        contentType: chatFileType.contentType,
+        collaborative: true
+      }) as YChat;
+
+    const chatModel = modelFactory.createNew({ sharedModel });
+    chatModel.name = model.path;
+
+    // Chats opened in the side panel have no document context, so the provider
+    // created above is what tells us when the document has been loaded. Without
+    // this the chat would only become usable when the document first becomes
+    // clean, which can be a second later (or never).
+    const provider = collaborativeContentProvider.providers.get(
+      `${model.format}:${chatFileType.contentType}:${model.path}`
+    );
+    provider?.ready
+      .then(() => chatModel.markDocumentSynced())
+      .catch(e => console.error('The chat document failed to load', e));
+
+    return {
+      model: chatModel,
+      displayName: getDisplayName(model.path, defaultDirectory)
+    };
+  }
+
+  // WS mode: no collaboration available.
+  const chatModel = new WsChatModel({
+    path,
+    user: app.serviceManager.user.identity,
+    widgetConfig,
+    serverSettings: app.serviceManager.serverSettings
   });
-
-  // Set the name of the model.
-  chatModel.name = model.path;
-
-  // Chats opened in the side panel have no document context, so the provider
-  // created above is what tells us when the document has been loaded. Without
-  // this the chat would only become usable when the document first becomes
-  // clean, which can be a second later (or never).
-  const provider = contentProvider.providers.get(
-    `${model.format}:${chatFileType.contentType}:${model.path}`
-  );
-  provider?.ready
-    .then(() => chatModel.markDocumentSynced())
-    .catch(e => console.error('The chat document failed to load', e));
+  await chatModel.initialize();
+  chatModel.name = path;
 
   return {
     model: chatModel,
-    displayName: getDisplayName(model.path, defaultDirectory)
+    displayName: getDisplayName(path, defaultDirectory)
   };
 }
 
@@ -590,8 +609,9 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
   id: pluginIds.chatCommands,
   description: 'The commands to create or open a chat.',
   autoStart: true,
-  requires: [ICollaborativeContentProvider, IWidgetConfig, IChatTracker],
+  requires: [IWidgetConfig, IChatTracker],
   optional: [
+    ICollaborativeContentProvider,
     IMultiChatPanel,
     ICommandPalette,
     IDefaultFileBrowser,
@@ -601,9 +621,9 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
   ],
   activate: (
     app: JupyterFrontEnd,
-    drive: ICollaborativeContentProvider,
     widgetConfig: IWidgetConfig,
     tracker: IChatTracker,
+    drive: ICollaborativeContentProvider | null,
     chatPanel: MultiChatPanel | null,
     commandPalette: ICommandPalette | null,
     filebrowser: IDefaultFileBrowser | null,
@@ -1037,18 +1057,32 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
                 return chatPanel.current ?? null;
               }
 
-              const openChatArgs = await createChatModel(app, drive, filepath);
+              const openChatArgs = await createChatModel(
+                app,
+                widgetConfig,
+                drive,
+                filepath
+              );
 
               // Add a chat widget to the side panel.
               chatPanel.open(openChatArgs);
-            } else {
-              // The chat is opened in the main area
+            } else if (drive) {
+              // The chat is opened in the main area (collaboration mode only).
               // TODO: support JCollab v3 by optionally prefixing 'RTC:'
               const widget = commands.execute('docmanager:open', {
                 path: `${filepath}`,
                 factory: FACTORY
               });
               return widget ?? null;
+            } else if (chatPanel) {
+              // WS mode has no main-area document factory — open in side panel.
+              const openChatArgs = await createChatModel(
+                app,
+                widgetConfig,
+                null,
+                filepath
+              );
+              chatPanel.open(openChatArgs);
             }
             return null;
           }
@@ -1261,8 +1295,9 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
   description: 'The chat panel widget.',
   autoStart: true,
   provides: IMultiChatPanel,
-  requires: [IWidgetConfig, ICollaborativeContentProvider, IRenderMimeRegistry],
+  requires: [IWidgetConfig, IRenderMimeRegistry],
   optional: [
+    ICollaborativeContentProvider,
     IAttachmentOpenerRegistry,
     IChatCommandRegistry,
     IChatToolbarFactory,
@@ -1279,8 +1314,8 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
   activate: (
     app: JupyterFrontEnd,
     widgetConfig: IWidgetConfig,
-    drive: ICollaborativeContentProvider,
     rmRegistry: IRenderMimeRegistry,
+    drive: ICollaborativeContentProvider | null,
     attachmentOpenerRegistry: IAttachmentOpenerRegistry,
     chatCommandRegistry: IChatCommandRegistry,
     chatToolbarFactory: ChatToolbarFactory | null,
@@ -1323,6 +1358,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
       createModel: async (path?: string) => {
         return createChatModel(
           app,
+          widgetConfig,
           drive,
           path,
           widgetConfig.config.defaultDirectory

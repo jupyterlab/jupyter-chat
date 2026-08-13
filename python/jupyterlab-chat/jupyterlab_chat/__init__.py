@@ -44,5 +44,22 @@ def _load_jupyter_server_extension(server_app):
     server_app: jupyterlab.labapp.LabApp
         JupyterLab application instance
     """
+    try:
+        import jupyter_collaboration  # noqa: F401
+        collaboration_available = True
+    except ImportError:
+        collaboration_available = False
+
+    if not collaboration_available:
+        from jupyter_server.utils import url_path_join
+        from .ws_handlers import WSChatHandler
+
+        server_app.web_app.settings["ws_chat_rooms"] = {}
+
+        base_url = server_app.web_app.settings.get("base_url", "/")
+        server_app.web_app.add_handlers(".*$", [
+            (url_path_join(base_url, "api/jupyter-chat/ws"), WSChatHandler),
+        ])
+
     name = "jupyterlab_chat"
     server_app.log.info(f"Registered {name} server extension")
