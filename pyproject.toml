@@ -57,3 +57,8 @@ ignore = ["W002"]
 
 [tool.mypy]
 check_untyped_defs = true
+
+[tool.pytest.ini_options]
+# Only collect the jupyterlab-chat Python package. jupyterlab-ws-chat lives here
+# as a git subtree and is not tested/built by this repo's CI yet.
+testpaths = ["python/jupyterlab-chat"]

@@ -20,7 +20,8 @@ export default defineConfig([
       '**/*.d.ts',
       'tests',
       '**/__tests__',
-      'ui-tests'
+      'ui-tests',
+      'python/jupyterlab-ws-chat'
     ]
   },
   js.configs.recommended,
