@@ -44,6 +44,7 @@ collaboration = [
 test = [
     "coverage",
     "mypy",
+    "nox",
     "pytest",
     "pytest-asyncio",
     "pytest-cov",
