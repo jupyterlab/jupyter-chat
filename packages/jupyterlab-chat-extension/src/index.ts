@@ -73,6 +73,7 @@ import {
   YChat,
   chatFileType,
   getDisplayName,
+  getServerSessionRtcInfo,
   resolveChatRenamePath
 } from 'jupyterlab-chat';
 import { chatCommandRegistryPlugin } from './chat-commands/plugins';
@@ -98,13 +99,15 @@ const pluginIds = {
 /**
  * Create a chat model for a given file path.
  *
- * When `contentProvider` is available (jupyter-collaboration installed) a
- * collaborative `LabChatModel` backed by a Yjs shared document is returned.
- * Otherwise a `LabChatModel` backed by a plain WebSocket is returned.
+ * Collaborative (RTC) mode is decided by the server and published via
+ * PageConfig (see `getServerSessionRtcInfo`). When enabled, a collaborative
+ * `LabChatModel` backed by a Yjs shared document (via the collaborative content
+ * provider) is returned. Otherwise a `LabChatModel` backed by a plain WebSocket
+ * is returned.
  *
  * @param app - the frontend application.
- * @param widgetConfig - the shared widget configuration.
- * @param collaborativeContentProvider - the collaborative content provider, or null.
+ * @param collaborativeContentProvider - the collaborative content provider, or
+ *   null. Only used when the server reports RTC enabled.
  * @param path - the path of the chat file (optional).
  *   If not provided, a new file will be created.
  * @param defaultDirectory - the default directory where to create chats.
@@ -129,24 +132,29 @@ async function createChatModel(
     'Chat'
   ) as LabChatModelFactory;
   const fileModel = await app.serviceManager.contents.get(path);
-  const sharedModel =
-    collaborativeContentProvider?.sharedModelFactory.createNew({
-      path: fileModel.path,
-      format: fileModel.format,
-      contentType: chatFileType.contentType,
-      collaborative: true
-    }) as YChat | undefined;
+
+  // The server's PageConfig decision is authoritative: only use the
+  // collaborative content provider when RTC is enabled this session.
+  const collaborative = getServerSessionRtcInfo().enabled;
+  const contentProvider = collaborative ? collaborativeContentProvider : null;
+
+  const sharedModel = contentProvider?.sharedModelFactory.createNew({
+    path: fileModel.path,
+    format: fileModel.format,
+    contentType: chatFileType.contentType,
+    collaborative: true
+  }) as YChat | undefined;
 
   // The LabChatModel initialize a shared model if undefined.
   const chatModel = modelFactory.createNew({ sharedModel });
   chatModel.name = fileModel.path;
 
-  if (collaborativeContentProvider) {
+  if (contentProvider) {
     // Chats opened in the side panel have no document context, so the provider
     // created above is what tells us when the document has been loaded. Without
     // this the chat would only become usable when the document first becomes
     // clean, which can be a second later (or never).
-    const provider = collaborativeContentProvider.providers.get(
+    const provider = contentProvider.providers.get(
       `${fileModel.format}:${chatFileType.contentType}:${fileModel.path}`
     );
     provider?.ready
@@ -439,7 +447,26 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
 
     app.docRegistry.addFileType(chatFileType);
 
-    if (drive) {
+    // The server decides whether RTC (collaborative) mode is active this
+    // session and publishes the decision via PageConfig. That decision is the
+    // single source of truth for `collaborative`: it honors which RTC server
+    // extensions are installed AND enabled, plus the jupyter_server_ydoc
+    // `disable_rtc` trait. The frontend `drive` provider is only the mechanism
+    // used when collaborative.
+    const collaborative = getServerSessionRtcInfo().enabled;
+    if (collaborative !== !!drive) {
+      console.warn(
+        `jupyterlab-chat: the server reports RTC ${
+          collaborative ? 'enabled' : 'disabled'
+        }, but the collaborative content provider is ${
+          drive ? 'present' : 'absent'
+        }. Ensure the frontend and server RTC packages match.`
+      );
+    }
+
+    // Register the collaborative document factory only in collaborative mode
+    // (and only when a provider is available to back it).
+    if (collaborative && drive) {
       const chatFactory = () => YChat.create();
       drive.sharedModelFactory.registerDocumentFactory('chat', chatFactory);
     }
@@ -456,8 +483,10 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
           activeCellManager,
           selectionWatcher,
           documentManager: filebrowser?.model.manager,
-          collaborative: !!drive,
-          serverSettings: drive ? undefined : ServerConnection.makeSettings()
+          collaborative,
+          serverSettings: collaborative
+            ? undefined
+            : ServerConnection.makeSettings()
         });
         app.docRegistry.addModelFactory(modelFactory);
       })
@@ -485,7 +514,7 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
       messagePreambleRegistry,
       chatBodyPlaceholderFactory: chatBodyPlaceholderFactory ?? undefined,
       welcomeMessage,
-      collaborative: !!drive
+      collaborative
     });
 
     // Registering the widget factory
