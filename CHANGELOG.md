@@ -2,6 +2,39 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.24.0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.23.2...802bf4ad26e9fcf675bd4a2c4bf0dd6a8a2a451a))
+
+### API and Breaking Changes
+
+- Return the sent message's id (or null) in `sendMessage` method [#477](https://github.com/jupyterlab/jupyter-chat/pull/477) ([@brichet](https://github.com/brichet), [@dlqqq](https://github.com/dlqqq), [@jtpio](https://github.com/jtpio))
+
+### Bugs fixed
+
+- Explicitly request file/directory content from the contents manager [#484](https://github.com/jupyterlab/jupyter-chat/pull/484) ([@brichet](https://github.com/brichet), [@dlqqq](https://github.com/dlqqq))
+
+### Maintenance and upkeep improvements
+
+- test: avoid SQLite YStore locks in parallel UI tests [#486](https://github.com/jupyterlab/jupyter-chat/pull/486) ([@uuzzrm](https://github.com/uuzzrm), [@brichet](https://github.com/brichet), [@krassowski](https://github.com/krassowski))
+- Bump node-tar from 6.2.1 to 7.5.22 [#485](https://github.com/jupyterlab/jupyter-chat/pull/485) ([@brichet](https://github.com/brichet), [@dlqqq](https://github.com/dlqqq))
+- ci: run UI tests against JupyterLab \<4.6 and >=4.6 via matrix [#473](https://github.com/jupyterlab/jupyter-chat/pull/473) ([@dlqqq](https://github.com/dlqqq), [@krassowski](https://github.com/krassowski))
+
+### Other merged PRs
+
+- Bump the npm_and_yarn group across 2 directories with 1 update [#482](https://github.com/jupyterlab/jupyter-chat/pull/482) ([@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-08-10&to=2026-08-14&type=c))
+
+@brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-08-10..2026-08-14&type=Issues)) | @dlqqq ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2026-08-10..2026-08-14&type=Issues)) | @jtpio ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2026-08-10..2026-08-14&type=Issues)) | @krassowski ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Akrassowski+updated%3A2026-08-10..2026-08-14&type=Issues)) | @uuzzrm ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Auuzzrm+updated%3A2026-08-10..2026-08-14&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.24.0alpha0
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.23.2...cb5bb5271c2c3f2e718786f9a00a6de9f74bebfa))
@@ -22,8 +55,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-08-10&to=2026-08-12&type=c))
 
 @brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-08-10..2026-08-12&type=Issues)) | @dlqqq ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2026-08-10..2026-08-12&type=Issues)) | @jtpio ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2026-08-10..2026-08-12&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.23.2
 
