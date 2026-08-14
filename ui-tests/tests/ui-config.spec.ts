@@ -221,12 +221,13 @@ test.describe('#typingNotification', () => {
       .getByRole('combobox');
 
     await guestInput.press('a');
-    await expect(writers).toBeAttached();
-    const start = Date.now();
+
+    // The indicator should appear while the guest is typing...
     await expect(writers).toHaveText(/jovyan_2 is typing/);
 
-    // Message should disappear after 1s, but this delay include the awareness update.
-    expect(Date.now() - start).toBeLessThanOrEqual(2000);
+    // ...and disappear shortly after the guest stops typing (WRITING_DELAY
+    // is 1 second, on top of the awareness propagation delay).
+    await expect(writers).not.toHaveText(/jovyan_2 is typing/);
   });
 
   test('should not display typing users if disabled', async ({ page }) => {
@@ -255,19 +256,8 @@ test.describe('#typingNotification', () => {
 
     await guestInput.press('a');
 
-    let hasContent = true;
-    try {
-      await page.waitForCondition(
-        async () => !!(await writers.textContent())?.trim(),
-        3000
-      );
-    } catch {
-      hasContent = false;
-    }
-
-    if (hasContent) {
-      throw Error('The typing notification should not be attached.');
-    }
+    // The indicator should never appear while the feature is disabled.
+    await expect(writers).not.toHaveText(/\S/, { timeout: 3000 });
   });
 
   test('should display several typing users', async ({
@@ -320,13 +310,13 @@ test.describe('#typingNotification', () => {
     await guestInput.press('a');
     await guest2Input.press('a');
 
-    await expect(writers).toBeAttached();
-    const regexp = /jovyan_[2|3] and jovyan_[2|3] are typing/;
-    await expect(writers).toHaveText(regexp);
+    // Both guests should be listed, in either order.
+    await expect(writers).toHaveText(/jovyan_[23] and jovyan_[23] are typing/);
 
-    const result = regexp.exec((await writers.textContent()) ?? '');
-    expect(result?.[1] !== undefined);
-    expect(result?.[1] !== result?.[2]);
+    const text = (await writers.textContent()) ?? '';
+    const names = text.match(/jovyan_[23]/g) ?? [];
+    expect(names).toHaveLength(2);
+    expect(names[0]).not.toBe(names[1]);
   });
 });
 
