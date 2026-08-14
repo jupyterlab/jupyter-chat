@@ -17,17 +17,21 @@ from __future__ import annotations
 
 import json
 from types import SimpleNamespace
+from typing import TYPE_CHECKING, cast
 
 import pytest
 from traitlets.config import Application
 
 from jupyterlab_chat import rtc_lib
 
+if TYPE_CHECKING:
+    from jupyter_server.serverapp import ServerApp
+
 
 # --- Fakes -------------------------------------------------------------------
 
 
-def make_serverapp(*, extensions=None, apps=None, config=None):
+def make_serverapp(*, extensions=None, apps=None, config=None) -> "ServerApp":
     """Build a fake ServerApp exposing just what rtc_lib inspects.
 
     Parameters
@@ -46,10 +50,13 @@ def make_serverapp(*, extensions=None, apps=None, config=None):
         for name, enabled in (extensions or {}).items()
     }
     manager = SimpleNamespace(extensions=exts, extension_apps=(apps or {}))
-    return SimpleNamespace(
-        extension_manager=manager,
-        config=(config or {}),
-        web_app=SimpleNamespace(settings={}),
+    return cast(
+        "ServerApp",
+        SimpleNamespace(
+            extension_manager=manager,
+            config=(config or {}),
+            web_app=SimpleNamespace(settings={}),
+        ),
     )
 
 
@@ -271,10 +278,13 @@ def test_publish_preserves_existing_page_config():
 
 
 def test_missing_extension_apps_does_not_crash():
-    sa = SimpleNamespace(
-        extension_manager=SimpleNamespace(extensions={}, extension_apps=None),
-        config={},
-        web_app=SimpleNamespace(settings={}),
+    sa = cast(
+        "ServerApp",
+        SimpleNamespace(
+            extension_manager=SimpleNamespace(extensions={}, extension_apps=None),
+            config={},
+            web_app=SimpleNamespace(settings={}),
+        ),
     )
     info = rtc_lib.get_server_session_rtc_info(sa)
     assert info.enabled is False and info.provider is None

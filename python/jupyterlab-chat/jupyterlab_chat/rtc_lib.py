@@ -223,15 +223,15 @@ def get_server_session_rtc_info(serverapp: "ServerApp") -> ServerSessionRtcInfo:
     else:
         provider = None
 
-    installed = sorted(name for name in RTC_PROVIDERS if _is_installed(name))
+    installed = sorted(str(name) for name in RTC_PROVIDERS if _is_installed(name))
 
     return ServerSessionRtcInfo(
         enabled=provider is not None,
         provider=provider,
         providerDetails=RtcProviderDetails(
             installed=installed,
-            enabledByServer=sorted(by_server),
-            enabledByTrait=sorted(by_trait),
+            enabledByServer=sorted(str(p) for p in by_server),
+            enabledByTrait=sorted(str(p) for p in by_trait),
         ),
     )
 
