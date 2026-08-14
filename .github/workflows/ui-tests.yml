@@ -18,8 +18,13 @@ jobs:
     # jupyter_collaboration and Galata are version-locked to JupyterLab, so each
     # matrix entry pins the compatible combination:
     #   - Galata 5.5.x targets JupyterLab 4.5, Galata 5.6.x targets JupyterLab 4.6.
-    #   - jupyter_collaboration 5.0.0a0 is required for JupyterLab >= 4.6
+    #   - jupyter_collaboration 5.x is required for JupyterLab >= 4.6
     #     (jupyter_ydoc v4); the 4.x series pairs with JupyterLab < 4.6.
+    #
+    # Reference snapshots are only maintained for the latest JupyterLab line
+    # (top level of each *-snapshots directory). Older lines set
+    # JLAB_IGNORE_SNAPSHOTS so their run still exercises functional behaviour
+    # but skips screenshot comparisons (see ui-tests/playwright.config.js).
     name: jupyterlab (JupyterLab ${{ matrix.label }})
     runs-on: ubuntu-latest
 
@@ -29,24 +34,17 @@ jobs:
         include:
           - label: '>=4.6'
             jupyterlab: '>=4.6,<4.7'
-            jupyter_collaboration: '==5.0.0a0'
+            jupyter_collaboration: '>=5,<6'
             galata: '^5.6.0'
-            # jupyter_collaboration 5.0.0a0 is a prerelease; --pre is scoped to
-            # that install only so JupyterLab stays on a stable release (a bare
-            # --pre with "<4.7" would otherwise pull a 4.7 alpha).
-            collab_pre: '--pre'
-            # Reference snapshots for JupyterLab >=4.6 live at the top level of
-            # each *-snapshots directory (empty subdir preserves the existing
-            # paths). See snapshotPathTemplate in ui-tests/playwright.config.js.
-            snapshot_subdir: ''
+            # Latest line owns the reference snapshots, so comparisons run.
+            ignore_snapshots: ''
           - label: '>=4.2,<4.6'
             jupyterlab: '>=4.2,<4.6'
             jupyter_collaboration: '~=4.0'
             galata: '~5.5.10'
-            collab_pre: ''
-            # JupyterLab <4.6 renders a few reference snapshots slightly
-            # differently, so it keeps its own snapshot subfolder.
-            snapshot_subdir: 'jupyterlab-lt-4.6'
+            # No version-specific snapshots for this line; skip screenshot
+            # comparisons and keep the functional coverage only.
+            ignore_snapshots: '1'
 
     env:
       PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/pw-browsers
@@ -67,8 +65,7 @@ jobs:
         run: |
           set -eux
           python -m pip install "jupyterlab${{ matrix.jupyterlab }}"
-          python -m pip install ${{ matrix.collab_pre }} \
-            "jupyter_collaboration${{ matrix.jupyter_collaboration }}"
+          python -m pip install "jupyter_collaboration${{ matrix.jupyter_collaboration }}"
           jupyter labextension list
 
       - name: Pin Galata for this matrix entry
@@ -99,7 +96,7 @@ jobs:
       - name: Execute integration tests
         working-directory: ui-tests
         env:
-          JLAB_SNAPSHOT_SUBDIR: ${{ matrix.snapshot_subdir }}
+          JLAB_IGNORE_SNAPSHOTS: ${{ matrix.ignore_snapshots }}
         run: |
           jlpm test --retries=2
 

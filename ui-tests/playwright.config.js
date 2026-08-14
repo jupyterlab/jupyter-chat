@@ -8,24 +8,17 @@
  */
 const baseConfig = require('@jupyterlab/galata/lib/playwright-config');
 
-// Snapshot references are rendered slightly differently across JupyterLab
-// versions, so when the UI tests run against multiple versions (see the CI
-// matrix in .github/workflows/ui-tests.yml) each version must keep its own
-// reference snapshots. Setting JLAB_SNAPSHOT_SUBDIR inserts a per-version
-// subfolder into the snapshot path. When it is unset (e.g. local runs), the
-// template collapses to Playwright's default layout, so existing behaviour is
-// unchanged.
-const snapshotSubdir = process.env.JLAB_SNAPSHOT_SUBDIR || '';
+// Reference snapshots render slightly differently across JupyterLab versions,
+// so we only maintain a single snapshot set for the latest JupyterLab line.
+// The CI matrix (see .github/workflows/ui-tests.yml) still exercises older
+// JupyterLab versions for functional regressions, but sets JLAB_IGNORE_SNAPSHOTS
+// there so screenshot comparisons are skipped instead of requiring a second,
+// version-specific set of reference images.
+const ignoreSnapshots = !!process.env.JLAB_IGNORE_SNAPSHOTS;
 
 module.exports = {
   ...baseConfig,
-  snapshotPathTemplate: [
-    '{testFileDir}/{testFileName}-snapshots',
-    snapshotSubdir,
-    '{arg}{-projectName}{-snapshotSuffix}{ext}'
-  ]
-    .filter(Boolean)
-    .join('/'),
+  ignoreSnapshots,
   webServer: {
     command: 'jlpm start',
     url: 'http://localhost:8888/lab',
