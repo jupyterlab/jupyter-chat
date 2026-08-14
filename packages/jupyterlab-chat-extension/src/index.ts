@@ -111,7 +111,6 @@ const pluginIds = {
  */
 async function createChatModel(
   app: JupyterFrontEnd,
-  widgetConfig: IWidgetConfig,
   collaborativeContentProvider: ICollaborativeContentProvider | null,
   path?: string,
   defaultDirectory?: string
@@ -138,6 +137,7 @@ async function createChatModel(
       collaborative: true
     }) as YChat | undefined;
 
+  // The LabChatModel initialize a shared model if undefined.
   const chatModel = modelFactory.createNew({ sharedModel });
   chatModel.name = fileModel.path;
 
@@ -1045,12 +1045,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
                 return chatPanel.current ?? null;
               }
 
-              const openChatArgs = await createChatModel(
-                app,
-                widgetConfig,
-                drive,
-                filepath
-              );
+              const openChatArgs = await createChatModel(app, drive, filepath);
 
               // Add a chat widget to the side panel.
               chatPanel.open(openChatArgs);
@@ -1336,7 +1331,6 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
       createModel: async (path?: string) => {
         return createChatModel(
           app,
-          widgetConfig,
           drive,
           path,
           widgetConfig.config.defaultDirectory

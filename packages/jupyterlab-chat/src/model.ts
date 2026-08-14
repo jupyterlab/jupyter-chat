@@ -104,13 +104,9 @@ export class LabChatModel
     // initialize current user
     this._user = new LabChatUser(options.user);
 
-    const { widgetConfig, sharedModel } = options;
+    const { widgetConfig } = options;
 
-    if (sharedModel) {
-      this._sharedModel = sharedModel;
-    } else {
-      this._sharedModel = YChat.create();
-    }
+    this._sharedModel = options.sharedModel ?? YChat.create();
 
     this._sharedModel.changed.connect(this._onchange, this);
 

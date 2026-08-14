@@ -13,6 +13,11 @@
 # runs before the `ychat` submodule.
 import jupyter_ydoc  # noqa: F401
 
+from jupyter_server.utils import url_path_join
+
+from .models import BaseChatModel  # noqa: F401
+from .websocket_handler import WSChatHandler  # noqa: F401
+
 try:
     from ._version import __version__
 except ImportError:
@@ -45,16 +50,13 @@ def _load_jupyter_server_extension(server_app):
         JupyterLab application instance
     """
     try:
-        import jupyter_collaboration  # noqa: F401
+        import jupyter_collaboration  # type: ignore[import-not-found]
         collaboration_available = True
     except ImportError:
         collaboration_available = False
 
     if not collaboration_available:
-        from jupyter_server.utils import url_path_join
-        from .ws_handlers import WSChatHandler
-
-        server_app.web_app.settings["ws_chat_rooms"] = {}
+        server_app.web_app.settings["ws_chat_models"] = {}
 
         base_url = server_app.web_app.settings.get("base_url", "/")
         server_app.web_app.add_handlers(".*$", [
