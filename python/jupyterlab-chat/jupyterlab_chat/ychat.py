@@ -103,7 +103,7 @@ class YChat(YBaseDoc, BaseChatModel):
         """
         with self._ydoc.transaction():
             self._yusers.update({
-                user.username: user.to_dict()
+                user.username: asdict(user)
             })
 
     def get_message(self, id: str) -> Optional[Message]:

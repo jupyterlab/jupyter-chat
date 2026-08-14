@@ -190,7 +190,7 @@ class WsChatModel(BaseChatModel):
         return att_id
 
     def set_user(self, user: User) -> None:
-        self._users[user.username] = user.to_dict()
+        self._users[user.username] = asdict(user)
 
     def set_metadata(self, name: str, metadata: Any) -> None:
         self._metadata[name] = metadata

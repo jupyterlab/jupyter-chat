@@ -2,7 +2,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 from abc import ABC, abstractmethod
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from typing import Any, Callable, Literal, Optional, Tuple, Union
 from jupyter_server.auth import User as JupyterUser
 
@@ -128,11 +128,6 @@ class User(JupyterUser):
     @mention_name.setter
     def mention_name(self, value: str) -> None:
         pass
-
-    def to_dict(self) -> dict:
-        d = asdict(self)
-        d['mention_name'] = self.mention_name
-        return d
 
 @dataclass(kw_only=True)
 class AttachmentSelection:
