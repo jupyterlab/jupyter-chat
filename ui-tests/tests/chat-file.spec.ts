@@ -30,7 +30,9 @@ const readFileContent = async (
   filename: string
 ): Promise<Contents.IModel> => {
   return await page.evaluate(async filepath => {
-    return await window.jupyterapp.serviceManager.contents.get(filepath);
+    return await window.jupyterapp.serviceManager.contents.get(filepath, {
+      content: true
+    });
   }, filename);
 };
 

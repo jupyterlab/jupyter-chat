@@ -1302,7 +1302,8 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     // Get the chat in default directory
     const getChatNames = async () => {
       const dirContents = await serviceManager.contents.get(
-        widgetConfig.config.defaultDirectory ?? ''
+        widgetConfig.config.defaultDirectory ?? '',
+        { content: true }
       );
       const names: { [name: string]: string } = {};
       for (const file of dirContents.content) {
