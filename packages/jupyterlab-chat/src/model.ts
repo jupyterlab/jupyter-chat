@@ -169,6 +169,28 @@ export class LabChatModel
     }
   }
 
+  /**
+   * Notify the model that its shared document has been synchronized with the
+   * server, and give it an ID if the document does not carry one yet.
+   *
+   * The model is only ready once it has an ID, so this must be called as soon as
+   * the document content is known - the ID cannot be created earlier, or a chat
+   * that already has one stored would end up with a conflicting ID.
+   *
+   * Callers should hook this to `IDocumentProvider.ready` (or the document
+   * context's `ready`) rather than to the document becoming clean: since
+   * jupyter-collaboration 5 a room stays dirty after being loaded, so the
+   * transition out of the dirty state may only happen on the first save, about a
+   * second later, leaving the chat unusable until then.
+   */
+  markDocumentSynced(): void {
+    if (!this._sharedModel.id) {
+      // Assigning the shared ID emits a metadata change, which sets the model
+      // ID - and therefore resolves `ready` - through `_onchange`.
+      this._sharedModel.id = UUID.uuid4();
+    }
+  }
+
   dispose(): void {
     if (this.isDisposed) {
       return;
@@ -211,9 +233,9 @@ export class LabChatModel
     });
   }
 
-  sendMessage(message: INewMessage): Promise<boolean | void> | boolean | void {
+  sendMessage(message: INewMessage): string | null {
     if (!message.body && !message.mime_model && !message.attachments?.length) {
-      return false;
+      return null;
     }
     this._resetWritingStatus();
     if (this._timeoutWriting !== null) {
@@ -262,6 +284,7 @@ export class LabChatModel
     }
 
     this.sharedModel.addMessage(msg);
+    return msg.id;
   }
 
   /**
@@ -563,6 +586,10 @@ export class LabChatModel
     }
 
     // Create a chat ID if not created when the document is not dirty.
+    //
+    // This is a fallback for chats whose document is not backed by a
+    // collaborative provider, and so never reports being synchronized. When
+    // there is one, `markDocumentSynced()` gets there first.
     if (changes.stateChange && !this._sharedModel.id) {
       if (
         changes.stateChange.some(

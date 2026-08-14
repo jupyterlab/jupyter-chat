@@ -1,6 +1,6 @@
 {
   "name": "jupyter-chat-root",
-  "version": "0.23.0",
+  "version": "0.24.0-alpha.0",
   "description": "A chat package for Jupyterlab extension",
   "private": true,
   "keywords": [
@@ -44,9 +44,6 @@
     "stylelint:check": "stylelint --cache \"**/style/**/*.css\"",
     "test": "jlpm workspace @jupyter/chat run test && jlpm workspace jupyterlab-chat run test",
     "watch": "jlpm workspace jupyterlab-chat-extension run watch"
-  },
-  "resolutions": {
-    "webpack": "5.106.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

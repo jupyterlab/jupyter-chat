@@ -54,11 +54,14 @@ test.describe('#messageToolbar', () => {
       .locator('.jp-chat-messages-container .jp-chat-message-container')
       .first();
 
-    await expect(message.locator('.jp-chat-toolbar')).not.toBeVisible();
+    // The toolbar is always rendered and only revealed on hover, through
+    // opacity - which playwright does not account for in visibility checks.
+    const toolbar = message.locator('.jp-chat-toolbar');
+    await expect(toolbar).toHaveCSS('opacity', '0');
 
     //Should display the message toolbar
     await message.hover({ position: { x: 5, y: 5 } });
-    await expect(message.locator('.jp-chat-toolbar')).toBeVisible();
+    await expect(toolbar).toHaveCSS('opacity', '1');
   });
 
   test('should set the message as deleted', async ({ page }) => {

@@ -21,8 +21,9 @@ export class MockChatContext
 }
 
 export class MockChatModel extends AbstractChatModel implements IChatModel {
-  sendMessage(message: INewMessage): Promise<boolean | void> | boolean | void {
+  sendMessage(message: INewMessage): null {
     // No-op
+    return null;
   }
 
   createChatContext(): IChatContext {
