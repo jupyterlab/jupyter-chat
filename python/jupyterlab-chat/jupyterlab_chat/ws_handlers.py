@@ -95,7 +95,7 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
         self.write_message(json.dumps({
             "type": "connection",
             "client_id": self._client_id,
-            "messages": room.messages,
+            "messages": [self._resolve_message(m, room) for m in room.messages],
             "users": room.users,
         }))
 
@@ -124,6 +124,35 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
             room.metadata = {"id": uuid.uuid4().hex}
         except Exception as e:
             self.log.error("Error loading chat file '%s': %s", full_path, e)
+
+    def _store_attachments(self, attachments: list[dict], room: _ChatRoom) -> list[str]:
+        """Store attachment dicts in room.attachments, return their IDs."""
+        ids = []
+        for att in attachments:
+            att_json = json.dumps(att, sort_keys=True)
+            att_id = next(
+                (
+                    id for id, existing in room.attachments.items()
+                    if json.dumps(existing, sort_keys=True) == att_json
+                ),
+                None,
+            ) or str(uuid.uuid4())
+            room.attachments[att_id] = att
+            ids.append(att_id)
+        return ids
+
+    def _resolve_message(self, message: dict, room: _ChatRoom) -> dict:
+        """Return a copy of a message with attachment IDs replaced by full objects."""
+        atts = message.get("attachments")
+        if not atts:
+            return message
+        resolved = dict(message)
+        resolved["attachments"] = [
+            room.attachments[att_id]
+            for att_id in atts
+            if att_id in room.attachments
+        ]
+        return resolved
 
     def _save_to_file(self, room: _ChatRoom) -> None:
         full_path = self._root_dir / room.path
@@ -159,9 +188,11 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
             "type": "msg",
             "raw_time": False,
         }
-        for key in ("attachments", "mentions", "metadata", "mime_model"):
+        for key in ("mentions", "metadata", "mime_model"):
             if key in data:
                 message[key] = data[key]
+        if "attachments" in data:
+            message["attachments"] = self._store_attachments(data["attachments"], room)
 
         # Keep messages sorted by timestamp
         idx = next(
@@ -170,20 +201,25 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
         )
         room.messages.insert(idx, message)
         self._save_to_file(room)
-        self._broadcast(room, json.dumps({"type": "msg", "message": message}))
+        self._broadcast(room, json.dumps({"type": "msg", "message": self._resolve_message(message, room)}))
 
     def _handle_update_message(self, data: dict, room: _ChatRoom) -> None:
         msg_id = data.get("id")
         if not msg_id:
             return
+        updated_msg = None
         for msg in room.messages:
             if msg.get("id") == msg_id:
-                for key in ("body", "deleted", "edited", "attachments", "mentions", "metadata"):
+                for key in ("body", "deleted", "edited", "mentions", "metadata"):
                     if key in data:
                         msg[key] = data[key]
+                if "attachments" in data:
+                    msg["attachments"] = self._store_attachments(data["attachments"], room)
+                updated_msg = msg
                 break
         self._save_to_file(room)
-        self._broadcast(room, json.dumps({"type": "msg", "message": data}))
+        if updated_msg is not None:
+            self._broadcast(room, json.dumps({"type": "msg", "message": self._resolve_message(updated_msg, room)}))
 
     def _broadcast(self, room: _ChatRoom, message: str) -> None:
         for handler in list(room.handlers.values()):

@@ -50,7 +50,7 @@ import { IDefaultFileBrowser } from '@jupyterlab/filebrowser';
 import { ILauncher } from '@jupyterlab/launcher';
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
-import { Contents } from '@jupyterlab/services';
+import { Contents, ServerConnection } from '@jupyterlab/services';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { ITranslator, nullTranslator } from '@jupyterlab/translation';
 import { launchIcon } from '@jupyterlab/ui-components';
@@ -70,7 +70,6 @@ import {
   LabChatModelFactory,
   LabChatPanel,
   WidgetConfig,
-  WsChatModel,
   YChat,
   chatFileType,
   getDisplayName,
@@ -101,7 +100,7 @@ const pluginIds = {
  *
  * When `contentProvider` is available (jupyter-collaboration installed) a
  * collaborative `LabChatModel` backed by a Yjs shared document is returned.
- * Otherwise a `WsChatModel` backed by a plain WebSocket is returned.
+ * Otherwise a `LabChatModel` backed by a plain WebSocket is returned.
  *
  * @param app - the frontend application.
  * @param widgetConfig - the shared widget configuration.
@@ -127,53 +126,39 @@ async function createChatModel(
     }
   }
 
+  const modelFactory = app.docRegistry.getModelFactory(
+    'Chat'
+  ) as LabChatModelFactory;
+  const fileModel = await app.serviceManager.contents.get(path);
+  const sharedModel =
+    collaborativeContentProvider?.sharedModelFactory.createNew({
+      path: fileModel.path,
+      format: fileModel.format,
+      contentType: chatFileType.contentType,
+      collaborative: true
+    }) as YChat | undefined;
+
+  const chatModel = modelFactory.createNew({ sharedModel });
+  chatModel.name = fileModel.path;
+
   if (collaborativeContentProvider) {
-    const modelFactory = app.docRegistry.getModelFactory(
-      'Chat'
-    ) as LabChatModelFactory;
-
-    const model = await app.serviceManager.contents.get(path);
-    const sharedModel =
-      collaborativeContentProvider.sharedModelFactory.createNew({
-        path: model.path,
-        format: model.format,
-        contentType: chatFileType.contentType,
-        collaborative: true
-      }) as YChat;
-
-    const chatModel = modelFactory.createNew({ sharedModel });
-    chatModel.name = model.path;
-
     // Chats opened in the side panel have no document context, so the provider
     // created above is what tells us when the document has been loaded. Without
     // this the chat would only become usable when the document first becomes
     // clean, which can be a second later (or never).
     const provider = collaborativeContentProvider.providers.get(
-      `${model.format}:${chatFileType.contentType}:${model.path}`
+      `${fileModel.format}:${chatFileType.contentType}:${fileModel.path}`
     );
     provider?.ready
       .then(() => chatModel.markDocumentSynced())
       .catch(e => console.error('The chat document failed to load', e));
-
-    return {
-      model: chatModel,
-      displayName: getDisplayName(model.path, defaultDirectory)
-    };
+  } else {
+    chatModel.markDocumentSynced();
   }
-
-  // WS mode: no collaboration available.
-  const chatModel = new WsChatModel({
-    path,
-    user: app.serviceManager.user.identity,
-    widgetConfig,
-    serverSettings: app.serviceManager.serverSettings
-  });
-  await chatModel.initialize();
-  chatModel.name = path;
 
   return {
     model: chatModel,
-    displayName: getDisplayName(path, defaultDirectory)
+    displayName: getDisplayName(fileModel.path, defaultDirectory)
   };
 }
 
@@ -470,7 +455,9 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
           translator,
           activeCellManager,
           selectionWatcher,
-          documentManager: filebrowser?.model.manager
+          documentManager: filebrowser?.model.manager,
+          collaborative: !!drive,
+          serverSettings: drive ? undefined : ServerConnection.makeSettings()
         });
         app.docRegistry.addModelFactory(modelFactory);
       })
@@ -497,7 +484,8 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
       messageFooterRegistry,
       messagePreambleRegistry,
       chatBodyPlaceholderFactory: chatBodyPlaceholderFactory ?? undefined,
-      welcomeMessage
+      welcomeMessage,
+      collaborative: !!drive
     });
 
     // Registering the widget factory
@@ -1066,23 +1054,13 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
 
               // Add a chat widget to the side panel.
               chatPanel.open(openChatArgs);
-            } else if (drive) {
-              // The chat is opened in the main area (collaboration mode only).
-              // TODO: support JCollab v3 by optionally prefixing 'RTC:'
+            } else {
+              // Open in the main area (works in both collaborative and WS mode).
               const widget = commands.execute('docmanager:open', {
                 path: `${filepath}`,
                 factory: FACTORY
               });
               return widget ?? null;
-            } else if (chatPanel) {
-              // WS mode has no main-area document factory — open in side panel.
-              const openChatArgs = await createChatModel(
-                app,
-                widgetConfig,
-                null,
-                filepath
-              );
-              chatPanel.open(openChatArgs);
             }
             return null;
           }

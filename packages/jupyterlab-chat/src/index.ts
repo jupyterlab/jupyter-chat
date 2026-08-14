@@ -8,5 +8,5 @@ export * from './model';
 export * from './token';
 export * from './utils';
 export * from './widget';
-export * from './ws-model';
+export * from './websocket-handler';
 export * from './ychat';
