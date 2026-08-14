@@ -12,8 +12,39 @@ concurrency:
 
 jobs:
   jupyterlab:
-    name: jupyterlab
+    # Run the JupyterLab integration tests against multiple JupyterLab versions
+    # to guard against regressions on JupyterLab < 4.6 (see issue #471).
+    #
+    # jupyter_collaboration and Galata are version-locked to JupyterLab, so each
+    # matrix entry pins the compatible combination:
+    #   - Galata 5.5.x targets JupyterLab 4.5, Galata 5.6.x targets JupyterLab 4.6.
+    #   - jupyter_collaboration 5.x is required for JupyterLab >= 4.6
+    #     (jupyter_ydoc v4); the 4.x series pairs with JupyterLab < 4.6.
+    #
+    # Reference snapshots are only maintained for the latest JupyterLab line
+    # (top level of each *-snapshots directory). Older lines set
+    # JLAB_IGNORE_SNAPSHOTS so their run still exercises functional behaviour
+    # but skips screenshot comparisons (see ui-tests/playwright.config.js).
+    name: jupyterlab (JupyterLab ${{ matrix.label }})
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: '>=4.6'
+            jupyterlab: '>=4.6,<4.7'
+            jupyter_collaboration: '>=5,<6'
+            galata: '^5.6.0'
+            # Latest line owns the reference snapshots, so comparisons run.
+            ignore_snapshots: ''
+          - label: '>=4.2,<4.6'
+            jupyterlab: '>=4.2,<4.6'
+            jupyter_collaboration: '~=4.0'
+            galata: '~5.5.10'
+            # No version-specific snapshots for this line; skip screenshot
+            # comparisons and keep the functional coverage only.
+            ignore_snapshots: '1'
 
     env:
       PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/pw-browsers
@@ -29,6 +60,20 @@ jobs:
         run: |
           set -eux
           python ./scripts/dev_install.py
+
+      - name: Pin JupyterLab and jupyter_collaboration for this matrix entry
+        run: |
+          set -eux
+          python -m pip install "jupyterlab${{ matrix.jupyterlab }}"
+          python -m pip install "jupyter_collaboration${{ matrix.jupyter_collaboration }}"
+          jupyter labextension list
+
+      - name: Pin Galata for this matrix entry
+        working-directory: ui-tests
+        env:
+          YARN_ENABLE_IMMUTABLE_INSTALLS: 0
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+        run: jlpm add --dev "@jupyterlab/galata@${{ matrix.galata }}"
 
       - name: Install tests dependencies
         working-directory: ui-tests
@@ -50,6 +95,8 @@ jobs:
 
       - name: Execute integration tests
         working-directory: ui-tests
+        env:
+          JLAB_IGNORE_SNAPSHOTS: ${{ matrix.ignore_snapshots }}
         run: |
           jlpm test --retries=2
 
@@ -57,7 +104,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: integration-jupyterlab
+          name: integration-jupyterlab-${{ strategy.job-index }}
           path: |
             ui-tests/test-results
             ui-tests/playwright-report
