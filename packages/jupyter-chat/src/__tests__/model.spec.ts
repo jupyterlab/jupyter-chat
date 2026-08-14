@@ -151,6 +151,33 @@ describe('test chat model', () => {
     });
   });
 
+  describe('unread messages', () => {
+    const msg = (id: string, time: number): IMessageContent => ({
+      type: 'msg',
+      id,
+      time,
+      body: `message ${id}`,
+      sender: { username: 'user' }
+    });
+
+    it('should not mark deleted messages as unread', () => {
+      const model = new MockChatModel();
+      model.messageAdded({ ...msg('message1', 1000), deleted: true });
+      model.messageAdded(msg('message2', 2000));
+      expect(model.unreadMessages).toEqual([1]);
+    });
+
+    it('should remove a message from the unread list when it is deleted', () => {
+      const model = new MockChatModel();
+      model.messageAdded(msg('message1', 1000));
+      model.messageAdded(msg('message2', 2000));
+      expect(model.unreadMessages).toEqual([0, 1]);
+
+      model.messages[0].update({ deleted: true });
+      expect(model.unreadMessages).toEqual([1]);
+    });
+  });
+
   describe('awareness', () => {
     it('should surface the model awareness on the context', () => {
       class AwareChatModel extends MockChatModel {

@@ -210,6 +210,19 @@ export function ChatMessages(): JSX.Element {
     };
   }, [messages, showDeleted, allRendered]);
 
+  // The list of messages to display, once deleted messages are filtered out.
+  const visibleMessages = showDeleted
+    ? messages
+    : messages.filter(message => !message.deleted);
+
+  // Map each message to its index in 'model.messages'. The viewport and the
+  // unread messages are tracked against the full model list (deleted messages
+  // are kept in the model, even when they are not rendered), so 'data-index'
+  // has to reference the model index for the intersection observer and the
+  // navigation to stay consistent.
+  const modelIndex = new Map<string, number>();
+  model.messages.forEach((message, index) => modelIndex.set(message.id, index));
+
   const horizontalPadding = area === 'main' ? 8 : 4;
   return (
     <>
@@ -230,10 +243,7 @@ export function ChatMessages(): JSX.Element {
           className={clsx(MESSAGES_BOX_CLASS)}
         >
           {/* Filter the deleted message if user don't expect to see it. */}
-          {(showDeleted
-            ? messages
-            : messages.filter(message => !message.deleted)
-          ).map((message, i) => {
+          {visibleMessages.map((message, i) => {
             const isCurrentUser =
               model.user !== undefined &&
               model.user.username === message.sender.username;
@@ -262,7 +272,10 @@ export function ChatMessages(): JSX.Element {
                 {messagePreambleRegistry && (
                   <MessagePreambleComponent message={message} />
                 )}
-                <ChatMessage message={message} index={i} />
+                <ChatMessage
+                  message={message}
+                  index={modelIndex.get(message.id) ?? i}
+                />
                 {messageFooterRegistry && (
                   <MessageFooterComponent message={message} />
                 )}
