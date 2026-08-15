@@ -10,7 +10,9 @@ import { DocumentWidget } from '@jupyterlab/docregistry';
 import { FileEditor } from '@jupyterlab/fileeditor';
 import { Notebook } from '@jupyterlab/notebook';
 import { IObservableList, ObservableList } from '@jupyterlab/observables';
+import { IRenderMime } from '@jupyterlab/rendermime';
 import { CommandRegistry } from '@lumino/commands';
+import { MessageLoop } from '@lumino/messaging';
 import { Widget } from '@lumino/widgets';
 
 import { IChatPanel } from './tokens';
@@ -139,4 +141,20 @@ export function injectAreaArg(
 
     return wrapped;
   };
+}
+
+/**
+ * Tears down a rendermime renderer created to display chat content.
+ *
+ * @param renderer - the renderer to dispose of.
+ */
+export function disposeRenderer(renderer: IRenderMime.IRenderer): void {
+  if (renderer.isDisposed) {
+    return;
+  }
+  if (renderer.isAttached) {
+    MessageLoop.sendMessage(renderer, Widget.Msg.BeforeDetach);
+    MessageLoop.sendMessage(renderer, Widget.Msg.AfterDetach);
+  }
+  renderer.dispose();
 }

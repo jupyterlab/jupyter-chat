@@ -3,11 +3,13 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { IRenderMime } from '@jupyterlab/rendermime';
 import { MessageLoop } from '@lumino/messaging';
 import { Widget } from '@lumino/widgets';
 import React, { useEffect, useRef } from 'react';
 
 import { useChatContext } from '../../context';
+import { disposeRenderer } from '../../utils';
 
 const WELCOME_MESSAGE_CLASS = 'jp-chat-welcome-message';
 const MD_MIME_TYPE = 'text/markdown';
@@ -39,32 +41,45 @@ export function WelcomeMessage(props: IWelcomeMessageProps): JSX.Element {
    * and insert it into `renderingContainer` if not yet inserted.
    */
   useEffect(() => {
-    let node: HTMLElement | null = null;
+    let cancelled = false;
+    let renderer: IRenderMime.IRenderer | null = null;
 
     const renderContent = async () => {
       // Render the welcome message using markdown renderer.
-      const renderer = rmRegistry.createRenderer(MD_MIME_TYPE);
+      renderer = rmRegistry.createRenderer(MD_MIME_TYPE);
       const mimeModel = rmRegistry.createModel({
         data: { [MD_MIME_TYPE]: content }
       });
       await renderer.renderModel(mimeModel);
+
+      // The effect has been cleaned up while rendering, the renderer is not
+      // owned by anybody anymore.
+      if (cancelled) {
+        disposeRenderer(renderer);
+        renderer = null;
+        return;
+      }
 
       // Manually trigger the onAfterAttach of the renderer, because the widget will
       // never been attached, only the node.
       // This is necessary to render latex.
       MessageLoop.sendMessage(renderer, Widget.Msg.AfterAttach);
 
-      node = renderer.node;
-      renderingContainer.current?.append(node);
+      renderingContainer.current?.append(renderer.node);
     };
 
     renderContent();
 
     return () => {
-      if (node && renderingContainer.current?.contains(node)) {
-        renderingContainer.current.removeChild(node);
+      cancelled = true;
+      if (renderer) {
+        const node = renderer.node;
+        if (renderingContainer.current?.contains(node)) {
+          renderingContainer.current.removeChild(node);
+        }
+        disposeRenderer(renderer);
+        renderer = null;
       }
-      node = null;
     };
   }, [content]);
 

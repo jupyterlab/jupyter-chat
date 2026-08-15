@@ -109,7 +109,7 @@ export namespace ChatWidgetFactory {
   export interface IOptions<T extends LabChatPanel>
     extends DocumentRegistry.IWidgetFactoryOptions<T>,
       Omit<Chat.IOptions, 'model' | 'inputToolbarRegistry' | 'translator'> {
-    inputToolbarFactory: IInputToolbarRegistryFactory;
+    inputToolbarFactory?: IInputToolbarRegistryFactory;
   }
 }
 
