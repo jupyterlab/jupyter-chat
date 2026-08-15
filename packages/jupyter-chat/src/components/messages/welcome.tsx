@@ -73,11 +73,7 @@ export function WelcomeMessage(props: IWelcomeMessageProps): JSX.Element {
     return () => {
       cancelled = true;
       if (renderer) {
-        const node = renderer.node;
-        if (renderingContainer.current?.contains(node)) {
-          renderingContainer.current.removeChild(node);
-        }
-        disposeRenderer(renderer);
+        disposeRenderer(renderer, true);
         renderer = null;
       }
     };
