@@ -143,6 +143,8 @@ describe('test chat model', () => {
     it('should have empty config', () => {
       const model = new MockChatModel();
       expect(model.config.sendWithShiftEnter).toBeUndefined();
+      expect(model.config.autoHideWelcomeMessage).toBeTruthy();
+      expect(model.config.hideWelcomeMessage).toBeFalsy();
     });
 
     it('should allow config', () => {

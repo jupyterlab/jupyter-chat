@@ -60,6 +60,18 @@ test.describe('#settings', () => {
       name: 'showDeleted'
     });
     expect(showDeleted).not.toBeChecked();
+
+    const autoHideWelcomeMessage = settings.getByRole('checkbox', {
+      name: 'autoHideWelcomeMessage',
+      exact: true
+    });
+    expect(autoHideWelcomeMessage).toBeChecked();
+
+    const hideWelcomeMessage = settings.getByRole('checkbox', {
+      name: 'hideWelcomeMessage',
+      exact: true
+    });
+    expect(hideWelcomeMessage).not.toBeChecked();
   });
 });
 
