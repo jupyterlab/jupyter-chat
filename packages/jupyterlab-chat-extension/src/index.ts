@@ -255,12 +255,20 @@ const chatConfig: JupyterFrontEndPlugin<IWidgetConfig> = {
   id: pluginIds.widgetConfig,
   description: 'Chat widget configuration.',
   autoStart: true,
-  optional: [ICollaborativeContentProvider, ISettingRegistry],
+  // IChatToolbarFactory is requested (though unused here) so the toolbar-factory
+  // plugin activates first and registers the settings transformer for the
+  // `docFactories` schema (it declares `jupyter.lab.transform: true` via its
+  // `jupyter.lab.toolbars`). Without this ordering, `settingRegistry.load()`
+  // below can run before the transformer exists and rejects with
+  // "<plugin> has no transformers yet", leaving the config (and the side-panel
+  // chat list) unpopulated. This bit RTC-free mode, where the smaller plugin
+  // graph made chatConfig win the activation race.
+  optional: [ISettingRegistry, IChatToolbarFactory],
   provides: IWidgetConfig,
   activate: (
     app: JupyterFrontEnd,
-    drive: ICollaborativeContentProvider | null,
-    settingRegistry: ISettingRegistry | null
+    settingRegistry: ISettingRegistry | null,
+    _chatToolbarFactory: ChatToolbarFactory | null
   ): IWidgetConfig => {
     /**
      * The chat config object.
@@ -276,11 +284,7 @@ const chatConfig: JupyterFrontEndPlugin<IWidgetConfig> = {
       const currentDirectory = setting.get('defaultDirectory')
         .composite as string;
 
-      if (
-        drive &&
-        previousDirectory &&
-        previousDirectory !== currentDirectory
-      ) {
+      if (previousDirectory && previousDirectory !== currentDirectory) {
         app.serviceManager.contents
           .get(previousDirectory)
           .then(contentModel => {
@@ -299,7 +303,7 @@ const chatConfig: JupyterFrontEndPlugin<IWidgetConfig> = {
       let directoryCreation: Promise<Contents.IModel | null> =
         Promise.resolve(null);
 
-      if (drive && currentDirectory && previousDirectory !== currentDirectory) {
+      if (currentDirectory && previousDirectory !== currentDirectory) {
         directoryCreation = app.serviceManager.contents
           .get(currentDirectory, { content: false })
           .catch(async () => {
