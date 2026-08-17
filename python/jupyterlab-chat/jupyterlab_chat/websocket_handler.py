@@ -28,6 +28,10 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
         return self.settings["ws_chat_models"]
 
     @property
+    def _chat_manager(self):
+        return self.settings["chat_manager"]
+
+    @property
     def _root_dir(self) -> Path:
         return Path(self.settings.get("server_root_dir", ".")).expanduser().resolve()
 
@@ -79,12 +83,9 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
         self._path = path
         self._client_id = uuid.uuid4().hex
 
-        if path not in self._chat_models:
-            model = WsChatModel(path=path, root_dir=self._root_dir)
-            model.load_from_file()
-            self._chat_models[path] = model
-
-        model = self._chat_models[path]
+        # The manager owns get-or-create and emits the `opened` lifecycle event
+        # (once, when the model is first created).
+        model = self._chat_manager.ws_open(path)
         model.handlers[self._client_id] = self
 
         # Register the connecting user. Prefer the client-provided identity
@@ -136,6 +137,7 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
         model = self._chat_models.get(path)
         if model is None:
             return
+        self._chat_manager.ws_activity(path)
 
         if data.get("is_update"):
             self._handle_update_message(data, model)
@@ -230,5 +232,7 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
         if model and client_id:
             model.handlers.pop(client_id, None)
             if not model.handlers:
-                del self._chat_models[path]
+                # Don't free immediately: the manager reclaims the model after a
+                # grace period of inactivity unless a client reconnects.
+                self._chat_manager.ws_client_gone(path)
         self.log.info("WS chat client %s disconnected", client_id)
