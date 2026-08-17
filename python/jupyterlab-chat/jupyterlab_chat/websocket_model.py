@@ -2,23 +2,30 @@
 # Distributed under the terms of the Modified BSD License.
 
 import json
+import logging
 import time
 import uuid
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from tornado import websocket
 
 from .models import (
     BaseChatModel,
+    ChatMessageAction,
+    ChatMessageEvent,
     FileAttachment,
     Message,
+    MessageObserver,
+    MessageObserverCallback,
     NewMessage,
     NotebookAttachment,
     User,
     message_asdict_factory,
 )
+
+_log = logging.getLogger(__name__)
 
 
 class WsChatModel(BaseChatModel):
@@ -38,6 +45,7 @@ class WsChatModel(BaseChatModel):
         self._users: Dict[str, dict] = {}
         self._attachments: Dict[str, dict] = {}
         self._metadata: Dict[str, object] = {}
+        self._message_observers: List[MessageObserverCallback] = []
 
     # ------------------------------------------------------------------
     # Room-level helpers
@@ -147,6 +155,7 @@ class WsChatModel(BaseChatModel):
         self.broadcast(
             json.dumps({"type": "msg", "message": self.resolve_message(msg_dict)})
         )
+        self._emit_message_event(ChatMessageAction.SERVER_MSG_SENT, message)
         return msg_id
 
     def update_message(
@@ -172,6 +181,11 @@ class WsChatModel(BaseChatModel):
         self.broadcast(
             json.dumps({"type": "msg", "message": self.resolve_message(msg_dict)})
         )
+        updated = self.get_message(update.id)
+        if updated is not None:
+            self._emit_message_event(
+                ChatMessageAction.SERVER_MSG_UPDATED, updated
+            )
 
     def set_attachment(
         self, attachment: Union[FileAttachment, NotebookAttachment]
@@ -194,3 +208,33 @@ class WsChatModel(BaseChatModel):
 
     def set_metadata(self, name: str, metadata: Any) -> None:
         self._metadata[name] = metadata
+
+    # ------------------------------------------------------------------
+    # Message observers
+    # ------------------------------------------------------------------
+
+    def observe_messages(
+        self, callback: MessageObserverCallback
+    ) -> MessageObserver:
+        self._message_observers.append(callback)
+        return MessageObserver(_handle=callback)
+
+    def unobserve_messages(self, observer: MessageObserver) -> None:
+        try:
+            self._message_observers.remove(observer._handle)
+        except ValueError:
+            pass
+
+    def _emit_message_event(
+        self, action: ChatMessageAction, message: Message
+    ) -> None:
+        """Notify all message observers of a change. Observer errors are logged
+        but never interrupt message handling."""
+        if not self._message_observers:
+            return
+        event = ChatMessageEvent(action=action, message=message)
+        for callback in list(self._message_observers):
+            try:
+                callback(event)
+            except Exception:  # pragma: no cover - defensive
+                _log.exception("Message observer failed for %s", action)
