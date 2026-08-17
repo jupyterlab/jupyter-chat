@@ -73,7 +73,7 @@ import {
   YChat,
   chatFileType,
   getDisplayName,
-  getServerSessionRtcInfo,
+  isCollaborative,
   resolveChatRenamePath
 } from 'jupyterlab-chat';
 import { chatCommandRegistryPlugin } from './chat-commands/plugins';
@@ -135,7 +135,7 @@ async function createChatModel(
 
   // The server's PageConfig decision is authoritative: only use the
   // collaborative content provider when RTC is enabled this session.
-  const collaborative = getServerSessionRtcInfo().enabled;
+  const collaborative = isCollaborative();
   const contentProvider = collaborative ? collaborativeContentProvider : null;
 
   const sharedModel = contentProvider?.sharedModelFactory.createNew({
@@ -453,7 +453,7 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
     // extensions are installed AND enabled, plus the jupyter_server_ydoc
     // `disable_rtc` trait. The frontend `drive` provider is only the mechanism
     // used when collaborative.
-    const collaborative = getServerSessionRtcInfo().enabled;
+    const collaborative = isCollaborative();
     if (collaborative !== !!drive) {
       console.warn(
         `jupyterlab-chat: the server reports RTC ${
