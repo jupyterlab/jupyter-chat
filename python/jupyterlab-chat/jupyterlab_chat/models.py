@@ -1,8 +1,9 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Literal, Optional, Tuple
+from typing import Any, Callable, Literal, Optional, Tuple, Union
 from jupyter_server.auth import User as JupyterUser
 
 
@@ -219,3 +220,66 @@ class NotebookAttachment:
     """
     (optional) A list of cells in the notebook.
     """
+
+
+class BaseChatModel(ABC):
+    """
+    Common interface implemented by both YChat (collaborative) and WsChatRoom
+    (WebSocket-only), allowing trigger actions and bots to work identically
+    regardless of the backend.
+    """
+
+    @abstractmethod
+    def get_id(self) -> Optional[str]:
+        ...
+
+    @abstractmethod
+    def get_message(self, id: str) -> Optional[Message]:
+        ...
+
+    @abstractmethod
+    def get_messages(self) -> list[Message]:
+        ...
+
+    @abstractmethod
+    def get_users(self) -> dict[str, User]:
+        ...
+
+    @abstractmethod
+    def get_metadata(self) -> dict[str, Any]:
+        ...
+
+    @abstractmethod
+    def get_attachments(self) -> dict[str, Union[FileAttachment, NotebookAttachment]]:
+        ...
+
+    @abstractmethod
+    def add_message(
+        self,
+        new_message: NewMessage,
+        trigger_actions: list[Callable] | None = None,
+    ) -> str:
+        ...
+
+    @abstractmethod
+    def update_message(
+        self,
+        update: Message,
+        append: bool = False,
+        trigger_actions: list[Callable] | None = None,
+    ) -> None:
+        ...
+
+    @abstractmethod
+    def set_attachment(
+        self, attachment: Union[FileAttachment, NotebookAttachment]
+    ) -> str:
+        ...
+
+    @abstractmethod
+    def set_user(self, user: User) -> None:
+        ...
+
+    @abstractmethod
+    def set_metadata(self, name: str, metadata: Any) -> None:
+        ...

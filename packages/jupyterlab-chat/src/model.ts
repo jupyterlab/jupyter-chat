@@ -17,12 +17,13 @@ import {
 import type { IAwareness } from '@jupyter/ydoc';
 import { IChangedArgs } from '@jupyterlab/coreutils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
-import { User } from '@jupyterlab/services';
+import { ServerConnection, User } from '@jupyterlab/services';
 import { PartialJSONObject, UUID } from '@lumino/coreutils';
 import { ISignal, Signal } from '@lumino/signaling';
 
 import { enforceAutosaveEnabled } from './autosave';
 import { IWidgetConfig } from './token';
+import { WebSocketHandler } from './websocket-handler';
 import { IChatChanges, IYmessage, YChat } from './ychat';
 
 const WRITING_DELAY = 1000;
@@ -36,6 +37,8 @@ export namespace LabChatModel {
     user: User.IIdentity | null;
     sharedModel?: YChat;
     languagePreference?: string;
+    collaborative?: boolean;
+    serverSettings?: ServerConnection.ISettings;
   }
 }
 
@@ -96,16 +99,14 @@ export class LabChatModel
   constructor(options: LabChatModel.IOptions) {
     super(options);
 
+    this.collaborative = options.collaborative ?? true;
+
     // initialize current user
     this._user = new LabChatUser(options.user);
 
-    const { widgetConfig, sharedModel } = options;
+    const { widgetConfig } = options;
 
-    if (sharedModel) {
-      this._sharedModel = sharedModel;
-    } else {
-      this._sharedModel = YChat.create();
-    }
+    this._sharedModel = options.sharedModel ?? YChat.create();
 
     this._sharedModel.changed.connect(this._onchange, this);
 
@@ -121,9 +122,18 @@ export class LabChatModel
 
     this.input.valueChanged.connect((_, value) => this.onInputChanged(value));
     this.messageEditionAdded.connect(this.onMessageEditionAdded);
+
+    if (!this.collaborative && options.serverSettings) {
+      this._wsHandler = new WebSocketHandler({
+        serverSettings: options.serverSettings,
+        user: this._user
+      });
+      this._wsHandler.messageReceived.connect(this._onWsMessage, this);
+      this._wsHandler.usersChanged.connect(this._onWsUsersChanged, this);
+    }
   }
 
-  readonly collaborative = true;
+  collaborative: boolean;
 
   get user(): IUser {
     return this._user;
@@ -184,6 +194,18 @@ export class LabChatModel
    * second later, leaving the chat unusable until then.
    */
   markDocumentSynced(): void {
+    if (this._wsHandler) {
+      this._wsHandler.setPath(this.name);
+      this._wsHandler.initialize();
+      this._wsHandler.ready
+        .then(() => {
+          if (!this.id) {
+            this.id = UUID.uuid4();
+          }
+        })
+        .catch(e => console.error('WS chat connection failed', e));
+      return;
+    }
     if (!this._sharedModel.id) {
       // Assigning the shared ID emits a metadata change, which sets the model
       // ID - and therefore resolves `ready` - through `_onchange`.
@@ -195,6 +217,8 @@ export class LabChatModel
     if (this.isDisposed) {
       return;
     }
+    this._wsHandler?.dispose();
+    this._wsHandler = null;
     super.dispose();
     this.sharedModel.awareness.off('change', this.onAwarenessChange);
     this.sharedModel.awareness.off('change', this._enforceAutosaveEnabled);
@@ -242,49 +266,22 @@ export class LabChatModel
       window.clearTimeout(this._timeoutWriting);
     }
 
-    const body = message.body ?? '';
-    const user = message.sender ?? this._user;
+    if (this._wsHandler) {
+      return this._wsHandler.sendMessage(message);
+    }
 
-    const msg: IYmessage = {
+    const content: IMessageContent = {
+      ...message,
       type: 'msg',
       id: UUID.uuid4(),
-      body,
+      body: message.body ?? '',
       time: Date.now() / 1000,
-      sender: user.username,
+      sender: message.sender ?? this._user,
       raw_time: true
     };
 
-    // Add the MIME model if provided.
-    if (message.mime_model) {
-      msg.mime_model = message.mime_model;
-    }
-
-    // Add the user if it does not exist
-    if (!this.sharedModel.getUser(user.username)) {
-      this.sharedModel.setUser(user);
-    }
-
-    // Add the attachments to the message.
-    const attachmentIds = message.attachments?.map(attachment =>
-      this.sharedModel.setAttachment(attachment)
-    );
-    if (attachmentIds?.length) {
-      msg.attachments = attachmentIds;
-    }
-
-    // Add the mentioned users.
-    const mentions = this._buildMentionList(message.mentions, body);
-    if (mentions.length) {
-      msg.mentions = mentions;
-    }
-
-    // Add the metadata if provided.
-    if (message.metadata) {
-      msg.metadata = message.metadata;
-    }
-
-    this.sharedModel.addMessage(msg);
-    return msg.id;
+    this.sharedModel.addMessage(this._contentToYmessage(content));
+    return content.id;
   }
 
   /**
@@ -298,49 +295,24 @@ export class LabChatModel
     id: string,
     updatedMessage: IMessageContent
   ): Promise<boolean | void> | boolean | void {
+    if (this._wsHandler) {
+      this._wsHandler.updateMessage(id, updatedMessage);
+      return;
+    }
+
     const index = this.sharedModel.getMessageIndex(id);
-    let message = this.sharedModel.getMessage(index);
-    if (message) {
-      message.body = updatedMessage.body;
-      message.edited = true;
-    } else {
-      const sender = updatedMessage.sender.username;
-
-      message = {
-        type: 'msg',
-        id: id || UUID.uuid4(),
-        body: updatedMessage.body,
-        time: updatedMessage.time || Date.now() / 1000,
-        sender: sender,
-        edited: true
-      };
-    }
-
-    // Update the attachments.
-    const attachmentIds = updatedMessage.attachments?.map(attachment =>
-      this.sharedModel.setAttachment(attachment)
+    this.sharedModel.updateMessage(
+      index,
+      this._contentToYmessage({ ...updatedMessage, id, edited: true })
     );
-    if (attachmentIds?.length) {
-      message.attachments = attachmentIds;
-    } else {
-      delete message.attachments;
-    }
-
-    // Update the mentioned users (text messages only).
-    const mentions = this._buildMentionList(
-      updatedMessage.mentions,
-      updatedMessage.body
-    );
-    if (mentions.length) {
-      message.mentions = mentions;
-    } else {
-      delete message.mentions;
-    }
-
-    this.sharedModel.updateMessage(index, message as IYmessage);
   }
 
   deleteMessage(id: string): Promise<boolean | void> | boolean | void {
+    if (this._wsHandler) {
+      this._wsHandler.deleteMessage(id);
+      return;
+    }
+
     const index = this.sharedModel.getMessageIndex(id);
     const message = this.sharedModel.getMessage(index);
     if (!message) {
@@ -410,34 +382,6 @@ export class LabChatModel
     }
     this.updateWriters(writers);
   };
-
-  private _buildMentionList(
-    userMentions: IUser[] | undefined,
-    body: string
-  ): string[] {
-    if (!userMentions) {
-      return [];
-    }
-    const mentions: string[] = [];
-    userMentions.forEach(user => {
-      // Make sure the user is still mentioned.
-      if (!user.mention_name) {
-        return;
-      }
-      const mention = '@' + user.mention_name;
-      const regex = new RegExp(mention);
-      if (!regex.exec(body)) {
-        return;
-      }
-
-      // Save the mention name if necessary.
-      if (!(this.sharedModel.getUser(user.username) === user)) {
-        this.sharedModel.setUser(user);
-      }
-      mentions.push(user.username);
-    });
-    return mentions;
-  }
 
   private _resetWritingStatus() {
     const awareness = this.sharedModel.awareness;
@@ -590,7 +534,8 @@ export class LabChatModel
     // This is a fallback for chats whose document is not backed by a
     // collaborative provider, and so never reports being synchronized. When
     // there is one, `markDocumentSynced()` gets there first.
-    if (changes.stateChange && !this._sharedModel.id) {
+    // Not needed in WS mode — readiness is signalled by the connection message.
+    if (changes.stateChange && !this._sharedModel.id && !this._wsHandler) {
       if (
         changes.stateChange.some(
           change => change.name === 'dirty' && !change.newValue
@@ -600,6 +545,79 @@ export class LabChatModel
       }
     }
   };
+
+  private _onWsUsersChanged = (
+    _: WebSocketHandler,
+    users: Record<string, IUser>
+  ): void => {
+    for (const user of Object.values(users)) {
+      if (!this._sharedModel.getUser(user.username)) {
+        this._sharedModel.setUser(new LabChatUser(user));
+      }
+    }
+  };
+
+  private _onWsMessage = (_: WebSocketHandler, msg: IMessageContent): void => {
+    const ymsg = this._contentToYmessage(msg);
+    const index = this._sharedModel.getMessageIndex(ymsg.id);
+    if (index >= 0) {
+      this._sharedModel.updateMessage(index, ymsg);
+    } else {
+      this._sharedModel.addMessage(ymsg);
+    }
+  };
+
+  private _contentToYmessage(msg: IMessageContent): IYmessage {
+    const sender = msg.sender as IUser;
+    if (!this._sharedModel.getUser(sender.username)) {
+      this._sharedModel.setUser(new LabChatUser(sender));
+    }
+    const ymsg: IYmessage = {
+      type: msg.type ?? 'msg',
+      id: msg.id,
+      body: msg.body,
+      time: msg.time,
+      sender: sender.username
+    };
+    if (msg.raw_time !== undefined) {
+      ymsg.raw_time = msg.raw_time;
+    }
+    if (msg.edited) {
+      ymsg.edited = msg.edited;
+    }
+    if (msg.deleted) {
+      ymsg.deleted = msg.deleted;
+    }
+    if (msg.metadata) {
+      ymsg.metadata = msg.metadata;
+    }
+    if (msg.mime_model) {
+      ymsg.mime_model = msg.mime_model;
+    }
+    if (msg.attachments?.length) {
+      ymsg.attachments = msg.attachments.map(att =>
+        this._sharedModel.setAttachment(att)
+      );
+    }
+    if (msg.mentions?.length) {
+      const mentionUsernames: string[] = [];
+      for (const u of msg.mentions) {
+        if (u.mention_name) {
+          if (!new RegExp('@' + u.mention_name).exec(msg.body)) {
+            continue;
+          }
+        }
+        if (!this._sharedModel.getUser(u.username)) {
+          this._sharedModel.setUser(new LabChatUser(u));
+        }
+        mentionUsernames.push(u.username);
+      }
+      if (mentionUsernames.length) {
+        ymsg.mentions = mentionUsernames;
+      }
+    }
+    return ymsg;
+  }
 
   readonly defaultKernelName: string = '';
   readonly defaultKernelLanguage: string = '';
@@ -613,6 +631,7 @@ export class LabChatModel
   private _timeoutWriting: number | null = null;
 
   private _user: IUser;
+  private _wsHandler: WebSocketHandler | null = null;
 }
 
 /**

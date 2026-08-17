@@ -13,6 +13,19 @@
 # runs before the `ychat` submodule.
 import jupyter_ydoc  # noqa: F401
 
+from jupyter_server.utils import url_path_join
+
+from .models import BaseChatModel  # noqa: F401
+from .rtc_lib import (  # noqa: F401
+    RTC_PROVIDERS,
+    RTCProvider,
+    ServerSessionRtcInfo,
+    get_rtc_provider,
+    get_server_session_rtc_info,
+    publish_rtc_info,
+)
+from .websocket_handler import WSChatHandler  # noqa: F401
+
 try:
     from ._version import __version__
 except ImportError:
@@ -44,5 +57,22 @@ def _load_jupyter_server_extension(server_app):
     server_app: jupyterlab.labapp.LabApp
         JupyterLab application instance
     """
+    # Resolve whether an RTC provider is active this session and advertise the
+    # decision to the frontend via PageConfig. See jupyterlab_chat.rtc_lib.
+    rtc_info = publish_rtc_info(server_app)
+
+    # When RTC is off, chat runs over the plain WebSocket handler. When an RTC
+    # provider is active, the collaborative (YChat) backend serves chat instead.
+    if not rtc_info.enabled:
+        server_app.web_app.settings["ws_chat_models"] = {}
+
+        base_url = server_app.web_app.settings.get("base_url", "/")
+        server_app.web_app.add_handlers(".*$", [
+            (url_path_join(base_url, "api/jupyter-chat/ws"), WSChatHandler),
+        ])
+
     name = "jupyterlab_chat"
-    server_app.log.info(f"Registered {name} server extension")
+    server_app.log.info(
+        f"Registered {name} server extension "
+        f"(RTC provider: {rtc_info.provider or 'none'})"
+    )
