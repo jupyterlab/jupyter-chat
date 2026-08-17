@@ -14,6 +14,14 @@ const WS_PATH = 'api/jupyter-chat/ws';
 export namespace WebSocketHandler {
   export interface IOptions {
     serverSettings: ServerConnection.ISettings;
+    /**
+     * The local user identity. Carried on outgoing message frames so the
+     * server records the sender as the client's identity (matching the
+     * collaborative mode, where the sender is set on the frontend). Optional
+     * for backward compatibility — the server falls back to its authenticated
+     * user when absent.
+     */
+    user?: IUser;
   }
 }
 
@@ -36,6 +44,14 @@ export namespace WebSocketHandler {
 export class WebSocketHandler {
   constructor(options: WebSocketHandler.IOptions) {
     this._serverSettings = options.serverSettings;
+    this._user = options.user ?? null;
+  }
+
+  /**
+   * The local user identity, carried on outgoing message frames.
+   */
+  set user(value: IUser | null) {
+    this._user = value;
   }
 
   /**
@@ -89,6 +105,9 @@ export class WebSocketHandler {
     }
     if (message.metadata) {
       msg.metadata = message.metadata;
+    }
+    if (this._user) {
+      msg.user = this._user;
     }
     this._send(msg);
     return id;
@@ -188,7 +207,10 @@ export class WebSocketHandler {
     const token = this._serverSettings.token;
     const url =
       `${wsUrl}?path=${encodeURIComponent(this._path)}` +
-      (token ? `&token=${encodeURIComponent(token)}` : '');
+      (token ? `&token=${encodeURIComponent(token)}` : '') +
+      (this._user
+        ? `&user=${encodeURIComponent(JSON.stringify(this._user))}`
+        : '');
 
     this._socket = new WebSocket(url);
     this._socket.onmessage = event => {
@@ -213,6 +235,7 @@ export class WebSocketHandler {
 
   private _path = '';
   private _disposed = false;
+  private _user: IUser | null = null;
   private _socket: WebSocket | null = null;
   private _serverSettings: ServerConnection.ISettings;
   private _usersMap: Record<string, IUser> = {};

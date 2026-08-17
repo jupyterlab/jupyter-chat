@@ -43,6 +43,33 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
         self.pre_get()
         await super().get(*args, **kwargs)
 
+    def _parse_client_user(self):
+        """Parse the optional client-provided identity from the connect query.
+
+        Returns a ``User`` built from the frontend's ``user`` query argument, or
+        ``None`` when it is absent or malformed.
+        """
+        raw = self.get_query_argument("user", None)
+        if not raw:
+            return None
+        try:
+            data = json.loads(raw)
+        except (json.JSONDecodeError, TypeError):
+            return None
+        if not isinstance(data, dict):
+            return None
+        username = data.get("username")
+        if not username:
+            return None
+        return User(
+            username=username,
+            name=data.get("name") or username,
+            display_name=data.get("display_name") or username,
+            initials=data.get("initials") or username[0].upper(),
+            color=data.get("color"),
+            avatar_url=data.get("avatar_url"),
+        )
+
     def open(self, *args: str, **kwargs: str):
         path = self.get_query_argument("path", None)
         if path is None:
@@ -60,9 +87,13 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
         model = self._chat_models[path]
         model.handlers[self._client_id] = self
 
-        # Register the connecting user
+        # Register the connecting user. Prefer the client-provided identity
+        # (matching collaborative mode, where the user is set on the frontend)
+        # so it equals the frontend's own identity and is excluded from its own
+        # mention suggestions. Fall back to the authenticated server user for
+        # older clients that do not send their identity.
         current_user = self.current_user
-        user = User(
+        user = self._parse_client_user() or User(
             username=current_user.username,
             name=current_user.name or current_user.username,
             display_name=current_user.display_name or current_user.username,
@@ -113,11 +144,24 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
 
     def _handle_new_message(self, data: dict, model: WsChatModel) -> None:
         timestamp = time.time()
+        # Prefer the client-provided identity as the sender, matching the
+        # collaborative mode where the sender is set on the frontend. Fall back
+        # to the authenticated server user for older clients that do not send
+        # their identity.
+        client_user = data.get("user")
+        new_user_registered = False
+        if isinstance(client_user, dict) and client_user.get("username"):
+            sender = client_user["username"]
+            if model._users.get(sender) != client_user:
+                model._users[sender] = client_user
+                new_user_registered = True
+        else:
+            sender = self.current_user.username
         message: dict = {
             "id": data.get("id") or str(uuid.uuid4()),
             "body": data.get("body", ""),
             "time": timestamp,
-            "sender": self.current_user.username,
+            "sender": sender,
             "type": "msg",
             "raw_time": False,
         }
@@ -134,6 +178,10 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
         model._messages.insert(idx, message)
         model._indexes_by_id = {m["id"]: i for i, m in enumerate(model._messages)}
         model.save()
+        # If we learned a new sender identity, tell all clients first so they can
+        # resolve the sender (display name/avatar) when the message arrives.
+        if new_user_registered:
+            model.broadcast(json.dumps({"type": "users", "users": model._users}))
         model.broadcast(
             json.dumps({"type": "msg", "message": model.resolve_message(message)})
         )
