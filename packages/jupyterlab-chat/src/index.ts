@@ -5,7 +5,9 @@
 
 export * from './factory';
 export * from './model';
+export * from './rtc';
 export * from './token';
 export * from './utils';
 export * from './widget';
+export * from './websocket-handler';
 export * from './ychat';

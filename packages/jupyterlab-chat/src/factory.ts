@@ -66,6 +66,7 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
     super(options);
     this._chatOptions = options;
     this._inputToolbarFactory = options.inputToolbarFactory;
+    this._collaborative = options.collaborative ?? true;
   }
 
   /**
@@ -90,15 +91,18 @@ export class ChatWidgetFactory extends ABCWidgetFactory<
    * IMPORTANT: this property must be defined to use the `RtcContentProvider`
    * registered by `jupyter_collaboration`. Without this, the chat document
    * widgets will not connect.
+   * Returns undefined in non-collaborative (WS) mode so the default HTTP
+   * content provider is used instead.
    */
-  get contentProviderId(): string {
-    return 'rtc';
+  get contentProviderId(): string | undefined {
+    return this._collaborative ? 'rtc' : undefined;
   }
 
   // Must override both getter and setter from ABCFactory for type compatibility.
   set contentProviderId(_value: string | undefined) {}
   private _chatOptions: Omit<Chat.IOptions, 'model'>;
   private _inputToolbarFactory?: IInputToolbarRegistryFactory;
+  private _collaborative: boolean;
 }
 
 export namespace ChatWidgetFactory {
@@ -110,6 +114,7 @@ export namespace ChatWidgetFactory {
     extends DocumentRegistry.IWidgetFactoryOptions<T>,
       Omit<Chat.IOptions, 'model' | 'inputToolbarRegistry' | 'translator'> {
     inputToolbarFactory?: IInputToolbarRegistryFactory;
+    collaborative?: boolean;
   }
 }
 
@@ -118,9 +123,10 @@ export class LabChatModelFactory
 {
   constructor(options: LabChatModel.IOptions) {
     this._modelOptions = options;
+    this.collaborative = options.collaborative ?? true;
   }
 
-  collaborative = true;
+  collaborative: boolean;
   /**
    * The name of the factory.
    *

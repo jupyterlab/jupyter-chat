@@ -11,6 +11,13 @@ from jupyterlab.galata import configure_jupyter_server
 
 configure_jupyter_server(c)
 
+# Bind a configurable port (defaults to 8888, unchanged) so a parallel
+# worktree/checkout can run the suite on its own port. Kept in sync with
+# TEST_PORT in playwright.config.js.
+import os
+
+c.ServerApp.port = int(os.environ.get("TEST_PORT", "8888"))
+
 c.FileContentsManager.delete_to_trash = False
 
 # Each UI test runs in its own temporary directory, but all documents handled by

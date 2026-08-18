@@ -10,6 +10,7 @@ import {
   test
 } from '@jupyterlab/galata';
 import { User } from '@jupyterlab/services';
+import { collaborativeOnly } from './tags';
 import { UUID } from '@lumino/coreutils';
 
 import { openChat, openSettings, USER } from './test-utils';
@@ -168,7 +169,7 @@ test.describe('#stackedMessages', () => {
   });
 });
 
-test.describe('#typingNotification', () => {
+test.describe('#typingNotification', collaborativeOnly, () => {
   let guestPage: IJupyterLabPageFixture;
   test.beforeEach(
     async ({ baseURL, browser, page, tmpPath, waitForApplication }) => {
