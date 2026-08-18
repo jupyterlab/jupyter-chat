@@ -23,6 +23,22 @@ export namespace WebSocketHandler {
      */
     user?: IUser;
   }
+
+  /**
+   * A writing status pushed by the server (e.g. an AI agent). In RTC-free mode
+   * clients never advertise their own typing, so writers only originate
+   * server-side.
+   */
+  export interface IWriting {
+    /** The user the status is about. */
+    user: IUser;
+    /** True if the user is writing, false if they stopped. */
+    state: boolean;
+    /** The message being edited, if any. */
+    messageID?: string;
+    /** Optional custom typing-indicator text. */
+    typingIndicator?: string;
+  }
 }
 
 /**
@@ -69,6 +85,13 @@ export class WebSocketHandler {
    */
   get usersChanged(): ISignal<this, Record<string, IUser>> {
     return this._usersChanged;
+  }
+
+  /**
+   * Emitted whenever a writing status is pushed by the server (e.g. an AI agent).
+   */
+  get writingChanged(): ISignal<this, WebSocketHandler.IWriting> {
+    return this._writingChanged;
   }
 
   /**
@@ -155,6 +178,18 @@ export class WebSocketHandler {
       this._usersChanged.emit(incoming);
     } else if (data.type === 'msg' && data.message) {
       this._messageReceived.emit(this._toMessageContent(data.message));
+    } else if (data.type === 'writing') {
+      const user: IUser = data.user ?? {
+        username: data.sender,
+        name: data.sender,
+        display_name: data.sender
+      };
+      this._writingChanged.emit({
+        user,
+        state: !!data.state,
+        messageID: data.messageID,
+        typingIndicator: data.typingIndicator
+      });
     }
   }
 
@@ -242,4 +277,5 @@ export class WebSocketHandler {
   private _ready = new PromiseDelegate<void>();
   private _messageReceived = new Signal<this, IMessageContent>(this);
   private _usersChanged = new Signal<this, Record<string, IUser>>(this);
+  private _writingChanged = new Signal<this, WebSocketHandler.IWriting>(this);
 }
