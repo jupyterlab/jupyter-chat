@@ -13,7 +13,19 @@ from typing import Any, Callable, Optional, Set, Union
 from uuid import uuid4
 from pycrdt import Array, ArrayEvent, Map, MapEvent, Subscription
 
-from .models import BaseChatModel, message_asdict_factory, FileAttachment, NotebookAttachment, Message, NewMessage, User
+from .models import (
+    BaseChatModel,
+    ChatMessageAction,
+    ChatMessageEvent,
+    FileAttachment,
+    Message,
+    MessageObserver,
+    MessageObserverCallback,
+    NewMessage,
+    NotebookAttachment,
+    User,
+    message_asdict_factory,
+)
 from .utils import find_mentions
 
 
@@ -240,6 +252,51 @@ class YChat(YBaseDoc, BaseChatModel):
         """
         with self._ydoc.transaction():
             self._ymetadata.update({name: metadata})
+
+    def observe_messages(
+        self, callback: MessageObserverCallback
+    ) -> MessageObserver:
+        """Observe new messages by subscribing to the shared messages array.
+
+        Only genuine new messages (array inserts) are surfaced; in-place content
+        edits mutate a nested map and do not raise an array event, so
+        ``CLIENT_MSG_EDITED``/``SERVER_MSG_UPDATED`` are not emitted in RTC mode.
+        New messages are classified as server-sent when their sender is a bot
+        user, and client-received otherwise.
+        """
+        subscription: Subscription = self._ymessages.observe(
+            partial(self._dispatch_message_event, callback)
+        )
+        return MessageObserver(_handle=subscription)
+
+    def unobserve_messages(self, observer: MessageObserver) -> None:
+        subscription = observer._handle
+        if subscription is not None:
+            self._ymessages.unobserve(subscription)
+
+    def _dispatch_message_event(
+        self, callback: MessageObserverCallback, event: ArrayEvent
+    ) -> None:
+        # Skip while the document is still loading its pre-existing messages,
+        # and skip events that contain a delete (a message reposition performed
+        # by `_set_timestamp` is a delete+insert of an existing message, not a
+        # new one).
+        if self.dirty:
+            return
+        if any("delete" in value.keys() for value in event.delta):  # type:ignore[attr-defined]
+            return
+        for value in event.delta:  # type:ignore[attr-defined]
+            if "insert" not in value.keys():
+                continue
+            for item in value["insert"]:
+                message = Message(**item.to_py())
+                sender = self.get_user(message.sender)
+                action = (
+                    ChatMessageAction.SERVER_MSG_SENT
+                    if sender is not None and sender.bot
+                    else ChatMessageAction.CLIENT_MSG_RECEIVED
+                )
+                callback(ChatMessageEvent(action=action, message=message))
 
     async def create_id(self) -> str:
         """
