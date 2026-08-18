@@ -234,7 +234,13 @@ export class LabChatModel
   }
 
   sendMessage(message: INewMessage): string | null {
-    if (!message.body && !message.mime_model && !message.attachments?.length) {
+    // Allow empty message for bot only, as it may be streamed later.
+    if (
+      !message.body &&
+      !message.mime_model &&
+      !message.attachments?.length &&
+      !message.sender?.bot
+    ) {
       return null;
     }
     this._resetWritingStatus();
