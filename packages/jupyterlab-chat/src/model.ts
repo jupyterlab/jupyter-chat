@@ -562,7 +562,8 @@ export class LabChatModel
               'raw_time',
               'deleted',
               'edited',
-              'metadata'
+              'metadata',
+              'mime_model'
             ].includes(key)
           ) {
             const update: Partial<IMessageContent> = {};
