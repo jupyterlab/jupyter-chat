@@ -29,6 +29,15 @@ import { IChatChanges, IYmessage, YChat } from './ychat';
 const WRITING_DELAY = 1000;
 
 /**
+ * How long a server-pushed (e.g. AI persona) writing status stays visible
+ * without a refresh. The sender is expected to re-broadcast while still
+ * writing and to send an explicit stop when done; this is only a safety net so
+ * a crashed or forgetful sender cannot leave a "is writing" indicator stuck
+ * forever. An explicit stop clears it immediately, regardless of this value.
+ */
+const WS_WRITING_TIMEOUT = 3000;
+
+/**
  * Chat model namespace.
  */
 export namespace LabChatModel {
@@ -431,10 +440,14 @@ export class LabChatModel
       return;
     }
     if (writing.state) {
-      this.setWritingStatus(writing.user, {
-        messageID: writing.messageID,
-        typingIndicator: writing.typingIndicator
-      });
+      this.setWritingStatus(
+        writing.user,
+        {
+          messageID: writing.messageID,
+          typingIndicator: writing.typingIndicator
+        },
+        WS_WRITING_TIMEOUT
+      );
     } else {
       this.clearWritingStatus(writing.user);
     }
