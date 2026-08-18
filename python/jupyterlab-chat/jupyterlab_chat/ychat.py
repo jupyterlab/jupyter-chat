@@ -13,11 +13,11 @@ from typing import Any, Callable, Optional, Set, Union
 from uuid import uuid4
 from pycrdt import Array, ArrayEvent, Map, MapEvent, Subscription
 
-from .models import message_asdict_factory, FileAttachment, NotebookAttachment, Message, NewMessage, User
+from .models import BaseChatModel, message_asdict_factory, FileAttachment, NotebookAttachment, Message, NewMessage, User
 from .utils import find_mentions
 
 
-class YChat(YBaseDoc):
+class YChat(YBaseDoc, BaseChatModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._background_tasks: Set[asyncio.Task] = set()

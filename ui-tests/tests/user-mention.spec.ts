@@ -10,6 +10,7 @@ import {
   test
 } from '@jupyterlab/galata';
 import { User } from '@jupyterlab/services';
+import { collaborativeOnly } from './tags';
 import { openChat, sendMessage, USER } from './test-utils';
 
 const FILENAME = 'user-mention.chat';
@@ -18,7 +19,7 @@ test.use({
   mockUser: USER
 });
 
-test.describe('#user-mention', () => {
+test.describe('#user-mention', collaborativeOnly, () => {
   let guestPage: IJupyterLabPageFixture;
   test.beforeEach(
     async ({ baseURL, browser, page, tmpPath, waitForApplication }) => {

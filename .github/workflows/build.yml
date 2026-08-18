@@ -143,3 +143,23 @@ jobs:
       - uses: jupyterlab/maintainer-tools/.github/actions/check-links@v1
         with:
           ignore_links: 'https://www.npmjs.com.*'
+
+  # Independent job: starts immediately (no `needs`), and nothing depends on it.
+  # Covers the RTC-free detection logic (fast unit tests) plus a per-provider
+  # integration matrix that boots a real server and checks the published
+  # `serverSessionRtcInfo` (server-side and over HTTP via the /lab page).
+  rtc_detection_tests:
+    name: RTC detection tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Base Setup
+        uses: jupyterlab/maintainer-tools/.github/actions/base-setup@v1
+
+      - name: Install nox and uv
+        run: python -m pip install nox uv
+
+      - name: Run RTC detection unit and integration tests
+        run: nox -s unit rtc_integration
