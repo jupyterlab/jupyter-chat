@@ -14,7 +14,7 @@ import { MessageToolbar } from './toolbar';
 import { CodeToolbar, CodeToolbarProps } from '../code-blocks/code-toolbar';
 import { useChatContext } from '../../context';
 import { IMessageContent } from '../../types';
-import { replaceMentionToSpan } from '../../utils';
+import { disposeRenderer, replaceMentionToSpan } from '../../utils';
 
 const RENDERED_CLASS = 'jp-chat-rendered-message';
 const DEFAULT_MIME_TYPE = 'text/markdown';
@@ -62,9 +62,11 @@ function MessageRendererBase(props: MessageRendererProps): JSX.Element {
   >([]);
 
   useEffect(() => {
+    let cancelled = false;
+    let renderer: IRenderMime.IRenderer | null = null;
+
     const renderContent = async () => {
       let isMarkdownRenderer = true;
-      let renderer: IRenderMime.IRenderer;
       let mimeModel: IRenderMime.IMimeModel;
 
       // Create the renderer and the mime model.
@@ -124,6 +126,15 @@ function MessageRendererBase(props: MessageRendererProps): JSX.Element {
       }
       await renderer.renderModel(mimeModel);
 
+      // The effect has been cleaned up while rendering, the renderer is not owned
+      // by anybody anymore.
+      if (cancelled) {
+        disposeRenderer(renderer);
+        renderer = null;
+        props.rendered.resolve();
+        return;
+      }
+
       // Manually trigger the onAfterAttach of the renderer, because the widget will
       // never been attached, only the node.
       // This is necessary to render latex.
@@ -158,6 +169,16 @@ function MessageRendererBase(props: MessageRendererProps): JSX.Element {
     };
 
     renderContent();
+
+    return () => {
+      cancelled = true;
+      if (renderer) {
+        // The node is left in place: it is either about to be replaced by the
+        // content of the next render, or removed with the component itself.
+        disposeRenderer(renderer);
+        renderer = null;
+      }
+    };
   }, [message.body, message.mime_model, message.mentions, rmRegistry]);
 
   return (
