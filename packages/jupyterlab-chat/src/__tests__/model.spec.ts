@@ -36,7 +36,7 @@ describe('LabChatModel', () => {
     model = new LabChatModel({
       widgetConfig: makeWidgetConfig(),
       user: TEST_USER,
-      sharedModel,
+      sharedModel
     });
     // Resolve the ready promise so messagesInserted can proceed.
     model.id = UUID.uuid4();
