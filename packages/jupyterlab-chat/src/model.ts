@@ -322,6 +322,11 @@ export class LabChatModel
       };
     }
 
+    // Update the mime model.
+    if (updatedMessage.mime_model) {
+      message.mime_model = updatedMessage.mime_model;
+    }
+
     // Update the attachments.
     const attachmentIds = updatedMessage.attachments?.map(attachment =>
       this.sharedModel.setAttachment(attachment)
