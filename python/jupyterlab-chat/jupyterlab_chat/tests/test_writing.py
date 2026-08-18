@@ -21,7 +21,8 @@ class _FakeHandler:
 def _model_with_client(tmp_path):
     model = WsChatModel(path="chat.chat", root_dir=tmp_path)
     handler = _FakeHandler()
-    model.handlers["client-1"] = handler
+    # _FakeHandler duck-types the WebSocketHandler surface used here (write_message).
+    model.handlers["client-1"] = handler  # type: ignore[assignment]
     return model, handler
 
 
