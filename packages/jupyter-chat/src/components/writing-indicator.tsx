@@ -41,13 +41,29 @@ function formatWritersText(
     return '';
   }
 
-  const names = writers.map(
-    w =>
-      w.user.display_name ??
-      w.user.name ??
-      w.user.username ??
-      trans.__('Unknown')
-  );
+  const nameOf = (w: IChatModel.IWriter) =>
+    w.user.display_name ??
+    w.user.name ??
+    w.user.username ??
+    trans.__('Unknown');
+
+  // When any writer supplies a custom typing indicator, render per-writer
+  // phrases ("<name> <indicator>"), so e.g. "Jupyternaut is running `ripgrep`".
+  if (writers.some(w => w.typingIndicator)) {
+    const phrases = writers.map(
+      w => `${nameOf(w)} ${w.typingIndicator ?? trans.__('is typing...')}`
+    );
+    if (phrases.length === 1) {
+      return phrases[0];
+    } else if (phrases.length === 2) {
+      return trans.__('%1 and %2', phrases[0], phrases[1]);
+    } else {
+      const allButLast = phrases.slice(0, -1).join(', ');
+      return trans.__('%1, and %2', allButLast, phrases[phrases.length - 1]);
+    }
+  }
+
+  const names = writers.map(nameOf);
 
   if (names.length === 1) {
     return trans.__('%1 is typing...', names[0]);

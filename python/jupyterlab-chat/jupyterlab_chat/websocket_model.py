@@ -76,6 +76,38 @@ class WsChatModel(BaseChatModel):
             except websocket.WebSocketClosedError:
                 pass
 
+    def broadcast_writing_status(self, user, status=None) -> None:
+        """Broadcast an ephemeral writing status for ``user`` to all clients.
+
+        Not persisted to the ``.chat`` file. ``user`` may be a ``User`` or a
+        mapping (with at least ``username``); ``status`` is ``None`` (stopped) or
+        a mapping with optional ``messageID``/``typingIndicator``. The full user
+        object is included so recipients can display the writer without having
+        seen a message from them.
+        """
+        if isinstance(user, dict):
+            user_dict = user
+        else:
+            user_dict = {
+                "username": user.username,
+                "name": getattr(user, "name", None),
+                "display_name": getattr(user, "display_name", None),
+                "initials": getattr(user, "initials", None),
+                "color": getattr(user, "color", None),
+                "avatar_url": getattr(user, "avatar_url", None),
+            }
+        payload: dict = {
+            "type": "writing",
+            "user": user_dict,
+            "state": status is not None,
+        }
+        if status:
+            for key in ("messageID", "typingIndicator"):
+                value = status.get(key)
+                if value is not None:
+                    payload[key] = value
+        self.broadcast(json.dumps(payload))
+
     def resolve_message(self, message: dict) -> dict:
         """Return a copy of a message with attachment IDs replaced by full objects."""
         atts = message.get("attachments")

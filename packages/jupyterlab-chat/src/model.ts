@@ -29,6 +29,15 @@ import { IChatChanges, IYmessage, YChat } from './ychat';
 const WRITING_DELAY = 1000;
 
 /**
+ * How long a server-pushed (e.g. AI persona) writing status stays visible
+ * without a refresh. The sender is expected to re-broadcast while still
+ * writing and to send an explicit stop when done; this is only a safety net so
+ * a crashed or forgetful sender cannot leave a "is writing" indicator stuck
+ * forever. An explicit stop clears it immediately, regardless of this value.
+ */
+const WS_WRITING_TIMEOUT = 3000;
+
+/**
  * Chat model namespace.
  */
 export namespace LabChatModel {
@@ -130,6 +139,7 @@ export class LabChatModel
       });
       this._wsHandler.messageReceived.connect(this._onWsMessage, this);
       this._wsHandler.usersChanged.connect(this._onWsUsersChanged, this);
+      this._wsHandler.writingChanged.connect(this._onWsWriting, this);
     }
   }
 
@@ -267,9 +277,10 @@ export class LabChatModel
     ) {
       return null;
     }
-    this._resetWritingStatus();
+    this.broadcastWritingStatus(null);
     if (this._timeoutWriting !== null) {
       window.clearTimeout(this._timeoutWriting);
+      this._timeoutWriting = null;
     }
 
     if (this._wsHandler) {
@@ -337,16 +348,22 @@ export class LabChatModel
    * @param messageID - The ID of the message being edited, if any.
    */
   onInputChanged = (value: string, messageID?: string): void => {
-    if (!value || !this.config.sendTypingNotification) {
+    if (!this.config.sendTypingNotification) {
       return;
     }
-    const awareness = this.sharedModel.awareness;
     if (this._timeoutWriting !== null) {
       window.clearTimeout(this._timeoutWriting);
+      this._timeoutWriting = null;
     }
-    awareness.setLocalStateField('isWriting', messageID ?? true);
+    // Empty input (including right after sending) means the user stopped.
+    if (!value) {
+      this.broadcastWritingStatus(null);
+      return;
+    }
+    this.broadcastWritingStatus({ messageID });
     this._timeoutWriting = window.setTimeout(() => {
-      this._resetWritingStatus();
+      this._timeoutWriting = null;
+      this.broadcastWritingStatus(null);
     }, WRITING_DELAY);
   };
 
@@ -381,7 +398,8 @@ export class LabChatModel
       if (state.isWriting !== undefined && state.isWriting !== false) {
         const writer: IChatModel.IWriter = {
           user: state.user,
-          messageID: state.isWriting === true ? undefined : state.isWriting
+          messageID: state.isWriting === true ? undefined : state.isWriting,
+          typingIndicator: state.typingIndicator ?? undefined
         };
         writers.push(writer);
       }
@@ -389,13 +407,57 @@ export class LabChatModel
     this.updateWriters(writers);
   };
 
-  private _resetWritingStatus() {
+  /**
+   * Broadcast the current user's writing status.
+   *
+   * Collaborative (RTC) mode advertises it over the awareness channel so peers
+   * see it. RTC-free (WebSocket) mode is effectively single-user, so the client
+   * does not advertise its own typing at all -- writers only ever come from the
+   * server (e.g. AI agents). Hence this is a no-op without RTC.
+   */
+  broadcastWritingStatus(status: IChatModel.IWritingStatus | null): void {
+    if (!this.collaborative) {
+      return;
+    }
     const awareness = this.sharedModel.awareness;
-    const states = awareness.getLocalState();
-    delete states?.isWriting;
-    awareness.setLocalState(states);
-    this._timeoutWriting = null;
+    if (status === null) {
+      const local = awareness.getLocalState() ?? {};
+      delete local.isWriting;
+      delete local.typingIndicator;
+      awareness.setLocalState(local);
+    } else {
+      awareness.setLocalStateField('isWriting', status.messageID ?? true);
+      awareness.setLocalStateField(
+        'typingIndicator',
+        status.typingIndicator ?? null
+      );
+    }
   }
+
+  /**
+   * Handle a writing status pushed by the server (e.g. an AI agent) over the
+   * WebSocket. The sender controls its own lifecycle via explicit start/stop.
+   */
+  private _onWsWriting = (
+    _: WebSocketHandler,
+    writing: WebSocketHandler.IWriting
+  ): void => {
+    if (writing.user.username === this.user.username) {
+      return;
+    }
+    if (writing.state) {
+      this.setWritingStatus(
+        writing.user,
+        {
+          messageID: writing.messageID,
+          typingIndicator: writing.typingIndicator
+        },
+        WS_WRITING_TIMEOUT
+      );
+    } else {
+      this.clearWritingStatus(writing.user);
+    }
+  };
 
   private _enforceAutosaveEnabled = () => {
     enforceAutosaveEnabled(this.sharedModel.awareness);

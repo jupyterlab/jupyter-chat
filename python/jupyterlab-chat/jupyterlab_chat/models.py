@@ -283,3 +283,21 @@ class BaseChatModel(ABC):
     @abstractmethod
     def set_metadata(self, name: str, metadata: Any) -> None:
         ...
+
+    def broadcast_writing_status(
+        self,
+        user: Union["User", dict],
+        status: Optional[dict] = None,
+    ) -> None:
+        """Broadcast an ephemeral "user is writing" status on behalf of ``user``.
+
+        ``user`` is a :class:`User` (or a mapping with at least ``username``),
+        allowing server-side senders such as AI agents -- which each have their
+        own user identity -- to advertise a typing indicator. ``status`` is
+        ``None`` when the user stopped, or a mapping with optional ``messageID``
+        and ``typingIndicator`` keys.
+
+        The default implementation is a no-op; transports that support live
+        presence (e.g. the WebSocket model) override it.
+        """
+        # no-op by default
