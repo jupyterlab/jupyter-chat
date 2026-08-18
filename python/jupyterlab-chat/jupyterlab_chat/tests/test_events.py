@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, cast
 from jupyter_events import EventLogger
 
 from jupyterlab_chat.events import ChatManager
+from jupyterlab_chat.models import NewMessage
 from jupyterlab_chat.websocket_model import WsChatModel
 
 if TYPE_CHECKING:
@@ -127,6 +128,59 @@ def test_deletion_frees_model(tmp_path):
 
         assert mgr.get("e.chat") is None
         assert {"path": "e.chat", "action": "deleted"} in capture
+        mgr.stop()
+
+    asyncio.run(run())
+
+
+def test_last_client_gone_frees_model(tmp_path):
+    """When the last client disconnects and no server-side writer is active, the
+    model is freed, so the next open builds a fresh model instead of reusing a
+    stale in-memory instance that would accumulate messages across reopens."""
+
+    async def run():
+        capture: list = []
+        mgr = _make_manager(tmp_path, capture)
+        chat = tmp_path / "r.chat"
+        chat.write_text("{}")
+
+        m1 = mgr.ws_open("r.chat")
+        m1.handlers["client-1"] = SimpleNamespace(write_message=lambda *a, **k: None)
+        m1.add_message(NewMessage(body="first message", sender="u"))
+
+        # Last client disconnects with no active writer -> model is freed.
+        m1.handlers.clear()
+        capture.clear()
+        mgr.ws_client_gone("r.chat")
+        await _drain()
+        assert mgr.get("r.chat") is None
+        assert {"path": "r.chat", "action": "closed"} in capture
+
+        # Reopening builds a fresh model, not the stale in-memory instance.
+        m2 = mgr.ws_open("r.chat")
+        assert m2 is not m1
+        mgr.stop()
+
+    asyncio.run(run())
+
+
+def test_reopen_while_live_reuses_in_memory_model(tmp_path):
+    """A reopen while the chat is still live (a client is connected) reuses the
+    same in-memory model without reloading, so attached server-side state is
+    preserved on reconnect."""
+
+    async def run():
+        mgr = _make_manager(tmp_path, [])
+        (tmp_path / "r.chat").write_text("{}")
+
+        m1 = mgr.ws_open("r.chat")
+        m1.handlers["client-1"] = SimpleNamespace(write_message=lambda *a, **k: None)
+        m1.add_message(NewMessage(body="first message", sender="u"))
+
+        # A second client connects while the first is still present.
+        m2 = mgr.ws_open("r.chat")
+        assert m2 is m1  # same live model
+        assert len(m2._messages) == 1  # nothing reloaded or reset
         mgr.stop()
 
     asyncio.run(run())

@@ -265,9 +265,26 @@ class ChatManager(LoggingConfigurable):
         self._last_active[path] = time.time()
 
     def ws_client_gone(self, path: str) -> None:
-        # Do not free immediately; the inactivity poller reclaims it after the
-        # grace period unless a client reconnects.
+        # The last client for this chat has disconnected. Free the model now
+        # unless a server-side writer (e.g. an AI persona still producing a
+        # reply) is keeping it alive, in which case the poller reclaims it once
+        # the writer stops. Freeing here -- rather than reloading from disk on the
+        # next open -- is what keeps a reopened chat consistent without having to
+        # handle out-of-band file changes.
         self._last_active[path] = time.time()
+        if not self._has_active_writers(path):
+            self._free(path, ChatEventAction.CLOSED)
+
+    def _has_active_writers(self, path: str) -> bool:
+        """Whether a server-side writer is keeping this chat alive.
+
+        A "writer" is an AI persona (or other server-side producer) that is still
+        working on a reply and would be orphaned if the model were freed. The
+        server-side writing API is not on this branch yet (see
+        jupyterlab/jupyter-chat#497); until it lands there are no server-side
+        writers, so a chat is freed as soon as its last client disconnects.
+        """
+        return False
 
     def _get_or_create_ws(self, path: str) -> "WsChatModel":
         model = self._models.get(path)
@@ -277,6 +294,10 @@ class ChatManager(LoggingConfigurable):
             self._models[path] = model
             self._last_active[path] = time.time()
             self._emit_event(ChatEvent(path=path, action=ChatEventAction.OPENED))
+        # A cached model is the live in-memory session: reuse it verbatim. We do
+        # not reload from disk (out-of-band file changes are unsupported) so that
+        # any attached server-side state, such as AI personas, is preserved when a
+        # client reconnects.
         return model  # type: ignore[return-value]
 
     # ------------------------------------------------------------------
