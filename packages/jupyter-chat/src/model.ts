@@ -156,10 +156,13 @@ export interface IChatModel extends IDisposable {
    *
    * @param id - the unique ID of the message.
    * @param message - the updated message.
+   * @param skipEditedUpdate - optional, whether to avoid setting the `edited` state of
+   * the message to true. Default should be `false`.
    */
   updateMessage?(
     id: string,
-    message: IMessageContent
+    message: IMessageContent,
+    skipEditedUpdate?: boolean
   ): Promise<boolean | void> | boolean | void;
 
   /**
