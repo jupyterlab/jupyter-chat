@@ -159,7 +159,8 @@ export interface IChatModel extends IDisposable {
    */
   updateMessage?(
     id: string,
-    message: IMessageContent
+    message: IMessageContent,
+    setEditedStatus?: boolean
   ): Promise<boolean | void> | boolean | void;
 
   /**

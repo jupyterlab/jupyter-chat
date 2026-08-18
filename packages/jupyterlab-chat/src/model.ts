@@ -299,7 +299,8 @@ export class LabChatModel
 
   updateMessage(
     id: string,
-    updatedMessage: IMessageContent
+    updatedMessage: IMessageContent,
+    setEditedStatus?: boolean
   ): Promise<boolean | void> | boolean | void {
     if (this._wsHandler) {
       this._wsHandler.updateMessage(id, updatedMessage);
@@ -309,7 +310,11 @@ export class LabChatModel
     const index = this.sharedModel.getMessageIndex(id);
     this.sharedModel.updateMessage(
       index,
-      this._contentToYmessage({ ...updatedMessage, id, edited: true })
+      this._contentToYmessage({
+        ...updatedMessage,
+        id,
+        edited: setEditedStatus ? true : updatedMessage.edited
+      })
     );
   }
 
