@@ -623,7 +623,10 @@ export abstract class AbstractChatModel implements IChatModel {
       const msg = new Message(formattedMessage);
       msg.changed.connect(this._onMessageChanged, this);
       formattedMessages.push(msg);
-      if (message.time > this.lastRead) {
+      // A deleted message is never rendered (or only as an empty placeholder),
+      // so it can never be marked as read by being scrolled into view: it
+      // should not be counted as unread.
+      if (message.time > this.lastRead && !message.deleted) {
         unreadIndexes.push(index + idx);
       }
     });
@@ -773,6 +776,17 @@ export abstract class AbstractChatModel implements IChatModel {
   }
 
   private _onMessageChanged(msg: IMessage): void {
+    // A deleted message is never rendered (or only as an empty placeholder),
+    // so it can never be marked as read by being scrolled into view: remove
+    // it from the unread messages as soon as it is deleted.
+    if (msg.deleted) {
+      const index = this._messages.indexOf(msg);
+      if (index !== -1 && this._unreadMessages.includes(index)) {
+        this.unreadMessages = this._unreadMessages.filter(
+          unreadIndex => unreadIndex !== index
+        );
+      }
+    }
     this._messageChanged.emit(msg);
   }
 
