@@ -70,7 +70,7 @@ describe('LabChatModel', () => {
         id,
         body: 'updated',
         time: 1000,
-        sender: TEST_USER,
+        sender: TEST_USER
       });
       await flushPromises();
 
@@ -90,7 +90,7 @@ describe('LabChatModel', () => {
         id,
         body: 'updated',
         time: 1000,
-        sender: TEST_BOT,
+        sender: TEST_BOT
       });
       await flushPromises();
 
