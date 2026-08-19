@@ -302,14 +302,13 @@ export class LabChatModel
 
   updateMessage(
     id: string,
-    updatedMessage: IMessageContent,
-    skipEditedUpdate?: boolean
+    updatedMessage: IMessageContent
   ): Promise<boolean | void> | boolean | void {
     const index = this.sharedModel.getMessageIndex(id);
     let message = this.sharedModel.getMessage(index);
     if (message) {
       message.body = updatedMessage.body;
-      message.edited = skipEditedUpdate ? message.edited : true;
+      message.edited = updatedMessage.sender.bot ? updatedMessage.edited : true;
     } else {
       const sender = updatedMessage.sender.username;
 
@@ -319,7 +318,7 @@ export class LabChatModel
         body: updatedMessage.body,
         time: updatedMessage.time || Date.now() / 1000,
         sender: sender,
-        edited: skipEditedUpdate ? false : true
+        edited: updatedMessage.sender.bot ? false : true
       };
     }
 
