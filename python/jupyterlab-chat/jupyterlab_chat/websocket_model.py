@@ -6,11 +6,13 @@ import logging
 import time
 import uuid
 from dataclasses import asdict
+from itertools import count
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from tornado import websocket
 
+from .pubsub import Payload, PubSubCallback, SubToken
 from .models import (
     BaseChatModel,
     ChatMessageAction,
@@ -46,6 +48,10 @@ class WsChatModel(BaseChatModel):
         self._attachments: Dict[str, dict] = {}
         self._metadata: Dict[str, object] = {}
         self._message_observers: List[MessageObserverCallback] = []
+        # Subscribers to document map topics (/chat/users, /chat/metadata,
+        # /chat/attachments), notified with the whole current map on each change.
+        self._doc_subs: Dict[str, Dict[int, PubSubCallback]] = {}
+        self._doc_sub_ids = count()
 
     # ------------------------------------------------------------------
     # Room-level helpers
@@ -233,13 +239,16 @@ class WsChatModel(BaseChatModel):
             None,
         ) or str(uuid.uuid4())
         self._attachments[att_id] = att_dict
+        self._notify_document(self.CHAT_ATTACHMENTS_TOPIC)
         return att_id
 
     def set_user(self, user: User) -> None:
         self._users[user.username] = asdict(user)
+        self._notify_document(self.CHAT_USERS_TOPIC)
 
     def set_metadata(self, name: str, metadata: Any) -> None:
         self._metadata[name] = metadata
+        self._notify_document(self.CHAT_METADATA_TOPIC)
 
     # ------------------------------------------------------------------
     # Message observers
@@ -270,3 +279,74 @@ class WsChatModel(BaseChatModel):
                 callback(event)
             except Exception:  # pragma: no cover - defensive
                 _log.exception("Message observer failed for %s", action)
+
+    # ------------------------------------------------------------------
+    # Generic pub/sub API (RTC-free transport)
+    #
+    # Document topics (/chat/*) route to the model's own state (persisted to the
+    # .chat file); presence topics use the inherited in-memory PubSubBus. This is
+    # the RTC-free counterpart to YChat's Y-type / awareness implementation.
+    # ------------------------------------------------------------------
+    def pub(self, topic: str, data: Any, client_id: str = "server") -> None:
+        if topic == self.CHAT_MESSAGES_TOPIC:
+            self.add_message(NewMessage(**data))
+        elif topic == self.CHAT_USERS_TOPIC:
+            self.set_user(User(**data))
+        elif topic == self.CHAT_METADATA_TOPIC:
+            for key, value in dict(data).items():
+                self.set_metadata(key, value)
+        elif topic == self.CHAT_ATTACHMENTS_TOPIC:
+            attachment: Union[FileAttachment, NotebookAttachment] = (
+                NotebookAttachment(**data)
+                if data.get("type") == "notebook"
+                else FileAttachment(**data)
+            )
+            self.set_attachment(attachment)
+        else:
+            self._pubsub().pub(topic, data, client_id)
+
+    def sub(self, topic: str, callback: PubSubCallback) -> SubToken:
+        if topic == self.CHAT_MESSAGES_TOPIC:
+            return self._sub_chat_messages(callback)
+        if topic in (
+            self.CHAT_USERS_TOPIC,
+            self.CHAT_METADATA_TOPIC,
+            self.CHAT_ATTACHMENTS_TOPIC,
+        ):
+            return self._sub_document(topic, callback)
+        return self._pubsub().sub(topic, callback)
+
+    def _current_document(self, topic: str) -> dict:
+        if topic == self.CHAT_USERS_TOPIC:
+            return dict(self._users)
+        if topic == self.CHAT_METADATA_TOPIC:
+            return dict(self._metadata)
+        if topic == self.CHAT_ATTACHMENTS_TOPIC:
+            return dict(self._attachments)
+        return {}
+
+    def _sub_document(self, topic: str, callback: PubSubCallback) -> SubToken:
+        # Snapshot with the whole current mapping, then re-notify on each change
+        # (replace semantics, matching YChat's document Map subscription).
+        callback(Payload(client_id="server", data=self._current_document(topic)))
+        sub_id = next(self._doc_sub_ids)
+        self._doc_subs.setdefault(topic, {})[sub_id] = callback
+        return SubToken(lambda: self._remove_doc_sub(topic, sub_id))
+
+    def _remove_doc_sub(self, topic: str, sub_id: int) -> None:
+        subs = self._doc_subs.get(topic)
+        if subs is not None:
+            subs.pop(sub_id, None)
+            if not subs:
+                self._doc_subs.pop(topic, None)
+
+    def _notify_document(self, topic: str) -> None:
+        subs = self._doc_subs.get(topic)
+        if not subs:
+            return
+        payload = Payload(client_id="server", data=self._current_document(topic))
+        for callback in list(subs.values()):
+            try:
+                callback(payload)
+            except Exception:  # pragma: no cover - defensive
+                _log.exception("Document subscriber failed for %s", topic)

@@ -374,6 +374,9 @@ class BaseChatModel(ABC):
     #: (ordered, file-backed) and bridges to ``observe_messages`` rather than the
     #: generic in-memory bus.
     CHAT_MESSAGES_TOPIC = "/chat/messages"
+    CHAT_USERS_TOPIC = "/chat/users"
+    CHAT_METADATA_TOPIC = "/chat/metadata"
+    CHAT_ATTACHMENTS_TOPIC = "/chat/attachments"
 
     _pubsub_bus: Optional[PubSubBus] = None
 

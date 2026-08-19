@@ -197,6 +197,32 @@ def test_chat_messages_topic_snapshot_and_live(tmp_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Document topics on WsChatModel (parity with YChat)
+# ---------------------------------------------------------------------------
+def test_ws_users_document_topic(tmp_path: Path) -> None:
+    model = _ws_model(tmp_path)
+    got: List[Payload] = []
+    model.sub(model.CHAT_USERS_TOPIC, got.append)
+    assert got[-1].data == {}  # snapshot (empty)
+    model.pub(model.CHAT_USERS_TOPIC, {"username": "u1", "name": "U1"})
+    assert "u1" in got[-1].data and got[-1].data["u1"]["username"] == "u1"
+
+
+def test_ws_metadata_document_topic(tmp_path: Path) -> None:
+    model = _ws_model(tmp_path)
+    got: List[Payload] = []
+    model.sub(model.CHAT_METADATA_TOPIC, got.append)
+    model.pub(model.CHAT_METADATA_TOPIC, {"default_persona": "jupyternaut"})
+    assert got[-1].data.get("default_persona") == "jupyternaut"
+
+
+def test_ws_pub_message_appends(tmp_path: Path) -> None:
+    model = _ws_model(tmp_path)
+    model.pub(model.CHAT_MESSAGES_TOPIC, {"body": "hi", "sender": "jovyan"})
+    assert [m.body for m in model.get_messages()] == ["hi"]
+
+
+# ---------------------------------------------------------------------------
 # Global channel on ChatManager
 # ---------------------------------------------------------------------------
 def test_manager_global_channel(tmp_path: Path) -> None:

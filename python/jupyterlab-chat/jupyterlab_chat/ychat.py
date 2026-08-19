@@ -11,8 +11,10 @@ from functools import partial
 from jupyter_ydoc.ybasedoc import YBaseDoc
 from typing import Any, Callable, Optional, Set, Union
 from uuid import uuid4
-from pycrdt import Array, ArrayEvent, Map, MapEvent, Subscription
+from pycrdt import Array, ArrayEvent, Awareness, Map, MapEvent, Subscription
 
+from .awareness_pubsub import AwarenessBus
+from .pubsub import Payload, PubSubCallback, SubToken
 from .models import (
     BaseChatModel,
     ChatMessageAction,
@@ -478,3 +480,79 @@ class YChat(YBaseDoc, BaseChatModel):
             if msg_idx != new_idx:
                 message = self._ymessages.pop(msg_idx)
                 self._ymessages.insert(new_idx, message)
+
+    # ------------------------------------------------------------------
+    # Generic pub/sub API (RTC transport)
+    #
+    # Document topics (/chat/*) map to the shared Y types; presence topics map
+    # to awareness. This is the RTC implementation of the pub/sub API declared
+    # on BaseChatModel; see docs/design/pubsub-api.md.
+    # ------------------------------------------------------------------
+    # Document topics (/chat/*) map to the shared Y types; presence topics map
+    # to awareness. Topic constants are inherited from BaseChatModel.
+
+    _presence_bus: Optional[AwarenessBus] = None
+
+    def _presence(self) -> AwarenessBus:
+        """The awareness-backed bus for presence topics, created lazily.
+
+        ``YChat.awareness`` is only set once the document is attached to a room;
+        when absent we create one over the same ``Doc`` (mirroring the
+        persona-manager) so presence works in-process too.
+        """
+        if self._presence_bus is None:
+            if self.awareness is None:
+                self.awareness = Awareness(ydoc=self._ydoc)
+            self._presence_bus = AwarenessBus(self.awareness)
+        return self._presence_bus
+
+    def pub(self, topic: str, data: Any, client_id: str = "server") -> None:
+        if topic.startswith("/chat"):
+            self._pub_document(topic, data)
+        else:
+            self._presence().pub(topic, data, client_id)
+
+    def sub(self, topic: str, callback: PubSubCallback) -> SubToken:
+        if topic == self.CHAT_MESSAGES_TOPIC:
+            # Reuse the base bridge: history snapshot + observe_messages stream.
+            return self._sub_chat_messages(callback)
+        if topic == self.CHAT_USERS_TOPIC:
+            return self._sub_map(self._yusers, callback)
+        if topic == self.CHAT_METADATA_TOPIC:
+            return self._sub_map(self._ymetadata, callback)
+        if topic == self.CHAT_ATTACHMENTS_TOPIC:
+            return self._sub_map(self._yattachments, callback)
+        return self._presence().sub(topic, callback)
+
+    def remove_client(self, client_id: str) -> None:
+        self._presence().remove_client(client_id)
+
+    def _sub_map(self, ymap: Map, callback: PubSubCallback) -> SubToken:
+        """Subscribe to a document Map topic: deliver the whole current mapping
+        as the snapshot, then the whole updated mapping on every change (document
+        topics use replace semantics, not the presence merge)."""
+        callback(Payload(client_id="server", data=ymap.to_py() or {}))
+        subscription = ymap.observe(
+            lambda _event: callback(
+                Payload(client_id="server", data=ymap.to_py() or {})
+            )
+        )
+        return SubToken(lambda: ymap.unobserve(subscription))
+
+    def _pub_document(self, topic: str, data: Any) -> None:
+        if topic == self.CHAT_MESSAGES_TOPIC:
+            self.add_message(NewMessage(**data))
+        elif topic == self.CHAT_USERS_TOPIC:
+            self.set_user(User(**data))
+        elif topic == self.CHAT_METADATA_TOPIC:
+            for key, value in dict(data).items():
+                self.set_metadata(key, value)
+        elif topic == self.CHAT_ATTACHMENTS_TOPIC:
+            attachment: Union[FileAttachment, NotebookAttachment] = (
+                NotebookAttachment(**data)
+                if data.get("type") == "notebook"
+                else FileAttachment(**data)
+            )
+            self.set_attachment(attachment)
+        else:  # pragma: no cover - defensive; unknown /chat/* topic
+            raise ValueError(f"Unknown document topic: {topic}")
