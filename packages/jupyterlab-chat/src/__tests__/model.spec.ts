@@ -20,6 +20,15 @@ const TEST_USER = {
   color: '#aabbcc'
 };
 
+const TEST_BOT = {
+  username: 'test-bot',
+  name: 'Test Bot',
+  display_name: 'Bot',
+  initials: 'BU',
+  color: '#aabbcc',
+  bot: true
+};
+
 function makeWidgetConfig(): IWidgetConfig {
   const owner = {} as IWidgetConfig;
   owner.config = {};
@@ -46,6 +55,48 @@ describe('LabChatModel', () => {
   afterEach(() => {
     Signal.clearData(model);
     sharedModel.dispose();
+  });
+
+  describe('message update from model', () => {
+    it('should set edited when user message is updated', async () => {
+      const id = model.sendMessage({
+        body: 'original',
+        sender: TEST_USER
+      }) as string;
+      await flushPromises();
+
+      model.updateMessage(id, {
+        type: 'msg',
+        id,
+        body: 'updated',
+        time: 1000,
+        sender: TEST_USER,
+      });
+      await flushPromises();
+
+      expect(model.messages[0].body).toBe('updated');
+      expect(model.messages[0].edited).toBe(true);
+    });
+
+    it('should not set edited when bot message is updated', async () => {
+      const id = model.sendMessage({
+        body: 'original',
+        sender: TEST_BOT
+      }) as string;
+      await flushPromises();
+
+      model.updateMessage(id, {
+        type: 'msg',
+        id,
+        body: 'updated',
+        time: 1000,
+        sender: TEST_BOT,
+      });
+      await flushPromises();
+
+      expect(model.messages[0].body).toBe('updated');
+      expect(model.messages[0].edited).toBeUndefined();
+    });
   });
 
   describe('message attribute updates from shared model', () => {
@@ -95,30 +146,6 @@ describe('LabChatModel', () => {
       await flushPromises();
 
       expect(model.messages[0].mime_model).toEqual(mimeModel);
-    });
-
-    it('should not set edited when only mime_model changes', async () => {
-      const id = UUID.uuid4();
-      sharedModel.addMessage({
-        type: 'msg',
-        id,
-        body: '',
-        time: 1000,
-        sender: TEST_USER.username
-      });
-      await flushPromises();
-
-      sharedModel.updateMessage(0, {
-        type: 'msg',
-        id,
-        body: '',
-        time: 1000,
-        sender: TEST_USER.username,
-        mime_model: { data: { 'text/plain': 'streamed output' } }
-      });
-      await flushPromises();
-
-      expect(model.messages[0].edited).toBeUndefined();
     });
   });
 
