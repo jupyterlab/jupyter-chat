@@ -310,8 +310,7 @@ export class LabChatModel
 
   updateMessage(
     id: string,
-    updatedMessage: IMessageContent,
-    skipEditedUpdate?: boolean
+    updatedMessage: IMessageContent
   ): Promise<boolean | void> | boolean | void {
     if (this._wsHandler) {
       this._wsHandler.updateMessage(id, updatedMessage);
@@ -324,7 +323,7 @@ export class LabChatModel
       this._contentToYmessage({
         ...updatedMessage,
         id,
-        edited: skipEditedUpdate ? updatedMessage.edited : true
+        edited: updatedMessage.sender.bot ? updatedMessage.edited : true
       })
     );
   }
