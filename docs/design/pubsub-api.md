@@ -118,7 +118,7 @@ to the same topic and stay in sync through the YDoc.
 
 The chat topic is special here: the server sends the message history the instant a
 client connects, because the client needs the file's contents to render anything.
-The web client therefore must be able to `sub("/chat/messages", ...)` *before* the
+The web client therefore must be able to `sub("/chat/messages", ...)` _before_ the
 WebSocket is open. Subscriptions are registered locally and flushed on connect, so
 the first thing the callback receives is the history catchup, followed by live
 edits on the same ordered connection.
