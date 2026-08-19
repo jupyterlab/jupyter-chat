@@ -96,6 +96,72 @@ class ChatEvent:
         return data
 
 
+#: Jupyter Events schema id for per-client connect/disconnect on a chat.
+CHAT_CLIENT_EVENT_SCHEMA_ID = "https://schema.jupyter.org/jupyterlab_chat/client/v1"
+
+#: Inline schema for per-client connection events. Unlike ``room/v1`` (which is
+#: room-level: it fires once when a chat goes live and once when it is freed),
+#: this fires for *every* client that connects to or disconnects from a chat, so
+#: server-side consumers (e.g. AI personas) can (re)publish per-client state such
+#: as a catch-up snapshot when a new consumer joins an already-live chat.
+CHAT_CLIENT_EVENT_SCHEMA = {
+    "$id": CHAT_CLIENT_EVENT_SCHEMA_ID,
+    "version": "1",
+    "title": "Chat client connection events",
+    "personal-data": True,
+    "description": "Per-client connect/disconnect events for a chat, emitted by jupyterlab_chat.",
+    "type": "object",
+    "required": ["path", "action", "client_id"],
+    "properties": {
+        "path": {
+            "type": "string",
+            "description": "Server-root-relative path of the .chat file (canonical id).",
+        },
+        "action": {
+            "enum": ["connected", "disconnected"],
+            "description": "Whether the client connected to or disconnected from the chat.",
+        },
+        "client_id": {
+            "type": "string",
+            "description": "Opaque per-connection id assigned by the WebSocket handler.",
+        },
+        "room_id": {
+            "type": "string",
+            "description": "RTC room id ({format}:{type}:{file_id}); absent in WebSocket mode.",
+        },
+    },
+    "additionalProperties": False,
+}
+
+
+class ClientEventAction(str, Enum):
+    """Per-client connection actions on the chat event bus."""
+
+    CONNECTED = "connected"
+    DISCONNECTED = "disconnected"
+
+
+@dataclass(frozen=True)
+class ClientEvent:
+    """A per-client connect/disconnect event. Emitted as JSON via Jupyter Events;
+    this is the canonical shape (the registered schema mirrors it)."""
+
+    path: str
+    action: ClientEventAction
+    client_id: str
+    room_id: Optional[str] = None
+
+    def to_data(self) -> dict:
+        data: dict = {
+            "path": self.path,
+            "action": self.action.value,
+            "client_id": self.client_id,
+        }
+        if self.room_id is not None:
+            data["room_id"] = self.room_id
+        return data
+
+
 class ChatManager(LoggingConfigurable):
     """
     Owns the set of live chat models and emits lifecycle events for them.
@@ -152,6 +218,10 @@ class ChatManager(LoggingConfigurable):
             self._event_logger.register_event_schema(CHAT_ROOM_EVENT_SCHEMA)
         except Exception as e:  # pragma: no cover - defensive
             self.log.warning("Failed to register chat room event schema: %s", e)
+        try:
+            self._event_logger.register_event_schema(CHAT_CLIENT_EVENT_SCHEMA)
+        except Exception as e:  # pragma: no cover - defensive
+            self.log.warning("Failed to register chat client event schema: %s", e)
 
     def observe_chats(self, callback: Callable) -> None:
         """Subscribe to chat lifecycle events (wraps ``EventLogger.add_listener``).
@@ -165,6 +235,21 @@ class ChatManager(LoggingConfigurable):
             schema_id=CHAT_ROOM_EVENT_SCHEMA_ID, listener=callback
         )
 
+    def observe_clients(self, callback: Callable) -> None:
+        """Subscribe to per-client connect/disconnect events (wraps
+        ``EventLogger.add_listener``).
+
+        ``callback`` is ``async def (logger, schema_id, data)`` where ``data``
+        matches :class:`ClientEvent`. Use this to (re)publish per-client state,
+        such as a catch-up snapshot, when a new consumer joins an already-live
+        chat.
+        """
+        if self._event_logger is None:
+            return
+        self._event_logger.add_listener(
+            schema_id=CHAT_CLIENT_EVENT_SCHEMA_ID, listener=callback
+        )
+
     def _emit_event(self, event: ChatEvent) -> None:
         if self._event_logger is None:
             return
@@ -174,6 +259,46 @@ class ChatManager(LoggingConfigurable):
             )
         except Exception as e:  # pragma: no cover - defensive
             self.log.warning("Failed to emit chat event %s: %s", event, e)
+
+    def _emit_client_event(self, event: ClientEvent) -> None:
+        if self._event_logger is None:
+            return
+        try:
+            self._event_logger.emit(
+                schema_id=CHAT_CLIENT_EVENT_SCHEMA_ID, data=event.to_data()
+            )
+        except Exception as e:  # pragma: no cover - defensive
+            self.log.warning("Failed to emit chat client event %s: %s", event, e)
+
+    def client_connected(self, path: str, client_id: str) -> None:
+        """Emit a ``connected`` client event. Called by the WS handler when a
+        client opens a connection to ``path``."""
+        room_id = next(
+            (rid for rid, p in self._room_to_path.items() if p == path), None
+        )
+        self._emit_client_event(
+            ClientEvent(
+                path=path,
+                action=ClientEventAction.CONNECTED,
+                client_id=client_id,
+                room_id=room_id,
+            )
+        )
+
+    def client_disconnected(self, path: str, client_id: str) -> None:
+        """Emit a ``disconnected`` client event. Called by the WS handler when a
+        client's connection to ``path`` closes."""
+        room_id = next(
+            (rid for rid, p in self._room_to_path.items() if p == path), None
+        )
+        self._emit_client_event(
+            ClientEvent(
+                path=path,
+                action=ClientEventAction.DISCONNECTED,
+                client_id=client_id,
+                room_id=room_id,
+            )
+        )
 
     # ------------------------------------------------------------------
     # Responsibility 2 -- model access
