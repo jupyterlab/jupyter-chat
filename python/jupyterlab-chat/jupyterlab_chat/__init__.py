@@ -15,7 +15,7 @@ import jupyter_ydoc  # noqa: F401
 
 from jupyter_server.utils import url_path_join
 
-from .models import BaseChatModel  # noqa: F401
+from .models import BaseChatModel, ChatUser  # noqa: F401
 from .rtc_lib import (  # noqa: F401
     RTC_PROVIDERS,
     RTCProvider,
