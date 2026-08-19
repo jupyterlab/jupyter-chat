@@ -2,10 +2,12 @@
 # Distributed under the terms of the Modified BSD License.
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from enum import Enum
 from typing import Any, Callable, Literal, Optional, Tuple, Union
 from jupyter_server.auth import User as JupyterUser
+
+from .pubsub import Payload, PubSubBus, PubSubCallback, SubToken
 
 
 def message_asdict_factory(data):
@@ -364,3 +366,71 @@ class BaseChatModel(ABC):
         presence (e.g. the WebSocket model) override it.
         """
         # no-op by default
+
+    # ------------------------------------------------------------------
+    # Generic pub/sub API
+    # ------------------------------------------------------------------
+    #: Reserved topic exposing the chat document's messages. It is special
+    #: (ordered, file-backed) and bridges to ``observe_messages`` rather than the
+    #: generic in-memory bus.
+    CHAT_MESSAGES_TOPIC = "/chat/messages"
+
+    _pubsub_bus: Optional[PubSubBus] = None
+
+    def _pubsub(self) -> PubSubBus:
+        if self._pubsub_bus is None:
+            self._pubsub_bus = PubSubBus()
+        return self._pubsub_bus
+
+    def pub(self, topic: str, data: Any, client_id: str = "server") -> None:
+        """Publish ``data`` to ``topic`` (see :mod:`jupyterlab_chat.pubsub`)."""
+        self._pubsub().pub(topic, data, client_id)
+
+    def sub(self, topic: str, callback: PubSubCallback) -> SubToken:
+        """Subscribe to ``topic``. The subscriber is seeded with the current
+        state and then receives every subsequent payload.
+
+        The reserved :data:`CHAT_MESSAGES_TOPIC` bridges to the message history
+        and ``observe_messages`` so the chat flow uses the same API as any other
+        topic.
+        """
+        if topic == self.CHAT_MESSAGES_TOPIC:
+            return self._sub_chat_messages(callback)
+        return self._pubsub().sub(topic, callback)
+
+    def unsub(self, token: SubToken) -> None:
+        """Cancel a subscription created by :meth:`sub`."""
+        token._release()
+
+    def remove_client(self, client_id: str) -> None:
+        """Drop all pub/sub contributions published by ``client_id`` (e.g. when
+        its connection closes), relaying a clearing payload on each topic."""
+        self._pubsub().remove_client(client_id)
+
+    def _sub_chat_messages(self, callback: PubSubCallback) -> SubToken:
+        # Catchup: replay the current messages to this subscriber, then stream
+        # subsequent create/update events.
+        for message in self.get_messages():
+            callback(Payload(client_id=message.sender, data=_message_payload(message)))
+
+        def _on_event(event: "ChatMessageEvent") -> None:
+            callback(
+                Payload(
+                    client_id=event.message.sender,
+                    data=_message_payload(event.message, event.action),
+                )
+            )
+
+        observer = self.observe_messages(_on_event)
+        return SubToken(lambda: self.unobserve_messages(observer))
+
+
+def _message_payload(
+    message: "Message", action: Optional["ChatMessageAction"] = None
+) -> dict:
+    """Serialize a :class:`Message` for delivery on the ``/chat/messages`` topic,
+    optionally tagging it with the :class:`ChatMessageAction` that produced it."""
+    data = asdict(message, dict_factory=message_asdict_factory)
+    if action is not None:
+        data["action"] = action.value
+    return data

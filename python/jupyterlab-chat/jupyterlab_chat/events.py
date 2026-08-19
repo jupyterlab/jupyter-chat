@@ -23,13 +23,14 @@ import time
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable, Optional
 
 from tornado.ioloop import PeriodicCallback
 from traitlets import Float
 from traitlets.config import LoggingConfigurable
 
 from .websocket_model import WsChatModel
+from .pubsub import PubSubBus, PubSubCallback, SubToken
 
 if TYPE_CHECKING:
     from jupyter_server.serverapp import ServerApp
@@ -129,6 +130,10 @@ class ChatManager(LoggingConfigurable):
         # ``ws_chat_models`` dict; kept under the same key for compatibility).
         self._settings["ws_chat_models"] = self._models
 
+        # Global pub/sub channel (see docs/design/pubsub-api.md). Carries state
+        # not tied to a single chat, e.g. cross-chat settings.
+        self._pubsub_bus = PubSubBus()
+
         self._register_schema()
         if rtc_enabled:
             self._wire_rtc_forwarding()
@@ -164,6 +169,23 @@ class ChatManager(LoggingConfigurable):
         self._event_logger.add_listener(
             schema_id=CHAT_ROOM_EVENT_SCHEMA_ID, listener=callback
         )
+
+    # ------------------------------------------------------------------
+    # Global pub/sub channel
+    # ------------------------------------------------------------------
+    def pub(self, topic: str, data: Any, client_id: str = "server") -> None:
+        """Publish ``data`` on the global channel (see the per-chat API on
+        :class:`~jupyterlab_chat.models.BaseChatModel`)."""
+        self._pubsub_bus.pub(topic, data, client_id)
+
+    def sub(self, topic: str, callback: PubSubCallback) -> SubToken:
+        """Subscribe to a global topic; the subscriber is seeded with the
+        current state and then receives every subsequent payload."""
+        return self._pubsub_bus.sub(topic, callback)
+
+    def unsub(self, token: SubToken) -> None:
+        """Cancel a global subscription created by :meth:`sub`."""
+        self._pubsub_bus.unsub(token)
 
     def _emit_event(self, event: ChatEvent) -> None:
         if self._event_logger is None:

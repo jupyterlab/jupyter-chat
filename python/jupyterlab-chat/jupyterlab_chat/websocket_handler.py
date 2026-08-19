@@ -243,6 +243,8 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
         model = self._chat_models.get(path)
         if model and client_id:
             model.handlers.pop(client_id, None)
+            # Drop this client's pub/sub contributions (e.g. its writers entry).
+            model.remove_client(client_id)
             if not model.handlers:
                 # Don't free immediately: the manager reclaims the model after a
                 # grace period of inactivity unless a client reconnects.
