@@ -88,8 +88,13 @@ class NewMessage:
     body: str
     """ The content of the message """
 
-    sender: str
-    """ The message sender unique id """
+    sender: Optional[str] = None
+    """
+    The message sender unique id.
+
+    Optional: when the message is added via ``add_message(..., user=...)`` the
+    sender is taken from that user, so this may be omitted.
+    """
 
     mime_model: Optional[MimeModel] = None
     """
@@ -302,7 +307,16 @@ class BaseChatModel(ABC):
         self,
         new_message: NewMessage,
         trigger_actions: list[Callable] | None = None,
+        user: Optional["User"] = None,
     ) -> str:
+        """Add a message to the chat.
+
+        When ``user`` is provided, it is registered in the chat (if not already
+        present) and the message is attributed to it, so a server-side sender
+        such as an AI agent can send under its own identity without a separate
+        :meth:`set_user` call. When ``user`` is omitted, ``new_message.sender``
+        is used instead (and is required in that case).
+        """
         ...
 
     @abstractmethod
@@ -364,3 +378,60 @@ class BaseChatModel(ABC):
         presence (e.g. the WebSocket model) override it.
         """
         # no-op by default
+
+    def add_user(self, user: "User") -> "ChatUser":
+        """Register ``user`` in the chat and return a :class:`ChatUser` bound to it.
+
+        This is the server-side entry point for adding a distinct identity (such
+        as an AI agent) to a chat. The returned :class:`ChatUser` remembers both
+        the model and the identity, so it can send messages and broadcast
+        writing status as ``user`` without passing the identity on every call.
+        """
+        self.set_user(user)
+        return ChatUser(model=self, user=user)
+
+
+@dataclass
+class ChatUser:
+    """A :class:`User` identity bound to a chat model.
+
+    Returned by :meth:`BaseChatModel.add_user`. It forwards calls to the model
+    while supplying its own ``user``, so a server-side sender (such as an AI
+    agent) can send messages and advertise writing status under its own identity
+    without repeating the ``user`` argument on every call::
+
+        chat_user = chat.add_user(user=my_persona_user)
+        chat_user.send_message("Hello!")
+        chat_user.broadcast_writing_status({"typingIndicator": "thinking..."})
+    """
+
+    model: "BaseChatModel"
+    """ The chat model this user belongs to. """
+
+    user: "User"
+    """ The identity this ``ChatUser`` sends messages and status as. """
+
+    def send_message(
+        self,
+        body: str,
+        *,
+        mime_model: Optional[MimeModel] = None,
+        trigger_actions: list[Callable] | None = None,
+    ) -> str:
+        """Send a message to the chat attributed to this user.
+
+        Returns the ID of the new message.
+        """
+        return self.model.add_message(
+            NewMessage(body=body, mime_model=mime_model),
+            trigger_actions=trigger_actions,
+            user=self.user,
+        )
+
+    def broadcast_writing_status(self, status: Optional[dict] = None) -> None:
+        """Broadcast an ephemeral writing status on behalf of this user.
+
+        ``status`` is ``None`` when the user stopped, or a mapping with optional
+        ``messageID`` and ``typingIndicator`` keys.
+        """
+        self.model.broadcast_writing_status(self.user, status)
