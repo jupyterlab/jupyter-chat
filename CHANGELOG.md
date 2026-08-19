@@ -2,6 +2,30 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.24.1
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.24.0...819a08cb8244b800fc310780c7ef18a645c3bc8f))
+
+### Enhancements made
+
+- Allow displaying cell output widget as message [#507](https://github.com/jupyterlab/jupyter-chat/pull/507) ([@brichet](https://github.com/brichet))
+
+### Bugs fixed
+
+- [0.24.x] Update the mime-model when updating message in jupyterlab-chat model [#505](https://github.com/jupyterlab/jupyter-chat/pull/505) ([@brichet](https://github.com/brichet), [@dlqqq](https://github.com/dlqqq))
+- Allow bot users to send empty messages in the frontend [#500](https://github.com/jupyterlab/jupyter-chat/pull/500) ([@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-08-14&to=2026-08-19&type=c))
+
+@brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-08-14..2026-08-19&type=Issues)) | @dlqqq ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2026-08-14..2026-08-19&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.24.0
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.23.2...802bf4ad26e9fcf675bd4a2c4bf0dd6a8a2a451a))
@@ -32,8 +56,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-08-10&to=2026-08-14&type=c))
 
 @brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-08-10..2026-08-14&type=Issues)) | @dlqqq ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2026-08-10..2026-08-14&type=Issues)) | @jtpio ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2026-08-10..2026-08-14&type=Issues)) | @krassowski ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Akrassowski+updated%3A2026-08-10..2026-08-14&type=Issues)) | @uuzzrm ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Auuzzrm+updated%3A2026-08-10..2026-08-14&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.24.0alpha0
 
