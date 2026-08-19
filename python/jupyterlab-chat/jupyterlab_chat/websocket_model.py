@@ -167,10 +167,27 @@ class WsChatModel(BaseChatModel):
         self,
         new_message: NewMessage,
         trigger_actions: list[Callable] | None = None,
+        user: Optional[User] = None,
     ) -> str:
+        # Resolve the sender. When a user is provided, register it and attribute
+        # the message to it; otherwise use the sender carried on the message.
+        sender: Optional[str]
+        if user is not None:
+            if user.username not in self.get_users():
+                self.set_user(user)
+            sender = user.username
+        else:
+            sender = new_message.sender
+        if not sender:
+            raise ValueError(
+                "add_message requires either new_message.sender or a user"
+            )
+
         timestamp = time.time()
         msg_id = str(uuid.uuid4())
-        message = Message(**asdict(new_message), time=timestamp, id=msg_id)
+        message_data = asdict(new_message)
+        message_data["sender"] = sender
+        message = Message(**message_data, time=timestamp, id=msg_id)
 
         if trigger_actions:
             for callback in trigger_actions:

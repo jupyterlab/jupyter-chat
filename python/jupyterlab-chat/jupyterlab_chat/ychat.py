@@ -140,7 +140,7 @@ class YChat(YBaseDoc, BaseChatModel):
         """
         return self._ymessages.to_py() or []
 
-    def add_message(self, new_message: NewMessage, trigger_actions: list[Callable] | None = None) -> str:
+    def add_message(self, new_message: NewMessage, trigger_actions: list[Callable] | None = None, user: Optional[User] = None) -> str:
         """
         Append a message to the document.
 
@@ -148,14 +148,34 @@ class YChat(YBaseDoc, BaseChatModel):
             new_message: The message to add
             trigger_actions: List of callbacks to execute on the message. Defaults to [find_mentions].
                            Each callback receives (message, chat) as arguments.
+            user: Optional sender identity. When provided, it is registered in
+                  the chat (if absent) and the message is attributed to it,
+                  overriding ``new_message.sender``. When omitted,
+                  ``new_message.sender`` is used and is required.
         """
         if trigger_actions is None:
             trigger_actions = [find_mentions]
 
+        # Resolve the sender. When a user is provided, register it so the
+        # message can be attributed to it (and so mention resolution can see it).
+        sender: Optional[str]
+        if user is not None:
+            if user.username not in self.get_users():
+                self.set_user(user)
+            sender = user.username
+        else:
+            sender = new_message.sender
+        if not sender:
+            raise ValueError(
+                "add_message requires either new_message.sender or a user"
+            )
+
         timestamp: float = time.time()
         uid = str(uuid4())
+        message_data = asdict(new_message)
+        message_data["sender"] = sender
         message = Message(
-            **asdict(new_message),
+            **message_data,
             time=timestamp,
             id=uid,
         )

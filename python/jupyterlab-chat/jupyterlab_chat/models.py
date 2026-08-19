@@ -88,8 +88,13 @@ class NewMessage:
     body: str
     """ The content of the message """
 
-    sender: str
-    """ The message sender unique id """
+    sender: Optional[str] = None
+    """
+    The message sender unique id.
+
+    Optional: when the message is added via ``add_message(..., user=...)`` the
+    sender is taken from that user, so this may be omitted.
+    """
 
     mime_model: Optional[MimeModel] = None
     """
@@ -302,7 +307,16 @@ class BaseChatModel(ABC):
         self,
         new_message: NewMessage,
         trigger_actions: list[Callable] | None = None,
+        user: Optional["User"] = None,
     ) -> str:
+        """Add a message to the chat.
+
+        When ``user`` is provided, it is registered in the chat (if not already
+        present) and the message is attributed to it, so a server-side sender
+        such as an AI agent can send under its own identity without a separate
+        :meth:`set_user` call. When ``user`` is omitted, ``new_message.sender``
+        is used instead (and is required in that case).
+        """
         ...
 
     @abstractmethod
@@ -376,30 +390,6 @@ class BaseChatModel(ABC):
         self.set_user(user)
         return ChatUser(model=self, user=user)
 
-    def send_message(
-        self,
-        user: "User",
-        body: str,
-        *,
-        mime_model: Optional[MimeModel] = None,
-        trigger_actions: list[Callable] | None = None,
-    ) -> str:
-        """Send a message to the chat attributed to ``user``.
-
-        ``user`` is registered in the chat first if it is not already present,
-        so a server-side sender can attribute a message to any identity it owns
-        without a separate :meth:`set_user`/:meth:`add_user` call. This lets
-        multiple AI agents share a chat while each sends under its own identity.
-
-        Returns the ID of the new message.
-        """
-        if user.username not in self.get_users():
-            self.set_user(user)
-        return self.add_message(
-            NewMessage(body=body, sender=user.username, mime_model=mime_model),
-            trigger_actions=trigger_actions,
-        )
-
 
 @dataclass
 class ChatUser:
@@ -432,11 +422,10 @@ class ChatUser:
 
         Returns the ID of the new message.
         """
-        return self.model.send_message(
-            self.user,
-            body,
-            mime_model=mime_model,
+        return self.model.add_message(
+            NewMessage(body=body, mime_model=mime_model),
             trigger_actions=trigger_actions,
+            user=self.user,
         )
 
     def broadcast_writing_status(self, status: Optional[dict] = None) -> None:

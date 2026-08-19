@@ -1,17 +1,18 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-"""Tests for the server-side ``add_user``/``send_message`` API and ``ChatUser``.
+"""Tests for sending messages under a chosen identity.
 
-The API lives on ``BaseChatModel`` and is implemented in terms of the abstract
-``set_user``/``add_message``/``broadcast_writing_status`` primitives, so it must
-behave identically on both transports (``YChat`` and ``WsChatModel``).
+``add_message`` accepts an optional ``user``: when provided, the user is
+registered in the chat and the message is attributed to it. The behaviour must
+be identical on both transports (``YChat`` and ``WsChatModel``). The ``add_user``
+/ ``ChatUser`` convenience layer builds on the same primitive.
 """
 
 import json
 
 import pytest
 
-from ..models import ChatUser, User
+from ..models import ChatUser, NewMessage, User
 from ..websocket_model import WsChatModel
 from ..ychat import YChat
 
@@ -38,35 +39,45 @@ def model(request, tmp_path):
     return WsChatModel(path="chat.chat", root_dir=tmp_path)
 
 
-def test_add_user_registers_and_returns_chat_user(model):
-    chat_user = model.add_user(BOT)
+# ---------------------------------------------------------------------------
+# add_message(user=...)
+# ---------------------------------------------------------------------------
 
-    assert isinstance(chat_user, ChatUser)
-    assert chat_user.user is BOT
-    assert chat_user.model is model
+def test_add_message_with_user_registers_and_attributes(model):
+    assert BOT.username not in model.get_users()
+
+    msg_id = model.add_message(NewMessage(body="Hello from the server"), user=BOT)
+
+    # The user is registered on first send.
     assert BOT.username in model.get_users()
-    assert model.get_users()[BOT.username].username == BOT.username
-
-
-def test_send_message_attributes_message_to_user(model):
-    msg_id = model.send_message(BOT, "Hello from the server")
-
     message = model.get_message(msg_id)
     assert message is not None
     assert message.body == "Hello from the server"
     assert message.sender == BOT.username
 
 
-def test_send_message_registers_user_if_absent(model):
-    # No prior add_user / set_user call.
-    assert BOT.username not in model.get_users()
+def test_add_message_user_overrides_message_sender(model):
+    # Even if a sender is set on the NewMessage, the explicit user wins.
+    msg_id = model.add_message(
+        NewMessage(body="hi", sender="someone-else"), user=BOT
+    )
 
-    model.send_message(BOT, "First contact")
-
-    assert BOT.username in model.get_users()
+    assert model.get_message(msg_id).sender == BOT.username
 
 
-def test_send_message_does_not_reregister_existing_user(model):
+def test_add_message_without_user_uses_message_sender(model):
+    # The pre-existing behaviour is unchanged when no user is passed.
+    msg_id = model.add_message(NewMessage(body="hi", sender="agent"))
+
+    assert model.get_message(msg_id).sender == "agent"
+
+
+def test_add_message_requires_sender_or_user(model):
+    with pytest.raises(ValueError):
+        model.add_message(NewMessage(body="orphan message"))
+
+
+def test_add_message_does_not_reregister_existing_user(model):
     model.set_user(BOT)
     calls = []
     original_set_user = model.set_user
@@ -77,22 +88,32 @@ def test_send_message_does_not_reregister_existing_user(model):
 
     model.set_user = tracking_set_user  # type: ignore[method-assign]
 
-    model.send_message(BOT, "Second message")
+    model.add_message(NewMessage(body="second"), user=BOT)
 
-    # The user was already present, so send_message should not re-register it.
+    # BOT was already present, so add_message should not re-register it.
     assert calls == []
 
 
 def test_multiple_bots_share_one_chat(model):
-    a = model.add_user(BOT)
-    b = model.add_user(BOT2)
-
-    id_a = a.send_message("from bot 1")
-    id_b = b.send_message("from bot 2")
+    id_a = model.add_message(NewMessage(body="from bot 1"), user=BOT)
+    id_b = model.add_message(NewMessage(body="from bot 2"), user=BOT2)
 
     assert model.get_message(id_a).sender == BOT.username
     assert model.get_message(id_b).sender == BOT2.username
     assert {BOT.username, BOT2.username} <= set(model.get_users())
+
+
+# ---------------------------------------------------------------------------
+# add_user() -> ChatUser convenience layer
+# ---------------------------------------------------------------------------
+
+def test_add_user_registers_and_returns_chat_user(model):
+    chat_user = model.add_user(BOT)
+
+    assert isinstance(chat_user, ChatUser)
+    assert chat_user.user is BOT
+    assert chat_user.model is model
+    assert BOT.username in model.get_users()
 
 
 def test_chat_user_send_message_forwards(model):
