@@ -2,6 +2,33 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.25.0alpha0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.24.0...b1eb121061d7408c158e34b70dab59be8e38cda7))
+
+### Enhancements made
+
+- Allow displaying cell output widget as message [#507](https://github.com/jupyterlab/jupyter-chat/pull/507) ([@brichet](https://github.com/brichet), [@dlqqq](https://github.com/dlqqq))
+- Server-side ChatManager and message observer [#499](https://github.com/jupyterlab/jupyter-chat/pull/499) ([@dlqqq](https://github.com/dlqqq), [@brichet](https://github.com/brichet))
+- Support server-side writers without YDoc awareness [#497](https://github.com/jupyterlab/jupyter-chat/pull/497) ([@dlqqq](https://github.com/dlqqq))
+- Make `jupyter-collaboration` optional [#489](https://github.com/jupyterlab/jupyter-chat/pull/489) ([@brichet](https://github.com/brichet), [@dlqqq](https://github.com/dlqqq))
+
+### Bugs fixed
+
+- Trigger a rerender of the message when the mime model only is updated [#506](https://github.com/jupyterlab/jupyter-chat/pull/506) ([@brichet](https://github.com/brichet), [@dlqqq](https://github.com/dlqqq))
+- Allow bot users to send empty messages in the frontend [#500](https://github.com/jupyterlab/jupyter-chat/pull/500) ([@brichet](https://github.com/brichet), [@dlqqq](https://github.com/dlqqq))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-08-14&to=2026-08-18&type=c))
+
+@brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-08-14..2026-08-18&type=Issues)) | @dlqqq ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2026-08-14..2026-08-18&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.24.0
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.23.2...802bf4ad26e9fcf675bd4a2c4bf0dd6a8a2a451a))
@@ -32,8 +59,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-08-10&to=2026-08-14&type=c))
 
 @brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-08-10..2026-08-14&type=Issues)) | @dlqqq ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2026-08-10..2026-08-14&type=Issues)) | @jtpio ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2026-08-10..2026-08-14&type=Issues)) | @krassowski ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Akrassowski+updated%3A2026-08-10..2026-08-14&type=Issues)) | @uuzzrm ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Auuzzrm+updated%3A2026-08-10..2026-08-14&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.24.0alpha0
 

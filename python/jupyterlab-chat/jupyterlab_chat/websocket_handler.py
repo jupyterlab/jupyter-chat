@@ -10,7 +10,7 @@ from typing import Dict
 from jupyter_server.base.handlers import JupyterHandler
 from tornado import web, websocket
 
-from .models import User
+from .models import ChatMessageAction, User
 from .websocket_model import WsChatModel
 
 
@@ -28,6 +28,10 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
         return self.settings["ws_chat_models"]
 
     @property
+    def _chat_manager(self):
+        return self.settings["chat_manager"]
+
+    @property
     def _root_dir(self) -> Path:
         return Path(self.settings.get("server_root_dir", ".")).expanduser().resolve()
 
@@ -41,7 +45,9 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
 
     async def get(self, *args, **kwargs):
         self.pre_get()
-        await super().get(*args, **kwargs)
+        result = super().get(*args, **kwargs)
+        if result is not None:
+            await result
 
     def _parse_client_user(self):
         """Parse the optional client-provided identity from the connect query.
@@ -79,12 +85,9 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
         self._path = path
         self._client_id = uuid.uuid4().hex
 
-        if path not in self._chat_models:
-            model = WsChatModel(path=path, root_dir=self._root_dir)
-            model.load_from_file()
-            self._chat_models[path] = model
-
-        model = self._chat_models[path]
+        # The manager owns get-or-create and emits the `opened` lifecycle event
+        # (once, when the model is first created).
+        model = self._chat_manager.ws_open(path)
         model.handlers[self._client_id] = self
 
         # Register the connecting user. Prefer the client-provided identity
@@ -136,6 +139,7 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
         model = self._chat_models.get(path)
         if model is None:
             return
+        self._chat_manager.ws_activity(path)
 
         if data.get("is_update"):
             self._handle_update_message(data, model)
@@ -185,6 +189,11 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
         model.broadcast(
             json.dumps({"type": "msg", "message": model.resolve_message(message)})
         )
+        received = model.get_message(message["id"])
+        if received is not None:
+            model._emit_message_event(
+                ChatMessageAction.CLIENT_MSG_RECEIVED, received
+            )
 
     def _handle_update_message(self, data: dict, model: WsChatModel) -> None:
         msg_id = data.get("id")
@@ -203,6 +212,11 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
         model.broadcast(
             json.dumps({"type": "msg", "message": model.resolve_message(msg)})
         )
+        edited = model.get_message(msg_id)
+        if edited is not None:
+            model._emit_message_event(
+                ChatMessageAction.CLIENT_MSG_EDITED, edited
+            )
 
     def _store_attachments(self, attachments: list[dict], model: WsChatModel) -> list[str]:
         """Store attachment dicts via the model's set_attachment, return their IDs."""
@@ -230,5 +244,7 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
         if model and client_id:
             model.handlers.pop(client_id, None)
             if not model.handlers:
-                del self._chat_models[path]
+                # Don't free immediately: the manager reclaims the model after a
+                # grace period of inactivity unless a client reconnects.
+                self._chat_manager.ws_client_gone(path)
         self.log.info("WS chat client %s disconnected", client_id)

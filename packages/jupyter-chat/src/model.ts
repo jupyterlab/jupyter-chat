@@ -10,7 +10,6 @@ import {
   TranslationBundle
 } from '@jupyterlab/translation';
 import type { IAwareness } from '@jupyter/ydoc';
-import { ArrayExt } from '@lumino/algorithm';
 import { CommandRegistry } from '@lumino/commands';
 import { PromiseDelegate } from '@lumino/coreutils';
 import { IDisposable } from '@lumino/disposable';
@@ -221,6 +220,34 @@ export interface IChatModel extends IDisposable {
   updateWriters(writers: IChatModel.IWriter[]): void;
 
   /**
+   * Mark a user as currently writing (add or update their writer entry).
+   *
+   * @param user - the writing user.
+   * @param status - optional writing status (messageID, custom typingIndicator).
+   * @param timeout - optional auto-clear delay in ms. When set, the user is
+   *   automatically cleared after `timeout` unless refreshed by another call.
+   *   Used by transports without their own liveness signal (e.g. WebSocket) to
+   *   avoid a stuck "is typing" if a clear message is never received.
+   */
+  setWritingStatus(
+    user: IUser,
+    status?: IChatModel.IWritingStatus,
+    timeout?: number
+  ): void;
+
+  /**
+   * Remove a user from the writers list.
+   */
+  clearWritingStatus(user: IUser): void;
+
+  /**
+   * Broadcast the *current user's* writing status to other clients, or clear it
+   * with `null`. Implemented per transport (RTC sets awareness; WebSocket sends
+   * a periodic writing frame). Default implementation is a no-op.
+   */
+  broadcastWritingStatus(status: IChatModel.IWritingStatus | null): void;
+
+  /**
    * Create the chat context that will be passed to the input model.
    */
   createChatContext(): IChatContext;
@@ -348,7 +375,7 @@ export abstract class AbstractChatModel implements IChatModel {
    * The current writer list.
    */
   get writers(): IChatModel.IWriter[] {
-    return this._writers;
+    return [...this._writers.values()];
   }
 
   /**
@@ -669,17 +696,82 @@ export abstract class AbstractChatModel implements IChatModel {
    * This implementation only propagate the list via a signal.
    */
   updateWriters(writers: IChatModel.IWriter[]): void {
-    const compareWriters = (a: IChatModel.IWriter, b: IChatModel.IWriter) => {
-      return (
-        a.user.username === b.user.username &&
-        a.user.display_name === b.user.display_name &&
-        a.messageID === b.messageID
-      );
-    };
-    if (!ArrayExt.shallowEqual(this._writers, writers, compareWriters)) {
-      this._writers = writers;
-      this._writersChanged.emit(writers);
+    // Reconcile the writers map with the provided snapshot (used by
+    // snapshot-style transports such as RTC awareness). Any auto-clear timers
+    // are dropped, since the snapshot is authoritative.
+    this._clearAllWriterTimers();
+    const next = new Map<string, IChatModel.IWriter>();
+    for (const writer of writers) {
+      next.set(writer.user.username, writer);
     }
+    if (!Private.writersEqual(this._writers, next)) {
+      this._writers = next;
+      this._writersChanged.emit(this.writers);
+    }
+  }
+
+  /**
+   * Mark a user as currently writing. See IChatModel.setWritingStatus.
+   */
+  setWritingStatus(
+    user: IUser,
+    status?: IChatModel.IWritingStatus,
+    timeout?: number
+  ): void {
+    const writer: IChatModel.IWriter = {
+      user,
+      messageID: status?.messageID,
+      typingIndicator: status?.typingIndicator
+    };
+    this._clearWriterTimer(user.username);
+    if (timeout !== undefined) {
+      this._writerTimers.set(
+        user.username,
+        window.setTimeout(() => this._removeWriter(user.username), timeout)
+      );
+    }
+    const previous = this._writers.get(user.username);
+    this._writers.set(user.username, writer);
+    if (!previous || !Private.writerEqual(previous, writer)) {
+      this._writersChanged.emit(this.writers);
+    }
+  }
+
+  /**
+   * Remove a user from the writers list. See IChatModel.clearWritingStatus.
+   */
+  clearWritingStatus(user: IUser): void {
+    this._removeWriter(user.username);
+  }
+
+  /**
+   * Broadcast the current user's writing status. Default no-op; transports
+   * override this (RTC awareness, WebSocket frame).
+   */
+  broadcastWritingStatus(_status: IChatModel.IWritingStatus | null): void {
+    // no-op by default
+  }
+
+  private _removeWriter(username: string): void {
+    this._clearWriterTimer(username);
+    if (this._writers.delete(username)) {
+      this._writersChanged.emit(this.writers);
+    }
+  }
+
+  private _clearWriterTimer(username: string): void {
+    const timer = this._writerTimers.get(username);
+    if (timer !== undefined) {
+      window.clearTimeout(timer);
+      this._writerTimers.delete(username);
+    }
+  }
+
+  private _clearAllWriterTimers(): void {
+    for (const timer of this._writerTimers.values()) {
+      window.clearTimeout(timer);
+    }
+    this._writerTimers.clear();
   }
 
   /**
@@ -796,7 +888,8 @@ export abstract class AbstractChatModel implements IChatModel {
   private _selectionWatcher: ISelectionWatcher | null;
   private _documentManager: IDocumentManager | null;
   private _notificationId: string | null = null;
-  private _writers: IChatModel.IWriter[] = [];
+  private _writers = new Map<string, IChatModel.IWriter>();
+  private _writerTimers = new Map<string, number>();
   private _messageEditions = new Map<string, IInputModel>();
   private _messagesUpdated = new Signal<IChatModel, void>(this);
   private _messageChanged = new Signal<IChatModel, IMessage>(this);
@@ -880,6 +973,25 @@ export namespace IChatModel {
      * The message ID (optional)
      */
     messageID?: string;
+    /**
+     * Custom status text to display instead of the default "is typing…",
+     * e.g. "is running `ripgrep …`". Falls back to the default when unset.
+     */
+    typingIndicator?: string;
+  }
+
+  /**
+   * The writing status broadcast by (or on behalf of) a user.
+   */
+  export interface IWritingStatus {
+    /**
+     * The ID of the message being edited, if any.
+     */
+    messageID?: string;
+    /**
+     * Optional custom typing-indicator text (see IWriter.typingIndicator).
+     */
+    typingIndicator?: string;
   }
 }
 
@@ -944,4 +1056,43 @@ export abstract class AbstractChatContext implements IChatContext {
   abstract get users(): IUser[];
 
   protected _model: IChatModel;
+}
+
+/**
+ * A namespace for private functionality.
+ */
+namespace Private {
+  /**
+   * Whether two writers are equivalent for change-detection purposes.
+   */
+  export function writerEqual(
+    a: IChatModel.IWriter,
+    b: IChatModel.IWriter
+  ): boolean {
+    return (
+      a.user.username === b.user.username &&
+      a.user.display_name === b.user.display_name &&
+      a.messageID === b.messageID &&
+      a.typingIndicator === b.typingIndicator
+    );
+  }
+
+  /**
+   * Whether two writer maps are equivalent.
+   */
+  export function writersEqual(
+    a: Map<string, IChatModel.IWriter>,
+    b: Map<string, IChatModel.IWriter>
+  ): boolean {
+    if (a.size !== b.size) {
+      return false;
+    }
+    for (const [username, writer] of a) {
+      const other = b.get(username);
+      if (!other || !writerEqual(writer, other)) {
+        return false;
+      }
+    }
+    return true;
+  }
 }

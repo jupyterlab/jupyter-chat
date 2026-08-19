@@ -61,11 +61,17 @@ def _load_jupyter_server_extension(server_app):
     # decision to the frontend via PageConfig. See jupyterlab_chat.rtc_lib.
     rtc_info = publish_rtc_info(server_app)
 
+    # Create the transport-agnostic chat manager (event bus + model registry +
+    # memory management). Under RTC it forwards jupyter_collaboration room events;
+    # under WebSocket it backs the WS handler (owns ``ws_chat_models``).
+    from .events import ChatManager
+
+    chat_manager = ChatManager(server_app, rtc_enabled=rtc_info.enabled)
+    server_app.web_app.settings["chat_manager"] = chat_manager
+
     # When RTC is off, chat runs over the plain WebSocket handler. When an RTC
     # provider is active, the collaborative (YChat) backend serves chat instead.
     if not rtc_info.enabled:
-        server_app.web_app.settings["ws_chat_models"] = {}
-
         base_url = server_app.web_app.settings.get("base_url", "/")
         server_app.web_app.add_handlers(".*$", [
             (url_path_join(base_url, "api/jupyter-chat/ws"), WSChatHandler),
