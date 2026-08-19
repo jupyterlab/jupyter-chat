@@ -208,9 +208,8 @@ class ChatManager(LoggingConfigurable):
             (rid for rid, p in self._room_to_path.items() if p == path), None
         )
 
-    def client_connected(self, path: str, client_id: str) -> None:
-        """Emit a ``client_connected`` event. Called by the WS handler when a
-        client opens a connection to ``path``."""
+    def on_client_connect(self, path: str, client_id: str) -> None:
+        """Callback invoked upon WebSocket client connection. Emits an event."""
         self._emit_event(
             ChatEvent(
                 path=path,
@@ -220,9 +219,8 @@ class ChatManager(LoggingConfigurable):
             )
         )
 
-    def client_disconnected(self, path: str, client_id: str) -> None:
-        """Emit a ``client_disconnected`` event. Called by the WS handler when a
-        client's connection to ``path`` closes."""
+    def on_client_disconnect(self, path: str, client_id: str) -> None:
+        """Callback invoked upon WebSocket client disconnection. Emits an event."""
         self._emit_event(
             ChatEvent(
                 path=path,

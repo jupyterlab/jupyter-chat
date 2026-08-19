@@ -204,9 +204,9 @@ def test_client_connected_and_disconnected_events(tmp_path):
 
         mgr.observe_chats(on_event)
 
-        mgr.client_connected("a.chat", "client-1")
-        mgr.client_connected("a.chat", "client-2")
-        mgr.client_disconnected("a.chat", "client-1")
+        mgr.on_client_connect("a.chat", "client-1")
+        mgr.on_client_connect("a.chat", "client-2")
+        mgr.on_client_disconnect("a.chat", "client-1")
         await _drain()
 
         assert events == [
