@@ -188,7 +188,7 @@ def test_reopen_while_live_reuses_in_memory_model(tmp_path):
 
 def test_client_connected_and_disconnected_events(tmp_path):
     async def run():
-        client_events: list = []
+        events: list = []
 
         logger = EventLogger()
         settings = {"event_logger": logger, "server_root_dir": str(tmp_path)}
@@ -198,20 +198,21 @@ def test_client_connected_and_disconnected_events(tmp_path):
         )
         mgr = ChatManager(serverapp, rtc_enabled=False, start_poller=False)
 
-        async def on_client(logger, schema_id, data):
-            client_events.append(data)
+        async def on_event(logger, schema_id, data):
+            if data["action"] in ("client_connected", "client_disconnected"):
+                events.append(data)
 
-        mgr.observe_clients(on_client)
+        mgr.observe_chats(on_event)
 
         mgr.client_connected("a.chat", "client-1")
         mgr.client_connected("a.chat", "client-2")
         mgr.client_disconnected("a.chat", "client-1")
         await _drain()
 
-        assert client_events == [
-            {"path": "a.chat", "action": "connected", "client_id": "client-1"},
-            {"path": "a.chat", "action": "connected", "client_id": "client-2"},
-            {"path": "a.chat", "action": "disconnected", "client_id": "client-1"},
+        assert events == [
+            {"path": "a.chat", "action": "client_connected", "client_id": "client-1"},
+            {"path": "a.chat", "action": "client_connected", "client_id": "client-2"},
+            {"path": "a.chat", "action": "client_disconnected", "client_id": "client-1"},
         ]
 
     asyncio.run(run())
