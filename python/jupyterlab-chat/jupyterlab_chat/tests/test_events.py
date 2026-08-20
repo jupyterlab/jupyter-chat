@@ -184,3 +184,35 @@ def test_reopen_while_live_reuses_in_memory_model(tmp_path):
         mgr.stop()
 
     asyncio.run(run())
+
+
+def test_client_connected_and_disconnected_events(tmp_path):
+    async def run():
+        events: list = []
+
+        logger = EventLogger()
+        settings = {"event_logger": logger, "server_root_dir": str(tmp_path)}
+        serverapp = cast(
+            "ServerApp",
+            SimpleNamespace(web_app=SimpleNamespace(settings=settings)),
+        )
+        mgr = ChatManager(serverapp, rtc_enabled=False, start_poller=False)
+
+        async def on_event(logger, schema_id, data):
+            if data["action"] in ("client_connected", "client_disconnected"):
+                events.append(data)
+
+        mgr.observe_chats(on_event)
+
+        mgr.on_client_connect("a.chat", "client-1")
+        mgr.on_client_connect("a.chat", "client-2")
+        mgr.on_client_disconnect("a.chat", "client-1")
+        await _drain()
+
+        assert events == [
+            {"path": "a.chat", "action": "client_connected", "client_id": "client-1"},
+            {"path": "a.chat", "action": "client_connected", "client_id": "client-2"},
+            {"path": "a.chat", "action": "client_disconnected", "client_id": "client-1"},
+        ]
+
+    asyncio.run(run())

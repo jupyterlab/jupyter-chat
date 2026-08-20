@@ -49,9 +49,9 @@ JUPYTER_COLLABORATION_EVENTS_URI = (
 CHAT_ROOM_EVENT_SCHEMA = {
     "$id": CHAT_ROOM_EVENT_SCHEMA_ID,
     "version": "1",
-    "title": "Chat room lifecycle events",
+    "title": "Chat room and client events",
     "personal-data": True,
-    "description": "Transport-agnostic chat room lifecycle events emitted by jupyterlab_chat.",
+    "description": "Transport-agnostic chat room lifecycle and per-client connection events emitted by jupyterlab_chat.",
     "type": "object",
     "required": ["path", "action"],
     "properties": {
@@ -60,8 +60,23 @@ CHAT_ROOM_EVENT_SCHEMA = {
             "description": "Server-root-relative path of the .chat file (canonical id).",
         },
         "action": {
-            "enum": ["opened", "closed", "deleted"],
-            "description": "Chat room lifecycle action.",
+            "enum": [
+                "opened",
+                "closed",
+                "deleted",
+                "client_connected",
+                "client_disconnected",
+            ],
+            "description": (
+                "Chat event action. 'opened'/'closed'/'deleted' are room-level "
+                "(fire once when the chat goes live / is freed / is deleted). "
+                "'client_connected'/'client_disconnected' fire per client and "
+                "carry 'client_id'."
+            ),
+        },
+        "client_id": {
+            "type": "string",
+            "description": "Per-connection id; present only for the client_* actions.",
         },
         "room_id": {
             "type": "string",
@@ -73,26 +88,34 @@ CHAT_ROOM_EVENT_SCHEMA = {
 
 
 class ChatEventAction(str, Enum):
-    """Lifecycle actions on the generic chat event bus."""
+    """Actions on the generic chat event bus."""
 
     OPENED = "opened"
     CLOSED = "closed"
     DELETED = "deleted"
+    #: Fires for every client that connects to a chat (carries ``client_id``).
+    CLIENT_CONNECTED = "client_connected"
+    #: Fires for every client that disconnects from a chat (carries ``client_id``).
+    CLIENT_DISCONNECTED = "client_disconnected"
 
 
 @dataclass(frozen=True)
 class ChatEvent:
-    """A lifecycle event. Emitted as JSON via Jupyter Events; this is the
-    canonical shape (the registered schema mirrors it)."""
+    """A chat event. Emitted as JSON via Jupyter Events; this is the canonical
+    shape (the registered schema mirrors it)."""
 
     path: str
     action: ChatEventAction
     room_id: Optional[str] = None
+    #: Set only for the ``client_connected``/``client_disconnected`` actions.
+    client_id: Optional[str] = None
 
     def to_data(self) -> dict:
         data: dict = {"path": self.path, "action": self.action.value}
         if self.room_id is not None:
             data["room_id"] = self.room_id
+        if self.client_id is not None:
+            data["client_id"] = self.client_id
         return data
 
 
@@ -154,10 +177,15 @@ class ChatManager(LoggingConfigurable):
             self.log.warning("Failed to register chat room event schema: %s", e)
 
     def observe_chats(self, callback: Callable) -> None:
-        """Subscribe to chat lifecycle events (wraps ``EventLogger.add_listener``).
+        """Subscribe to chat events (wraps ``EventLogger.add_listener``).
 
         ``callback`` is ``async def (logger, schema_id, data)`` where ``data``
-        matches :class:`ChatEvent`.
+        matches :class:`ChatEvent`. The stream carries both room-level actions
+        (``opened``/``closed``/``deleted``) and per-client actions
+        (``client_connected``/``client_disconnected``, which carry ``client_id``);
+        consumers filter by ``action``. Use the client actions to (re)publish
+        per-client state, such as a catch-up snapshot, when a new consumer joins
+        an already-live chat.
         """
         if self._event_logger is None:
             return
@@ -174,6 +202,33 @@ class ChatManager(LoggingConfigurable):
             )
         except Exception as e:  # pragma: no cover - defensive
             self.log.warning("Failed to emit chat event %s: %s", event, e)
+
+    def _room_id_for(self, path: str) -> Optional[str]:
+        return next(
+            (rid for rid, p in self._room_to_path.items() if p == path), None
+        )
+
+    def on_client_connect(self, path: str, client_id: str) -> None:
+        """Callback invoked upon WebSocket client connection. Emits an event."""
+        self._emit_event(
+            ChatEvent(
+                path=path,
+                action=ChatEventAction.CLIENT_CONNECTED,
+                room_id=self._room_id_for(path),
+                client_id=client_id,
+            )
+        )
+
+    def on_client_disconnect(self, path: str, client_id: str) -> None:
+        """Callback invoked upon WebSocket client disconnection. Emits an event."""
+        self._emit_event(
+            ChatEvent(
+                path=path,
+                action=ChatEventAction.CLIENT_DISCONNECTED,
+                room_id=self._room_id_for(path),
+                client_id=client_id,
+            )
+        )
 
     # ------------------------------------------------------------------
     # Responsibility 2 -- model access
