@@ -14,6 +14,7 @@ import {
 import clsx from 'clsx';
 import React, { useEffect, useRef, useState } from 'react';
 
+import { isImeCompositionEvent } from './ime';
 import { InputToolbarRegistry } from './toolbar-registry';
 import { submitInputMessage } from './submit-message';
 import { useChatCommands } from './use-chat-commands';
@@ -117,6 +118,16 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
    * component.
    */
   async function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    /**
+     * During IME composition (e.g. typing with a Chinese, Japanese or Korean
+     * input method) the browser consumes the pressed keys before the page does.
+     * In particular, pressing Enter confirms the selected candidate; handling
+     * it here would send an unfinished message. Let the IME finish first.
+     */
+    if (isImeCompositionEvent(event.nativeEvent)) {
+      return;
+    }
+
     /**
      * IMPORTANT: This statement ensures that arrow keys can be used to navigate
      * the multiline input when the chat commands menu is closed.

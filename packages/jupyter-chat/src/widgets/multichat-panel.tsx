@@ -31,6 +31,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ChatSelectorPopup } from './chat-selector-popup';
 import { ChatWidget } from './chat-widget';
 import { defaultPlaceholder, Placeholder } from './placeholder';
+import { isImeCompositionEvent } from '../components/input/ime';
 import {
   Chat,
   IInputToolbarRegistry,
@@ -849,6 +850,11 @@ function ChatSearchInput({
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     const popup = getPopup();
     if (!popup || !popup.isVisible) {
+      return;
+    }
+
+    // Ignore key events during IME composition.
+    if (isImeCompositionEvent(event.nativeEvent)) {
       return;
     }
 
