@@ -1,9 +1,13 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import asyncio
 from dataclasses import asdict
-import pytest
+from unittest.mock import patch
 from uuid import uuid4
+
+import pytest
+
 from ..models import message_asdict_factory, Message, NewMessage, User
 from ..ychat import YChat
 from ..utils import find_mentions
@@ -38,6 +42,47 @@ def test_initialize_ychat():
     assert chat._get_messages() == []
     assert chat._get_users() == {}
     assert chat.get_metadata() == {}
+
+
+def test_create_id_updates_metadata_synchronously():
+    chat = YChat()
+
+    document_id = chat.create_id()
+
+    assert document_id == chat.get_id()
+
+
+@pytest.mark.asyncio
+async def test_initialize_creates_id_without_a_background_task():
+    chat = YChat()
+
+    with patch.object(chat, "create_task", side_effect=AssertionError):
+        chat.dirty = False
+    await asyncio.sleep(0)
+
+    assert chat.get_id() is not None
+    assert not chat._background_tasks
+
+
+@pytest.mark.asyncio
+async def test_raw_message_timestamp_is_updated_without_a_background_task():
+    chat = YChat()
+    chat.set_id("test-chat")
+    chat.dirty = False
+    timestamp = 123.0
+
+    with (
+        patch("jupyterlab_chat.ychat.time.time", return_value=timestamp),
+        patch.object(chat, "create_task", side_effect=AssertionError),
+    ):
+        chat.add_message(create_new_message())
+    await asyncio.sleep(0)
+
+    message = chat.get_messages()[0]
+    assert message.time == timestamp
+    assert message.raw_time is False
+    assert not chat._background_tasks
+
 
 def test_user_ignores_mention_name_ctor_arg():
     user = User(
