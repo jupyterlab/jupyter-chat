@@ -2,6 +2,29 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.25.0alpha2
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.25.0-alpha.1...548d31f5e850c14ae277d65410b3b166b41d6ccb))
+
+### Enhancements made
+
+- Implement `YChat.broadcast_writing_status()` [#516](https://github.com/jupyterlab/jupyter-chat/pull/516) ([@dlqqq](https://github.com/dlqqq))
+
+### Bugs fixed
+
+- fix: avoid background tasks for synchronous YChat updates [#521](https://github.com/jupyterlab/jupyter-chat/pull/521) ([@uuzzrm](https://github.com/uuzzrm), [@dlqqq](https://github.com/dlqqq))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-08-20&to=2026-08-20&type=c))
+
+@dlqqq ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2026-08-20..2026-08-20&type=Issues)) | @uuzzrm ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Auuzzrm+updated%3A2026-08-20..2026-08-20&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.25.0alpha1
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.25.0-alpha.0...48946e7ad4d1c5b97db4c1310194cbbd235c2f02))
@@ -24,8 +47,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-08-18&to=2026-08-20&type=c))
 
 @bhavana-nair ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abhavana-nair+updated%3A2026-08-18..2026-08-20&type=Issues)) | @dlqqq ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2026-08-18..2026-08-20&type=Issues)) | @opensource-joe ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Aopensource-joe+updated%3A2026-08-18..2026-08-20&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.25.0alpha0
 
