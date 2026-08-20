@@ -347,6 +347,7 @@ class BaseChatModel(ABC):
         :meth:`observe_messages`."""
         ...
 
+    @abstractmethod
     def broadcast_writing_status(
         self,
         user: "User",
@@ -359,7 +360,10 @@ class BaseChatModel(ABC):
         typing indicator. ``status`` is ``None`` when the user stopped, or a
         mapping with optional ``messageID`` and ``typingIndicator`` keys.
 
-        The default implementation is a no-op; transports that support live
-        presence (e.g. the WebSocket model) override it.
+        This is abstract: every transport MUST implement it so the writers API
+        stays transport-complete. The WebSocket model relays a ``writing`` frame
+        to connected clients; the collaborative (:class:`YChat`) model writes the
+        status into the shared awareness channel. Both surface the writer through
+        the same frontend ``writersChanged`` signal.
         """
-        # no-op by default
+        ...
