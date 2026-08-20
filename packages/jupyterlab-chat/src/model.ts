@@ -38,6 +38,102 @@ const WRITING_DELAY = 1000;
 const WS_WRITING_TIMEOUT = 3000;
 
 /**
+ * Coerce an untrusted value to an `IUser`, or `null` if it is not one.
+ * Awareness state is written by arbitrary clients, so the only field we rely on
+ * is a string `username`.
+ */
+function asUser(value: unknown): IUser | null {
+  if (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof (value as { username?: unknown }).username === 'string'
+  ) {
+    return value as IUser;
+  }
+  return null;
+}
+
+/**
+ * Coerce an untrusted value to an `IWriter`, or `null` if it is not one.
+ */
+function asWriter(value: unknown): IChatModel.IWriter | null {
+  if (typeof value !== 'object' || value === null) {
+    return null;
+  }
+  const record = value as Record<string, unknown>;
+  const user = asUser(record.user);
+  if (!user) {
+    return null;
+  }
+  return {
+    user,
+    messageID:
+      typeof record.messageID === 'string' ? record.messageID : undefined,
+    typingIndicator:
+      typeof record.typingIndicator === 'string'
+        ? record.typingIndicator
+        : undefined
+  };
+}
+
+/**
+ * Build the writers list from the raw awareness states of a collaborative chat.
+ *
+ * Two shapes appear on the shared awareness channel: a peer advertising its own
+ * typing on its own slot (`isWriting`), and the set of writers a server-side
+ * sender (e.g. AI personas) publishes as a `writers` list on a single slot,
+ * since those senders have no awareness client of their own. Duplicate
+ * usernames are collapsed downstream by `updateWriters`.
+ *
+ * Awareness state is untrusted (any client can write anything), so every field
+ * is validated before use and malformed entries are dropped. Exported for tests.
+ */
+export function collectWritersFromAwareness(
+  states: Map<number, Record<string, unknown>>,
+  localUsername: string
+): IChatModel.IWriter[] {
+  const writers: IChatModel.IWriter[] = [];
+  // The current user must never see themselves as a writer, whichever slot
+  // advertises them (their own typing slot, or a server-published set).
+  const pushWriter = (writer: IChatModel.IWriter | null): void => {
+    if (writer && writer.user.username !== localUsername) {
+      writers.push(writer);
+    }
+  };
+  for (const state of states.values()) {
+    if (typeof state !== 'object' || state === null) {
+      continue;
+    }
+
+    // A server-side sender publishes the whole writer set on one slot.
+    if (Array.isArray(state.writers)) {
+      for (const entry of state.writers) {
+        pushWriter(asWriter(entry));
+      }
+    }
+
+    // A peer advertises its own typing on its own slot. `isWriting` is `true`
+    // (writing, no target message) or the string ID of the message being
+    // written; anything else is ignored.
+    const isWriting = state.isWriting;
+    if (isWriting === true || (typeof isWriting === 'string' && isWriting)) {
+      const user = asUser(state.user);
+      if (user) {
+        pushWriter({
+          user,
+          messageID: typeof isWriting === 'string' ? isWriting : undefined,
+          typingIndicator:
+            typeof state.typingIndicator === 'string'
+              ? state.typingIndicator
+              : undefined
+        });
+      }
+    }
+  }
+  return writers;
+}
+
+/**
  * Chat model namespace.
  */
 export namespace LabChatModel {
@@ -385,26 +481,15 @@ export class LabChatModel
 
   /**
    * Triggered when an awareness state changes.
-   * Used to populate the writers list.
+   * Used to populate the writers list from the shared awareness channel.
    */
   onAwarenessChange = () => {
-    const writers: IChatModel.IWriter[] = [];
-    const states = this.sharedModel.awareness.getStates();
-    for (const stateID of states.keys()) {
-      const state = states.get(stateID);
-      if (!state || !state.user || state.user.username === this.user.username) {
-        continue;
-      }
-      if (state.isWriting !== undefined && state.isWriting !== false) {
-        const writer: IChatModel.IWriter = {
-          user: state.user,
-          messageID: state.isWriting === true ? undefined : state.isWriting,
-          typingIndicator: state.typingIndicator ?? undefined
-        };
-        writers.push(writer);
-      }
-    }
-    this.updateWriters(writers);
+    this.updateWriters(
+      collectWritersFromAwareness(
+        this.sharedModel.awareness.getStates(),
+        this.user.username
+      )
+    );
   };
 
   /**

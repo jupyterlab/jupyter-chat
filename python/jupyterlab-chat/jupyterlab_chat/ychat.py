@@ -28,6 +28,14 @@ from .models import (
 )
 from .utils import find_mentions
 
+# Awareness state field under which the collaborative model publishes the set of
+# users currently writing (e.g. AI personas). Server-side senders have no
+# awareness client of their own, so rather than fake a client per writer, the
+# whole set is published as a list under the document's own awareness slot and
+# clients scan every slot for this field. See `onAwarenessChange` in the
+# frontend model.
+WRITERS_AWARENESS_KEY = "writers"
+
 
 class YChat(YBaseDoc, BaseChatModel):
     def __init__(self, *args, **kwargs):
@@ -49,6 +57,10 @@ class YChat(YBaseDoc, BaseChatModel):
 
         # Lookup table to get message index from its ID.
         self._indexes_by_id: dict[str, int] = {}
+
+        # In-memory set of users currently writing (keyed by username), the
+        # source of truth published to the awareness channel. Ephemeral.
+        self._writers: dict[str, dict] = {}
 
     @property
     def version(self) -> str:
@@ -260,6 +272,49 @@ class YChat(YBaseDoc, BaseChatModel):
         """
         with self._ydoc.transaction():
             self._ymetadata.update({name: metadata})
+
+    def broadcast_writing_status(
+        self,
+        user: User,
+        status: Optional[dict] = None,
+    ) -> None:
+        """Broadcast ``user``'s writing status over the awareness channel.
+
+        ``user`` is a :class:`User`, serialized with ``dataclasses.asdict()`` so
+        every field (including ``bot``) survives to the client. ``status`` is
+        ``None`` when the user stopped, or a mapping with optional
+        ``messageID``/``typingIndicator`` keys. The full set of writers is
+        published as a list under the document's own awareness slot (the field
+        named by :data:`WRITERS_AWARENESS_KEY`), which every client scans; the
+        awareness channel keeps that slot alive on its own, so no per-writer
+        client or heartbeat is needed. Ephemeral: never persisted to the
+        ``.chat`` document.
+        """
+        if status is None:
+            self._writers.pop(user.username, None)
+        else:
+            writer: dict = {"user": asdict(user)}
+            message_id = status.get("messageID")
+            if message_id is not None:
+                writer["messageID"] = message_id
+            typing_indicator = status.get("typingIndicator")
+            if typing_indicator is not None:
+                writer["typingIndicator"] = typing_indicator
+            self._writers[user.username] = writer
+        self._publish_writers()
+
+    def _publish_writers(self) -> None:
+        """Publish the current writer set to the awareness channel.
+
+        Writes to the document's own awareness slot (no client-ID juggling). A
+        no-op until the document is attached to a collaboration room, which is
+        always the case when a server-side sender writes.
+        """
+        if self.awareness is None:
+            return
+        self.awareness.set_local_state_field(
+            WRITERS_AWARENESS_KEY, list(self._writers.values())
+        )
 
     def observe_messages(
         self, callback: MessageObserverCallback
