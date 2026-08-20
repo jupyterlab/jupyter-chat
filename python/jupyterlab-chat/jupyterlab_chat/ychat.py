@@ -64,6 +64,17 @@ class YChat(YBaseDoc, BaseChatModel):
         self._background_tasks.add(task)
         task.add_done_callback(self._background_tasks.discard)
 
+    @staticmethod
+    def _schedule_callback(callback: Callable[..., Any], *args: Any) -> None:
+        """Run a synchronous document update after the current YDoc event."""
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError as exc:
+            raise RuntimeError(
+                "YChat document updates require a running event loop"
+            ) from exc
+        loop.call_soon(callback, *args)
+
     @property
     def ymessages(self) -> Array:
         return self._ymessages
@@ -306,7 +317,7 @@ class YChat(YBaseDoc, BaseChatModel):
                 )
                 callback(ChatMessageEvent(action=action, message=message))
 
-    async def create_id(self) -> str:
+    def create_id(self) -> str:
         """
         Creates a new ID for the document.
         """
@@ -423,7 +434,7 @@ class YChat(YBaseDoc, BaseChatModel):
         if self.dirty:
             return
         if (self.get_id() is None):
-            self.create_task(self.create_id())
+            self._schedule_callback(self.create_id)
         if self._ystate_subscription is not None:
             self._ystate.unobserve(self._ystate_subscription)
             self._ystate_subscription = None
@@ -466,9 +477,9 @@ class YChat(YBaseDoc, BaseChatModel):
         for idx in range(index, index + inserted_count):
             message_dict = self._ymessages[idx]
             if message_dict and message_dict.get("raw_time", True):  # type:ignore[attr-defined]
-                self.create_task(self._set_timestamp(idx, timestamp))
+                self._schedule_callback(self._set_timestamp, idx, timestamp)
 
-    async def _set_timestamp(self, msg_idx: int, timestamp: float):
+    def _set_timestamp(self, msg_idx: int, timestamp: float) -> None:
         """
         Update the timestamp of a message and reinsert it at the correct position.
         """

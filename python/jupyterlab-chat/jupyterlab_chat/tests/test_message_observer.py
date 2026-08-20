@@ -5,6 +5,7 @@
 Covers ``observe_messages``/``unobserve_messages`` on both the WebSocket model
 (RTC-free) and the collaborative ``YChat``.
 """
+import asyncio
 from pathlib import Path
 from typing import List
 
@@ -115,8 +116,8 @@ def test_ws_observer_error_is_isolated(tmp_path: Path) -> None:
 # Collaborative model (YChat)
 # --------------------------------------------------------------------------
 def _insert_ymessage(chat: YChat, message: dict) -> None:
-    # raw_time=False avoids the server-timestamp reschedule (which uses an
-    # asyncio task) so the test stays synchronous.
+    # raw_time=False avoids the server-timestamp reschedule so the test stays
+    # synchronous.
     message.setdefault("raw_time", False)
     with chat._ydoc.transaction():
         chat._ymessages.append(Map(message))
@@ -150,3 +151,19 @@ def test_ychat_insert_classification_and_unobserve() -> None:
         chat, {"id": "m3", "body": "after", "time": 3.0, "sender": "human"}
     )
     assert "after" not in [e.message.body for e in events]
+
+
+@pytest.mark.asyncio
+async def test_ychat_timestamp_update_preserves_insert_event() -> None:
+    chat = YChat()
+    chat.set_id("test-chat")
+    chat.dirty = False
+    events: List[ChatMessageEvent] = []
+    chat.observe_messages(events.append)
+
+    chat.add_message(NewMessage(body="from human", sender="human"))
+    await asyncio.sleep(0)
+
+    assert len(events) == 1
+    assert events[0].message.body == "from human"
+    assert chat.get_messages()[0].raw_time is False
