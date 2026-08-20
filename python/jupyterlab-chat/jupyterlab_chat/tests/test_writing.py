@@ -41,23 +41,28 @@ def test_broadcast_writing_status_frame(tmp_path):
     assert frame["user"]["display_name"] == "Bot-Agent"
 
 
-def test_broadcast_writing_status_accepts_user_dict(tmp_path):
+def test_broadcast_writing_status_preserves_bot_flag(tmp_path):
+    """`bot` must survive serialization: consumers (e.g. a stop button) use
+    `user.bot` to distinguish AI writers from humans. Regression for the
+    persona stop button never enabling because the writer's `bot` was dropped.
+    """
     model, handler = _model_with_client(tmp_path)
+    bot_user = User(username="jovyan-bot", name="Agent", bot=True)
+    human = User(username="jovyan", name="Jovyan")
 
-    model.broadcast_writing_status(
-        {"username": "alice", "display_name": "Alice"}, {"messageID": "m1"}
-    )
+    model.broadcast_writing_status(bot_user, {"typingIndicator": "Writing..."})
+    model.broadcast_writing_status(human, {"typingIndicator": "typing"})
 
-    frame = json.loads(handler.messages[0])
-    assert frame["user"] == {"username": "alice", "display_name": "Alice"}
-    assert frame["state"] is True
-    assert frame["messageID"] == "m1"
+    bot_frame = json.loads(handler.messages[0])
+    human_frame = json.loads(handler.messages[1])
+    assert bot_frame["user"]["bot"] is True
+    assert human_frame["user"]["bot"] is False
 
 
 def test_broadcast_writing_status_stop(tmp_path):
     model, handler = _model_with_client(tmp_path)
 
-    model.broadcast_writing_status({"username": "bot"}, None)
+    model.broadcast_writing_status(User(username="bot"), None)
 
     frame = json.loads(handler.messages[0])
     assert frame["state"] is False
@@ -68,7 +73,7 @@ def test_broadcast_writing_status_stop(tmp_path):
 def test_writing_is_not_persisted(tmp_path):
     model, _ = _model_with_client(tmp_path)
 
-    model.broadcast_writing_status({"username": "bot"}, {"typingIndicator": "x"})
+    model.broadcast_writing_status(User(username="bot"), {"typingIndicator": "x"})
 
     # Ephemeral: broadcasting a writing status must not create/modify the file.
     assert not (tmp_path / "chat.chat").exists()

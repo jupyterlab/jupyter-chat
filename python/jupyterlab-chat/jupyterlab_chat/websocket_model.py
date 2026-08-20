@@ -84,29 +84,18 @@ class WsChatModel(BaseChatModel):
             except websocket.WebSocketClosedError:
                 pass
 
-    def broadcast_writing_status(self, user, status=None) -> None:
+    def broadcast_writing_status(self, user: User, status=None) -> None:
         """Broadcast an ephemeral writing status for ``user`` to all clients.
 
-        Not persisted to the ``.chat`` file. ``user`` may be a ``User`` or a
-        mapping (with at least ``username``); ``status`` is ``None`` (stopped) or
-        a mapping with optional ``messageID``/``typingIndicator``. The full user
-        object is included so recipients can display the writer without having
-        seen a message from them.
+        Not persisted to the ``.chat`` file. ``user`` is a :class:`User`;
+        ``status`` is ``None`` (stopped) or a mapping with optional
+        ``messageID``/``typingIndicator``. The full user object is included so
+        recipients can display the writer (and tell bots from humans via
+        ``user.bot``) without having seen a message from them.
         """
-        if isinstance(user, dict):
-            user_dict = user
-        else:
-            user_dict = {
-                "username": user.username,
-                "name": getattr(user, "name", None),
-                "display_name": getattr(user, "display_name", None),
-                "initials": getattr(user, "initials", None),
-                "color": getattr(user, "color", None),
-                "avatar_url": getattr(user, "avatar_url", None),
-            }
         payload: dict = {
             "type": "writing",
-            "user": user_dict,
+            "user": asdict(user),
             "state": status is not None,
         }
         if status:
