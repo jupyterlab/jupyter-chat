@@ -211,8 +211,16 @@ class YChat(YBaseDoc, BaseChatModel):
         """
         Returns all attachments in the chat as a dictionary, indexed by
         attachment ID.
+
+        Values are typed as `FileAttachment` or `NotebookAttachment`
         """
-        return self._yattachments.to_py() or {}
+        result: dict[str, Union[FileAttachment, NotebookAttachment]] = {}
+        for att_id, att_dict in (self._yattachments.to_py() or {}).items():
+            if att_dict.get("type") == "notebook":
+                result[att_id] = NotebookAttachment(**att_dict)
+            else:
+                result[att_id] = FileAttachment(**att_dict)
+        return result
 
     def set_attachment(self, attachment: Union[FileAttachment, NotebookAttachment]) -> str:
         """
@@ -229,7 +237,7 @@ class YChat(YBaseDoc, BaseChatModel):
         attachment_json = json.dumps(asdict(attachment), sort_keys=True)
         attachment_id = None
         for id, att in self.get_attachments().items():
-            if json.dumps(att, sort_keys=True) == attachment_json:
+            if json.dumps(asdict(att), sort_keys=True) == attachment_json:
                 attachment_id = id
                 break
         if not attachment_id:
@@ -328,7 +336,10 @@ class YChat(YBaseDoc, BaseChatModel):
             {
                 "messages": self._get_messages(),
                 "users": self._get_users(),
-                "attachments": self.get_attachments(),
+                "attachments": {
+                    att_id: asdict(att)
+                    for att_id, att in self.get_attachments().items()
+                },
                 "metadata": self.get_metadata()
             },
             indent=2
