@@ -41,10 +41,13 @@ class YChat(YBaseDoc, BaseChatModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.dirty = True
-        # The RTC room id ("{format}:{type}:{file_id}"), set by whoever resolves
-        # this document (e.g. the ChatManager). Used by get_path() to recover
-        # the file id. `None` when the chat was not resolved through a room.
+        # Set by whoever resolves this document (e.g. the ChatManager) from the
+        # collaboration room lifecycle event, which carries both fields. The
+        # room id ("{format}:{type}:{file_id}") lets get_path() recover the file
+        # id; initial_path is the path recorded when the room was created and is
+        # used as a fallback. Both are None until the chat is resolved.
         self.room_id: Optional[str] = None
+        self.initial_path: Optional[str] = None
         self._ydoc["users"] = self._yusers = Map()  # type:ignore[var-annotated]
         self._ydoc["messages"] = self._ymessages = Array()  # type:ignore[var-annotated]
         self._ydoc["attachments"] = self._yattachments = Map()  # type:ignore[var-annotated]
@@ -397,14 +400,14 @@ class YChat(YBaseDoc, BaseChatModel):
     def get_path(self) -> str:
         """Return the chat file path relative to ``ContentsManager.root_dir``.
 
-        When this chat's ``room_id`` is known, the file id is its last
-        ``:``-delimited component (room ids have the form
-        ``{format}:{type}:{file_id}``), and the live path is resolved from the
-        File ID service so it follows the file across moves and renames. The
-        File ID service is always installed when RTC is enabled, but this method
-        does not assume ``jupyter_server_fileid`` is present: without a room id
-        or a File ID service, the path recorded in the shared document state is
-        returned as-is.
+        Resolves the live path from the file id encoded in ``room_id`` (its last
+        ``:``-delimited component) via the File ID service, so the path follows
+        the file across moves and renames. Falls back to ``initial_path`` (the
+        path recorded when the room was created) when there is no room id / File
+        ID service, or the id cannot be resolved. Both ``room_id`` and
+        ``initial_path`` are set by the resolver (e.g. the ChatManager) from the
+        collaboration room lifecycle event; this method does not rely on the
+        shared-state ``path``, which not every RTC provider sets.
         """
         if self.room_id:
             file_id = self.room_id.split(":")[-1]
@@ -413,12 +416,12 @@ class YChat(YBaseDoc, BaseChatModel):
                 resolved = file_id_manager.get_path(file_id)
                 if resolved:
                     return resolved
-        path = self.path
-        if path is None:
+        if self.initial_path is None:
             raise ValueError(
-                "This YChat has no path recorded in its shared document state."
+                "This YChat has no path: neither a resolvable room id nor an "
+                "initial_path has been recorded."
             )
-        return path
+        return self.initial_path
 
     @staticmethod
     def _get_file_id_manager() -> Optional[Any]:

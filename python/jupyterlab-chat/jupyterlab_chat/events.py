@@ -405,9 +405,11 @@ class ChatManager(LoggingConfigurable):
             collaboration = self._settings["jupyter_server_ydoc"]
             model = await collaboration.get_document(room_id=room_id, copy=False)
             if model is not None:
-                # Give the document its room id so get_path() can recover the
-                # file id (the room id's last ':'-delimited component).
+                # Record the room id (so get_path() can recover the file id) and
+                # the initial path, both taken from the room lifecycle event
+                # (self._room_to_path is populated from that event's `path`).
                 model.room_id = room_id
+                model.initial_path = self._room_to_path.get(room_id)
             return model
         except Exception as e:  # pragma: no cover - depends on RTC install
             self.log.warning("Could not resolve YChat for room %s: %s", room_id, e)

@@ -44,3 +44,11 @@ def test_ychat_get_path(jp_serverapp):
     os.rename(root / "sub" / "chat.chat", root / "moved" / "chat.chat")
     fim.move("sub/chat.chat", "moved/chat.chat")
     assert chat.get_path() == "moved/chat.chat"
+
+
+def test_ychat_get_path_falls_back_to_initial_path():
+    # With no resolvable room id / File ID service, get_path() returns the
+    # initial_path recorded when the room was created.
+    chat = YChat()
+    chat.initial_path = "sub/chat.chat"
+    assert chat.get_path() == "sub/chat.chat"
