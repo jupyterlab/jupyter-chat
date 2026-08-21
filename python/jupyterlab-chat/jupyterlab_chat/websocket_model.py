@@ -125,6 +125,11 @@ class WsChatModel(BaseChatModel):
     def get_id(self) -> Optional[str]:
         return self._metadata.get("id")  # type: ignore[return-value]
 
+    def get_path(self) -> str:
+        # The WebSocket model does not use file IDs; its path is fixed at
+        # construction and is already relative to the ContentsManager root.
+        return self.path
+
     def get_message(self, id: str) -> Optional[Message]:
         idx = self._indexes_by_id.get(id)
         if idx is None:

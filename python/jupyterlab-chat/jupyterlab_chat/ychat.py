@@ -393,6 +393,50 @@ class YChat(YBaseDoc, BaseChatModel):
         with self._ydoc.transaction():
             self._ymetadata.update({"id": id})
 
+    def get_path(self) -> str:
+        """Return the chat file path relative to ``ContentsManager.root_dir``.
+
+        The collaborative model records its root-relative path in the shared
+        document state. When the File ID service is available it is preferred to
+        resolve the live path, so the path follows the file across moves and
+        renames. The File ID service is always installed when RTC is enabled,
+        but this method does not assume ``jupyter_server_fileid`` is present:
+        without it, the path recorded in the shared state is returned as-is.
+        """
+        path = self.path
+        file_id_manager = self._get_file_id_manager()
+        if file_id_manager is not None and path is not None:
+            file_id = file_id_manager.get_id(path)
+            if file_id:
+                resolved = file_id_manager.get_path(file_id)
+                if resolved:
+                    return resolved
+        if path is None:
+            raise ValueError(
+                "This YChat has no path recorded in its shared document state."
+            )
+        return path
+
+    @staticmethod
+    def _get_file_id_manager() -> Optional[Any]:
+        """Best-effort reference to the server's File ID manager.
+
+        Returns ``None`` when there is no running server or when
+        ``jupyter_server_fileid`` is not installed (the manager is only
+        registered in the server settings by that extension). Never raises.
+        """
+        try:
+            from jupyter_server.serverapp import ServerApp
+
+            if not ServerApp.initialized():
+                return None
+            web_app = getattr(ServerApp.instance(), "web_app", None)
+            if web_app is None:
+                return None
+            return web_app.settings.get("file_id_manager")
+        except Exception:  # pragma: no cover - defensive
+            return None
+
     def get(self) -> str:
         """
         Returns the contents of the document.
