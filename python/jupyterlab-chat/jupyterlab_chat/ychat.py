@@ -42,6 +42,10 @@ class YChat(YBaseDoc, BaseChatModel):
         super().__init__(*args, **kwargs)
         self._background_tasks: Set[asyncio.Task] = set()
         self.dirty = True
+        # The RTC room id ("{format}:{type}:{file_id}"), set by whoever resolves
+        # this document (e.g. the ChatManager). Used by get_path() to recover
+        # the file id. `None` when the chat was not resolved through a room.
+        self.room_id: Optional[str] = None
         self._ydoc["users"] = self._yusers = Map()  # type:ignore[var-annotated]
         self._ydoc["messages"] = self._ymessages = Array()  # type:ignore[var-annotated]
         self._ydoc["attachments"] = self._yattachments = Map()  # type:ignore[var-annotated]
@@ -399,21 +403,23 @@ class YChat(YBaseDoc, BaseChatModel):
     def get_path(self) -> str:
         """Return the chat file path relative to ``ContentsManager.root_dir``.
 
-        The collaborative model records its root-relative path in the shared
-        document state. When the File ID service is available it is preferred to
-        resolve the live path, so the path follows the file across moves and
-        renames. The File ID service is always installed when RTC is enabled,
-        but this method does not assume ``jupyter_server_fileid`` is present:
-        without it, the path recorded in the shared state is returned as-is.
+        When this chat's ``room_id`` is known, the file id is its last
+        ``:``-delimited component (room ids have the form
+        ``{format}:{type}:{file_id}``), and the live path is resolved from the
+        File ID service so it follows the file across moves and renames. The
+        File ID service is always installed when RTC is enabled, but this method
+        does not assume ``jupyter_server_fileid`` is present: without a room id
+        or a File ID service, the path recorded in the shared document state is
+        returned as-is.
         """
-        path = self.path
-        file_id_manager = self._get_file_id_manager()
-        if file_id_manager is not None and path is not None:
-            file_id = file_id_manager.get_id(path)
-            if file_id:
+        if self.room_id:
+            file_id = self.room_id.split(":")[-1]
+            file_id_manager = self._get_file_id_manager()
+            if file_id_manager is not None:
                 resolved = file_id_manager.get_path(file_id)
                 if resolved:
                     return resolved
+        path = self.path
         if path is None:
             raise ValueError(
                 "This YChat has no path recorded in its shared document state."

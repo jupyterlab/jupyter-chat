@@ -2,6 +2,7 @@
 # Distributed under the terms of the Modified BSD License.
 """Tests for ``BaseChatModel.get_path()`` on both transports."""
 
+import os
 from pathlib import Path
 
 import pytest
@@ -25,13 +26,21 @@ def test_ws_chat_model_get_path(tmp_path):
 
 def test_ychat_get_path(jp_serverapp):
     """With a running server whose File ID service is enabled, ``get_path()``
-    returns the chat's path relative to the ContentsManager root."""
-    assert jp_serverapp.web_app.settings.get("file_id_manager") is not None
+    resolves the file id from the room id and returns the file's current path,
+    following it across an in-band move."""
+    fim = jp_serverapp.web_app.settings["file_id_manager"]
 
     root = Path(jp_serverapp.root_dir)
     (root / "sub").mkdir(parents=True, exist_ok=True)
     (root / "sub" / "chat.chat").write_text("{}")
+    file_id = fim.index("sub/chat.chat")
 
     chat = YChat()
-    chat.path = "sub/chat.chat"
+    chat.room_id = f"text:chat:{file_id}"
     assert chat.get_path() == "sub/chat.chat"
+
+    # After an in-band move, get_path() follows the file via its stable id.
+    (root / "moved").mkdir()
+    os.rename(root / "sub" / "chat.chat", root / "moved" / "chat.chat")
+    fim.move("sub/chat.chat", "moved/chat.chat")
+    assert chat.get_path() == "moved/chat.chat"

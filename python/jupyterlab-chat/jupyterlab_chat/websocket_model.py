@@ -58,11 +58,11 @@ class WsChatModel(BaseChatModel):
         self._indexes_by_id: dict[str, int] = {}
         self._users: Dict[str, dict] = {}
         self._attachments: Dict[str, dict] = {}
-        # Stable id assigned once. Persisted in the chat file's metadata, so it
-        # survives reloads and in-band moves (the file carries it to the new
-        # path). ``load_from_file`` adopts a persisted id if the file has one.
-        self._metadata: Dict[str, object] = {"id": uuid.uuid4().hex}
+        self._metadata: Dict[str, object] = {}
         self._message_observers: List[MessageObserverCallback] = []
+        # A random id assigned once per model instance. Not persisted to the
+        # chat file: no consumer needs it to be stable across reloads.
+        self._id = uuid.uuid4().hex
 
         # Track in-band moves: a rename via the ContentsManager updates our
         # tracked path, so subsequent saves go to the file's new location. This
@@ -89,7 +89,6 @@ class WsChatModel(BaseChatModel):
 
     def load_from_file(self) -> None:
         full_path = self.root_dir / self.path
-        existing_id = self._metadata.get("id")
         try:
             with open(full_path) as f:
                 content = json.load(f)
@@ -99,10 +98,6 @@ class WsChatModel(BaseChatModel):
             self._metadata = content.get("metadata", {})
         except (FileNotFoundError, json.JSONDecodeError):
             self._metadata = {}
-        # Guarantee a stable id: adopt the file's persisted id if present,
-        # otherwise keep the id assigned at construction.
-        if not self._metadata.get("id"):
-            self._metadata["id"] = existing_id or uuid.uuid4().hex
         self._indexes_by_id = {m["id"]: i for i, m in enumerate(self._messages) if "id" in m}
 
     def save(self) -> None:
@@ -156,7 +151,7 @@ class WsChatModel(BaseChatModel):
     # ------------------------------------------------------------------
 
     def get_id(self) -> str:
-        return self._metadata["id"]  # type: ignore[return-value]
+        return self._id
 
     def get_path(self) -> str:
         # The WebSocket model does not use file IDs; its path is tracked

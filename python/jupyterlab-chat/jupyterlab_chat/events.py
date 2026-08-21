@@ -403,7 +403,12 @@ class ChatManager(LoggingConfigurable):
         RTC provider is installed."""
         try:
             collaboration = self._settings["jupyter_server_ydoc"]
-            return await collaboration.get_document(room_id=room_id, copy=False)
+            model = await collaboration.get_document(room_id=room_id, copy=False)
+            if model is not None:
+                # Give the document its room id so get_path() can recover the
+                # file id (the room id's last ':'-delimited component).
+                model.room_id = room_id
+            return model
         except Exception as e:  # pragma: no cover - depends on RTC install
             self.log.warning("Could not resolve YChat for room %s: %s", room_id, e)
             return None

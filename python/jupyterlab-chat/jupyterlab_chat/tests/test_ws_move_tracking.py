@@ -13,19 +13,8 @@ def test_get_id_is_a_stable_str(tmp_path):
     model = WsChatModel(path="chat.chat", root_dir=tmp_path)
     chat_id = model.get_id()
     assert isinstance(chat_id, str) and chat_id
-    # Stable across calls.
+    # Stable across calls (for the lifetime of the model instance).
     assert model.get_id() == chat_id
-
-
-def test_id_persists_across_reload(tmp_path):
-    model = WsChatModel(path="chat.chat", root_dir=tmp_path)
-    model.save()
-    chat_id = model.get_id()
-
-    # A fresh model loading the same file adopts the persisted id.
-    reloaded = WsChatModel(path="chat.chat", root_dir=tmp_path)
-    reloaded.load_from_file()
-    assert reloaded.get_id() == chat_id
 
 
 @pytest.mark.asyncio
@@ -79,4 +68,4 @@ def test_moved_model_saves_to_new_path(tmp_path):
     assert (tmp_path / "moved.chat").exists()
     assert not (tmp_path / "chat.chat").exists()
     saved = json.loads((tmp_path / "moved.chat").read_text())
-    assert saved["metadata"]["id"] == model.get_id()
+    assert saved["messages"] == []
