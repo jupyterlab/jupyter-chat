@@ -34,6 +34,11 @@ import {
  */
 export interface IChatModel extends IDisposable {
   /**
+   * The unique id of the chat, when known. Implemented by `AbstractChatModel`.
+   */
+  id?: string;
+
+  /**
    * The chat model name.
    */
   name: string;
@@ -1000,6 +1005,10 @@ export namespace IChatModel {
  */
 export interface IChatContext {
   /**
+   * The unique id of the chat, when known.
+   */
+  readonly id?: string;
+  /**
    * The name of the chat.
    */
   readonly name: string;
@@ -1029,6 +1038,10 @@ export interface IChatContext {
 export abstract class AbstractChatContext implements IChatContext {
   constructor(options: { model: IChatModel }) {
     this._model = options.model;
+  }
+
+  get id(): string | undefined {
+    return this._model.id;
   }
 
   get name(): string {
