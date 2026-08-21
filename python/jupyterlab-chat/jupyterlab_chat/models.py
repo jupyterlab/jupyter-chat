@@ -274,7 +274,8 @@ class BaseChatModel(ABC):
     """
 
     @abstractmethod
-    def get_id(self) -> Optional[str]:
+    def get_id(self) -> str:
+        """Return the stable unique id of this chat. Always a string."""
         ...
 
     @abstractmethod

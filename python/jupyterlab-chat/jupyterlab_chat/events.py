@@ -279,7 +279,9 @@ class ChatManager(LoggingConfigurable):
             if model is None:
                 continue
             # Deletion: the backing file is gone (via ContentsManager/filesystem).
-            if not (self._root_dir / path).exists():
+            # Use the model's live path so an in-band move (which updates the
+            # model's tracked path) is not mistaken for a deletion.
+            if not (self._root_dir / model.get_path()).exists():
                 self._free(path, ChatEventAction.DELETED)
                 continue
             # Inactivity: only applies to WS models we own the memory for. A
@@ -293,6 +295,8 @@ class ChatManager(LoggingConfigurable):
     def _free(self, path: str, action: ChatEventAction) -> Optional["BaseChatModel"]:
         model = self._models.pop(path, None)
         self._last_active.pop(path, None)
+        if isinstance(model, WsChatModel):
+            model.dispose()
         room_id = None
         for rid, p in list(self._room_to_path.items()):
             if p == path:
@@ -344,7 +348,11 @@ class ChatManager(LoggingConfigurable):
     def _get_or_create_ws(self, path: str) -> "WsChatModel":
         model = self._models.get(path)
         if model is None:
-            model = WsChatModel(path=path, root_dir=self._root_dir)
+            model = WsChatModel(
+                path=path,
+                root_dir=self._root_dir,
+                event_logger=self._event_logger,
+            )
             model.load_from_file()
             self._models[path] = model
             self._last_active[path] = time.time()

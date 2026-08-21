@@ -7,7 +7,7 @@ import time
 import uuid
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
 
 from tornado import websocket
 
@@ -25,7 +25,16 @@ from .models import (
     message_asdict_factory,
 )
 
+if TYPE_CHECKING:
+    from jupyter_events import EventLogger
+
 _log = logging.getLogger(__name__)
+
+#: Jupyter Server ContentsManager event schema. The manager emits a ``rename``
+#: action (with ``source_path`` and ``path``) on in-band moves/renames.
+CONTENTS_EVENT_SCHEMA_ID = (
+    "https://events.jupyter.org/jupyter_server/contents_service/v1"
+)
 
 
 class WsChatModel(BaseChatModel):
@@ -36,7 +45,12 @@ class WsChatModel(BaseChatModel):
     to the collaborative (YChat) backend.
     """
 
-    def __init__(self, path: str, root_dir: Path):
+    def __init__(
+        self,
+        path: str,
+        root_dir: Path,
+        event_logger: Optional["EventLogger"] = None,
+    ):
         self.path = path
         self.root_dir = root_dir
         self.handlers: Dict[str, websocket.WebSocketHandler] = {}
@@ -44,8 +58,22 @@ class WsChatModel(BaseChatModel):
         self._indexes_by_id: dict[str, int] = {}
         self._users: Dict[str, dict] = {}
         self._attachments: Dict[str, dict] = {}
-        self._metadata: Dict[str, object] = {}
+        # Stable id assigned once. Persisted in the chat file's metadata, so it
+        # survives reloads and in-band moves (the file carries it to the new
+        # path). ``load_from_file`` adopts a persisted id if the file has one.
+        self._metadata: Dict[str, object] = {"id": uuid.uuid4().hex}
         self._message_observers: List[MessageObserverCallback] = []
+
+        # Track in-band moves: a rename via the ContentsManager updates our
+        # tracked path, so subsequent saves go to the file's new location. This
+        # does not observe out-of-band moves (e.g. `mv` in a terminal), which do
+        # not go through the ContentsManager.
+        self._event_logger = event_logger
+        if event_logger is not None:
+            event_logger.add_listener(
+                schema_id=CONTENTS_EVENT_SCHEMA_ID,
+                listener=self._on_contents_event,
+            )
 
     # ------------------------------------------------------------------
     # Room-level helpers
@@ -61,6 +89,7 @@ class WsChatModel(BaseChatModel):
 
     def load_from_file(self) -> None:
         full_path = self.root_dir / self.path
+        existing_id = self._metadata.get("id")
         try:
             with open(full_path) as f:
                 content = json.load(f)
@@ -69,7 +98,11 @@ class WsChatModel(BaseChatModel):
             self._attachments = content.get("attachments", {})
             self._metadata = content.get("metadata", {})
         except (FileNotFoundError, json.JSONDecodeError):
-            self._metadata = {"id": uuid.uuid4().hex}
+            self._metadata = {}
+        # Guarantee a stable id: adopt the file's persisted id if present,
+        # otherwise keep the id assigned at construction.
+        if not self._metadata.get("id"):
+            self._metadata["id"] = existing_id or uuid.uuid4().hex
         self._indexes_by_id = {m["id"]: i for i, m in enumerate(self._messages) if "id" in m}
 
     def save(self) -> None:
@@ -122,13 +155,59 @@ class WsChatModel(BaseChatModel):
     # BaseChatModel implementation
     # ------------------------------------------------------------------
 
-    def get_id(self) -> Optional[str]:
-        return self._metadata.get("id")  # type: ignore[return-value]
+    def get_id(self) -> str:
+        return self._metadata["id"]  # type: ignore[return-value]
 
     def get_path(self) -> str:
-        # The WebSocket model does not use file IDs; its path is fixed at
-        # construction and is already relative to the ContentsManager root.
+        # The WebSocket model does not use file IDs; its path is tracked
+        # in-process and kept current on in-band moves (see _on_contents_event).
         return self.path
+
+    async def _on_contents_event(self, logger, schema_id: str, data: dict) -> None:
+        """Update ``self.path`` when the backing file is moved in-band.
+
+        Handles both an exact file rename and the rename of an ancestor
+        directory. Only ContentsManager (REST/API) operations emit these events;
+        out-of-band moves are not observed.
+        """
+        if data.get("action") != "rename":
+            return
+        source = data.get("source_path")
+        dest = data.get("path")
+        if not source or not dest:
+            return
+        new_path = self._relocated_path(self.path, source, dest)
+        if new_path is not None and new_path != self.path:
+            _log.info("Chat file moved: '%s' -> '%s'", self.path, new_path)
+            self.path = new_path
+
+    @staticmethod
+    def _relocated_path(current: str, source: str, dest: str) -> Optional[str]:
+        """Return the path ``current`` maps to when ``source`` is renamed to
+        ``dest``, or ``None`` if ``current`` is unaffected.
+
+        Covers an exact file rename (``current == source``) and the rename of an
+        ancestor directory (``current`` nested under ``source``).
+        """
+        if current == source:
+            return dest
+        prefix = source + "/"
+        if current.startswith(prefix):
+            return dest + "/" + current[len(prefix):]
+        return None
+
+    def dispose(self) -> None:
+        """Release resources held by the model. Removes the ContentsManager
+        event listener so it does not outlive the model."""
+        if self._event_logger is not None:
+            try:
+                self._event_logger.remove_listener(
+                    schema_id=CONTENTS_EVENT_SCHEMA_ID,
+                    listener=self._on_contents_event,
+                )
+            except Exception:  # pragma: no cover - defensive
+                pass
+            self._event_logger = None
 
     def get_message(self, id: str) -> Optional[Message]:
         idx = self._indexes_by_id.get(id)

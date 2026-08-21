@@ -380,11 +380,14 @@ class YChat(YBaseDoc, BaseChatModel):
         self.set_id(id)
         return id
 
-    def get_id(self) -> Optional[str]:
+    def get_id(self) -> str:
         """
-        Returns the ID of the document.
+        Returns the ID of the document, creating one if it does not exist yet.
         """
-        return self._ymetadata.get("id", None)
+        existing = self._ymetadata.get("id", None)
+        if existing:
+            return existing
+        return self.create_id()
 
     def set_id(self, id: str) -> None:
         """
@@ -532,7 +535,10 @@ class YChat(YBaseDoc, BaseChatModel):
         """
         if self.dirty:
             return
-        if (self.get_id() is None):
+        # Read the raw metadata rather than get_id(): get_id() lazily creates an
+        # id, and this observer runs inside a read-only transaction where writes
+        # are forbidden. The (deferred) create_id below performs the write.
+        if self._ymetadata.get("id", None) is None:
             self._schedule_callback(self.create_id)
         if self._ystate_subscription is not None:
             self._ystate.unobserve(self._ystate_subscription)
