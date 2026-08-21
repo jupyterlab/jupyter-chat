@@ -7,8 +7,10 @@ import time
 import uuid
 from dataclasses import asdict
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
+from jupyter_events import EventLogger
+from jupyter_server.services.contents.manager import ContentsManager
 from tornado import websocket
 
 from .models import (
@@ -25,16 +27,12 @@ from .models import (
     message_asdict_factory,
 )
 
-if TYPE_CHECKING:
-    from jupyter_events import EventLogger
-
 _log = logging.getLogger(__name__)
 
-#: Jupyter Server ContentsManager event schema. The manager emits a ``rename``
-#: action (with ``source_path`` and ``path``) on in-band moves/renames.
-CONTENTS_EVENT_SCHEMA_ID = (
-    "https://events.jupyter.org/jupyter_server/contents_service/v1"
-)
+#: Jupyter Server ContentsManager event schema id. The manager emits a
+#: ``rename`` action (with ``source_path`` and ``path``) on in-band
+#: moves/renames.
+CONTENTS_EVENT_SCHEMA_ID = ContentsManager.event_schema_id
 
 
 class WsChatModel(BaseChatModel):
@@ -49,7 +47,7 @@ class WsChatModel(BaseChatModel):
         self,
         path: str,
         root_dir: Path,
-        event_logger: Optional["EventLogger"] = None,
+        event_logger: Optional[EventLogger] = None,
     ):
         self.path = path
         self.root_dir = root_dir
