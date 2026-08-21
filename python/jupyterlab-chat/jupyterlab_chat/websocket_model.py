@@ -3,7 +3,7 @@
 
 import json
 import logging
-import posixpath
+import os
 import time
 import uuid
 from dataclasses import asdict
@@ -172,10 +172,10 @@ class WsChatModel(BaseChatModel):
             return
         if self.path == source:
             self._on_path_change(dest)
-        elif posixpath.commonpath((source, self.path)) == source:
+        elif os.path.commonpath((source, self.path)) == source:
             # `self.path` is nested under the renamed directory `source`.
             self._on_path_change(
-                posixpath.join(dest, posixpath.relpath(self.path, source))
+                os.path.join(dest, os.path.relpath(self.path, source))
             )
 
     def _on_path_change(self, new_path: str) -> None:
