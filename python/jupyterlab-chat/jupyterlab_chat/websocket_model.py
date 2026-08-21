@@ -3,7 +3,7 @@
 
 import json
 import logging
-import os
+import posixpath
 import time
 import uuid
 from dataclasses import asdict
@@ -172,8 +172,11 @@ class WsChatModel(BaseChatModel):
             return
         if self.path == source:
             self._on_path_change(dest)
-        elif self.path.startswith(f"{source}/"):
-            self._on_path_change(os.path.join(dest, os.path.relpath(self.path, source)))
+        elif posixpath.commonpath((source, self.path)) == source:
+            # `self.path` is nested under the renamed directory `source`.
+            self._on_path_change(
+                posixpath.join(dest, posixpath.relpath(self.path, source))
+            )
 
     def _on_path_change(self, new_path: str) -> None:
         """Point the model at ``new_path`` (the file's new location)."""
