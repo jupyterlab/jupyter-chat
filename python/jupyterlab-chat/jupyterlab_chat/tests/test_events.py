@@ -3,9 +3,11 @@
 """Unit tests for jupyterlab_chat.events.ChatManager (WebSocket path)."""
 import asyncio
 import time
+from pathlib import Path
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, cast
 
+import jupyter_server
 from jupyter_events import EventLogger
 
 from jupyterlab_chat.events import ChatManager
@@ -16,8 +18,21 @@ if TYPE_CHECKING:
     from jupyter_server.serverapp import ServerApp
 
 
-def _make_manager(tmp_path, capture):
+def _event_logger() -> EventLogger:
+    """An EventLogger with the ContentsManager schema registered, matching a
+    real server (so freeing a WsChatModel can remove its contents listener)."""
     logger = EventLogger()
+    logger.register_event_schema(
+        Path(jupyter_server.__file__).parent
+        / "event_schemas"
+        / "contents_service"
+        / "v1.yaml"
+    )
+    return logger
+
+
+def _make_manager(tmp_path, capture):
+    logger = _event_logger()
     settings = {"event_logger": logger, "server_root_dir": str(tmp_path)}
     serverapp = cast(
         "ServerApp", SimpleNamespace(web_app=SimpleNamespace(settings=settings))
@@ -190,7 +205,7 @@ def test_client_connected_and_disconnected_events(tmp_path):
     async def run():
         events: list = []
 
-        logger = EventLogger()
+        logger = _event_logger()
         settings = {"event_logger": logger, "server_root_dir": str(tmp_path)}
         serverapp = cast(
             "ServerApp",

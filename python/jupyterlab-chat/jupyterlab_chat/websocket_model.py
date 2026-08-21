@@ -3,6 +3,7 @@
 
 import json
 import logging
+import os
 import time
 import uuid
 from dataclasses import asdict
@@ -157,11 +158,11 @@ class WsChatModel(BaseChatModel):
         return self.path
 
     async def _on_contents_event(self, logger, schema_id: str, data: dict) -> None:
-        """Update ``self.path`` when the backing file is moved in-band.
+        """Update the tracked path when the backing file is moved in-band.
 
-        Handles both an exact file rename and the rename of an ancestor
-        directory. Only ContentsManager (REST/API) operations emit these events;
-        out-of-band moves are not observed.
+        Calls :meth:`_on_path_change` when the rename affects this file directly
+        or renames one of its ancestor directories. Only ContentsManager
+        (REST/API) operations emit these events; out-of-band moves are not seen.
         """
         if data.get("action") != "rename":
             return
@@ -169,38 +170,24 @@ class WsChatModel(BaseChatModel):
         dest = data.get("path")
         if not source or not dest:
             return
-        new_path = self._relocated_path(self.path, source, dest)
-        if new_path is not None and new_path != self.path:
+        if self.path == source:
+            self._on_path_change(dest)
+        elif self.path.startswith(f"{source}/"):
+            self._on_path_change(os.path.join(dest, os.path.relpath(self.path, source)))
+
+    def _on_path_change(self, new_path: str) -> None:
+        """Point the model at ``new_path`` (the file's new location)."""
+        if new_path != self.path:
             _log.info("Chat file moved: '%s' -> '%s'", self.path, new_path)
             self.path = new_path
 
-    @staticmethod
-    def _relocated_path(current: str, source: str, dest: str) -> Optional[str]:
-        """Return the path ``current`` maps to when ``source`` is renamed to
-        ``dest``, or ``None`` if ``current`` is unaffected.
-
-        Covers an exact file rename (``current == source``) and the rename of an
-        ancestor directory (``current`` nested under ``source``).
-        """
-        if current == source:
-            return dest
-        prefix = source + "/"
-        if current.startswith(prefix):
-            return dest + "/" + current[len(prefix):]
-        return None
-
     def dispose(self) -> None:
-        """Release resources held by the model. Removes the ContentsManager
-        event listener so it does not outlive the model."""
+        """Remove the ContentsManager event listener when the model is freed."""
         if self._event_logger is not None:
-            try:
-                self._event_logger.remove_listener(
-                    schema_id=CONTENTS_EVENT_SCHEMA_ID,
-                    listener=self._on_contents_event,
-                )
-            except Exception:  # pragma: no cover - defensive
-                pass
-            self._event_logger = None
+            self._event_logger.remove_listener(
+                schema_id=CONTENTS_EVENT_SCHEMA_ID,
+                listener=self._on_contents_event,
+            )
 
     def get_message(self, id: str) -> Optional[Message]:
         idx = self._indexes_by_id.get(id)

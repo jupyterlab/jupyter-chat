@@ -9,7 +9,7 @@ import time
 import asyncio
 from functools import partial
 from jupyter_ydoc.ybasedoc import YBaseDoc
-from typing import Any, Callable, Optional, Set, Union
+from typing import Any, Callable, Optional, Union
 from uuid import uuid4
 from pycrdt import Array, ArrayEvent, Map, MapEvent, Subscription
 
@@ -40,7 +40,6 @@ WRITERS_AWARENESS_KEY = "writers"
 class YChat(YBaseDoc, BaseChatModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._background_tasks: Set[asyncio.Task] = set()
         self.dirty = True
         # The RTC room id ("{format}:{type}:{file_id}"), set by whoever resolves
         # this document (e.g. the ChatManager). Used by get_path() to recover
@@ -74,11 +73,6 @@ class YChat(YBaseDoc, BaseChatModel):
         :rtype: str
         """
         return "1.0.0"
-
-    def create_task(self, coro):
-        task = asyncio.create_task(coro)
-        self._background_tasks.add(task)
-        task.add_done_callback(self._background_tasks.discard)
 
     @staticmethod
     def _schedule_callback(callback: Callable[..., Any], *args: Any) -> None:
