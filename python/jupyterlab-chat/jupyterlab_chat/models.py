@@ -281,9 +281,6 @@ class BaseChatModel(ABC):
     def get_path(self) -> str:
         """Return the path of the file backing this chat model, relative to
         ``ContentsManager.root_dir``.
-
-        This is a stopgap until ``WsChatModel`` and the collaborative model
-        expose paths uniformly (see jupyterlab/jupyter-chat#522).
         """
         ...
 
