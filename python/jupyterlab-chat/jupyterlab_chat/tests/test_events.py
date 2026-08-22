@@ -235,15 +235,21 @@ def test_client_connected_and_disconnected_events(tmp_path):
 
         mgr.observe_chats(on_event)
 
+        # A live model must exist for client events to carry its chat_id (in
+        # production the WS handler calls ws_open before on_client_connect).
+        (tmp_path / "a.chat").write_text("{}")
+        model = mgr.ws_open("a.chat")
+        chat_id = model.get_id()
+
         mgr.on_client_connect("a.chat", "client-1")
         mgr.on_client_connect("a.chat", "client-2")
         mgr.on_client_disconnect("a.chat", "client-1")
         await _drain()
 
         assert events == [
-            {"path": "a.chat", "action": "client_connected", "client_id": "client-1"},
-            {"path": "a.chat", "action": "client_connected", "client_id": "client-2"},
-            {"path": "a.chat", "action": "client_disconnected", "client_id": "client-1"},
+            {"path": "a.chat", "action": "client_connected", "chat_id": chat_id, "client_id": "client-1"},
+            {"path": "a.chat", "action": "client_connected", "chat_id": chat_id, "client_id": "client-2"},
+            {"path": "a.chat", "action": "client_disconnected", "chat_id": chat_id, "client_id": "client-1"},
         ]
 
     asyncio.run(run())

@@ -136,23 +136,37 @@ class ChatManager(LoggingConfigurable):
         return model.get_id() if model is not None else None
 
     def on_client_connect(self, path: str, client_id: str) -> None:
-        """Callback invoked upon WebSocket client connection. Emits an event."""
+        """Callback invoked upon WebSocket client connection. Emits an event.
+
+        A live model is guaranteed here (the handler calls ``ws_open`` first), so
+        the event always carries a ``chat_id``; the guard is purely defensive.
+        """
+        chat_id = self._chat_id_for(path)
+        if chat_id is None:
+            return
         self._emit_event(
             ChatEvent(
                 path=path,
                 action=ChatEventAction.CLIENT_CONNECTED,
-                chat_id=self._chat_id_for(path),
+                chat_id=chat_id,
                 client_id=client_id,
             )
         )
 
     def on_client_disconnect(self, path: str, client_id: str) -> None:
-        """Callback invoked upon WebSocket client disconnection. Emits an event."""
+        """Callback invoked upon WebSocket client disconnection. Emits an event.
+
+        Fires before the model is freed, so the model is still live and the event
+        always carries a ``chat_id``; the guard is purely defensive.
+        """
+        chat_id = self._chat_id_for(path)
+        if chat_id is None:
+            return
         self._emit_event(
             ChatEvent(
                 path=path,
                 action=ChatEventAction.CLIENT_DISCONNECTED,
-                chat_id=self._chat_id_for(path),
+                chat_id=chat_id,
                 client_id=client_id,
             )
         )
@@ -209,16 +223,17 @@ class ChatManager(LoggingConfigurable):
     def _free(self, path: str, action: ChatEventAction) -> Optional["BaseChatModel"]:
         model = self._models.pop(path, None)
         self._last_active.pop(path, None)
-        # Capture the stable chat id before disposing: close/delete events fire
-        # after the model is freed, so this is the last chance to read it.
-        chat_id = model.get_id() if model is not None else None
-        if isinstance(model, WsChatModel):
-            model.dispose()
         for rid, p in list(self._room_to_path.items()):
             if p == path:
                 del self._room_to_path[rid]
-        if model is not None:
-            self._emit_event(ChatEvent(path=path, action=action, chat_id=chat_id))
+        if model is None:
+            return None
+        # Capture the stable chat id before disposing: close/delete events fire
+        # after the model is freed, so this is the last chance to read it.
+        chat_id = model.get_id()
+        if isinstance(model, WsChatModel):
+            model.dispose()
+        self._emit_event(ChatEvent(path=path, action=action, chat_id=chat_id))
         return model
 
     def stop(self) -> None:
@@ -313,13 +328,20 @@ class ChatManager(LoggingConfigurable):
             # doc before returning, so `get_id()` reads the persisted metadata id
             # (never mints a premature one that could conflict with disk).
             model = await self._resolve_ychat(room)
-            chat_id = None
-            if model is not None:
-                self._models[path] = model
-                chat_id = model.get_id()
+            if model is None:
+                # No usable chat without a resolved model; do not emit an
+                # `opened` event that could not carry a chat_id.
+                self.log.warning(
+                    "Could not resolve YChat for room %s; skipping opened event",
+                    room,
+                )
+                return
+            self._models[path] = model
             self._emit_event(
                 ChatEvent(
-                    path=path, action=ChatEventAction.OPENED, chat_id=chat_id
+                    path=path,
+                    action=ChatEventAction.OPENED,
+                    chat_id=model.get_id(),
                 )
             )
         elif action == "clean":

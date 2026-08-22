@@ -38,7 +38,7 @@ CHAT_ROOM_EVENT_SCHEMA = {
     "personal-data": True,
     "description": "Transport-agnostic chat room lifecycle and per-client connection events emitted by jupyterlab_chat.",
     "type": "object",
-    "required": ["path", "action"],
+    "required": ["path", "action", "chat_id"],
     "properties": {
         "path": {
             "type": "string",
@@ -63,7 +63,8 @@ CHAT_ROOM_EVENT_SCHEMA = {
             "type": "string",
             "description": (
                 "Stable, transport-neutral chat id (chat.get_id()); the source of "
-                "truth for correlating a chat across events and transports."
+                "truth for correlating a chat across events and transports. Always "
+                "present on every event."
             ),
         },
         "client_id": {
@@ -94,16 +95,19 @@ class ChatEvent:
 
     path: str
     action: ChatEventAction
-    #: Stable, transport-neutral chat id (``chat.get_id()``). Populated on every
-    #: event; ``None`` only in the rare case the model could not be resolved.
-    chat_id: Optional[str] = None
+    #: Stable, transport-neutral chat id (``chat.get_id()``). Always present: the
+    #: ChatManager only emits an event once it has resolved the chat's model, so
+    #: consumers can rely on ``chat_id`` being set on every event.
+    chat_id: str
     #: Set only for the ``client_connected``/``client_disconnected`` actions.
     client_id: Optional[str] = None
 
     def to_data(self) -> dict:
-        data: dict = {"path": self.path, "action": self.action.value}
-        if self.chat_id is not None:
-            data["chat_id"] = self.chat_id
+        data: dict = {
+            "path": self.path,
+            "action": self.action.value,
+            "chat_id": self.chat_id,
+        }
         if self.client_id is not None:
             data["client_id"] = self.client_id
         return data
