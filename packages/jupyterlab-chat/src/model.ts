@@ -281,7 +281,7 @@ export class LabChatModel
   set id(value: string | undefined) {
     super.id = value;
     if (value) {
-      this.setReady();
+      this.setReady(value);
     }
   }
 
@@ -306,9 +306,18 @@ export class LabChatModel
       this._wsHandler.ready
         .then(() => {
           if (!this.id) {
-            // Prefer the server-assigned id (from the connection frame); fall
-            // back to a local id only for older servers that do not send one.
-            this.id = this._wsHandler!.chatId ?? UUID.uuid4();
+            // The server is the single source of truth for the chat id: it is
+            // delivered in the WS connection frame (from `chat.get_id()`). We do
+            // NOT mint a local id, so `model.id` always matches the backend.
+            const serverId = this._wsHandler!.chatId;
+            if (serverId) {
+              this.id = serverId;
+            } else {
+              console.error(
+                'WS chat connection frame did not include a chat id; ' +
+                  'the chat cannot become ready. Is the server up to date?'
+              );
+            }
           }
         })
         .catch(e => console.error('WS chat connection failed', e));

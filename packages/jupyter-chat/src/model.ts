@@ -54,9 +54,11 @@ export interface IChatModel extends IDisposable {
   unreadMessages: number[];
 
   /**
-   * The promise resolving when the model is ready.
+   * A promise that resolves, once the model is ready, with the chat's stable
+   * id. The id matches the backend's `chat.get_id()` and is guaranteed to be
+   * available (and never change) from this point on.
    */
-  readonly ready: Promise<void>;
+  readonly ready: Promise<string>;
 
   /**
    * The awareness channel of the underlying shared document, when the chat is
@@ -314,7 +316,7 @@ export abstract class AbstractChatModel implements IChatModel {
     this._selectionWatcher = options.selectionWatcher ?? null;
     this._documentManager = options.documentManager ?? null;
 
-    this._readyDelegate = new PromiseDelegate<void>();
+    this._readyDelegate = new PromiseDelegate<string>();
 
     this.ready.then(() => {
       this._inputModel.chatContext = this.createChatContext();
@@ -422,17 +424,21 @@ export abstract class AbstractChatModel implements IChatModel {
   }
 
   /**
-   * Promise that resolves when the model is ready.
+   * Promise that resolves, when the model is ready, with the chat's stable id.
    */
-  get ready(): Promise<void> {
+  get ready(): Promise<string> {
     return this._readyDelegate.promise;
   }
 
   /**
-   * Set the model as ready.
+   * Mark the model as ready, resolving `ready` with the chat's stable id.
+   *
+   * The id must match the backend's `chat.get_id()`; callers pass the
+   * server-authoritative id (WebSocket connection frame, or the synchronized
+   * shared-document metadata under RTC).
    */
-  protected setReady(): void {
-    this._readyDelegate.resolve();
+  protected setReady(id: string): void {
+    this._readyDelegate.resolve(id);
   }
 
   /**
@@ -881,7 +887,7 @@ export abstract class AbstractChatModel implements IChatModel {
   private _name: string = '';
   private _config: IConfig;
   protected _trans: TranslationBundle;
-  private _readyDelegate = new PromiseDelegate<void>();
+  private _readyDelegate = new PromiseDelegate<string>();
   private _inputModel: IInputModel;
   private _disposed = new Signal<IChatModel, void>(this);
   private _isDisposed = false;
@@ -1005,9 +1011,11 @@ export namespace IChatModel {
  */
 export interface IChatContext {
   /**
-   * The unique id of the chat, when known.
+   * The chat's stable id. Always available: a chat context is only created once
+   * the model is `ready`, at which point the id is guaranteed to be set (and to
+   * match the backend's `chat.get_id()`).
    */
-  readonly id?: string;
+  readonly id: string;
   /**
    * The name of the chat.
    */
@@ -1040,8 +1048,17 @@ export abstract class AbstractChatContext implements IChatContext {
     this._model = options.model;
   }
 
-  get id(): string | undefined {
-    return this._model.id;
+  get id(): string {
+    // A chat context is only created once the model is ready (see the
+    // AbstractChatModel constructor), so the model's id is guaranteed set here.
+    const id = this._model.id;
+    if (id === undefined) {
+      throw new Error(
+        'IChatContext.id was read before the model was ready; ' +
+          'a chat context must only be created after `model.ready`.'
+      );
+    }
+    return id;
   }
 
   get name(): string {
