@@ -129,20 +129,12 @@ class ChatManager(LoggingConfigurable):
         except Exception as e:  # pragma: no cover - defensive
             self.log.warning("Failed to emit chat event %s: %s", event, e)
 
-    def _chat_id_for(self, path: str) -> Optional[str]:
-        """The stable chat id for a live chat, or ``None`` if not currently live."""
-        model = self._models.get(path)
-        return model.get_id() if model is not None else None
-
-    def on_client_connect(self, path: str, client_id: str) -> None:
+    def on_client_connect(self, path: str, client_id: str, chat_id: str) -> None:
         """Callback invoked upon WebSocket client connection. Emits an event.
 
-        A live model is guaranteed here (the handler calls ``ws_open`` first), so
-        the event always carries a ``chat_id``; the guard is purely defensive.
+        ``chat_id`` is supplied by the caller (the WS handler, which already holds
+        the model), so the event always carries the chat's stable id.
         """
-        chat_id = self._chat_id_for(path)
-        if chat_id is None:
-            return
         self._emit_event(
             ChatEvent(
                 path=path,
@@ -152,15 +144,12 @@ class ChatManager(LoggingConfigurable):
             )
         )
 
-    def on_client_disconnect(self, path: str, client_id: str) -> None:
+    def on_client_disconnect(self, path: str, client_id: str, chat_id: str) -> None:
         """Callback invoked upon WebSocket client disconnection. Emits an event.
 
-        Fires before the model is freed, so the model is still live and the event
-        always carries a ``chat_id``; the guard is purely defensive.
+        ``chat_id`` is supplied by the caller (the WS handler still holds the live
+        model at disconnect time), so the event always carries the chat's id.
         """
-        chat_id = self._chat_id_for(path)
-        if chat_id is None:
-            return
         self._emit_event(
             ChatEvent(
                 path=path,

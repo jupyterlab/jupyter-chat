@@ -241,9 +241,9 @@ def test_client_connected_and_disconnected_events(tmp_path):
         model = mgr.ws_open("a.chat")
         chat_id = model.get_id()
 
-        mgr.on_client_connect("a.chat", "client-1")
-        mgr.on_client_connect("a.chat", "client-2")
-        mgr.on_client_disconnect("a.chat", "client-1")
+        mgr.on_client_connect("a.chat", "client-1", chat_id)
+        mgr.on_client_connect("a.chat", "client-2", chat_id)
+        mgr.on_client_disconnect("a.chat", "client-1", chat_id)
         await _drain()
 
         assert events == [

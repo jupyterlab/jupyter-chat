@@ -125,7 +125,7 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
                     pass
 
         self.log.info("WS chat client %s connected to model '%s'", self._client_id, path)
-        self._chat_manager.on_client_connect(path, self._client_id)
+        self._chat_manager.on_client_connect(path, self._client_id, model.get_id())
 
     async def on_message(self, raw: str | bytes) -> None:
         try:
@@ -245,7 +245,7 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
         model = self._chat_models.get(path)
         if model and client_id:
             model.handlers.pop(client_id, None)
-            self._chat_manager.on_client_disconnect(path, client_id)
+            self._chat_manager.on_client_disconnect(path, client_id, model.get_id())
             if not model.handlers:
                 # Don't free immediately: the manager reclaims the model after a
                 # grace period of inactivity unless a client reconnects.
