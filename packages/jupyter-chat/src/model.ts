@@ -1011,9 +1011,11 @@ export namespace IChatModel {
  */
 export interface IChatContext {
   /**
-   * The unique id of the chat, when known.
+   * The chat's stable id. Always available: a chat context is only created once
+   * the model is `ready`, at which point the id is guaranteed to be set (and to
+   * match the backend's `chat.get_id()`).
    */
-  readonly id?: string;
+  readonly id: string;
   /**
    * The name of the chat.
    */
@@ -1046,8 +1048,17 @@ export abstract class AbstractChatContext implements IChatContext {
     this._model = options.model;
   }
 
-  get id(): string | undefined {
-    return this._model.id;
+  get id(): string {
+    // A chat context is only created once the model is ready (see the
+    // AbstractChatModel constructor), so the model's id is guaranteed set here.
+    const id = this._model.id;
+    if (id === undefined) {
+      throw new Error(
+        'IChatContext.id was read before the model was ready; ' +
+          'a chat context must only be created after `model.ready`.'
+      );
+    }
+    return id;
   }
 
   get name(): string {
