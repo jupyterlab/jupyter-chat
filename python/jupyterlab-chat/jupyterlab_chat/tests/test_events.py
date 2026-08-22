@@ -1,6 +1,6 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
-"""Unit tests for jupyterlab_chat.events.ChatManager (WebSocket path)."""
+"""Unit tests for jupyterlab_chat.chat_manager.ChatManager (WebSocket path)."""
 import asyncio
 import time
 from pathlib import Path
@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, cast
 import jupyter_server
 from jupyter_events import EventLogger
 
-from jupyterlab_chat.events import ChatManager
+from jupyterlab_chat.chat_manager import ChatManager
 from jupyterlab_chat.models import NewMessage
 from jupyterlab_chat.websocket_model import WsChatModel
 
@@ -51,6 +51,14 @@ async def _drain():
     await asyncio.sleep(0.1)
 
 
+def _find(capture, path, action):
+    """Return the captured event matching path+action, or None."""
+    for e in capture:
+        if e.get("path") == path and e.get("action") == action:
+            return e
+    return None
+
+
 def test_ws_open_emits_opened_once_and_get(tmp_path):
     async def run():
         capture: list = []
@@ -60,7 +68,9 @@ def test_ws_open_emits_opened_once_and_get(tmp_path):
         model = mgr.ws_open("a.chat")
         assert isinstance(model, WsChatModel)
         await _drain()
-        assert {"path": "a.chat", "action": "opened"} in capture
+        opened = _find(capture, "a.chat", "opened")
+        assert opened is not None
+        assert opened["chat_id"] == model.get_id()
 
         # model access
         assert mgr.get("a.chat") is model
@@ -107,7 +117,9 @@ def test_inactivity_frees_model(tmp_path):
         await _drain()
 
         assert mgr.get("c.chat") is None  # garbage-collected
-        assert {"path": "c.chat", "action": "closed"} in capture
+        closed = _find(capture, "c.chat", "closed")
+        assert closed is not None
+        assert closed["chat_id"] == model.get_id()
         mgr.stop()
 
     asyncio.run(run())
@@ -134,7 +146,7 @@ def test_deletion_frees_model(tmp_path):
         mgr = _make_manager(tmp_path, capture)
         chat = tmp_path / "e.chat"
         chat.write_text("{}")
-        mgr.ws_open("e.chat")
+        model = mgr.ws_open("e.chat")
 
         chat.unlink()  # deleted via filesystem/ContentsManager
         capture.clear()
@@ -142,7 +154,9 @@ def test_deletion_frees_model(tmp_path):
         await _drain()
 
         assert mgr.get("e.chat") is None
-        assert {"path": "e.chat", "action": "deleted"} in capture
+        deleted = _find(capture, "e.chat", "deleted")
+        assert deleted is not None
+        assert deleted["chat_id"] == model.get_id()
         mgr.stop()
 
     asyncio.run(run())
@@ -169,7 +183,9 @@ def test_last_client_gone_frees_model(tmp_path):
         mgr.ws_client_gone("r.chat")
         await _drain()
         assert mgr.get("r.chat") is None
-        assert {"path": "r.chat", "action": "closed"} in capture
+        closed = _find(capture, "r.chat", "closed")
+        assert closed is not None
+        assert closed["chat_id"] == m1.get_id()
 
         # Reopening builds a fresh model, not the stale in-memory instance.
         m2 = mgr.ws_open("r.chat")
