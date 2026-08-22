@@ -110,6 +110,7 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
         self.write_message(json.dumps({
             "type": "connection",
             "client_id": self._client_id,
+            "id": model.get_id(),
             "messages": [model.resolve_message(m) for m in model._messages],
             "users": model._users,
         }))

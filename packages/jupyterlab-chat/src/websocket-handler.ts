@@ -102,6 +102,15 @@ export class WebSocketHandler {
     return this._ready.promise;
   }
 
+  /**
+   * The server-assigned chat id, received on the connection message. Available
+   * once `ready` has resolved; `undefined` against older servers that do not
+   * send it.
+   */
+  get chatId(): string | undefined {
+    return this._chatId;
+  }
+
   setPath(path: string): void {
     this._path = path;
   }
@@ -166,6 +175,7 @@ export class WebSocketHandler {
 
   private _handleMessage(data: any): void {
     if (data.type === 'connection') {
+      this._chatId = data.id as string | undefined;
       this._usersMap = (data.users as Record<string, IUser>) ?? {};
       this._usersChanged.emit(this._usersMap);
       for (const msg of (data.messages as any[]) ?? []) {
@@ -270,6 +280,7 @@ export class WebSocketHandler {
 
   private _path = '';
   private _disposed = false;
+  private _chatId: string | undefined;
   private _user: IUser | null = null;
   private _socket: WebSocket | null = null;
   private _serverSettings: ServerConnection.ISettings;

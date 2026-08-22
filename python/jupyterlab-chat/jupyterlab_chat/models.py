@@ -274,7 +274,15 @@ class BaseChatModel(ABC):
     """
 
     @abstractmethod
-    def get_id(self) -> Optional[str]:
+    def get_id(self) -> str:
+        """Return the stable unique id of this chat. Always a string."""
+        ...
+
+    @abstractmethod
+    def get_path(self) -> str:
+        """Return the path of the file backing this chat model, relative to
+        ``ContentsManager.root_dir``.
+        """
         ...
 
     @abstractmethod

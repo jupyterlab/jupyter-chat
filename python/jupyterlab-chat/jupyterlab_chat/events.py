@@ -279,7 +279,9 @@ class ChatManager(LoggingConfigurable):
             if model is None:
                 continue
             # Deletion: the backing file is gone (via ContentsManager/filesystem).
-            if not (self._root_dir / path).exists():
+            # Use the model's live path so an in-band move (which updates the
+            # model's tracked path) is not mistaken for a deletion.
+            if not (self._root_dir / model.get_path()).exists():
                 self._free(path, ChatEventAction.DELETED)
                 continue
             # Inactivity: only applies to WS models we own the memory for. A
@@ -293,6 +295,8 @@ class ChatManager(LoggingConfigurable):
     def _free(self, path: str, action: ChatEventAction) -> Optional["BaseChatModel"]:
         model = self._models.pop(path, None)
         self._last_active.pop(path, None)
+        if isinstance(model, WsChatModel):
+            model.dispose()
         room_id = None
         for rid, p in list(self._room_to_path.items()):
             if p == path:
@@ -344,7 +348,11 @@ class ChatManager(LoggingConfigurable):
     def _get_or_create_ws(self, path: str) -> "WsChatModel":
         model = self._models.get(path)
         if model is None:
-            model = WsChatModel(path=path, root_dir=self._root_dir)
+            model = WsChatModel(
+                path=path,
+                root_dir=self._root_dir,
+                event_logger=self._event_logger,
+            )
             model.load_from_file()
             self._models[path] = model
             self._last_active[path] = time.time()
@@ -395,7 +403,14 @@ class ChatManager(LoggingConfigurable):
         RTC provider is installed."""
         try:
             collaboration = self._settings["jupyter_server_ydoc"]
-            return await collaboration.get_document(room_id=room_id, copy=False)
+            model = await collaboration.get_document(room_id=room_id, copy=False)
+            if model is not None:
+                # Record the room id (so get_path() can recover the file id) and
+                # the initial path, both taken from the room lifecycle event
+                # (self._room_to_path is populated from that event's `path`).
+                model.room_id = room_id
+                model.initial_path = self._room_to_path.get(room_id)
+            return model
         except Exception as e:  # pragma: no cover - depends on RTC install
             self.log.warning("Could not resolve YChat for room %s: %s", room_id, e)
             return None

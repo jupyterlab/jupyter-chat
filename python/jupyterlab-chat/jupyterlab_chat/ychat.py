@@ -9,7 +9,7 @@ import time
 import asyncio
 from functools import partial
 from jupyter_ydoc.ybasedoc import YBaseDoc
-from typing import Any, Callable, Optional, Set, Union
+from typing import Any, Callable, Optional, Union
 from uuid import uuid4
 from pycrdt import Array, ArrayEvent, Map, MapEvent, Subscription
 
@@ -40,8 +40,14 @@ WRITERS_AWARENESS_KEY = "writers"
 class YChat(YBaseDoc, BaseChatModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._background_tasks: Set[asyncio.Task] = set()
         self.dirty = True
+        # Set by whoever resolves this document (e.g. the ChatManager) from the
+        # collaboration room lifecycle event, which carries both fields. The
+        # room id ("{format}:{type}:{file_id}") lets get_path() recover the file
+        # id; initial_path is the path recorded when the room was created and is
+        # used as a fallback. Both are None until the chat is resolved.
+        self.room_id: Optional[str] = None
+        self.initial_path: Optional[str] = None
         self._ydoc["users"] = self._yusers = Map()  # type:ignore[var-annotated]
         self._ydoc["messages"] = self._ymessages = Array()  # type:ignore[var-annotated]
         self._ydoc["attachments"] = self._yattachments = Map()  # type:ignore[var-annotated]
@@ -70,11 +76,6 @@ class YChat(YBaseDoc, BaseChatModel):
         :rtype: str
         """
         return "1.0.0"
-
-    def create_task(self, coro):
-        task = asyncio.create_task(coro)
-        self._background_tasks.add(task)
-        task.add_done_callback(self._background_tasks.discard)
 
     @staticmethod
     def _schedule_callback(callback: Callable[..., Any], *args: Any) -> None:
@@ -380,11 +381,14 @@ class YChat(YBaseDoc, BaseChatModel):
         self.set_id(id)
         return id
 
-    def get_id(self) -> Optional[str]:
+    def get_id(self) -> str:
         """
-        Returns the ID of the document.
+        Returns the ID of the document, creating one if it does not exist yet.
         """
-        return self._ymetadata.get("id", None)
+        existing = self._ymetadata.get("id", None)
+        if existing:
+            return existing
+        return self.create_id()
 
     def set_id(self, id: str) -> None:
         """
@@ -392,6 +396,52 @@ class YChat(YBaseDoc, BaseChatModel):
         """
         with self._ydoc.transaction():
             self._ymetadata.update({"id": id})
+
+    def get_path(self) -> str:
+        """Return the chat file path relative to ``ContentsManager.root_dir``.
+
+        Resolves the live path from the file id encoded in ``room_id`` (its last
+        ``:``-delimited component) via the File ID service, so the path follows
+        the file across moves and renames. Falls back to ``initial_path`` (the
+        path recorded when the room was created) when there is no room id / File
+        ID service, or the id cannot be resolved. Both ``room_id`` and
+        ``initial_path`` are set by the resolver (e.g. the ChatManager) from the
+        collaboration room lifecycle event; this method does not rely on the
+        shared-state ``path``, which not every RTC provider sets.
+        """
+        if self.room_id:
+            file_id = self.room_id.split(":")[-1]
+            file_id_manager = self._get_file_id_manager()
+            if file_id_manager is not None:
+                resolved = file_id_manager.get_path(file_id)
+                if resolved:
+                    return resolved
+        if self.initial_path is None:
+            raise ValueError(
+                "This YChat has no path: neither a resolvable room id nor an "
+                "initial_path has been recorded."
+            )
+        return self.initial_path
+
+    @staticmethod
+    def _get_file_id_manager() -> Optional[Any]:
+        """Best-effort reference to the server's File ID manager.
+
+        Returns ``None`` when there is no running server or when
+        ``jupyter_server_fileid`` is not installed (the manager is only
+        registered in the server settings by that extension). Never raises.
+        """
+        try:
+            from jupyter_server.serverapp import ServerApp
+
+            if not ServerApp.initialized():
+                return None
+            web_app = getattr(ServerApp.instance(), "web_app", None)
+            if web_app is None:
+                return None
+            return web_app.settings.get("file_id_manager")
+        except Exception:  # pragma: no cover - defensive
+            return None
 
     def get(self) -> str:
         """
@@ -488,7 +538,10 @@ class YChat(YBaseDoc, BaseChatModel):
         """
         if self.dirty:
             return
-        if (self.get_id() is None):
+        # Read the raw metadata rather than get_id(): get_id() lazily creates an
+        # id, and this observer runs inside a read-only transaction where writes
+        # are forbidden. The (deferred) create_id below performs the write.
+        if self._ymetadata.get("id", None) is None:
             self._schedule_callback(self.create_id)
         if self._ystate_subscription is not None:
             self._ystate.unobserve(self._ystate_subscription)
