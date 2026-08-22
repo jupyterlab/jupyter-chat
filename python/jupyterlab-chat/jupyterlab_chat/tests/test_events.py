@@ -72,10 +72,9 @@ def test_ws_open_emits_opened_once_and_get(tmp_path):
         assert opened is not None
         assert opened["chat_id"] == model.get_id()
 
-        # model access
-        assert mgr.get("a.chat") is model
-        assert mgr.get("missing.chat") is None
-        assert mgr.get("text:chat:xyz") is None  # unknown key (path) is not live
+        # model access (keyed by the stable chat id)
+        assert mgr.get(model.get_id()) is model
+        assert mgr.get("no-such-id") is None
 
         # second connection to same path: no duplicate `opened`
         capture.clear()
@@ -111,12 +110,12 @@ def test_inactivity_frees_model(tmp_path):
         model = mgr.ws_open("c.chat")
         assert not model.handlers  # no connected clients
 
-        mgr._last_active["c.chat"] = time.time() - 10_000  # stale
+        mgr._last_active[model.get_id()] = time.time() - 10_000  # stale
         capture.clear()
         mgr._poll()
         await _drain()
 
-        assert mgr.get("c.chat") is None  # garbage-collected
+        assert mgr.get(model.get_id()) is None  # garbage-collected
         closed = _find(capture, "c.chat", "closed")
         assert closed is not None
         assert closed["chat_id"] == model.get_id()
@@ -131,10 +130,10 @@ def test_connected_client_keeps_model_alive(tmp_path):
         (tmp_path / "d.chat").write_text("{}")
         model = mgr.ws_open("d.chat")
         model.handlers["client-1"] = object()  # simulate a connected client
-        mgr._last_active["d.chat"] = time.time() - 10_000
+        mgr._last_active[model.get_id()] = time.time() - 10_000
 
         mgr._poll()
-        assert mgr.get("d.chat") is model  # kept because a client is connected
+        assert mgr.get(model.get_id()) is model  # kept because a client is connected
         mgr.stop()
 
     asyncio.run(run())
@@ -153,7 +152,7 @@ def test_deletion_frees_model(tmp_path):
         mgr._poll()
         await _drain()
 
-        assert mgr.get("e.chat") is None
+        assert mgr.get(model.get_id()) is None
         deleted = _find(capture, "e.chat", "deleted")
         assert deleted is not None
         assert deleted["chat_id"] == model.get_id()
@@ -180,9 +179,9 @@ def test_last_client_gone_frees_model(tmp_path):
         # Last client disconnects with no active writer -> model is freed.
         m1.handlers.clear()
         capture.clear()
-        mgr.ws_client_gone("r.chat")
+        mgr.ws_client_gone(m1.get_id())
         await _drain()
-        assert mgr.get("r.chat") is None
+        assert mgr.get(m1.get_id()) is None
         closed = _find(capture, "r.chat", "closed")
         assert closed is not None
         assert closed["chat_id"] == m1.get_id()

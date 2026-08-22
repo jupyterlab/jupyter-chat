@@ -70,11 +70,14 @@ class ChatManager(LoggingConfigurable):
         self._event_logger = self._settings.get("event_logger")
         self._rtc_enabled = rtc_enabled
 
+        # Live chat models keyed by their stable chat id (``chat.get_id()``) --
+        # the only stable identifier of a chat (paths change on rename; room ids
+        # exist only under RTC). ``_last_active`` is keyed the same way.
         self._models: dict[str, "BaseChatModel"] = {}
         self._last_active: dict[str, float] = {}
 
-        # Single source of truth for the WS handler (supersedes the ad-hoc
-        # ``ws_chat_models`` dict; kept under the same key for compatibility).
+        # Exposed for server-side consumers under the legacy ``ws_chat_models``
+        # settings key. Same dict object as ``_models`` -- now keyed by chat id.
         self._settings["ws_chat_models"] = self._models
 
         self._register_schema()
@@ -162,65 +165,72 @@ class ChatManager(LoggingConfigurable):
     # ------------------------------------------------------------------
     # Responsibility 2 -- model access
     # ------------------------------------------------------------------
-    def get(self, path: str) -> Optional["BaseChatModel"]:
-        """Return the live model for a chat ``path``, or ``None`` if not live.
+    def get(self, chat_id: str) -> Optional["BaseChatModel"]:
+        """Return the live model for a stable ``chat_id`` (``chat.get_id()``), or
+        ``None`` if that chat is not currently live.
 
-        Synchronous: an open chat is always already cached (we cache before
-        emitting ``opened``). ``path`` is the canonical key stamped on every
-        lifecycle event; a room id is an RTC transport detail and is never a
-        valid key here.
+        The chat id is the only stable key; it is stamped on every lifecycle
+        event, so consumers already have it. (Paths change on rename and room ids
+        exist only under RTC, so neither is a reliable key.)
         """
-        return self._models.get(path)
+        return self._models.get(chat_id)
 
     async def create(self, path: str) -> Optional["BaseChatModel"]:
-        """Async get-or-create.
+        """Async get-or-create by ``path`` (the WS connection parameter).
 
         WS: get-or-create a ``WsChatModel`` (loading from disk; creating an empty
         chat when the file is missing is expected). RTC: an ``opened`` room event
-        creates and caches the ``YChat``, so this only returns an already-live
-        model and does not create one on demand.
+        creates and caches the ``YChat``, so this returns an already-live model
+        and does not create one on demand.
         """
-        model = self._models.get(path)
-        if model is not None:
-            return model
         if self._rtc_enabled:
-            return None
+            existing = self._model_for_path(path)
+            return existing
         return self._get_or_create_ws(path)
+
+    def _model_for_path(self, path: str) -> Optional["BaseChatModel"]:
+        """Find the live model whose current path is ``path`` (linear scan over
+        the handful of live chats). Uses ``get_path()`` so a renamed chat is
+        matched by its current path, never a stale key."""
+        return next(
+            (m for m in self._models.values() if m.get_path() == path), None
+        )
 
     # ------------------------------------------------------------------
     # Responsibility 3 -- memory management
     # ------------------------------------------------------------------
     def _poll(self) -> None:
         now = time.time()
-        for path in list(self._models.keys()):
-            model = self._models.get(path)
+        for chat_id in list(self._models.keys()):
+            model = self._models.get(chat_id)
             if model is None:
                 continue
             # Deletion: the backing file is gone (via ContentsManager/filesystem).
             # Use the model's live path so an in-band move (which updates the
             # model's tracked path) is not mistaken for a deletion.
             if not (self._root_dir / model.get_path()).exists():
-                self._free(path, ChatEventAction.DELETED)
+                self._free(chat_id, ChatEventAction.DELETED)
                 continue
             # Inactivity: only applies to WS models we own the memory for. A
             # connected client keeps the chat alive.
             if isinstance(model, WsChatModel):
                 if model.handlers:
-                    self._last_active[path] = now
-                elif now - self._last_active.get(path, now) > self.inactivity_timeout_s:
-                    self._free(path, ChatEventAction.CLOSED)
+                    self._last_active[chat_id] = now
+                elif now - self._last_active.get(chat_id, now) > self.inactivity_timeout_s:
+                    self._free(chat_id, ChatEventAction.CLOSED)
 
-    def _free(self, path: str, action: ChatEventAction) -> Optional["BaseChatModel"]:
-        model = self._models.pop(path, None)
-        self._last_active.pop(path, None)
+    def _free(self, chat_id: str, action: ChatEventAction) -> Optional["BaseChatModel"]:
+        model = self._models.pop(chat_id, None)
+        self._last_active.pop(chat_id, None)
         if model is None:
             return None
-        # Capture the stable chat id before disposing: close/delete events fire
-        # after the model is freed, so this is the last chance to read it.
-        chat_id = model.get_id()
         if isinstance(model, WsChatModel):
             model.dispose()
-        self._emit_event(ChatEvent(path=path, action=action, chat_id=chat_id))
+        # The event carries the model's current path (for display/discovery) and
+        # its stable chat id (the key we just freed).
+        self._emit_event(
+            ChatEvent(path=model.get_path(), action=action, chat_id=chat_id)
+        )
         return model
 
     def stop(self) -> None:
@@ -232,26 +242,27 @@ class ChatManager(LoggingConfigurable):
     # ------------------------------------------------------------------
     def ws_open(self, path: str) -> "WsChatModel":
         """First/any client connecting to ``path``: get-or-create the model and
-        (on first creation) emit ``opened``."""
+        (on first creation) emit ``opened``. Returns the model; the caller reads
+        ``model.get_id()`` for the stable chat id."""
         model = self._get_or_create_ws(path)
-        self._last_active[path] = time.time()
+        self._last_active[model.get_id()] = time.time()
         return model
 
-    def ws_activity(self, path: str) -> None:
-        self._last_active[path] = time.time()
+    def ws_activity(self, chat_id: str) -> None:
+        self._last_active[chat_id] = time.time()
 
-    def ws_client_gone(self, path: str) -> None:
+    def ws_client_gone(self, chat_id: str) -> None:
         # The last client for this chat has disconnected. Free the model now
         # unless a server-side writer (e.g. an AI persona still producing a
         # reply) is keeping it alive, in which case the poller reclaims it once
         # the writer stops. Freeing here -- rather than reloading from disk on the
         # next open -- is what keeps a reopened chat consistent without having to
         # handle out-of-band file changes.
-        self._last_active[path] = time.time()
-        if not self._has_active_writers(path):
-            self._free(path, ChatEventAction.CLOSED)
+        self._last_active[chat_id] = time.time()
+        if not self._has_active_writers(chat_id):
+            self._free(chat_id, ChatEventAction.CLOSED)
 
-    def _has_active_writers(self, path: str) -> bool:
+    def _has_active_writers(self, chat_id: str) -> bool:
         """Whether a server-side writer is keeping this chat alive.
 
         A "writer" is an AI persona (or other server-side producer) that is still
@@ -263,28 +274,31 @@ class ChatManager(LoggingConfigurable):
         return False
 
     def _get_or_create_ws(self, path: str) -> "WsChatModel":
-        model = self._models.get(path)
-        if model is None:
-            model = WsChatModel(
+        # Reuse the live model for this path if one exists (matched by current
+        # path, so a renamed chat is still found). A cached model is the live
+        # in-memory session: reuse it verbatim -- we do not reload from disk
+        # (out-of-band file changes are unsupported) so attached server-side
+        # state, such as AI personas, is preserved across reconnects.
+        existing = self._model_for_path(path)
+        if isinstance(existing, WsChatModel):
+            return existing
+        model = WsChatModel(
+            path=path,
+            root_dir=self._root_dir,
+            event_logger=self._event_logger,
+        )
+        model.load_from_file()
+        chat_id = model.get_id()
+        self._models[chat_id] = model
+        self._last_active[chat_id] = time.time()
+        self._emit_event(
+            ChatEvent(
                 path=path,
-                root_dir=self._root_dir,
-                event_logger=self._event_logger,
+                action=ChatEventAction.OPENED,
+                chat_id=chat_id,
             )
-            model.load_from_file()
-            self._models[path] = model
-            self._last_active[path] = time.time()
-            self._emit_event(
-                ChatEvent(
-                    path=path,
-                    action=ChatEventAction.OPENED,
-                    chat_id=model.get_id(),
-                )
-            )
-        # A cached model is the live in-memory session: reuse it verbatim. We do
-        # not reload from disk (out-of-band file changes are unsupported) so that
-        # any attached server-side state, such as AI personas, is preserved when a
-        # client reconnects.
-        return model  # type: ignore[return-value]
+        )
+        return model
 
     # ------------------------------------------------------------------
     # RTC forwarding (best-effort; not exercised without jupyter_collaboration)
@@ -309,7 +323,6 @@ class ChatManager(LoggingConfigurable):
         if len(parts) < 2 or parts[1] != "chat" or not path:
             return
         if action == "initialize":
-            self._last_active[path] = time.time()
             # Resolve the YChat: `get_document` loads the file content into the
             # doc before returning, so `get_id()` reads the persisted metadata id
             # (never mints a premature one that could conflict with disk).
@@ -322,16 +335,20 @@ class ChatManager(LoggingConfigurable):
                     room,
                 )
                 return
-            self._models[path] = model
+            chat_id = model.get_id()
+            self._models[chat_id] = model
+            self._last_active[chat_id] = time.time()
             self._emit_event(
                 ChatEvent(
                     path=path,
                     action=ChatEventAction.OPENED,
-                    chat_id=model.get_id(),
+                    chat_id=chat_id,
                 )
             )
         elif action == "clean":
-            self._free(path, ChatEventAction.CLOSED)
+            model = self._model_for_path(path)
+            if model is not None:
+                self._free(model.get_id(), ChatEventAction.CLOSED)
 
     async def _resolve_ychat(self, room_id: str, initial_path: str):
         """Resolve the ``YChat`` for a room via jupyter_collaboration. Mirrors

@@ -24,10 +24,6 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
     _path: str
 
     @property
-    def _chat_models(self) -> Dict[str, WsChatModel]:
-        return self.settings["ws_chat_models"]
-
-    @property
     def _chat_manager(self):
         return self.settings["chat_manager"]
 
@@ -88,6 +84,7 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
         # The manager owns get-or-create and emits the `opened` lifecycle event
         # (once, when the model is first created).
         model = self._chat_manager.ws_open(path)
+        self._model = model
         model.handlers[self._client_id] = self
 
         # Register the connecting user. Prefer the client-provided identity
@@ -138,10 +135,10 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
         if not path:
             return
 
-        model = self._chat_models.get(path)
+        model = getattr(self, "_model", None)
         if model is None:
             return
-        self._chat_manager.ws_activity(path)
+        self._chat_manager.ws_activity(model.get_id())
 
         if data.get("is_update"):
             self._handle_update_message(data, model)
@@ -242,12 +239,14 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
             return
 
         client_id = getattr(self, "_client_id", None)
-        model = self._chat_models.get(path)
+        model = getattr(self, "_model", None)
         if model and client_id:
             model.handlers.pop(client_id, None)
-            self._chat_manager.on_client_disconnect(path, client_id, model.get_id())
+            self._chat_manager.on_client_disconnect(
+                model.get_path(), client_id, model.get_id()
+            )
             if not model.handlers:
                 # Don't free immediately: the manager reclaims the model after a
                 # grace period of inactivity unless a client reconnects.
-                self._chat_manager.ws_client_gone(path)
+                self._chat_manager.ws_client_gone(model.get_id())
         self.log.info("WS chat client %s disconnected", client_id)
