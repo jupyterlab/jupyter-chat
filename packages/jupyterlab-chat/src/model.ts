@@ -278,6 +278,12 @@ export class LabChatModel
     this._readOnly = value;
   }
 
+  // Declaring `set id` in this subclass shadows the base class's accessor
+  // property entirely, so `get id` must be redeclared here too or reading
+  // `.id` on a LabChatModel returns undefined even after `_id` is set.
+  get id(): string | undefined {
+    return super.id;
+  }
   set id(value: string | undefined) {
     super.id = value;
     if (value) {
