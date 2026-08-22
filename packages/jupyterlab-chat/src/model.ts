@@ -329,9 +329,20 @@ export class LabChatModel
         .catch(e => console.error('WS chat connection failed', e));
       return;
     }
-    if (!this._sharedModel.id) {
-      // Assigning the shared ID emits a metadata change, which sets the model
-      // ID - and therefore resolves `ready` - through `_onchange`.
+    // The synced document's `id` metadata is the single source of truth for the
+    // chat id under RTC: the server writes it (the same value `chat.get_id()`
+    // returns) and it reaches us through the shared document. When it is already
+    // present at sync time, adopt it and resolve `ready` with it - the initial
+    // sync populates it without emitting an `_onchange` metadata delta, so
+    // nothing else would set the model id and `ready` would never resolve.
+    if (this._sharedModel.id) {
+      this.id = this._sharedModel.id;
+    } else {
+      // Brand-new document with no id yet: assigning the shared id emits a
+      // metadata change that sets the model id - and therefore resolves `ready`
+      // - through `_onchange`. A server-authored id that arrives later is
+      // likewise adopted through `_onchange`. We do NOT mint an id that would
+      // diverge from the server's, since the server reads back this value.
       this._sharedModel.id = UUID.uuid4();
     }
   }
