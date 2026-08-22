@@ -72,13 +72,13 @@ class ChatManager(LoggingConfigurable):
 
         # Live chat models keyed by their stable chat id (``chat.get_id()``) --
         # the only stable identifier of a chat (paths change on rename; room ids
-        # exist only under RTC). ``_last_active`` is keyed the same way.
-        self._models: dict[str, "BaseChatModel"] = {}
-        self._last_active: dict[str, float] = {}
+        # exist only under RTC). ``_last_activity_by_id`` is keyed the same way.
+        self._chats_by_id: dict[str, "BaseChatModel"] = {}
+        self._last_activity_by_id: dict[str, float] = {}
 
-        # Exposed for server-side consumers under the legacy ``ws_chat_models``
-        # settings key. Same dict object as ``_models`` -- now keyed by chat id.
-        self._settings["ws_chat_models"] = self._models
+        # Exposed for server-side consumers under the ``chats_by_id`` settings key
+        # (same dict object as ``_chats_by_id``), keyed by the stable chat id.
+        self._settings["chats_by_id"] = self._chats_by_id
 
         self._register_schema()
         if rtc_enabled:
@@ -173,7 +173,7 @@ class ChatManager(LoggingConfigurable):
         event, so consumers already have it. (Paths change on rename and room ids
         exist only under RTC, so neither is a reliable key.)
         """
-        return self._models.get(chat_id)
+        return self._chats_by_id.get(chat_id)
 
     async def create(self, path: str) -> Optional["BaseChatModel"]:
         """Async get-or-create by ``path`` (the WS connection parameter).
@@ -193,7 +193,7 @@ class ChatManager(LoggingConfigurable):
         the handful of live chats). Uses ``get_path()`` so a renamed chat is
         matched by its current path, never a stale key."""
         return next(
-            (m for m in self._models.values() if m.get_path() == path), None
+            (m for m in self._chats_by_id.values() if m.get_path() == path), None
         )
 
     # ------------------------------------------------------------------
@@ -201,8 +201,8 @@ class ChatManager(LoggingConfigurable):
     # ------------------------------------------------------------------
     def _poll(self) -> None:
         now = time.time()
-        for chat_id in list(self._models.keys()):
-            model = self._models.get(chat_id)
+        for chat_id in list(self._chats_by_id.keys()):
+            model = self._chats_by_id.get(chat_id)
             if model is None:
                 continue
             # Deletion: the backing file is gone (via ContentsManager/filesystem).
@@ -215,13 +215,13 @@ class ChatManager(LoggingConfigurable):
             # connected client keeps the chat alive.
             if isinstance(model, WsChatModel):
                 if model.handlers:
-                    self._last_active[chat_id] = now
-                elif now - self._last_active.get(chat_id, now) > self.inactivity_timeout_s:
+                    self._last_activity_by_id[chat_id] = now
+                elif now - self._last_activity_by_id.get(chat_id, now) > self.inactivity_timeout_s:
                     self._free(chat_id, ChatEventAction.CLOSED)
 
     def _free(self, chat_id: str, action: ChatEventAction) -> Optional["BaseChatModel"]:
-        model = self._models.pop(chat_id, None)
-        self._last_active.pop(chat_id, None)
+        model = self._chats_by_id.pop(chat_id, None)
+        self._last_activity_by_id.pop(chat_id, None)
         if model is None:
             return None
         if isinstance(model, WsChatModel):
@@ -245,11 +245,11 @@ class ChatManager(LoggingConfigurable):
         (on first creation) emit ``opened``. Returns the model; the caller reads
         ``model.get_id()`` for the stable chat id."""
         model = self._get_or_create_ws(path)
-        self._last_active[model.get_id()] = time.time()
+        self._last_activity_by_id[model.get_id()] = time.time()
         return model
 
     def ws_activity(self, chat_id: str) -> None:
-        self._last_active[chat_id] = time.time()
+        self._last_activity_by_id[chat_id] = time.time()
 
     def ws_client_gone(self, chat_id: str) -> None:
         # The last client for this chat has disconnected. Free the model now
@@ -258,7 +258,7 @@ class ChatManager(LoggingConfigurable):
         # the writer stops. Freeing here -- rather than reloading from disk on the
         # next open -- is what keeps a reopened chat consistent without having to
         # handle out-of-band file changes.
-        self._last_active[chat_id] = time.time()
+        self._last_activity_by_id[chat_id] = time.time()
         if not self._has_active_writers(chat_id):
             self._free(chat_id, ChatEventAction.CLOSED)
 
@@ -289,8 +289,8 @@ class ChatManager(LoggingConfigurable):
         )
         model.load_from_file()
         chat_id = model.get_id()
-        self._models[chat_id] = model
-        self._last_active[chat_id] = time.time()
+        self._chats_by_id[chat_id] = model
+        self._last_activity_by_id[chat_id] = time.time()
         self._emit_event(
             ChatEvent(
                 path=path,
@@ -336,8 +336,8 @@ class ChatManager(LoggingConfigurable):
                 )
                 return
             chat_id = model.get_id()
-            self._models[chat_id] = model
-            self._last_active[chat_id] = time.time()
+            self._chats_by_id[chat_id] = model
+            self._last_activity_by_id[chat_id] = time.time()
             self._emit_event(
                 ChatEvent(
                     path=path,

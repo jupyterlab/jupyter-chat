@@ -110,7 +110,7 @@ def test_inactivity_frees_model(tmp_path):
         model = mgr.ws_open("c.chat")
         assert not model.handlers  # no connected clients
 
-        mgr._last_active[model.get_id()] = time.time() - 10_000  # stale
+        mgr._last_activity_by_id[model.get_id()] = time.time() - 10_000  # stale
         capture.clear()
         mgr._poll()
         await _drain()
@@ -130,7 +130,7 @@ def test_connected_client_keeps_model_alive(tmp_path):
         (tmp_path / "d.chat").write_text("{}")
         model = mgr.ws_open("d.chat")
         model.handlers["client-1"] = object()  # simulate a connected client
-        mgr._last_active[model.get_id()] = time.time() - 10_000
+        mgr._last_activity_by_id[model.get_id()] = time.time() - 10_000
 
         mgr._poll()
         assert mgr.get(model.get_id()) is model  # kept because a client is connected

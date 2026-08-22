@@ -19,7 +19,7 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
     WebSocket handler for a single chat file.
 
     One instance per connected client; all clients connected to the same
-    .chat file share a WsChatModel stored in settings["ws_chat_models"].
+    .chat file share a WsChatModel; the registry lives in settings["chats_by_id"].
     """
     _path: str
 

@@ -63,7 +63,7 @@ def _load_jupyter_server_extension(server_app):
 
     # Create the transport-agnostic chat manager (event bus + model registry +
     # memory management). Under RTC it forwards jupyter_collaboration room events;
-    # under WebSocket it backs the WS handler (owns ``ws_chat_models``).
+    # under WebSocket it backs the WS handler (owns ``chats_by_id``).
     from .chat_manager import ChatManager
 
     chat_manager = ChatManager(server_app, rtc_enabled=rtc_info.enabled)
