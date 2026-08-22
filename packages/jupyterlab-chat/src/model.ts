@@ -306,7 +306,9 @@ export class LabChatModel
       this._wsHandler.ready
         .then(() => {
           if (!this.id) {
-            this.id = UUID.uuid4();
+            // Prefer the server-assigned id (from the connection frame); fall
+            // back to a local id only for older servers that do not send one.
+            this.id = this._wsHandler!.chatId ?? UUID.uuid4();
           }
         })
         .catch(e => console.error('WS chat connection failed', e));

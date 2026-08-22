@@ -59,9 +59,6 @@ class WsChatModel(BaseChatModel):
         self._attachments: Dict[str, dict] = {}
         self._metadata: Dict[str, object] = {}
         self._message_observers: List[MessageObserverCallback] = []
-        # A random id assigned once per model instance. Not persisted to the
-        # chat file: no consumer needs it to be stable across reloads.
-        self._id = uuid.uuid4().hex
 
         # Track in-band moves: a rename via the ContentsManager updates our
         # tracked path, so subsequent saves go to the file's new location. This
@@ -97,6 +94,10 @@ class WsChatModel(BaseChatModel):
             self._metadata = content.get("metadata", {})
         except (FileNotFoundError, json.JSONDecodeError):
             self._metadata = {}
+        # A stable id lives in the chat file's metadata (same as the
+        # collaborative model). Generate one if the file has none yet; it is
+        # persisted on the next save.
+        self._metadata.setdefault("id", uuid.uuid4().hex)
         self._indexes_by_id = {m["id"]: i for i, m in enumerate(self._messages) if "id" in m}
 
     def save(self) -> None:
@@ -150,7 +151,9 @@ class WsChatModel(BaseChatModel):
     # ------------------------------------------------------------------
 
     def get_id(self) -> str:
-        return self._id
+        # The id is stored in the chat file's metadata (same as the
+        # collaborative model). Create one lazily if it does not exist yet.
+        return self._metadata.setdefault("id", uuid.uuid4().hex)  # type: ignore[return-value]
 
     def get_path(self) -> str:
         # The WebSocket model does not use file IDs; its path is tracked
