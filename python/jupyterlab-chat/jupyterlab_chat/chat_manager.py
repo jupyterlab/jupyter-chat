@@ -71,7 +71,6 @@ class ChatManager(LoggingConfigurable):
         self._rtc_enabled = rtc_enabled
 
         self._models: dict[str, "BaseChatModel"] = {}
-        self._room_to_path: dict[str, str] = {}
         self._last_active: dict[str, float] = {}
 
         # Single source of truth for the WS handler (supersedes the ad-hoc
@@ -185,16 +184,18 @@ class ChatManager(LoggingConfigurable):
         return self._models.get(path)
 
     async def create(self, path: str) -> Optional["BaseChatModel"]:
-        """Async get-or-create. Resolves+caches if already open, otherwise
-        instantiates the model (WS: ``WsChatModel`` + ``load_from_file``; RTC:
-        resolve the ``YChat``). Creating an empty chat when the file is missing
-        is expected behavior for WS.
+        """Async get-or-create.
+
+        WS: get-or-create a ``WsChatModel`` (loading from disk; creating an empty
+        chat when the file is missing is expected). RTC: an ``opened`` room event
+        creates and caches the ``YChat``, so this only returns an already-live
+        model and does not create one on demand.
         """
         model = self._models.get(path)
         if model is not None:
             return model
         if self._rtc_enabled:
-            return await self._resolve_ychat_by_path(path)
+            return None
         return self._get_or_create_ws(path)
 
     # ------------------------------------------------------------------
@@ -223,9 +224,6 @@ class ChatManager(LoggingConfigurable):
     def _free(self, path: str, action: ChatEventAction) -> Optional["BaseChatModel"]:
         model = self._models.pop(path, None)
         self._last_active.pop(path, None)
-        for rid, p in list(self._room_to_path.items()):
-            if p == path:
-                del self._room_to_path[rid]
         if model is None:
             return None
         # Capture the stable chat id before disposing: close/delete events fire
@@ -322,12 +320,11 @@ class ChatManager(LoggingConfigurable):
         if len(parts) < 2 or parts[1] != "chat" or not path:
             return
         if action == "initialize":
-            self._room_to_path[room] = path
             self._last_active[path] = time.time()
             # Resolve the YChat: `get_document` loads the file content into the
             # doc before returning, so `get_id()` reads the persisted metadata id
             # (never mints a premature one that could conflict with disk).
-            model = await self._resolve_ychat(room)
+            model = await self._resolve_ychat(room, initial_path=path)
             if model is None:
                 # No usable chat without a resolved model; do not emit an
                 # `opened` event that could not carry a chat_id.
@@ -347,7 +344,7 @@ class ChatManager(LoggingConfigurable):
         elif action == "clean":
             self._free(path, ChatEventAction.CLOSED)
 
-    async def _resolve_ychat(self, room_id: str):
+    async def _resolve_ychat(self, room_id: str, initial_path: str):
         """Resolve the ``YChat`` for a room via jupyter_collaboration. Mirrors
         jupyter-ai-router's approach; guarded because the APIs only exist when an
         RTC provider is installed."""
@@ -356,23 +353,11 @@ class ChatManager(LoggingConfigurable):
             model = await collaboration.get_document(room_id=room_id, copy=False)
             if model is not None:
                 # Record the room id (so get_path() can recover the file id) and
-                # the initial path, both taken from the room lifecycle event
-                # (self._room_to_path is populated from that event's `path`).
+                # the initial path, both taken from the room lifecycle event.
                 # `room_id` is an RTC transport detail kept internal to YChat.
                 model.room_id = room_id
-                model.initial_path = self._room_to_path.get(room_id)
+                model.initial_path = initial_path
             return model
         except Exception as e:  # pragma: no cover - depends on RTC install
             self.log.warning("Could not resolve YChat for room %s: %s", room_id, e)
             return None
-
-    async def _resolve_ychat_by_path(self, path: str):
-        room_id = next(
-            (rid for rid, p in self._room_to_path.items() if p == path), None
-        )
-        if room_id is None:
-            return None
-        model = await self._resolve_ychat(room_id)
-        if model is not None:
-            self._models[path] = model
-        return model
