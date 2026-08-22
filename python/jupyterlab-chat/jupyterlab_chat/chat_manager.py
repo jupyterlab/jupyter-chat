@@ -160,15 +160,14 @@ class ChatManager(LoggingConfigurable):
     # ------------------------------------------------------------------
     # Responsibility 2 -- model access
     # ------------------------------------------------------------------
-    def get(self, query: str) -> Optional["BaseChatModel"]:
-        """Return the live model for a path (or a room id, when RTC is available).
+    def get(self, path: str) -> Optional["BaseChatModel"]:
+        """Return the live model for a chat ``path``, or ``None`` if not live.
 
         Synchronous: an open chat is always already cached (we cache before
-        emitting ``opened``). Returns ``None`` if the chat is not currently live.
+        emitting ``opened``). ``path`` is the canonical key stamped on every
+        lifecycle event; a room id is an RTC transport detail and is never a
+        valid key here.
         """
-        path = self._resolve_path(query)
-        if path is None:
-            return None
         return self._models.get(path)
 
     async def create(self, path: str) -> Optional["BaseChatModel"]:
@@ -183,18 +182,6 @@ class ChatManager(LoggingConfigurable):
         if self._rtc_enabled:
             return await self._resolve_ychat_by_path(path)
         return self._get_or_create_ws(path)
-
-    def _resolve_path(self, query: str) -> Optional[str]:
-        if query in self._models:
-            return query
-        if query in self._room_to_path:
-            return self._room_to_path[query]
-        # A room id ("{fmt}:{type}:{id}") is only meaningful under RTC, and only
-        # resolvable if we have seen its ``opened`` event. We do not depend on a
-        # fileIdManager here; an unknown room id resolves to None.
-        if _looks_like_room_id(query):
-            return None
-        return query  # treat as a path
 
     # ------------------------------------------------------------------
     # Responsibility 3 -- memory management
@@ -367,9 +354,3 @@ class ChatManager(LoggingConfigurable):
         if model is not None:
             self._models[path] = model
         return model
-
-
-def _looks_like_room_id(query: str) -> bool:
-    """Heuristic: RTC room ids have the form ``{file_format}:{file_type}:{file_id}``.
-    A ``.chat`` path never contains ':' on the platforms we support."""
-    return query.count(":") >= 2

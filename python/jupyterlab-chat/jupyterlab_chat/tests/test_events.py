@@ -75,7 +75,7 @@ def test_ws_open_emits_opened_once_and_get(tmp_path):
         # model access
         assert mgr.get("a.chat") is model
         assert mgr.get("missing.chat") is None
-        assert mgr.get("text:chat:xyz") is None  # room id resolves to None w/o RTC
+        assert mgr.get("text:chat:xyz") is None  # unknown key (path) is not live
 
         # second connection to same path: no duplicate `opened`
         capture.clear()
