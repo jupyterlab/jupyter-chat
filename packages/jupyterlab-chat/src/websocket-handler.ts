@@ -299,10 +299,8 @@ export class WebSocketHandler {
       if (this._disposed) {
         return;
       }
-      // Closed before the connection frame arrived: the chat could not be
-      // opened (e.g. the server rejected the path). Fail `ready` so the hosting
-      // widget can surface the error, instead of reconnecting into the same
-      // failure or leaving a spinner hanging forever.
+      // Closed before the connection frame arrived: signal failure so callers can fall
+      // back using a non connected chat (typically in Jupyterlite environment).
       if (!this._connected) {
         this._ready.reject(
           new Error(
