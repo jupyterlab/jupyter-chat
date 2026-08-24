@@ -11,8 +11,8 @@ build:
 
   jobs:
     pre_build:
-      - /bin/bash -c "jlpm install && jlpm build:lite-docs"
-      - /bin/bash -c "pip install docs/jupyter-chat-example"
+      - /bin/bash -c "jlpm install && jlpm build"
+      - /bin/bash -c "pip install python/jupyterlab-chat"
 
 # Build documentation in the docs/ directory with Sphinx
 sphinx:
