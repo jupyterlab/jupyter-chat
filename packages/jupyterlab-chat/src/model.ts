@@ -432,7 +432,10 @@ export class LabChatModel
       body: message.body ?? '',
       time: Date.now() / 1000,
       sender: message.sender ?? this._user,
-      raw_time: true
+      // Set the raw time only if there is a server to update the time to a reference
+      // one (the server time is source of truth). At that stage, without collaboration,
+      // this means that the chat is running without server (jupyterlite).
+      raw_time: this.collaborative ? true : false
     };
 
     this.sharedModel.addMessage(this._contentToYmessage(content));
