@@ -318,8 +318,11 @@ export class WebSocketHandler {
         }, 1000);
       }
     };
-    this._socket.onerror = error =>
-      console.error('WS chat connection error:', error);
+    this._socket.onerror = error => {
+      if (this._connected) {
+        console.error('WS chat connection error:', error);
+      }
+    };
   }
 
   private _path = '';
