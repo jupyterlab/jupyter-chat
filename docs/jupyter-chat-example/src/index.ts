@@ -52,7 +52,8 @@ class ChatContext extends AbstractChatContext {
 class MyChatModel extends AbstractChatModel {
   constructor(options: IChatModel.IOptions) {
     super(options);
-    this.setReady();
+    // This example model has no backend; give it a stable client-side id.
+    this.setReady(UUID.uuid4());
   }
 
   sendMessage(newMessage: INewMessage): string | null {

@@ -92,6 +92,18 @@ export function WritingIndicator(
   return (
     <Box
       className={WRITERS_ELEMENT_CLASSNAME}
+      // The indicator already says something useful, "Alice is typing..." or
+      // "Jupyternaut is running `ripgrep`", but only on screen. Announcing it
+      // politely means a screen reader user learns a reply is coming without
+      // being interrupted mid-sentence.
+      //
+      // The region is the container rather than the text, so it is present in
+      // the accessibility tree before a writer appears and the change is
+      // announced. `aria-atomic` keeps the phrase together: without it a name
+      // change alone can be read out on its own, stripped of its context.
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
       sx={{
         ...props.sx,
         minHeight: '16px'

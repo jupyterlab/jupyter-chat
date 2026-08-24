@@ -38,6 +38,102 @@ const WRITING_DELAY = 1000;
 const WS_WRITING_TIMEOUT = 3000;
 
 /**
+ * Coerce an untrusted value to an `IUser`, or `null` if it is not one.
+ * Awareness state is written by arbitrary clients, so the only field we rely on
+ * is a string `username`.
+ */
+function asUser(value: unknown): IUser | null {
+  if (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof (value as { username?: unknown }).username === 'string'
+  ) {
+    return value as IUser;
+  }
+  return null;
+}
+
+/**
+ * Coerce an untrusted value to an `IWriter`, or `null` if it is not one.
+ */
+function asWriter(value: unknown): IChatModel.IWriter | null {
+  if (typeof value !== 'object' || value === null) {
+    return null;
+  }
+  const record = value as Record<string, unknown>;
+  const user = asUser(record.user);
+  if (!user) {
+    return null;
+  }
+  return {
+    user,
+    messageID:
+      typeof record.messageID === 'string' ? record.messageID : undefined,
+    typingIndicator:
+      typeof record.typingIndicator === 'string'
+        ? record.typingIndicator
+        : undefined
+  };
+}
+
+/**
+ * Build the writers list from the raw awareness states of a collaborative chat.
+ *
+ * Two shapes appear on the shared awareness channel: a peer advertising its own
+ * typing on its own slot (`isWriting`), and the set of writers a server-side
+ * sender (e.g. AI personas) publishes as a `writers` list on a single slot,
+ * since those senders have no awareness client of their own. Duplicate
+ * usernames are collapsed downstream by `updateWriters`.
+ *
+ * Awareness state is untrusted (any client can write anything), so every field
+ * is validated before use and malformed entries are dropped. Exported for tests.
+ */
+export function collectWritersFromAwareness(
+  states: Map<number, Record<string, unknown>>,
+  localUsername: string
+): IChatModel.IWriter[] {
+  const writers: IChatModel.IWriter[] = [];
+  // The current user must never see themselves as a writer, whichever slot
+  // advertises them (their own typing slot, or a server-published set).
+  const pushWriter = (writer: IChatModel.IWriter | null): void => {
+    if (writer && writer.user.username !== localUsername) {
+      writers.push(writer);
+    }
+  };
+  for (const state of states.values()) {
+    if (typeof state !== 'object' || state === null) {
+      continue;
+    }
+
+    // A server-side sender publishes the whole writer set on one slot.
+    if (Array.isArray(state.writers)) {
+      for (const entry of state.writers) {
+        pushWriter(asWriter(entry));
+      }
+    }
+
+    // A peer advertises its own typing on its own slot. `isWriting` is `true`
+    // (writing, no target message) or the string ID of the message being
+    // written; anything else is ignored.
+    const isWriting = state.isWriting;
+    if (isWriting === true || (typeof isWriting === 'string' && isWriting)) {
+      const user = asUser(state.user);
+      if (user) {
+        pushWriter({
+          user,
+          messageID: typeof isWriting === 'string' ? isWriting : undefined,
+          typingIndicator:
+            typeof state.typingIndicator === 'string'
+              ? state.typingIndicator
+              : undefined
+        });
+      }
+    }
+  }
+  return writers;
+}
+
+/**
  * Chat model namespace.
  */
 export namespace LabChatModel {
@@ -182,10 +278,16 @@ export class LabChatModel
     this._readOnly = value;
   }
 
+  // Declaring `set id` in this subclass shadows the base class's accessor
+  // property entirely, so `get id` must be redeclared here too or reading
+  // `.id` on a LabChatModel returns undefined even after `_id` is set.
+  get id(): string | undefined {
+    return super.id;
+  }
   set id(value: string | undefined) {
     super.id = value;
     if (value) {
-      this.setReady();
+      this.setReady(value);
     }
   }
 
@@ -210,15 +312,37 @@ export class LabChatModel
       this._wsHandler.ready
         .then(() => {
           if (!this.id) {
-            this.id = UUID.uuid4();
+            // The server is the single source of truth for the chat id: it is
+            // delivered in the WS connection frame (from `chat.get_id()`). We do
+            // NOT mint a local id, so `model.id` always matches the backend.
+            const serverId = this._wsHandler!.chatId;
+            if (serverId) {
+              this.id = serverId;
+            } else {
+              console.error(
+                'WS chat connection frame did not include a chat id; ' +
+                  'the chat cannot become ready. Is the server up to date?'
+              );
+            }
           }
         })
         .catch(e => console.error('WS chat connection failed', e));
       return;
     }
-    if (!this._sharedModel.id) {
-      // Assigning the shared ID emits a metadata change, which sets the model
-      // ID - and therefore resolves `ready` - through `_onchange`.
+    // The synced document's `id` metadata is the single source of truth for the
+    // chat id under RTC: the server writes it (the same value `chat.get_id()`
+    // returns) and it reaches us through the shared document. When it is already
+    // present at sync time, adopt it and resolve `ready` with it - the initial
+    // sync populates it without emitting an `_onchange` metadata delta, so
+    // nothing else would set the model id and `ready` would never resolve.
+    if (this._sharedModel.id) {
+      this.id = this._sharedModel.id;
+    } else {
+      // Brand-new document with no id yet: assigning the shared id emits a
+      // metadata change that sets the model id - and therefore resolves `ready`
+      // - through `_onchange`. A server-authored id that arrives later is
+      // likewise adopted through `_onchange`. We do NOT mint an id that would
+      // diverge from the server's, since the server reads back this value.
       this._sharedModel.id = UUID.uuid4();
     }
   }
@@ -389,26 +513,15 @@ export class LabChatModel
 
   /**
    * Triggered when an awareness state changes.
-   * Used to populate the writers list.
+   * Used to populate the writers list from the shared awareness channel.
    */
   onAwarenessChange = () => {
-    const writers: IChatModel.IWriter[] = [];
-    const states = this.sharedModel.awareness.getStates();
-    for (const stateID of states.keys()) {
-      const state = states.get(stateID);
-      if (!state || !state.user || state.user.username === this.user.username) {
-        continue;
-      }
-      if (state.isWriting !== undefined && state.isWriting !== false) {
-        const writer: IChatModel.IWriter = {
-          user: state.user,
-          messageID: state.isWriting === true ? undefined : state.isWriting,
-          typingIndicator: state.typingIndicator ?? undefined
-        };
-        writers.push(writer);
-      }
-    }
-    this.updateWriters(writers);
+    this.updateWriters(
+      collectWritersFromAwareness(
+        this.sharedModel.awareness.getStates(),
+        this.user.username
+      )
+    );
   };
 
   /**

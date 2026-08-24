@@ -274,7 +274,15 @@ class BaseChatModel(ABC):
     """
 
     @abstractmethod
-    def get_id(self) -> Optional[str]:
+    def get_id(self) -> str:
+        """Return the stable unique id of this chat. Always a string."""
+        ...
+
+    @abstractmethod
+    def get_path(self) -> str:
+        """Return the path of the file backing this chat model, relative to
+        ``ContentsManager.root_dir``.
+        """
         ...
 
     @abstractmethod
@@ -347,20 +355,23 @@ class BaseChatModel(ABC):
         :meth:`observe_messages`."""
         ...
 
+    @abstractmethod
     def broadcast_writing_status(
         self,
-        user: Union["User", dict],
+        user: "User",
         status: Optional[dict] = None,
     ) -> None:
         """Broadcast an ephemeral "user is writing" status on behalf of ``user``.
 
-        ``user`` is a :class:`User` (or a mapping with at least ``username``),
-        allowing server-side senders such as AI agents -- which each have their
-        own user identity -- to advertise a typing indicator. ``status`` is
-        ``None`` when the user stopped, or a mapping with optional ``messageID``
-        and ``typingIndicator`` keys.
+        ``user`` is a :class:`User`, allowing server-side senders such as AI
+        agents -- which each have their own user identity -- to advertise a
+        typing indicator. ``status`` is ``None`` when the user stopped, or a
+        mapping with optional ``messageID`` and ``typingIndicator`` keys.
 
-        The default implementation is a no-op; transports that support live
-        presence (e.g. the WebSocket model) override it.
+        This is abstract: every transport MUST implement it so the writers API
+        stays transport-complete. The WebSocket model relays a ``writing`` frame
+        to connected clients; the collaborative (:class:`YChat`) model writes the
+        status into the shared awareness channel. Both surface the writer through
+        the same frontend ``writersChanged`` signal.
         """
-        # no-op by default
+        ...

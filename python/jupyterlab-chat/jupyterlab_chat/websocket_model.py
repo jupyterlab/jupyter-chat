@@ -3,12 +3,15 @@
 
 import json
 import logging
+import os
 import time
 import uuid
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union
 
+from jupyter_events import EventLogger
+from jupyter_server.services.contents.manager import ContentsManager
 from tornado import websocket
 
 from .models import (
@@ -27,6 +30,11 @@ from .models import (
 
 _log = logging.getLogger(__name__)
 
+#: Jupyter Server ContentsManager event schema id. The manager emits a
+#: ``rename`` action (with ``source_path`` and ``path``) on in-band
+#: moves/renames.
+CONTENTS_EVENT_SCHEMA_ID = ContentsManager.event_schema_id
+
 
 class WsChatModel(BaseChatModel):
     """
@@ -36,7 +44,12 @@ class WsChatModel(BaseChatModel):
     to the collaborative (YChat) backend.
     """
 
-    def __init__(self, path: str, root_dir: Path):
+    def __init__(
+        self,
+        path: str,
+        root_dir: Path,
+        event_logger: Optional[EventLogger] = None,
+    ):
         self.path = path
         self.root_dir = root_dir
         self.handlers: Dict[str, websocket.WebSocketHandler] = {}
@@ -46,6 +59,17 @@ class WsChatModel(BaseChatModel):
         self._attachments: Dict[str, dict] = {}
         self._metadata: Dict[str, object] = {}
         self._message_observers: List[MessageObserverCallback] = []
+
+        # Track in-band moves: a rename via the ContentsManager updates our
+        # tracked path, so subsequent saves go to the file's new location. This
+        # does not observe out-of-band moves (e.g. `mv` in a terminal), which do
+        # not go through the ContentsManager.
+        self._event_logger = event_logger
+        if event_logger is not None:
+            event_logger.add_listener(
+                schema_id=CONTENTS_EVENT_SCHEMA_ID,
+                listener=self._on_contents_event,
+            )
 
     # ------------------------------------------------------------------
     # Room-level helpers
@@ -69,7 +93,11 @@ class WsChatModel(BaseChatModel):
             self._attachments = content.get("attachments", {})
             self._metadata = content.get("metadata", {})
         except (FileNotFoundError, json.JSONDecodeError):
-            self._metadata = {"id": uuid.uuid4().hex}
+            self._metadata = {}
+        # A stable id lives in the chat file's metadata (same as the
+        # collaborative model). Generate one if the file has none yet; it is
+        # persisted on the next save.
+        self._metadata.setdefault("id", uuid.uuid4().hex)
         self._indexes_by_id = {m["id"]: i for i, m in enumerate(self._messages) if "id" in m}
 
     def save(self) -> None:
@@ -84,29 +112,18 @@ class WsChatModel(BaseChatModel):
             except websocket.WebSocketClosedError:
                 pass
 
-    def broadcast_writing_status(self, user, status=None) -> None:
+    def broadcast_writing_status(self, user: User, status=None) -> None:
         """Broadcast an ephemeral writing status for ``user`` to all clients.
 
-        Not persisted to the ``.chat`` file. ``user`` may be a ``User`` or a
-        mapping (with at least ``username``); ``status`` is ``None`` (stopped) or
-        a mapping with optional ``messageID``/``typingIndicator``. The full user
-        object is included so recipients can display the writer without having
-        seen a message from them.
+        Not persisted to the ``.chat`` file. ``user`` is a :class:`User`;
+        ``status`` is ``None`` (stopped) or a mapping with optional
+        ``messageID``/``typingIndicator``. The full user object is included so
+        recipients can display the writer (and tell bots from humans via
+        ``user.bot``) without having seen a message from them.
         """
-        if isinstance(user, dict):
-            user_dict = user
-        else:
-            user_dict = {
-                "username": user.username,
-                "name": getattr(user, "name", None),
-                "display_name": getattr(user, "display_name", None),
-                "initials": getattr(user, "initials", None),
-                "color": getattr(user, "color", None),
-                "avatar_url": getattr(user, "avatar_url", None),
-            }
         payload: dict = {
             "type": "writing",
-            "user": user_dict,
+            "user": asdict(user),
             "state": status is not None,
         }
         if status:
@@ -133,8 +150,50 @@ class WsChatModel(BaseChatModel):
     # BaseChatModel implementation
     # ------------------------------------------------------------------
 
-    def get_id(self) -> Optional[str]:
-        return self._metadata.get("id")  # type: ignore[return-value]
+    def get_id(self) -> str:
+        # The id is stored in the chat file's metadata (same as the
+        # collaborative model). Create one lazily if it does not exist yet.
+        return self._metadata.setdefault("id", uuid.uuid4().hex)  # type: ignore[return-value]
+
+    def get_path(self) -> str:
+        # The WebSocket model does not use file IDs; its path is tracked
+        # in-process and kept current on in-band moves (see _on_contents_event).
+        return self.path
+
+    async def _on_contents_event(self, logger, schema_id: str, data: dict) -> None:
+        """Update the tracked path when the backing file is moved in-band.
+
+        Calls :meth:`_on_path_change` when the rename affects this file directly
+        or renames one of its ancestor directories. Only ContentsManager
+        (REST/API) operations emit these events; out-of-band moves are not seen.
+        """
+        if data.get("action") != "rename":
+            return
+        source = data.get("source_path")
+        dest = data.get("path")
+        if not source or not dest:
+            return
+        if self.path == source:
+            self._on_path_change(dest)
+        elif os.path.commonpath((source, self.path)) == source:
+            # `self.path` is nested under the renamed directory `source`.
+            self._on_path_change(
+                os.path.join(dest, os.path.relpath(self.path, source))
+            )
+
+    def _on_path_change(self, new_path: str) -> None:
+        """Point the model at ``new_path`` (the file's new location)."""
+        if new_path != self.path:
+            _log.info("Chat file moved: '%s' -> '%s'", self.path, new_path)
+            self.path = new_path
+
+    def dispose(self) -> None:
+        """Remove the ContentsManager event listener when the model is freed."""
+        if self._event_logger is not None:
+            self._event_logger.remove_listener(
+                schema_id=CONTENTS_EVENT_SCHEMA_ID,
+                listener=self._on_contents_event,
+            )
 
     def get_message(self, id: str) -> Optional[Message]:
         idx = self._indexes_by_id.get(id)
