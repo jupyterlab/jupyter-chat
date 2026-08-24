@@ -444,7 +444,11 @@ export class LabChatModel
     const index = this.sharedModel.getMessageIndex(id);
     this.sharedModel.updateMessage(
       index,
-      this._contentToYmessage({ ...updatedMessage, id, edited: true })
+      this._contentToYmessage({
+        ...updatedMessage,
+        id,
+        edited: updatedMessage.sender.bot ? updatedMessage.edited : true
+      })
     );
   }
 
