@@ -3,7 +3,22 @@
 
 """Tests for the RTC-free WebSocket handler connection guards."""
 
-from jupyterlab_chat.websocket_handler import WSChatHandler
+from jupyterlab_chat.websocket_handler import WSChatHandler, is_safe_chat_path
+
+
+def test_is_safe_chat_path_accepts_in_root_paths(tmp_path):
+    assert is_safe_chat_path("a.chat", tmp_path)
+    assert is_safe_chat_path("nested/dir/a.chat", tmp_path)
+    # A ``..`` that resolves back inside root is still safe.
+    assert is_safe_chat_path("nested/../a.chat", tmp_path)
+
+
+def test_is_safe_chat_path_rejects_unsafe_paths(tmp_path):
+    assert not is_safe_chat_path("", tmp_path)
+    assert not is_safe_chat_path("/etc/passwd", tmp_path)
+    assert not is_safe_chat_path("../secret.chat", tmp_path)
+    assert not is_safe_chat_path("a/../../secret.chat", tmp_path)
+    assert not is_safe_chat_path("a\x00b.chat", tmp_path)
 
 
 def test_path_is_instance_attribute_not_class_default():

@@ -325,7 +325,12 @@ export class LabChatModel
             }
           }
         })
-        .catch(e => console.error('WS chat connection failed', e));
+        .catch(e => {
+          console.error('WS chat connection failed', e);
+          // Fail `ready` so the hosting widget disposes the chat and notifies
+          // the user, instead of leaving a loading spinner forever.
+          this.setError(e instanceof Error ? e : new Error(String(e)));
+        });
       return;
     }
     // The synced document's `id` metadata is the single source of truth for the

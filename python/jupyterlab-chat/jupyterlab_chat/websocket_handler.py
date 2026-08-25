@@ -2,6 +2,7 @@
 # Distributed under the terms of the Modified BSD License.
 
 import json
+import os
 import time
 import uuid
 from pathlib import Path
@@ -12,6 +13,24 @@ from tornado import web, websocket
 
 from .models import ChatMessageAction, User
 from .websocket_model import WsChatModel
+
+
+def is_safe_chat_path(path: str, root_dir: Path) -> bool:
+    """Whether ``path`` is a safe, in-root relative chat path.
+
+    Rejects empty, NUL-containing, absolute, and parent-escaping (``..``) paths
+    so a malformed or hostile path can never read or write outside the server
+    root. ``os.path`` is used (not ``posixpath``) as the correct cross-platform
+    choice, and ``commonpath`` confirms the resolved path stays within root.
+    """
+    if not path or "\x00" in path or os.path.isabs(path):
+        return False
+    root = str(root_dir)
+    full = os.path.normpath(os.path.join(root, path))
+    try:
+        return os.path.commonpath((root, full)) == root
+    except ValueError:
+        return False
 
 
 class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
@@ -59,8 +78,10 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
         # tornado url-unescapes the captured route segment, so ``args[0]`` is the
         # decoded chat path (with slashes restored).
         path = args[0] if args else ""
-        if not path:
-            self.close(1008, "Missing or invalid chat path")
+        if not is_safe_chat_path(path, self._root_dir):
+            # 1008 (policy violation): the path is missing, unparseable, or would
+            # escape the server root. The frontend surfaces this to the user.
+            self.close(1008, "Invalid chat path")
             return
 
         self._path = path

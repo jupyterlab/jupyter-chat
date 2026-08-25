@@ -162,6 +162,7 @@ export class WebSocketHandler {
       for (const msg of (data.messages as any[]) ?? []) {
         this._messageReceived.emit(this._toMessageContent(msg));
       }
+      this._connected = true;
       this._ready.resolve();
     } else if (data.type === 'users') {
       const incoming = (data.users as Record<string, IUser>) ?? {};
@@ -242,7 +243,23 @@ export class WebSocketHandler {
       }
     };
     this._socket.onclose = event => {
-      if (event.code === 1006 && !this._disposed) {
+      if (this._disposed) {
+        return;
+      }
+      // Closed before the connection frame arrived: the chat could not be
+      // opened (e.g. the server rejected the path). Fail `ready` so the hosting
+      // widget can surface the error, instead of reconnecting into the same
+      // failure or leaving a spinner hanging forever.
+      if (!this._connected) {
+        this._ready.reject(
+          new Error(
+            `Chat WebSocket was closed before opening (code ${event.code})`
+          )
+        );
+        return;
+      }
+      // An established connection dropped abnormally: try to reconnect.
+      if (event.code === 1006) {
         setTimeout(() => {
           if (!this._disposed) {
             this._openSocket();
@@ -256,6 +273,7 @@ export class WebSocketHandler {
 
   private _path = '';
   private _disposed = false;
+  private _connected = false;
   private _chatId: string | undefined;
   private _socket: WebSocket | null = null;
   private _serverSettings: ServerConnection.ISettings;

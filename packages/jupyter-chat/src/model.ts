@@ -318,9 +318,14 @@ export abstract class AbstractChatModel implements IChatModel {
 
     this._readyDelegate = new PromiseDelegate<string>();
 
-    this.ready.then(() => {
-      this._inputModel.chatContext = this.createChatContext();
-    });
+    this.ready
+      .then(() => {
+        this._inputModel.chatContext = this.createChatContext();
+      })
+      .catch(() => {
+        // `ready` was rejected (the chat failed to open); no context is created.
+        // The failure is surfaced to the user by the hosting widget.
+      });
   }
 
   /**
@@ -439,6 +444,18 @@ export abstract class AbstractChatModel implements IChatModel {
    */
   protected setReady(id: string): void {
     this._readyDelegate.resolve(id);
+  }
+
+  /**
+   * Mark the chat as failed to become ready, rejecting `ready`.
+   *
+   * Used when the chat can never become usable - e.g. the WebSocket connection
+   * was closed by the server before the connection frame arrived. Consumers of
+   * `ready` (such as the widgets that show a loading spinner) can then react to
+   * the failure instead of hanging forever.
+   */
+  protected setError(reason: unknown): void {
+    this._readyDelegate.reject(reason);
   }
 
   /**
