@@ -6,7 +6,7 @@ import json
 import time
 import uuid
 from pathlib import Path
-from typing import Dict
+from typing import Any, Dict
 
 from jupyter_server.base.handlers import JupyterHandler
 from tornado import web, websocket
@@ -39,12 +39,17 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
     One instance per connected client; all clients connected to the same
     .chat file share a WsChatModel; the registry lives in settings["chats_by_id"].
     """
-    # A real default (not just an annotation) so ``self._path`` resolves even
-    # when the connection closes before ``open()`` runs -- e.g. a connection
-    # that never sends a decodable chat path, causing ``open()`` to
-    # ``self.close()`` and return early. Both ``on_message`` and ``on_close``
-    # treat a falsy ``_path`` as "never opened" and return.
-    _path: str = ""
+    _path: str
+
+    def initialize(self, *args: Any, **kwargs: Any) -> None:
+        super().initialize(*args, **kwargs)
+        # Set as an instance attribute (not a class-level default) so
+        # ``self._path`` always resolves -- including when the connection closes
+        # before ``open()`` runs, e.g. a connection that never sends a decodable
+        # chat path, so ``open()`` calls ``self.close()`` and returns early.
+        # Both ``on_message`` and ``on_close`` treat a falsy ``_path`` as
+        # "never opened" and return.
+        self._path = ""
 
     @property
     def _chat_manager(self):

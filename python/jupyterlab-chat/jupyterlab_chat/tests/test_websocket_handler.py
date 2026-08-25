@@ -32,12 +32,22 @@ def test_decode_chat_path_invalid_segment_returns_empty():
     assert decode_chat_path("@@@not-base64@@@") == ""
 
 
+def test_path_is_instance_attribute_not_class_default():
+    # `_path` is a plain annotation with no class-level default; `initialize()`
+    # sets it as an instance attribute so it always resolves.
+    assert "_path" not in vars(WSChatHandler)
+    handler = WSChatHandler.__new__(WSChatHandler)
+    handler.initialize()
+    assert handler._path == ""
+
+
 def test_on_close_is_noop_when_connection_never_opened():
     """A connection that closes before ``open()`` set ``_path`` must not raise.
 
-    ``_path`` has a real class default of "" so ``on_close`` reads it safely and
-    returns early instead of raising ``AttributeError``.
+    ``initialize()`` sets ``_path`` to "" as an instance attribute, so
+    ``on_close`` reads it safely and returns early instead of raising
+    ``AttributeError``.
     """
     handler = WSChatHandler.__new__(WSChatHandler)
-    assert handler._path == ""
+    handler.initialize()
     handler.on_close()  # no-op, no exception
