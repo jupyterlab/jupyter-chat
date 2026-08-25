@@ -17,7 +17,7 @@ import { webSocketOnly } from './tags';
  * side panel with an unsafe path.
  */
 const UNSAFE_PATH = '../../../invalid-chat-path.chat';
-const CHAT_PANEL_ID = 'jupyter-chat::multi-chat-panel';
+const CHAT_PANEL_ID = 'JupyterlabChat:sidepanel';
 
 test.describe('#invalid-chat-path', webSocketOnly, () => {
   test('side panel closes the chat and notifies on server rejection', async ({
@@ -27,8 +27,11 @@ test.describe('#invalid-chat-path', webSocketOnly, () => {
       async ({ unsafePath, panelId }) => {
         const app = (window as any).jupyterapp;
         let chatPanel: any = null;
-        for (const widget of app.shell.widgets('left')) {
-          if (widget.id === panelId) {
+        for (const widget of Array.from(app.shell.widgets('left')) as any[]) {
+          if (
+            widget.id === panelId ||
+            (widget.hasClass && widget.hasClass('jp-chat-sidepanel'))
+          ) {
             chatPanel = widget;
             break;
           }
@@ -49,13 +52,15 @@ test.describe('#invalid-chat-path', webSocketOnly, () => {
       { unsafePath: UNSAFE_PATH, panelId: CHAT_PANEL_ID }
     );
 
-    // An error notification is shown to the user.
-    await expect(
-      page.getByText(/Unable to open chat at given path/)
-    ).toBeVisible();
-
     // The chat is closed: no loading spinner is left hanging in the panel.
     const chatPanel = page.locator(`[id="${CHAT_PANEL_ID}"]`);
     await expect(chatPanel.locator('.jp-Spinner')).toHaveCount(0);
+
+    // An error notification was emitted; open the notification center and
+    // verify its message.
+    await page.locator('.jp-Notification-Status').click();
+    await expect(
+      page.getByText(/Unable to open chat at given path/)
+    ).toBeVisible();
   });
 });
