@@ -9,19 +9,29 @@ import { ServerConnection } from '@jupyterlab/services';
 import { PromiseDelegate, UUID } from '@lumino/coreutils';
 import { ISignal, Signal } from '@lumino/signaling';
 
-const WS_PATH = 'api/jupyter-chat/ws';
+const WS_PATH = 'api/chat/ws';
+
+/**
+ * Encode a chat path as a single URL-safe segment.
+ *
+ * The path is base64url-encoded (no padding) so it can contain slashes and
+ * other characters while remaining a single, unambiguous URL path segment.
+ */
+function encodePathSegment(path: string): string {
+  const bytes = new TextEncoder().encode(path);
+  let binary = '';
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+  return btoa(binary)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
 
 export namespace WebSocketHandler {
   export interface IOptions {
     serverSettings: ServerConnection.ISettings;
-    /**
-     * The local user identity. Carried on outgoing message frames so the
-     * server records the sender as the client's identity (matching the
-     * collaborative mode, where the sender is set on the frontend). Optional
-     * for backward compatibility — the server falls back to its authenticated
-     * user when absent.
-     */
-    user?: IUser;
   }
 
   /**
@@ -60,14 +70,6 @@ export namespace WebSocketHandler {
 export class WebSocketHandler {
   constructor(options: WebSocketHandler.IOptions) {
     this._serverSettings = options.serverSettings;
-    this._user = options.user ?? null;
-  }
-
-  /**
-   * The local user identity, carried on outgoing message frames.
-   */
-  set user(value: IUser | null) {
-    this._user = value;
   }
 
   /**
@@ -137,9 +139,6 @@ export class WebSocketHandler {
     }
     if (message.metadata) {
       msg.metadata = message.metadata;
-    }
-    if (this._user) {
-      msg.user = this._user;
     }
     this._send(msg);
     return id;
@@ -248,14 +247,13 @@ export class WebSocketHandler {
   }
 
   private _openSocket(): void {
-    const wsUrl = URLExt.join(this._serverSettings.wsUrl, WS_PATH);
+    const wsUrl = URLExt.join(
+      this._serverSettings.wsUrl,
+      WS_PATH,
+      encodePathSegment(this._path)
+    );
     const token = this._serverSettings.token;
-    const url =
-      `${wsUrl}?path=${encodeURIComponent(this._path)}` +
-      (token ? `&token=${encodeURIComponent(token)}` : '') +
-      (this._user
-        ? `&user=${encodeURIComponent(JSON.stringify(this._user))}`
-        : '');
+    const url = token ? `${wsUrl}?token=${encodeURIComponent(token)}` : wsUrl;
 
     this._socket = new WebSocket(url);
     this._socket.onmessage = event => {
@@ -281,7 +279,6 @@ export class WebSocketHandler {
   private _path = '';
   private _disposed = false;
   private _chatId: string | undefined;
-  private _user: IUser | null = null;
   private _socket: WebSocket | null = null;
   private _serverSettings: ServerConnection.ISettings;
   private _usersMap: Record<string, IUser> = {};

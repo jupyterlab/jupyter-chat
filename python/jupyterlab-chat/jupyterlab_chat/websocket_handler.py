@@ -1,6 +1,7 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import base64
 import json
 import time
 import uuid
@@ -14,6 +15,23 @@ from .models import ChatMessageAction, User
 from .websocket_model import WsChatModel
 
 
+def decode_chat_path(segment: str) -> str:
+    """Decode a chat path from its URL segment.
+
+    The path is carried as a single URL-safe base64 segment (no padding) so it
+    can contain slashes and other characters without needing to be a valid,
+    unambiguous URL path on its own. Returns an empty string when the segment is
+    missing or cannot be decoded.
+    """
+    if not segment:
+        return ""
+    try:
+        padding = "=" * (-len(segment) % 4)
+        return base64.urlsafe_b64decode(segment + padding).decode("utf-8")
+    except (ValueError, UnicodeDecodeError):
+        return ""
+
+
 class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
     """
     WebSocket handler for a single chat file.
@@ -21,7 +39,12 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
     One instance per connected client; all clients connected to the same
     .chat file share a WsChatModel; the registry lives in settings["chats_by_id"].
     """
-    _path: str
+    # A real default (not just an annotation) so ``self._path`` resolves even
+    # when the connection closes before ``open()`` runs -- e.g. a connection
+    # that never sends a decodable chat path, causing ``open()`` to
+    # ``self.close()`` and return early. Both ``on_message`` and ``on_close``
+    # treat a falsy ``_path`` as "never opened" and return.
+    _path: str = ""
 
     @property
     def _chat_manager(self):
@@ -45,37 +68,10 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
         if result is not None:
             await result
 
-    def _parse_client_user(self):
-        """Parse the optional client-provided identity from the connect query.
-
-        Returns a ``User`` built from the frontend's ``user`` query argument, or
-        ``None`` when it is absent or malformed.
-        """
-        raw = self.get_query_argument("user", None)
-        if not raw:
-            return None
-        try:
-            data = json.loads(raw)
-        except (json.JSONDecodeError, TypeError):
-            return None
-        if not isinstance(data, dict):
-            return None
-        username = data.get("username")
-        if not username:
-            return None
-        return User(
-            username=username,
-            name=data.get("name") or username,
-            display_name=data.get("display_name") or username,
-            initials=data.get("initials") or username[0].upper(),
-            color=data.get("color"),
-            avatar_url=data.get("avatar_url"),
-        )
-
     def open(self, *args: str, **kwargs: str):
-        path = self.get_query_argument("path", None)
-        if path is None:
-            self.close(1008, "Missing 'path' query parameter")
+        path = decode_chat_path(args[0] if args else "")
+        if not path:
+            self.close(1008, "Missing or invalid chat path")
             return
 
         self._path = path
@@ -87,13 +83,12 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
         self._model = model
         model.handlers[self._client_id] = self
 
-        # Register the connecting user. Prefer the client-provided identity
-        # (matching collaborative mode, where the user is set on the frontend)
-        # so it equals the frontend's own identity and is excluded from its own
-        # mention suggestions. Fall back to the authenticated server user for
-        # older clients that do not send their identity.
+        # Register the connecting user using the server's authenticated identity.
+        # The WS transport is single-user, so every connection -- from any tab or
+        # client -- is the same authenticated user; there is no separate frontend
+        # identity to carry.
         current_user = self.current_user
-        user = self._parse_client_user() or User(
+        user = User(
             username=current_user.username,
             name=current_user.name or current_user.username,
             display_name=current_user.display_name or current_user.username,
@@ -147,19 +142,9 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
 
     def _handle_new_message(self, data: dict, model: WsChatModel) -> None:
         timestamp = time.time()
-        # Prefer the client-provided identity as the sender, matching the
-        # collaborative mode where the sender is set on the frontend. Fall back
-        # to the authenticated server user for older clients that do not send
-        # their identity.
-        client_user = data.get("user")
-        new_user_registered = False
-        if isinstance(client_user, dict) and client_user.get("username"):
-            sender = client_user["username"]
-            if model._users.get(sender) != client_user:
-                model._users[sender] = client_user
-                new_user_registered = True
-        else:
-            sender = self.current_user.username
+        # The WS transport is single-user: the sender is always the
+        # authenticated server user, already registered in `open()`.
+        sender = self.current_user.username
         message: dict = {
             "id": data.get("id") or str(uuid.uuid4()),
             "body": data.get("body", ""),
@@ -181,10 +166,6 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
         model._messages.insert(idx, message)
         model._indexes_by_id = {m["id"]: i for i, m in enumerate(model._messages)}
         model.save()
-        # If we learned a new sender identity, tell all clients first so they can
-        # resolve the sender (display name/avatar) when the message arrives.
-        if new_user_registered:
-            model.broadcast(json.dumps({"type": "users", "users": model._users}))
         model.broadcast(
             json.dumps({"type": "msg", "message": model.resolve_message(message)})
         )

@@ -230,8 +230,7 @@ export class LabChatModel
 
     if (!this.collaborative && options.serverSettings) {
       this._wsHandler = new WebSocketHandler({
-        serverSettings: options.serverSettings,
-        user: this._user
+        serverSettings: options.serverSettings
       });
       this._wsHandler.messageReceived.connect(this._onWsMessage, this);
       this._wsHandler.usersChanged.connect(this._onWsUsersChanged, this);
