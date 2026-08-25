@@ -11,24 +11,6 @@ import { ISignal, Signal } from '@lumino/signaling';
 
 const WS_PATH = 'api/chat/ws';
 
-/**
- * Encode a chat path as a single URL-safe segment.
- *
- * The path is base64url-encoded (no padding) so it can contain slashes and
- * other characters while remaining a single, unambiguous URL path segment.
- */
-function encodePathSegment(path: string): string {
-  const bytes = new TextEncoder().encode(path);
-  let binary = '';
-  for (const byte of bytes) {
-    binary += String.fromCharCode(byte);
-  }
-  return btoa(binary)
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
-}
-
 export namespace WebSocketHandler {
   export interface IOptions {
     serverSettings: ServerConnection.ISettings;
@@ -247,11 +229,7 @@ export class WebSocketHandler {
   }
 
   private _openSocket(): void {
-    const wsUrl = URLExt.join(
-      this._serverSettings.wsUrl,
-      WS_PATH,
-      encodePathSegment(this._path)
-    );
+    const wsUrl = `${URLExt.join(this._serverSettings.wsUrl, WS_PATH)}/${encodeURIComponent(this._path)}`;
     const token = this._serverSettings.token;
     const url = token ? `${wsUrl}?token=${encodeURIComponent(token)}` : wsUrl;
 

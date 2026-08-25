@@ -1,7 +1,6 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-import base64
 import json
 import time
 import uuid
@@ -13,23 +12,6 @@ from tornado import web, websocket
 
 from .models import ChatMessageAction, User
 from .websocket_model import WsChatModel
-
-
-def decode_chat_path(segment: str) -> str:
-    """Decode a chat path from its URL segment.
-
-    The path is carried as a single URL-safe base64 segment (no padding) so it
-    can contain slashes and other characters without needing to be a valid,
-    unambiguous URL path on its own. Returns an empty string when the segment is
-    missing or cannot be decoded.
-    """
-    if not segment:
-        return ""
-    try:
-        padding = "=" * (-len(segment) % 4)
-        return base64.urlsafe_b64decode(segment + padding).decode("utf-8")
-    except (ValueError, UnicodeDecodeError):
-        return ""
 
 
 class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
@@ -74,7 +56,9 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
             await result
 
     def open(self, *args: str, **kwargs: str):
-        path = decode_chat_path(args[0] if args else "")
+        # tornado url-unescapes the captured route segment, so ``args[0]`` is the
+        # decoded chat path (with slashes restored).
+        path = args[0] if args else ""
         if not path:
             self.close(1008, "Missing or invalid chat path")
             return

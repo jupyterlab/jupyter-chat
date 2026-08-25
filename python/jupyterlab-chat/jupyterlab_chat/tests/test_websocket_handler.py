@@ -1,35 +1,9 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
-"""Tests for the RTC-free WebSocket handler path encoding and connection guards."""
+"""Tests for the RTC-free WebSocket handler connection guards."""
 
-import base64
-
-from jupyterlab_chat.websocket_handler import WSChatHandler, decode_chat_path
-
-
-def _urlsafe_b64_no_pad(text: str) -> str:
-    """Encode like the frontend does: URL-safe base64 without padding."""
-    return base64.urlsafe_b64encode(text.encode("utf-8")).decode("ascii").rstrip("=")
-
-
-def test_decode_chat_path_roundtrips_paths_with_slashes():
-    path = "some/nested/folder/my chat.chat"
-    assert decode_chat_path(_urlsafe_b64_no_pad(path)) == path
-
-
-def test_decode_chat_path_roundtrips_unicode():
-    path = "café/notebooks/чат.chat"
-    assert decode_chat_path(_urlsafe_b64_no_pad(path)) == path
-
-
-def test_decode_chat_path_empty_segment_returns_empty():
-    assert decode_chat_path("") == ""
-
-
-def test_decode_chat_path_invalid_segment_returns_empty():
-    # Not valid base64url -> treated as "no path" rather than raising.
-    assert decode_chat_path("@@@not-base64@@@") == ""
+from jupyterlab_chat.websocket_handler import WSChatHandler
 
 
 def test_path_is_instance_attribute_not_class_default():
