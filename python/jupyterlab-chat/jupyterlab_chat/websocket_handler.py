@@ -5,6 +5,7 @@ import json
 import os
 import time
 import uuid
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Dict
 
@@ -108,11 +109,15 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
         )
         model.set_user(user)
 
-        # Send full history so the client can render existing messages
+        # Send full history so the client can render existing messages. The
+        # connecting user's identity is included so the client adopts the same
+        # (server-authoritative) identity the server registered for it -- used
+        # for sender attribution and to exclude itself from mention suggestions.
         self.write_message(json.dumps({
             "type": "connection",
             "client_id": self._client_id,
             "id": model.get_id(),
+            "user": asdict(user),
             "messages": [model.resolve_message(m) for m in model._messages],
             "users": model._users,
         }))
