@@ -74,7 +74,7 @@ def _load_jupyter_server_extension(server_app):
     if not rtc_info.enabled:
         base_url = server_app.web_app.settings.get("base_url", "/")
         server_app.web_app.add_handlers(".*$", [
-            (url_path_join(base_url, "api/jupyter-chat/ws"), WSChatHandler),
+            (url_path_join(base_url, "api/chat/ws", "(.+)"), WSChatHandler),
         ])
 
     name = "jupyterlab_chat"

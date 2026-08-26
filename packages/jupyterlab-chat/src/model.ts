@@ -230,8 +230,7 @@ export class LabChatModel
 
     if (!this.collaborative && options.serverSettings) {
       this._wsHandler = new WebSocketHandler({
-        serverSettings: options.serverSettings,
-        user: this._user
+        serverSettings: options.serverSettings
       });
       this._wsHandler.messageReceived.connect(this._onWsMessage, this);
       this._wsHandler.usersChanged.connect(this._onWsUsersChanged, this);
@@ -311,22 +310,31 @@ export class LabChatModel
       this._wsHandler.initialize();
       this._wsHandler.ready
         .then(() => {
+          // The connection frame carries both the chat id and the identity the
+          // server registered for this connection. The chat is not ready until
+          // both are known: the client adopts the server-assigned identity (the
+          // RTC-free server owns identity) and takes the server's chat id.
+          const wsUser = this._wsHandler!.connectedUser;
+          const serverId = this._wsHandler!.chatId;
+          if (!wsUser || !serverId) {
+            console.error(
+              'WS chat connection frame did not include the user identity ' +
+                'and chat id; the chat cannot become ready. Is the server up ' +
+                'to date?'
+            );
+            return;
+          }
+          this._user = new LabChatUser(wsUser);
           if (!this.id) {
-            // The server is the single source of truth for the chat id: it is
-            // delivered in the WS connection frame (from `chat.get_id()`). We do
-            // NOT mint a local id, so `model.id` always matches the backend.
-            const serverId = this._wsHandler!.chatId;
-            if (serverId) {
-              this.id = serverId;
-            } else {
-              console.error(
-                'WS chat connection frame did not include a chat id; ' +
-                  'the chat cannot become ready. Is the server up to date?'
-              );
-            }
+            this.id = serverId;
           }
         })
-        .catch(e => console.error('WS chat connection failed', e));
+        .catch(e => {
+          console.error('WS chat connection failed', e);
+          // Fail `ready` so the hosting widget disposes the chat and notifies
+          // the user, instead of leaving a loading spinner forever.
+          this.setError(e instanceof Error ? e : new Error(String(e)));
+        });
       return;
     }
     // The synced document's `id` metadata is the single source of truth for the

@@ -11,6 +11,31 @@ from jupyterlab.galata import configure_jupyter_server
 
 configure_jupyter_server(c)
 
+# The RTC-free chat WebSocket derives the sender identity from the server's
+# authenticated user, and the client adopts that same identity. The default
+# identity provider mints a *random* anonymous user on each generation, so the
+# REST (`/api/me`) identity and the chat WebSocket identity could differ and
+# were not reproducible. Return a single fixed user instead: this keeps the two
+# identical and stable (deterministic screenshots and ownership checks), and it
+# matches the `USER` constant the frontend tests use. Patching the method on the
+# base class (rather than swapping the provider class) preserves the auth
+# configuration galata already applied.
+from jupyter_server.auth.identity import IdentityProvider, User
+
+
+def _fixed_anonymous_user(self, handler):
+    return User(
+        username="test-user",
+        name="jovyan",
+        display_name="jovyan",
+        initials="JP",
+        avatar_url=None,
+        color="var(--jp-collaborator-color1)",
+    )
+
+
+IdentityProvider.generate_anonymous_user = _fixed_anonymous_user
+
 # Bind a configurable port (defaults to 8888, unchanged) so a parallel
 # worktree/checkout can run the suite on its own port. Kept in sync with
 # TEST_PORT in playwright.config.js.

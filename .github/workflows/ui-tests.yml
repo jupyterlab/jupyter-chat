@@ -45,14 +45,14 @@ jobs:
             galata: '^5.6.0'
             # Latest line owns the reference snapshots, so comparisons run.
             ignore_snapshots: ''
-            grep_invert: ''
+            grep_invert: '@websocket'
           - name: 'JupyterLab <4.6 + Collaboration v4'
             jupyterlab: '>=4.2,<4.6'
             collaboration: '~=4.0'
             galata: '~5.5.10'
             # No version-specific snapshots for this line; skip comparisons.
             ignore_snapshots: '1'
-            grep_invert: ''
+            grep_invert: '@websocket'
           # --- RTC-free jobs: jupyter_collaboration NOT installed ---
           - name: 'JupyterLab >=4.6'
             jupyterlab: '>=4.6,<4.7'

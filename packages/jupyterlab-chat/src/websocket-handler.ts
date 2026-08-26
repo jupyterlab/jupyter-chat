@@ -9,19 +9,11 @@ import { ServerConnection } from '@jupyterlab/services';
 import { PromiseDelegate, UUID } from '@lumino/coreutils';
 import { ISignal, Signal } from '@lumino/signaling';
 
-const WS_PATH = 'api/jupyter-chat/ws';
+const WS_PATH = 'api/chat/ws';
 
 export namespace WebSocketHandler {
   export interface IOptions {
     serverSettings: ServerConnection.ISettings;
-    /**
-     * The local user identity. Carried on outgoing message frames so the
-     * server records the sender as the client's identity (matching the
-     * collaborative mode, where the sender is set on the frontend). Optional
-     * for backward compatibility — the server falls back to its authenticated
-     * user when absent.
-     */
-    user?: IUser;
   }
 
   /**
@@ -60,14 +52,6 @@ export namespace WebSocketHandler {
 export class WebSocketHandler {
   constructor(options: WebSocketHandler.IOptions) {
     this._serverSettings = options.serverSettings;
-    this._user = options.user ?? null;
-  }
-
-  /**
-   * The local user identity, carried on outgoing message frames.
-   */
-  set user(value: IUser | null) {
-    this._user = value;
   }
 
   /**
@@ -111,6 +95,15 @@ export class WebSocketHandler {
     return this._chatId;
   }
 
+  /**
+   * The identity the server registered for this connection, received on the
+   * connection message. Available once `ready` has resolved; `undefined`
+   * against older servers that do not send it.
+   */
+  get connectedUser(): IUser | undefined {
+    return this._connectedUser;
+  }
+
   setPath(path: string): void {
     this._path = path;
   }
@@ -137,9 +130,6 @@ export class WebSocketHandler {
     }
     if (message.metadata) {
       msg.metadata = message.metadata;
-    }
-    if (this._user) {
-      msg.user = this._user;
     }
     this._send(msg);
     return id;
@@ -176,11 +166,13 @@ export class WebSocketHandler {
   private _handleMessage(data: any): void {
     if (data.type === 'connection') {
       this._chatId = data.id as string | undefined;
+      this._connectedUser = (data.user as IUser) ?? undefined;
       this._usersMap = (data.users as Record<string, IUser>) ?? {};
       this._usersChanged.emit(this._usersMap);
       for (const msg of (data.messages as any[]) ?? []) {
         this._messageReceived.emit(this._toMessageContent(msg));
       }
+      this._connected = true;
       this._ready.resolve();
     } else if (data.type === 'users') {
       const incoming = (data.users as Record<string, IUser>) ?? {};
@@ -248,14 +240,9 @@ export class WebSocketHandler {
   }
 
   private _openSocket(): void {
-    const wsUrl = URLExt.join(this._serverSettings.wsUrl, WS_PATH);
+    const wsUrl = `${URLExt.join(this._serverSettings.wsUrl, WS_PATH)}/${encodeURIComponent(this._path)}`;
     const token = this._serverSettings.token;
-    const url =
-      `${wsUrl}?path=${encodeURIComponent(this._path)}` +
-      (token ? `&token=${encodeURIComponent(token)}` : '') +
-      (this._user
-        ? `&user=${encodeURIComponent(JSON.stringify(this._user))}`
-        : '');
+    const url = token ? `${wsUrl}?token=${encodeURIComponent(token)}` : wsUrl;
 
     this._socket = new WebSocket(url);
     this._socket.onmessage = event => {
@@ -266,7 +253,23 @@ export class WebSocketHandler {
       }
     };
     this._socket.onclose = event => {
-      if (event.code === 1006 && !this._disposed) {
+      if (this._disposed) {
+        return;
+      }
+      // Closed before the connection frame arrived: the chat could not be
+      // opened (e.g. the server rejected the path). Fail `ready` so the hosting
+      // widget can surface the error, instead of reconnecting into the same
+      // failure or leaving a spinner hanging forever.
+      if (!this._connected) {
+        this._ready.reject(
+          new Error(
+            `Chat WebSocket was closed before opening (code ${event.code})`
+          )
+        );
+        return;
+      }
+      // An established connection dropped abnormally: try to reconnect.
+      if (event.code === 1006) {
         setTimeout(() => {
           if (!this._disposed) {
             this._openSocket();
@@ -280,8 +283,9 @@ export class WebSocketHandler {
 
   private _path = '';
   private _disposed = false;
+  private _connected = false;
   private _chatId: string | undefined;
-  private _user: IUser | null = null;
+  private _connectedUser: IUser | undefined;
   private _socket: WebSocket | null = null;
   private _serverSettings: ServerConnection.ISettings;
   private _usersMap: Record<string, IUser> = {};

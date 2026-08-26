@@ -4,6 +4,7 @@
  */
 
 import { ChatArea, ChatWidget, IChatModel, IChatPanel } from '@jupyter/chat';
+import { Notification } from '@jupyterlab/apputils';
 import { DocumentWidget } from '@jupyterlab/docregistry';
 
 import { LabChatModel } from './model';
@@ -28,6 +29,15 @@ export class LabChatPanel
     this.context.ready
       .then(() => this.model.markDocumentSynced())
       .catch(e => console.error('The chat document failed to load', e));
+    // If the chat can never become ready (e.g. the server closed the WebSocket
+    // because the path was invalid), dispose this widget so no loading spinner
+    // is left hanging, and let the user know.
+    this.model.ready.catch(() => {
+      Notification.error(
+        `Unable to open chat at given path: '${this.model.name}'.`
+      );
+      this.dispose();
+    });
   }
 
   /**
