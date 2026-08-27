@@ -137,9 +137,10 @@ export class YChat extends YDocument<IChatChanges> {
   getSource(): JSONObject {
     const users = this._users.toJSON();
     const messages = this._messages.toJSON();
+    const attachments = this._attachments.toJSON();
     const metadata = this._metadata.toJSON();
 
-    return { users, messages, metadata };
+    return { users, messages, attachments, metadata };
   }
 
   setSource(value: JSONObject): void {
@@ -162,6 +163,11 @@ export class YChat extends YDocument<IChatChanges> {
       const users = value['users'] ?? {};
       Object.entries(users).forEach(([key, val]) =>
         this._users.set(key, val as IUser)
+      );
+
+      const attachments = value['attachments'] ?? {};
+      Object.entries(attachments).forEach(([key, val]) =>
+        this._attachments.set(key, val as IAttachment)
       );
 
       const metadata = value['metadata'] ?? {};
