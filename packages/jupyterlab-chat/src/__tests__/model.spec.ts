@@ -48,8 +48,7 @@ describe('LabChatModel', () => {
       sharedModel,
       collaborative: true
     });
-    // Resolve the ready promise so messagesInserted can proceed.
-    model.id = UUID.uuid4();
+    model.markDocumentSynced();
   });
 
   afterEach(() => {
@@ -146,6 +145,95 @@ describe('LabChatModel', () => {
       await flushPromises();
 
       expect(model.messages[0].mime_model).toEqual(mimeModel);
+    });
+  });
+
+  describe('ready resolves after messages are loaded', () => {
+    it('messages present in sharedModel before sync are buffered, not yet in model', () => {
+      const sm = YChat.create();
+      const m = new LabChatModel({
+        widgetConfig: makeWidgetConfig(),
+        user: TEST_USER,
+        sharedModel: sm,
+        collaborative: true
+      });
+      sm.addMessage({
+        type: 'msg',
+        id: UUID.uuid4(),
+        body: 'pre-sync',
+        time: 1000,
+        sender: TEST_USER.username
+      });
+      // Not yet synced: message must be buffered, not inserted.
+      expect(m.messages).toHaveLength(0);
+      sm.dispose();
+    });
+
+    it('messages are in model.messages when ready resolves', async () => {
+      const sm = YChat.create();
+      const m = new LabChatModel({
+        widgetConfig: makeWidgetConfig(),
+        user: TEST_USER,
+        sharedModel: sm,
+        collaborative: true
+      });
+      sm.addMessage({
+        type: 'msg',
+        id: UUID.uuid4(),
+        body: 'pre-sync',
+        time: 1000,
+        sender: TEST_USER.username
+      });
+
+      m.markDocumentSynced();
+      await m.ready;
+
+      expect(m.messages).toHaveLength(1);
+      expect(m.messages[0].body).toBe('pre-sync');
+      sm.dispose();
+    });
+
+    it('model.messages is already populated inside the ready .then() callback', async () => {
+      const sm = YChat.create();
+      const m = new LabChatModel({
+        widgetConfig: makeWidgetConfig(),
+        user: TEST_USER,
+        sharedModel: sm,
+        collaborative: true
+      });
+      sm.addMessage({
+        type: 'msg',
+        id: UUID.uuid4(),
+        body: 'pre-sync',
+        time: 1000,
+        sender: TEST_USER.username
+      });
+
+      let messagesAtReady = -1;
+      const check = m.ready.then(() => {
+        messagesAtReady = m.messages.length;
+      });
+
+      m.markDocumentSynced();
+      await check;
+
+      expect(messagesAtReady).toBe(1);
+      sm.dispose();
+    });
+
+    it('messages added after sync are inserted directly without buffering', async () => {
+      await model.ready;
+
+      sharedModel.addMessage({
+        type: 'msg',
+        id: UUID.uuid4(),
+        body: 'post-sync',
+        time: 1000,
+        sender: TEST_USER.username
+      });
+
+      expect(model.messages).toHaveLength(1);
+      expect(model.messages[0].body).toBe('post-sync');
     });
   });
 

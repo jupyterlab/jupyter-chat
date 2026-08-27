@@ -286,9 +286,12 @@ export class LabChatModel
   }
   set id(value: string | undefined) {
     super.id = value;
-    if (value) {
-      this.setReady(value);
-    }
+  }
+
+  protected setReady(id: string): void {
+    this._documentSynced = true;
+    this._flushPreReadyMessages();
+    super.setReady(id);
   }
 
   /**
@@ -326,9 +329,8 @@ export class LabChatModel
             return;
           }
           this._user = new LabChatUser(wsUser);
-          if (!this.id) {
-            this.id = serverId;
-          }
+          this.id = serverId;
+          this.setReady(serverId);
         })
         .catch(e => {
           this._wsHandler?.dispose();
@@ -347,6 +349,8 @@ export class LabChatModel
           if (!this._sharedModel.id) {
             this._sharedModel.id = UUID.uuid4();
           }
+          const id = this._sharedModel.id;
+          this.setReady(id);
         });
       return;
     }
@@ -357,14 +361,16 @@ export class LabChatModel
     // sync populates it without emitting an `_onchange` metadata delta, so
     // nothing else would set the model id and `ready` would never resolve.
     if (this._sharedModel.id) {
-      this.id = this._sharedModel.id;
+      const id = this._sharedModel.id;
+      this.id = id; // no _onchange delta fires for the existing id at sync time
+      this.setReady(id);
     } else {
-      // Brand-new document with no id yet: assigning the shared id emits a
-      // metadata change that sets the model id - and therefore resolves `ready`
-      // - through `_onchange`. A server-authored id that arrives later is
-      // likewise adopted through `_onchange`. We do NOT mint an id that would
-      // diverge from the server's, since the server reads back this value.
-      this._sharedModel.id = UUID.uuid4();
+      // Brand-new document: writing the id to the shared model fires _onchange
+      // synchronously, which sets this.id (and thus super.id) via metadataChanges.
+      // setReady() then flushes buffered messages and resolves `ready`.
+      const id = UUID.uuid4();
+      this._sharedModel.id = id;
+      this.setReady(id);
     }
   }
 
@@ -401,15 +407,24 @@ export class LabChatModel
     return new LabChatContext({ model: this });
   }
 
-  async messagesInserted(
-    index: number,
-    messages: IMessageContent[]
-  ): Promise<void> {
-    // Ensure the chat has an ID before inserting the messages, to properly catch the
-    // unread messages (the last read message is saved using the chat ID).
-    return this.ready.then(() => {
+  messagesInserted(index: number, messages: IMessageContent[]): void {
+    // Buffer messages that arrive before the document is synced. They are
+    // flushed synchronously in markDocumentSynced() so that `ready` resolves
+    // only after all initial messages and metadata are already in the model.
+    // This ensures that the chat has an ID before inserting the messages, to properly
+    // catch the unread messages (the last read message is saved using the chat ID).
+    if (!this._documentSynced) {
+      this._preReadyMessages.push({ index, messages });
+      return;
+    }
+    super.messagesInserted(index, messages);
+  }
+
+  private _flushPreReadyMessages(): void {
+    for (const { index, messages } of this._preReadyMessages) {
       super.messagesInserted(index, messages);
-    });
+    }
+    this._preReadyMessages = [];
   }
 
   sendMessage(message: INewMessage): string | null {
@@ -751,7 +766,9 @@ export class LabChatModel
           change => change.name === 'dirty' && !change.newValue
         )
       ) {
-        this._sharedModel.id = UUID.uuid4();
+        const id = UUID.uuid4();
+        this._sharedModel.id = id;
+        this.setReady(id);
       }
     }
   };
@@ -843,6 +860,11 @@ export class LabChatModel
 
   private _sharedModel: YChat;
 
+  private _documentSynced = false;
+  private _preReadyMessages: Array<{
+    index: number;
+    messages: IMessageContent[];
+  }> = [];
   private _dirty = false;
   private _readOnly = false;
   private _contentChanged = new Signal<this, void>(this);
