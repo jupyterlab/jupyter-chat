@@ -14,6 +14,14 @@ from tornado import web, websocket
 
 from .models import ChatMessageAction, User
 from .websocket_model import WsChatModel
+from .ws_messages import (
+    ClientEditMessage,
+    ClientSendMessage,
+    ServerConnectionMessage,
+    ServerMessageMessage,
+    parse_client_message,
+    to_wire,
+)
 
 
 def is_safe_chat_path(path: str, root_dir: Path) -> bool:
@@ -92,7 +100,6 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
         # (once, when the model is first created).
         model = self._chat_manager.ws_open(path)
         self._model = model
-        model.handlers[self._client_id] = self
 
         # Register the connecting user using the server's authenticated identity.
         # The WS transport is single-user, so every connection -- from any tab or
@@ -107,29 +114,28 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
             color=getattr(current_user, "color", None),
             avatar_url=getattr(current_user, "avatar_url", None),
         )
+        # ``set_user`` broadcasts a ``users`` update to every connected client.
+        # Doing this *before* registering our own handler means already-connected
+        # clients learn about us, while we do not receive a redundant delta ahead
+        # of our own connection frame (which already carries the full users map).
         model.set_user(user)
+        model.handlers[self._client_id] = self
 
         # Send full history so the client can render existing messages. The
         # connecting user's identity is included so the client adopts the same
         # (server-authoritative) identity the server registered for it -- used
         # for sender attribution and to exclude itself from mention suggestions.
-        self.write_message(json.dumps({
-            "type": "connection",
-            "client_id": self._client_id,
-            "id": model.get_id(),
-            "user": asdict(user),
-            "messages": [model.resolve_message(m) for m in model._messages],
-            "users": model._users,
-        }))
-
-        # Notify existing clients about the updated users map
-        users_update = json.dumps({"type": "users", "users": model._users})
-        for client_id, handler in list(model.handlers.items()):
-            if client_id != self._client_id:
-                try:
-                    handler.write_message(users_update)
-                except websocket.WebSocketClosedError:
-                    pass
+        self.write_message(
+            to_wire(
+                ServerConnectionMessage(
+                    client_id=self._client_id,
+                    id=model.get_id(),
+                    user=asdict(user),
+                    messages=[model.resolve_message(m) for m in model._messages],
+                    users=model._users,
+                )
+            )
+        )
 
         self.log.info("WS chat client %s connected to model '%s'", self._client_id, path)
         self._chat_manager.on_client_connect(path, self._client_id, model.get_id())
@@ -141,8 +147,7 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
             self.log.error("Invalid JSON received on WS chat connection")
             return
 
-        path = self._path
-        if not path:
+        if not self._path:
             return
 
         model = getattr(self, "_model", None)
@@ -150,29 +155,39 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
             return
         self._chat_manager.ws_activity(model.get_id())
 
-        if data.get("is_update"):
-            self._handle_update_message(data, model)
-        else:
-            self._handle_new_message(data, model)
+        message = parse_client_message(data)
+        if message is None:
+            self.log.error(
+                "Ignoring malformed or unsupported chat WS frame: %r", data
+            )
+            return
 
-    def _handle_new_message(self, data: dict, model: WsChatModel) -> None:
+        if isinstance(message, ClientSendMessage):
+            self._handle_new_message(message, model)
+        else:
+            self._handle_update_message(message, model)
+
+    def _handle_new_message(self, msg: ClientSendMessage, model: WsChatModel) -> None:
         timestamp = time.time()
         # The WS transport is single-user: the sender is always the
         # authenticated server user, already registered in `open()`.
         sender = self.current_user.username
         message: dict = {
-            "id": data.get("id") or str(uuid.uuid4()),
-            "body": data.get("body", ""),
+            "id": msg.id,
+            "body": msg.body,
             "time": timestamp,
             "sender": sender,
             "type": "msg",
             "raw_time": False,
         }
-        for key in ("mentions", "metadata", "mime_model"):
-            if key in data:
-                message[key] = data[key]
-        if "attachments" in data:
-            message["attachments"] = self._store_attachments(data["attachments"], model)
+        if msg.mentions:
+            message["mentions"] = msg.mentions
+        if msg.metadata is not None:
+            message["metadata"] = msg.metadata
+        if msg.mime_model is not None:
+            message["mime_model"] = msg.mime_model
+        if msg.attachments is not None:
+            message["attachments"] = self._store_attachments(msg.attachments, model)
 
         idx = next(
             (i for i, m in enumerate(model._messages) if m.get("time", 0) > timestamp),
@@ -182,7 +197,7 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
         model._indexes_by_id = {m["id"]: i for i, m in enumerate(model._messages)}
         model.save()
         model.broadcast(
-            json.dumps({"type": "msg", "message": model.resolve_message(message)})
+            to_wire(ServerMessageMessage(message=model.resolve_message(message)))
         )
         received = model.get_message(message["id"])
         if received is not None:
@@ -190,24 +205,28 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
                 ChatMessageAction.CLIENT_MSG_RECEIVED, received
             )
 
-    def _handle_update_message(self, data: dict, model: WsChatModel) -> None:
-        msg_id = data.get("id")
-        if not msg_id:
-            return
-        idx = model._indexes_by_id.get(msg_id)
+    def _handle_update_message(self, msg: ClientEditMessage, model: WsChatModel) -> None:
+        idx = model._indexes_by_id.get(msg.id)
         if idx is None:
             return
-        msg = model._messages[idx]
-        for key in ("body", "deleted", "edited", "mentions", "metadata"):
-            if key in data:
-                msg[key] = data[key]
-        if "attachments" in data:
-            msg["attachments"] = self._store_attachments(data["attachments"], model)
+        stored = model._messages[idx]
+        if msg.body is not None:
+            stored["body"] = msg.body
+        if msg.deleted is not None:
+            stored["deleted"] = msg.deleted
+        if msg.edited is not None:
+            stored["edited"] = msg.edited
+        if msg.mentions is not None:
+            stored["mentions"] = msg.mentions
+        if msg.metadata is not None:
+            stored["metadata"] = msg.metadata
+        if msg.attachments is not None:
+            stored["attachments"] = self._store_attachments(msg.attachments, model)
         model.save()
         model.broadcast(
-            json.dumps({"type": "msg", "message": model.resolve_message(msg)})
+            to_wire(ServerMessageMessage(message=model.resolve_message(stored)))
         )
-        edited = model.get_message(msg_id)
+        edited = model.get_message(msg.id)
         if edited is not None:
             model._emit_message_event(
                 ChatMessageAction.CLIENT_MSG_EDITED, edited

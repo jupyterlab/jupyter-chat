@@ -45,6 +45,15 @@ c.ServerApp.port = int(os.environ.get("TEST_PORT", "8888"))
 
 c.FileContentsManager.delete_to_trash = False
 
+# Enable the test-only server extension that exposes POST /chat-test/add-user
+# (see chat_test_extension.py), used by user-updates.spec.ts to add a user to a
+# live chat via chat.set_user() and verify the client's user list updates. This
+# config file's directory is not importable by default, so put it on sys.path.
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+c.ServerApp.jpserver_extensions = {"chat_test_extension": True}
+
 # Each UI test runs in its own temporary directory, but all documents handled by
 # the server otherwise share the same SQLite YStore. Use one temporary file per
 # document so parallel tests do not contend for a database lock.

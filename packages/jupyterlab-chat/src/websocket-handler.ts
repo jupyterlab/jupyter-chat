@@ -9,6 +9,16 @@ import { ServerConnection } from '@jupyterlab/services';
 import { PromiseDelegate, UUID } from '@lumino/coreutils';
 import { ISignal, Signal } from '@lumino/signaling';
 
+import {
+  CLIENT,
+  IClientChatWsMessage,
+  IClientEditMessage,
+  IClientSendMessage,
+  IServerChatWsMessage,
+  IWireMessage,
+  SERVER
+} from './ws-messages';
+
 const WS_PATH = 'api/chat/ws';
 
 export namespace WebSocketHandler {
@@ -72,6 +82,14 @@ export class WebSocketHandler {
   }
 
   /**
+   * Emitted whenever chat metadata changes -- on every 'metadata' update pushed
+   * by the server. The payload is the map of new/updated metadata entries.
+   */
+  get metadataChanged(): ISignal<this, Record<string, any>> {
+    return this._metadataChanged;
+  }
+
+  /**
    * Emitted whenever a writing status is pushed by the server (e.g. an AI agent).
    */
   get writingChanged(): ISignal<this, WebSocketHandler.IWriting> {
@@ -114,8 +132,9 @@ export class WebSocketHandler {
 
   sendMessage(message: INewMessage): string {
     const id = UUID.uuid4();
-    const msg: Record<string, unknown> = {
-      type: 'msg',
+    const msg: IClientSendMessage = {
+      type: CLIENT,
+      action: 'send',
       id,
       body: message.body ?? ''
     };
@@ -136,9 +155,9 @@ export class WebSocketHandler {
   }
 
   updateMessage(id: string, message: IMessageContent): void {
-    const msg: Record<string, unknown> = {
-      type: 'msg',
-      is_update: true,
+    const msg: IClientEditMessage = {
+      type: CLIENT,
+      action: 'edit',
       id,
       body: message.body,
       edited: true
@@ -153,7 +172,13 @@ export class WebSocketHandler {
   }
 
   deleteMessage(id: string): void {
-    this._send({ type: 'msg', is_update: true, id, body: '', deleted: true });
+    this._send({
+      type: CLIENT,
+      action: 'edit',
+      id,
+      body: '',
+      deleted: true
+    });
   }
 
   dispose(): void {
@@ -163,40 +188,56 @@ export class WebSocketHandler {
     Signal.clearData(this);
   }
 
-  private _handleMessage(data: any): void {
-    if (data.type === 'connection') {
-      this._chatId = data.id as string | undefined;
-      this._connectedUser = (data.user as IUser) ?? undefined;
-      this._usersMap = (data.users as Record<string, IUser>) ?? {};
-      this._usersChanged.emit(this._usersMap);
-      for (const msg of (data.messages as any[]) ?? []) {
-        this._messageReceived.emit(this._toMessageContent(msg));
+  private _handleMessage(data: IServerChatWsMessage): void {
+    if (data.type !== SERVER) {
+      return;
+    }
+    switch (data.action) {
+      case 'connection': {
+        this._chatId = data.id;
+        this._connectedUser = data.user ?? undefined;
+        this._usersMap = data.users ?? {};
+        this._usersChanged.emit(this._usersMap);
+        for (const msg of data.messages ?? []) {
+          this._messageReceived.emit(this._toMessageContent(msg));
+        }
+        this._connected = true;
+        this._ready.resolve();
+        break;
       }
-      this._connected = true;
-      this._ready.resolve();
-    } else if (data.type === 'users') {
-      const incoming = (data.users as Record<string, IUser>) ?? {};
-      this._usersMap = { ...this._usersMap, ...incoming };
-      this._usersChanged.emit(incoming);
-    } else if (data.type === 'msg' && data.message) {
-      this._messageReceived.emit(this._toMessageContent(data.message));
-    } else if (data.type === 'writing') {
-      const user: IUser = data.user ?? {
-        username: data.sender,
-        name: data.sender,
-        display_name: data.sender
-      };
-      this._writingChanged.emit({
-        user,
-        state: !!data.state,
-        messageID: data.messageID,
-        typingIndicator: data.typingIndicator
-      });
+      case 'users': {
+        const incoming = data.users ?? {};
+        this._usersMap = { ...this._usersMap, ...incoming };
+        this._usersChanged.emit(incoming);
+        break;
+      }
+      case 'metadata': {
+        this._metadataChanged.emit(data.metadata ?? {});
+        break;
+      }
+      case 'message': {
+        this._messageReceived.emit(this._toMessageContent(data.message));
+        break;
+      }
+      case 'writing': {
+        const user: IUser = data.user ?? {
+          username: '',
+          name: '',
+          display_name: ''
+        };
+        this._writingChanged.emit({
+          user,
+          state: !!data.state,
+          messageID: data.messageID,
+          typingIndicator: data.typingIndicator
+        });
+        break;
+      }
     }
   }
 
-  private _toMessageContent(msg: any): IMessageContent {
-    const username = msg.sender as string;
+  private _toMessageContent(msg: IWireMessage): IMessageContent {
+    const username = msg.sender;
     const sender: IUser = this._usersMap[username] ?? {
       username,
       name: username,
@@ -235,7 +276,7 @@ export class WebSocketHandler {
     return content;
   }
 
-  private _send(data: Record<string, unknown>): void {
+  private _send(data: IClientChatWsMessage): void {
     this._socket?.send(JSON.stringify(data));
   }
 
@@ -247,7 +288,9 @@ export class WebSocketHandler {
     this._socket = new WebSocket(url);
     this._socket.onmessage = event => {
       try {
-        this._handleMessage(JSON.parse(event.data as string));
+        this._handleMessage(
+          JSON.parse(event.data as string) as IServerChatWsMessage
+        );
       } catch (e) {
         console.error('WS chat: invalid JSON received', e);
       }
@@ -292,5 +335,6 @@ export class WebSocketHandler {
   private _ready = new PromiseDelegate<void>();
   private _messageReceived = new Signal<this, IMessageContent>(this);
   private _usersChanged = new Signal<this, Record<string, IUser>>(this);
+  private _metadataChanged = new Signal<this, Record<string, any>>(this);
   private _writingChanged = new Signal<this, WebSocketHandler.IWriting>(this);
 }

@@ -234,6 +234,7 @@ export class LabChatModel
       });
       this._wsHandler.messageReceived.connect(this._onWsMessage, this);
       this._wsHandler.usersChanged.connect(this._onWsUsersChanged, this);
+      this._wsHandler.metadataChanged.connect(this._onWsMetadata, this);
       this._wsHandler.writingChanged.connect(this._onWsWriting, this);
     }
   }
@@ -748,6 +749,15 @@ export class LabChatModel
       if (!this._sharedModel.getUser(user.username)) {
         this._sharedModel.setUser(new LabChatUser(user));
       }
+    }
+  };
+
+  private _onWsMetadata = (
+    _: WebSocketHandler,
+    metadata: Record<string, any>
+  ): void => {
+    for (const [key, value] of Object.entries(metadata)) {
+      this._sharedModel.setMetadata(key, value);
     }
   };
 
