@@ -212,9 +212,10 @@ class ChatManager(LoggingConfigurable):
                 self._free(chat_id, ChatEventAction.DELETED)
                 continue
             # Inactivity: only applies to WS models we own the memory for. A
-            # connected client keeps the chat alive.
+            # connected client -- or an open ``keep_alive()`` context (e.g. a
+            # persona still writing) -- keeps the chat alive.
             if isinstance(model, WsChatModel):
-                if model.handlers:
+                if model.handlers or model.is_kept_alive:
                     self._last_activity_by_id[chat_id] = now
                 elif now - self._last_activity_by_id.get(chat_id, now) > self.inactivity_timeout_s:
                     self._free(chat_id, ChatEventAction.CLOSED)
@@ -263,15 +264,16 @@ class ChatManager(LoggingConfigurable):
             self._free(chat_id, ChatEventAction.CLOSED)
 
     def _has_active_writers(self, chat_id: str) -> bool:
-        """Whether a server-side writer is keeping this chat alive.
+        """Whether a server-side producer is keeping this chat alive.
 
-        A "writer" is an AI persona (or other server-side producer) that is still
-        working on a reply and would be orphaned if the model were freed. The
-        server-side writing API is not on this branch yet (see
-        jupyterlab/jupyter-chat#497); until it lands there are no server-side
-        writers, so a chat is freed as soon as its last client disconnects.
+        A chat is kept alive while any :meth:`WsChatModel.keep_alive` context is
+        open -- for example an AI persona still producing a reply after every
+        client has disconnected. While kept alive the model is not freed when the
+        last client leaves; the poller reclaims it once no ``keep_alive`` context
+        remains and no clients are connected.
         """
-        return False
+        model = self._chats_by_id.get(chat_id)
+        return isinstance(model, WsChatModel) and model.is_kept_alive
 
     def _get_or_create_ws(self, path: str) -> "WsChatModel":
         # Reuse the live model for this path if one exists (matched by current

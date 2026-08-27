@@ -54,6 +54,14 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 c.ServerApp.jpserver_extensions = {"chat_test_extension": True}
 
+# Reclaim RTC-free chat models quickly in tests so ws-chats-freed.spec.ts can
+# observe a chat being freed shortly after its last client disconnects (the
+# production default is 5 minutes). This only affects the WebSocket WsChatModel
+# path; YChat memory is managed by jupyter-collaboration, so the collaborative
+# CI legs are unaffected.
+c.ChatManager.inactivity_timeout_s = 2.0
+c.ChatManager.poll_interval_s = 1.0
+
 # Each UI test runs in its own temporary directory, but all documents handled by
 # the server otherwise share the same SQLite YStore. Use one temporary file per
 # document so parallel tests do not contend for a database lock.
