@@ -47,20 +47,18 @@ describe('writers state', () => {
     expect(changes.length).toBe(count);
   });
 
-  it('auto-clears a writer after the timeout unless refreshed', () => {
+  it('keeps a writer until it is explicitly cleared (no auto-expiry)', () => {
     jest.useFakeTimers();
     try {
-      model.setWritingStatus(userA, undefined, 2000);
+      model.setWritingStatus(userA);
       expect(model.writers).toHaveLength(1);
 
-      // Refresh before expiry keeps it alive.
-      jest.advanceTimersByTime(1500);
-      model.setWritingStatus(userA, undefined, 2000);
-      jest.advanceTimersByTime(1500);
+      // A single call persists like any other update: no timer drops it.
+      jest.advanceTimersByTime(60_000);
       expect(model.writers).toHaveLength(1);
 
-      // No refresh -> auto-cleared after the timeout (the WS anti-stuck path).
-      jest.advanceTimersByTime(2000);
+      // Only an explicit clear removes it.
+      model.clearWritingStatus(userA);
       expect(model.writers).toHaveLength(0);
     } finally {
       jest.useRealTimers();

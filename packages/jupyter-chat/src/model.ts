@@ -226,18 +226,14 @@ export interface IChatModel extends IDisposable {
   /**
    * Mark a user as currently writing (add or update their writer entry).
    *
+   * The writer stays until explicitly removed via {@link clearWritingStatus}
+   * (or replaced by a new snapshot in {@link updateWriters}); there is no
+   * auto-expiry, so a single call persists like any other update.
+   *
    * @param user - the writing user.
    * @param status - optional writing status (messageID, custom typingIndicator).
-   * @param timeout - optional auto-clear delay in ms. When set, the user is
-   *   automatically cleared after `timeout` unless refreshed by another call.
-   *   Used by transports without their own liveness signal (e.g. WebSocket) to
-   *   avoid a stuck "is typing" if a clear message is never received.
    */
-  setWritingStatus(
-    user: IUser,
-    status?: IChatModel.IWritingStatus,
-    timeout?: number
-  ): void;
+  setWritingStatus(user: IUser, status?: IChatModel.IWritingStatus): void;
 
   /**
    * Remove a user from the writers list.
@@ -247,7 +243,7 @@ export interface IChatModel extends IDisposable {
   /**
    * Broadcast the *current user's* writing status to other clients, or clear it
    * with `null`. Implemented per transport (RTC sets awareness; WebSocket sends
-   * a periodic writing frame). Default implementation is a no-op.
+   * a single writing frame). Default implementation is a no-op.
    */
   broadcastWritingStatus(status: IChatModel.IWritingStatus | null): void;
 
@@ -722,9 +718,7 @@ export abstract class AbstractChatModel implements IChatModel {
    */
   updateWriters(writers: IChatModel.IWriter[]): void {
     // Reconcile the writers map with the provided snapshot (used by
-    // snapshot-style transports such as RTC awareness). Any auto-clear timers
-    // are dropped, since the snapshot is authoritative.
-    this._clearAllWriterTimers();
+    // snapshot-style transports such as RTC awareness).
     const next = new Map<string, IChatModel.IWriter>();
     for (const writer of writers) {
       next.set(writer.user.username, writer);
@@ -738,23 +732,12 @@ export abstract class AbstractChatModel implements IChatModel {
   /**
    * Mark a user as currently writing. See IChatModel.setWritingStatus.
    */
-  setWritingStatus(
-    user: IUser,
-    status?: IChatModel.IWritingStatus,
-    timeout?: number
-  ): void {
+  setWritingStatus(user: IUser, status?: IChatModel.IWritingStatus): void {
     const writer: IChatModel.IWriter = {
       user,
       messageID: status?.messageID,
       typingIndicator: status?.typingIndicator
     };
-    this._clearWriterTimer(user.username);
-    if (timeout !== undefined) {
-      this._writerTimers.set(
-        user.username,
-        window.setTimeout(() => this._removeWriter(user.username), timeout)
-      );
-    }
     const previous = this._writers.get(user.username);
     this._writers.set(user.username, writer);
     if (!previous || !Private.writerEqual(previous, writer)) {
@@ -778,25 +761,9 @@ export abstract class AbstractChatModel implements IChatModel {
   }
 
   private _removeWriter(username: string): void {
-    this._clearWriterTimer(username);
     if (this._writers.delete(username)) {
       this._writersChanged.emit(this.writers);
     }
-  }
-
-  private _clearWriterTimer(username: string): void {
-    const timer = this._writerTimers.get(username);
-    if (timer !== undefined) {
-      window.clearTimeout(timer);
-      this._writerTimers.delete(username);
-    }
-  }
-
-  private _clearAllWriterTimers(): void {
-    for (const timer of this._writerTimers.values()) {
-      window.clearTimeout(timer);
-    }
-    this._writerTimers.clear();
   }
 
   /**
@@ -914,7 +881,6 @@ export abstract class AbstractChatModel implements IChatModel {
   private _documentManager: IDocumentManager | null;
   private _notificationId: string | null = null;
   private _writers = new Map<string, IChatModel.IWriter>();
-  private _writerTimers = new Map<string, number>();
   private _messageEditions = new Map<string, IInputModel>();
   private _messagesUpdated = new Signal<IChatModel, void>(this);
   private _messageChanged = new Signal<IChatModel, IMessage>(this);
