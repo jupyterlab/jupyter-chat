@@ -299,12 +299,17 @@ export class WebSocketHandler {
       if (this._disposed) {
         return;
       }
-      // Closed before the connection frame arrived: signal failure so callers can fall
-      // back using a non connected chat (typically in Jupyterlite environment).
+      // Closed before the connection frame arrived: signal failure so callers can
+      // distinguish between an unreachable server (code 1006, e.g. JupyterLite) and
+      // an explicit server-side rejection (any other code, e.g. 1008 for invalid path).
       if (!this._connected) {
         this._ready.reject(
-          new Error(
-            `Chat WebSocket was closed before opening (code ${event.code})`
+          Object.assign(
+            new Error(
+              event.reason ||
+                `Chat WebSocket was closed before opening (code ${event.code})`
+            ),
+            { wsCloseCode: event.code }
           )
         );
         return;

@@ -331,12 +331,19 @@ export class LabChatModel
           }
         })
         .catch(e => {
+          this._wsHandler?.dispose();
+          this._wsHandler = null;
+          if ((e as { wsCloseCode?: number }).wsCloseCode !== 1006) {
+            // The server was reachable but rejected the connection (e.g. invalid
+            // path): surface the error rather than silently falling back.
+            this.setError(e);
+            return;
+          }
+          // Server unreachable (e.g. JupyterLite): fall back to the shared model.
           console.warn(
             'WS chat connection failed, falling back to shared model',
             e
           );
-          this._wsHandler?.dispose();
-          this._wsHandler = null;
           if (!this._sharedModel.id) {
             this._sharedModel.id = UUID.uuid4();
           }
