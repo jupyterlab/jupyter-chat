@@ -6,9 +6,10 @@ import logging
 import os
 import time
 import uuid
+from contextlib import contextmanager
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, Iterator, List, Optional, Union
 
 from jupyter_events import EventLogger
 from jupyter_server.services.contents.manager import ContentsManager
@@ -60,6 +61,11 @@ class WsChatModel(BaseChatModel):
         self.path = path
         self.root_dir = root_dir
         self.handlers: Dict[str, websocket.WebSocketHandler] = {}
+        # Number of open ``keep_alive()`` contexts. While > 0 the ChatManager
+        # will not free this model even with no connected clients (see
+        # ``keep_alive`` / ``is_kept_alive``). An int -- not a bool -- so nested
+        # or concurrent contexts each hold the model alive until the last exits.
+        self._keep_alive_depth = 0
         self._messages: list[dict] = []
         self._indexes_by_id: dict[str, int] = {}
         self._users: Dict[str, dict] = {}
@@ -140,6 +146,58 @@ class WsChatModel(BaseChatModel):
                 )
             )
         )
+
+    # ------------------------------------------------------------------
+    # Memory management (WebSocket-only)
+    # ------------------------------------------------------------------
+
+    @contextmanager
+    def keep_alive(self) -> Iterator[None]:
+        """Keep this chat model alive for the duration of the ``with`` block.
+
+        While at least one ``keep_alive()`` context is open, the
+        :class:`~jupyterlab_chat.chat_manager.ChatManager` will not free this
+        model even if every client disconnects -- neither when the last client
+        leaves nor on the inactivity poll. Use it to guard a server-side
+        operation that must outlive the connected clients, e.g. an AI persona
+        still producing a reply after the user closed the tab::
+
+            with chat.keep_alive():
+                await do_some_long_work()
+                chat.add_message(NewMessage(body="done", sender=persona_id))
+
+        Reentrant: nested or concurrent contexts each hold the chat alive until
+        the last one exits. Once no contexts remain the chat becomes
+        ``inactive and empty`` again and is reclaimed by the chat manager's
+        periodic scan (see ``ChatManager.freeable_chat_grace_period``).
+
+        Exclusive to the WebSocket backend. Under real-time collaboration a
+        chat's memory is managed by jupyter-collaboration at a higher layer, so
+        keeping it alive here is neither needed nor wired in.
+        """
+        self._keep_alive_depth += 1
+        try:
+            yield
+        finally:
+            self._keep_alive_depth -= 1
+
+    @property
+    def is_kept_alive(self) -> bool:
+        """Whether at least one :meth:`keep_alive` context is currently open."""
+        return self._keep_alive_depth > 0
+
+    @property
+    def inactive_and_empty(self) -> bool:
+        """Whether nothing is currently holding this chat in memory: no connected
+        web clients and no open :meth:`keep_alive` context.
+
+        This is the first state in the WebSocket memory lifecycle
+        (``inactive and empty`` -> ``freeable`` -> ``freed``): the
+        :class:`~jupyterlab_chat.chat_manager.ChatManager` starts a grace timer
+        once a chat is inactive and empty and frees it once it has stayed that
+        way past ``freeable_chat_grace_period``.
+        """
+        return not self.handlers and not self.is_kept_alive
 
     def resolve_message(self, message: dict) -> dict:
         """Return a copy of a message with attachment IDs replaced by full objects."""

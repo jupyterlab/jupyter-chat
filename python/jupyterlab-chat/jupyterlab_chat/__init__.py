@@ -66,7 +66,9 @@ def _load_jupyter_server_extension(server_app):
     # under WebSocket it backs the WS handler (owns ``chats_by_id``).
     from .chat_manager import ChatManager
 
-    chat_manager = ChatManager(server_app, rtc_enabled=rtc_info.enabled)
+    chat_manager = ChatManager(
+        server_app, rtc_enabled=rtc_info.enabled, config=server_app.config
+    )
     server_app.web_app.settings["chat_manager"] = chat_manager
 
     # When RTC is off, chat runs over the plain WebSocket handler. When an RTC
