@@ -2,6 +2,39 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.25.0rc0
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.25.0-alpha.7...9fcf7698d9f839d08b6dc7f28c82f92ee0ef018e))
+
+### API and Breaking Changes
+
+- Add `WsChatModel.keep_alive()` [#535](https://github.com/jupyterlab/jupyter-chat/pull/535) ([@dlqqq](https://github.com/dlqqq))
+
+### Enhancements made
+
+- Load and save content from/to file in jupyterlite [#533](https://github.com/jupyterlab/jupyter-chat/pull/533) ([@brichet](https://github.com/brichet), [@dlqqq](https://github.com/dlqqq))
+- Jupyterlite compatibility [#529](https://github.com/jupyterlab/jupyter-chat/pull/529) ([@brichet](https://github.com/brichet), [@dlqqq](https://github.com/dlqqq))
+
+### Bugs fixed
+
+- Drop the re-broadcast required for writing status in WS chat [#534](https://github.com/jupyterlab/jupyter-chat/pull/534) ([@dlqqq](https://github.com/dlqqq))
+- Set ready after load complete [#532](https://github.com/jupyterlab/jupyter-chat/pull/532) ([@brichet](https://github.com/brichet), [@dlqqq](https://github.com/dlqqq))
+
+### Maintenance and upkeep improvements
+
+- Rename Playwright report artifacts [#536](https://github.com/jupyterlab/jupyter-chat/pull/536) ([@brichet](https://github.com/brichet), [@dlqqq](https://github.com/dlqqq))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-08-27&to=2026-08-27&type=c))
+
+@brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-08-27..2026-08-27&type=Issues)) | @dlqqq ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2026-08-27..2026-08-27&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.25.0alpha7
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.25.0-alpha.6...fccd334abcdd7b13aecafd249b279490144023cd))
@@ -18,8 +51,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-08-26&to=2026-08-27&type=c))
 
 @dlqqq ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2026-08-26..2026-08-27&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.25.0alpha6
 
