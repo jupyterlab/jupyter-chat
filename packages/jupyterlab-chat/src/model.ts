@@ -331,10 +331,22 @@ export class LabChatModel
           }
         })
         .catch(e => {
-          console.error('WS chat connection failed', e);
-          // Fail `ready` so the hosting widget disposes the chat and notifies
-          // the user, instead of leaving a loading spinner forever.
-          this.setError(e instanceof Error ? e : new Error(String(e)));
+          this._wsHandler?.dispose();
+          this._wsHandler = null;
+          if ((e as { wsCloseCode?: number }).wsCloseCode !== 1006) {
+            // The server was reachable but rejected the connection (e.g. invalid
+            // path): surface the error rather than silently falling back.
+            this.setError(e);
+            return;
+          }
+          // Server unreachable (e.g. JupyterLite): fall back to the shared model.
+          console.warn(
+            'WS chat connection failed, falling back to shared model',
+            e
+          );
+          if (!this._sharedModel.id) {
+            this._sharedModel.id = UUID.uuid4();
+          }
         });
       return;
     }
@@ -427,7 +439,10 @@ export class LabChatModel
       body: message.body ?? '',
       time: Date.now() / 1000,
       sender: message.sender ?? this._user,
-      raw_time: true
+      // Set the raw time only if there is a server to update the time to a reference
+      // one (the server time is source of truth). At that stage, without collaboration,
+      // this means that the chat is running without server (jupyterlite).
+      raw_time: this.collaborative ? true : false
     };
 
     this.sharedModel.addMessage(this._contentToYmessage(content));

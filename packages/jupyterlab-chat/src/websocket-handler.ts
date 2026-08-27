@@ -299,14 +299,17 @@ export class WebSocketHandler {
       if (this._disposed) {
         return;
       }
-      // Closed before the connection frame arrived: the chat could not be
-      // opened (e.g. the server rejected the path). Fail `ready` so the hosting
-      // widget can surface the error, instead of reconnecting into the same
-      // failure or leaving a spinner hanging forever.
+      // Closed before the connection frame arrived: signal failure so callers can
+      // distinguish between an unreachable server (code 1006, e.g. JupyterLite) and
+      // an explicit server-side rejection (any other code, e.g. 1008 for invalid path).
       if (!this._connected) {
         this._ready.reject(
-          new Error(
-            `Chat WebSocket was closed before opening (code ${event.code})`
+          Object.assign(
+            new Error(
+              event.reason ||
+                `Chat WebSocket was closed before opening (code ${event.code})`
+            ),
+            { wsCloseCode: event.code }
           )
         );
         return;
@@ -320,8 +323,11 @@ export class WebSocketHandler {
         }, 1000);
       }
     };
-    this._socket.onerror = error =>
-      console.error('WS chat connection error:', error);
+    this._socket.onerror = error => {
+      if (this._connected) {
+        console.error('WS chat connection error:', error);
+      }
+    };
   }
 
   private _path = '';

@@ -22,20 +22,18 @@
     "url": "https://github.com/jupyterlab/jupyter-chat.git"
   },
   "workspaces": [
-    "packages/*",
-    "docs/jupyter-chat-example"
+    "packages/*"
   ],
   "scripts": {
     "build": "jlpm workspace @jupyter/chat run build && jlpm workspace jupyterlab-chat run build && jlpm workspace jupyterlab-chat-extension run build",
     "build:core": "jlpm workspace @jupyter/chat run build",
-    "build:lite-docs": "jlpm workspace @jupyter/chat run build && jlpm workspace jupyter-chat-example run build",
-    "build:prod": "jlpm workspace @jupyter/chat run build:prod && jlpm workspace jupyterlab-chat run build:prod && jlpm workspace jupyterlab-chat-extension run build:prod && jlpm workspace jupyter-chat-example run build:prod",
-    "clean": "jlpm workspace @jupyter/chat run clean && jlpm workspace jupyterlab-chat run clean && jlpm workspace jupyterlab-chat-extension run clean && jlpm workspace jupyter-chat-example run clean",
-    "clean:all": "jlpm workspace @jupyter/chat run clean:all && jlpm workspace jupyterlab-chat run clean:all && jlpm workspace jupyterlab-chat-extension run clean:all && jlpm workspace jupyter-chat-example run clean:all",
+    "build:prod": "jlpm workspace @jupyter/chat run build:prod && jlpm workspace jupyterlab-chat run build:prod && jlpm workspace jupyterlab-chat-extension run build:prod",
+    "clean": "jlpm workspace @jupyter/chat run clean && jlpm workspace jupyterlab-chat run clean && jlpm workspace jupyterlab-chat-extension run clean",
+    "clean:all": "jlpm workspace @jupyter/chat run clean:all && jlpm workspace jupyterlab-chat run clean:all && jlpm workspace jupyterlab-chat-extension run clean:all",
     "dev": "jupyter lab --config playground/config.py",
     "eslint": "jlpm eslint:check --fix",
     "eslint:check": "eslint . --cache",
-    "install:extension": "jlpm workspace @jupyter/chat run install:extension && jlpm workspace jupyterlab-chat run install:extension && jlpm workspace jupyterlab-chat-extension run install:extension && jlpm workspace jupyter-chat-example run install:extension",
+    "install:extension": "jlpm workspace @jupyter/chat run install:extension && jlpm workspace jupyterlab-chat run install:extension && jlpm workspace jupyterlab-chat-extension run install:extension",
     "lint:check": "jlpm run prettier:check && jlpm run eslint:check",
     "lint": "jlpm run prettier && jlpm run eslint && jlpm stylelint",
     "prettier": "prettier --write \"**/*{.ts,.tsx,.js,.jsx,.css,.json,.md,.yml}\"",
