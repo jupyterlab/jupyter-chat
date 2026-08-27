@@ -162,11 +162,10 @@ export class LabChatModel
     this._readOnly = value;
   }
 
-  set id(value: string | undefined) {
-    super.id = value;
-    if (value) {
-      this.setReady();
-    }
+  protected setReady(): void {
+    this._documentSynced = true;
+    this._flushPreReadyMessages();
+    super.setReady();
   }
 
   /**
@@ -185,10 +184,13 @@ export class LabChatModel
    */
   markDocumentSynced(): void {
     if (!this._sharedModel.id) {
-      // Assigning the shared ID emits a metadata change, which sets the model
-      // ID - and therefore resolves `ready` - through `_onchange`.
+      // Brand-new document: writing the id fires _onchange synchronously, which
+      // sets this.id via metadataChanges before setReady() is called.
       this._sharedModel.id = UUID.uuid4();
     }
+    // For an existing document, _onchange already fired for the id metadata
+    // during the initial Yjs sync and set this.id before this method was called.
+    this.setReady();
   }
 
   dispose(): void {
@@ -222,15 +224,24 @@ export class LabChatModel
     return new LabChatContext({ model: this });
   }
 
-  async messagesInserted(
-    index: number,
-    messages: IMessageContent[]
-  ): Promise<void> {
-    // Ensure the chat has an ID before inserting the messages, to properly catch the
-    // unread messages (the last read message is saved using the chat ID).
-    return this.ready.then(() => {
+  messagesInserted(index: number, messages: IMessageContent[]): void {
+    // Buffer messages that arrive before the document is synced. They are
+    // flushed synchronously in markDocumentSynced() so that `ready` resolves
+    // only after all initial messages and metadata are already in the model.
+    // This ensures that the chat has an ID before inserting the messages, to properly
+    // catch the unread messages (the last read message is saved using the chat ID).
+    if (!this._documentSynced) {
+      this._preReadyMessages.push({ index, messages });
+      return;
+    }
+    super.messagesInserted(index, messages);
+  }
+
+  private _flushPreReadyMessages(): void {
+    for (const { index, messages } of this._preReadyMessages) {
       super.messagesInserted(index, messages);
-    });
+    }
+    this._preReadyMessages = [];
   }
 
   sendMessage(message: INewMessage): string | null {
@@ -609,6 +620,7 @@ export class LabChatModel
         )
       ) {
         this._sharedModel.id = UUID.uuid4();
+        this.setReady();
       }
     }
   };
@@ -618,6 +630,11 @@ export class LabChatModel
 
   private _sharedModel: YChat;
 
+  private _documentSynced = false;
+  private _preReadyMessages: Array<{
+    index: number;
+    messages: IMessageContent[];
+  }> = [];
   private _dirty = false;
   private _readOnly = false;
   private _contentChanged = new Signal<this, void>(this);
