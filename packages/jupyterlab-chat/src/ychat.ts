@@ -189,6 +189,17 @@ export class YChat extends YDocument<IChatChanges> {
     });
   }
 
+  /**
+   * Set (or update) a chat-level metadata entry. Used by the RTC-free transport
+   * to apply `metadata` updates pushed by the server; the metadata observer then
+   * emits the change to consumers.
+   */
+  setMetadata(key: string, value: IMetadata): void {
+    this.transact(() => {
+      this._metadata.set(key, value);
+    });
+  }
+
   getMessage(index: number): IYmessage | undefined {
     return this._messages.get(index).toJSON() as IYmessage;
   }

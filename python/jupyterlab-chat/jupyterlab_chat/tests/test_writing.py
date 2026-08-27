@@ -34,7 +34,8 @@ def test_broadcast_writing_status_frame(tmp_path):
 
     assert len(handler.messages) == 1
     frame = json.loads(handler.messages[0])
-    assert frame["type"] == "writing"
+    assert frame["type"] == "server"
+    assert frame["action"] == "writing"
     assert frame["state"] is True
     assert frame["typingIndicator"] == "is running ripgrep"
     assert frame["user"]["username"] == "bot"
@@ -65,6 +66,8 @@ def test_broadcast_writing_status_stop(tmp_path):
     model.broadcast_writing_status(User(username="bot"), None)
 
     frame = json.loads(handler.messages[0])
+    assert frame["type"] == "server"
+    assert frame["action"] == "writing"
     assert frame["state"] is False
     assert frame["user"]["username"] == "bot"
     assert "typingIndicator" not in frame

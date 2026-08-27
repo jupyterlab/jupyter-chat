@@ -14,6 +14,13 @@ from jupyter_events import EventLogger
 from jupyter_server.services.contents.manager import ContentsManager
 from tornado import websocket
 
+from .ws_messages import (
+    ServerMessageMessage,
+    ServerMetadataMessage,
+    ServerUsersMessage,
+    ServerWritingMessage,
+    to_wire,
+)
 from .models import (
     BaseChatModel,
     ChatMessageAction,
@@ -121,17 +128,18 @@ class WsChatModel(BaseChatModel):
         recipients can display the writer (and tell bots from humans via
         ``user.bot``) without having seen a message from them.
         """
-        payload: dict = {
-            "type": "writing",
-            "user": asdict(user),
-            "state": status is not None,
-        }
-        if status:
-            for key in ("messageID", "typingIndicator"):
-                value = status.get(key)
-                if value is not None:
-                    payload[key] = value
-        self.broadcast(json.dumps(payload))
+        active = status is not None
+        status = status or {}
+        self.broadcast(
+            to_wire(
+                ServerWritingMessage(
+                    user=asdict(user),
+                    state=active,
+                    messageID=status.get("messageID"),
+                    typingIndicator=status.get("typingIndicator"),
+                )
+            )
+        )
 
     def resolve_message(self, message: dict) -> dict:
         """Return a copy of a message with attachment IDs replaced by full objects."""
@@ -244,7 +252,7 @@ class WsChatModel(BaseChatModel):
         self._indexes_by_id = {m["id"]: i for i, m in enumerate(self._messages)}
         self.save()
         self.broadcast(
-            json.dumps({"type": "msg", "message": self.resolve_message(msg_dict)})
+            to_wire(ServerMessageMessage(message=self.resolve_message(msg_dict)))
         )
         self._emit_message_event(ChatMessageAction.SERVER_MSG_SENT, message)
         return msg_id
@@ -270,7 +278,7 @@ class WsChatModel(BaseChatModel):
                 msg_dict[key] = value
         self.save()
         self.broadcast(
-            json.dumps({"type": "msg", "message": self.resolve_message(msg_dict)})
+            to_wire(ServerMessageMessage(message=self.resolve_message(msg_dict)))
         )
         updated = self.get_message(update.id)
         if updated is not None:
@@ -295,10 +303,17 @@ class WsChatModel(BaseChatModel):
         return att_id
 
     def set_user(self, user: User) -> None:
-        self._users[user.username] = asdict(user)
+        user_dict = asdict(user)
+        self._users[user.username] = user_dict
+        # Push the change to connected clients. Personas register themselves via
+        # this method *after* clients have connected, so without this broadcast a
+        # newly added user (e.g. an AI agent's name/avatar) would never appear.
+        self.broadcast(to_wire(ServerUsersMessage(users={user.username: user_dict})))
 
     def set_metadata(self, name: str, metadata: Any) -> None:
         self._metadata[name] = metadata
+        # Push the change to connected clients (same rationale as set_user).
+        self.broadcast(to_wire(ServerMetadataMessage(metadata={name: metadata})))
 
     # ------------------------------------------------------------------
     # Message observers
