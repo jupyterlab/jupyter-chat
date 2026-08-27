@@ -29,15 +29,6 @@ import { IChatChanges, IYmessage, YChat } from './ychat';
 const WRITING_DELAY = 1000;
 
 /**
- * How long a server-pushed (e.g. AI persona) writing status stays visible
- * without a refresh. The sender is expected to re-broadcast while still
- * writing and to send an explicit stop when done; this is only a safety net so
- * a crashed or forgetful sender cannot leave a "is writing" indicator stuck
- * forever. An explicit stop clears it immediately, regardless of this value.
- */
-const WS_WRITING_TIMEOUT = 3000;
-
-/**
  * Coerce an untrusted value to an `IUser`, or `null` if it is not one.
  * Awareness state is written by arbitrary clients, so the only field we rely on
  * is a string `username`.
@@ -577,7 +568,9 @@ export class LabChatModel
 
   /**
    * Handle a writing status pushed by the server (e.g. an AI agent) over the
-   * WebSocket. The sender controls its own lifecycle via explicit start/stop.
+   * WebSocket. The sender fully controls the lifecycle via explicit start/stop
+   * frames: a `state: true` frame shows the indicator and it stays visible
+   * until a `state: false` frame clears it -- no re-broadcasting is required.
    */
   private _onWsWriting = (
     _: WebSocketHandler,
@@ -587,14 +580,10 @@ export class LabChatModel
       return;
     }
     if (writing.state) {
-      this.setWritingStatus(
-        writing.user,
-        {
-          messageID: writing.messageID,
-          typingIndicator: writing.typingIndicator
-        },
-        WS_WRITING_TIMEOUT
-      );
+      this.setWritingStatus(writing.user, {
+        messageID: writing.messageID,
+        typingIndicator: writing.typingIndicator
+      });
     } else {
       this.clearWritingStatus(writing.user);
     }
