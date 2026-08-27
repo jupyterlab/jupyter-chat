@@ -19,6 +19,7 @@ import { IChangedArgs } from '@jupyterlab/coreutils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { ServerConnection, User } from '@jupyterlab/services';
 import { PartialJSONObject, UUID } from '@lumino/coreutils';
+import { Debouncer } from '@lumino/polling';
 import { ISignal, Signal } from '@lumino/signaling';
 
 import { enforceAutosaveEnabled } from './autosave';
@@ -268,7 +269,15 @@ export class LabChatModel
     return this._dirty;
   }
   set dirty(value: boolean) {
+    const old = this._dirty;
     this._dirty = value;
+    if (old !== value) {
+      this._stateChanged.emit({
+        name: 'dirty',
+        oldValue: old,
+        newValue: value
+      });
+    }
   }
 
   get readOnly(): boolean {
@@ -346,11 +355,18 @@ export class LabChatModel
             'WS chat connection failed, falling back to shared model',
             e
           );
-          if (!this._sharedModel.id) {
-            this._sharedModel.id = UUID.uuid4();
-          }
-          const id = this._sharedModel.id;
-          this.setReady(id);
+          // Restore content from disk before wiring the change handler, so the
+          // initial population doesn't itself trigger a save. `ready` is
+          // resolved only after the load completes (see #532).
+          void this._loadContent().then(() => {
+            if (!this._sharedModel.id) {
+              this._sharedModel.id = UUID.uuid4();
+            }
+            const id = this._sharedModel.id;
+            // Any subsequent change must be saved by the frontend (no backend).
+            this._sharedModel.changed.connect(this._onServerLessChange, this);
+            this.setReady(id);
+          });
         });
       return;
     }
@@ -378,6 +394,7 @@ export class LabChatModel
     if (this.isDisposed) {
       return;
     }
+    this._saveDebouncer.dispose();
     this._wsHandler?.dispose();
     this._wsHandler = null;
     super.dispose();
@@ -388,19 +405,20 @@ export class LabChatModel
   }
 
   toString(): string {
-    return JSON.stringify({}, null, 2);
+    return JSON.stringify(this._sharedModel.getSource(), null, 2);
   }
 
-  fromString(data: string): void {
-    /** */
+  fromString(_data: string): void {
+    // Content is loaded on demand via _loadContent() in the serverless
+    // (JupyterLite) fallback; in RTC/WS modes the transport owns the data.
   }
 
   toJSON(): PartialJSONObject {
     return JSON.parse(this.toString());
   }
 
-  fromJSON(data: PartialJSONObject): void {
-    // nothing to do
+  fromJSON(_data: PartialJSONObject): void {
+    // nothing to do — see fromString
   }
 
   createChatContext(): IChatContext {
@@ -618,6 +636,55 @@ export class LabChatModel
   private _enforceAutosaveEnabled = () => {
     enforceAutosaveEnabled(this.sharedModel.awareness);
   };
+
+  /**
+   * Triggered when there is no backend and a change occur in the shared model (e.g.
+   * Jupyterlite). It is used to save the chat content from the frontend.
+   */
+  private _onServerLessChange = (): void => {
+    this.dirty = true;
+    void this._saveDebouncer.invoke();
+  };
+
+  /**
+   * Load the chat content when no backend is available (e.g. Jupyterlite).
+   * Should be called once when initializing the chat.
+   */
+  private async _loadContent(): Promise<void> {
+    if (!this.documentManager) {
+      return;
+    }
+    try {
+      const file = await this.documentManager.services.contents.get(this.name, {
+        content: true,
+        format: 'text'
+      });
+      if (typeof file.content === 'string' && file.content) {
+        this._sharedModel.setSource(JSON.parse(file.content));
+      }
+    } catch {
+      // Missing or invalid file — start with an empty chat.
+    }
+  }
+
+  /**
+   * Save the content to a file when no backend is available (e.g. Jupyterlite).
+   */
+  private async _saveContent(): Promise<void> {
+    if (!this.documentManager) {
+      return;
+    }
+    try {
+      await this.documentManager.services.contents.save(this.name, {
+        type: 'file',
+        format: 'text',
+        content: this.toString()
+      });
+      this.dirty = false;
+    } catch (e) {
+      console.error('Failed to save chat file', e);
+    }
+  }
 
   private _onchange = async (_: YChat, changes: IChatChanges) => {
     if (changes.messageListChanges) {
@@ -872,7 +939,13 @@ export class LabChatModel
   private _timeoutWriting: number | null = null;
 
   private _user: IUser;
+
+  // Web socket to use if RTC is not available
   private _wsHandler: WebSocketHandler | null = null;
+
+  // Debouncer used to save file from the frontend if RTC and web socket are not
+  // available (e.g. jupyterlite).
+  private _saveDebouncer = new Debouncer(() => this._saveContent(), 500);
 }
 
 /**
