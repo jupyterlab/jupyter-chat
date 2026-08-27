@@ -40,6 +40,7 @@ jobs:
         include:
           # --- Collaborative (RTC) jobs: jupyter_collaboration installed ---
           - name: 'JupyterLab >=4.6 + Collaboration v5'
+            artifact_name: jupyterlab-ge4.6-collab
             jupyterlab: '>=4.6,<4.7'
             collaboration: '>=5,<6'
             galata: '^5.6.0'
@@ -47,6 +48,7 @@ jobs:
             ignore_snapshots: ''
             grep_invert: '@websocket'
           - name: 'JupyterLab <4.6 + Collaboration v4'
+            artifact_name: jupyterlab-lt4.6-collab
             jupyterlab: '>=4.2,<4.6'
             collaboration: '~=4.0'
             galata: '~5.5.10'
@@ -55,6 +57,7 @@ jobs:
             grep_invert: '@websocket'
           # --- RTC-free jobs: jupyter_collaboration NOT installed ---
           - name: 'JupyterLab >=4.6'
+            artifact_name: jupyterlab-ge4.6-websocket
             jupyterlab: '>=4.6,<4.7'
             collaboration: ''
             galata: '^5.6.0'
@@ -62,6 +65,7 @@ jobs:
             ignore_snapshots: ''
             grep_invert: '@collaborative'
           - name: 'JupyterLab <4.6'
+            artifact_name: jupyterlab-lt4.6-websocket
             jupyterlab: '>=4.2,<4.6'
             collaboration: ''
             galata: '~5.5.10'
@@ -141,7 +145,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: integration-jupyterlab-${{ strategy.job-index }}
+          name: integration-${{ matrix.artifact_name }}
           path: |
             ui-tests/test-results
             ui-tests/playwright-report
