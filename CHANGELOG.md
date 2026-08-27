@@ -2,6 +2,25 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.25.0alpha7
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.25.0-alpha.6...fccd334abcdd7b13aecafd249b279490144023cd))
+
+### Bugs fixed
+
+- Push user and metadata updates to WS chat clients [#531](https://github.com/jupyterlab/jupyter-chat/pull/531) ([@dlqqq](https://github.com/dlqqq))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-08-26&to=2026-08-27&type=c))
+
+@dlqqq ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2026-08-26..2026-08-27&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.25.0alpha6
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.25.0-alpha.5...4acfbaa686ae3c739e080769d6a25a1f20646bfd))
@@ -22,8 +41,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-08-22&to=2026-08-26&type=c))
 
 @brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-08-22..2026-08-26&type=Issues)) | @dlqqq ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2026-08-22..2026-08-26&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.25.0alpha5
 
