@@ -48,8 +48,9 @@ def _make_manager(tmp_path) -> ChatManager:
     serverapp = cast(
         "ServerApp", SimpleNamespace(web_app=SimpleNamespace(settings=settings))
     )
-    # Poller is driven manually via `_poll()` for deterministic timing.
-    return ChatManager(serverapp, rtc_enabled=False, start_poller=False)
+    # The scanner is driven manually via `_scan_freeable_chats()` for
+    # deterministic timing.
+    return ChatManager(serverapp, rtc_enabled=False, start_scanner=False)
 
 
 # ---------------------------------------------------------------------------
@@ -102,14 +103,14 @@ def test_keep_alive_blocks_free_on_last_client_gone(tmp_path):
 
         # Context exited and the last client already left -> the poller reclaims.
         mgr._last_activity_by_id[chat_id] = time.time() - 10_000
-        mgr._poll()
+        mgr._scan_freeable_chats()
         assert mgr.get(chat_id) is None
         mgr.stop()
 
     asyncio.run(run())
 
 
-def test_keep_alive_blocks_inactivity_poll(tmp_path):
+def test_keep_alive_blocks_scan_reclaim(tmp_path):
     async def run():
         mgr = _make_manager(tmp_path)
         (tmp_path / "d.chat").write_text("{}")
@@ -119,11 +120,11 @@ def test_keep_alive_blocks_inactivity_poll(tmp_path):
 
         with model.keep_alive():
             mgr._last_activity_by_id[chat_id] = time.time() - 10_000  # stale
-            mgr._poll()
+            mgr._scan_freeable_chats()
             assert mgr.get(chat_id) is model  # kept alive despite inactivity
 
         mgr._last_activity_by_id[chat_id] = time.time() - 10_000
-        mgr._poll()
+        mgr._scan_freeable_chats()
         assert mgr.get(chat_id) is None
         mgr.stop()
 

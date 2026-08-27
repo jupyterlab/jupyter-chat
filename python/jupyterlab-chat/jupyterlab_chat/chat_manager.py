@@ -50,20 +50,34 @@ class ChatManager(LoggingConfigurable):
     Responsibilities:
       1. Event bus  -- ``observe_chats`` / emits ``opened|closed|deleted`` via Jupyter Events.
       2. Model access -- ``get`` (sync) / ``create`` (async get-or-create).
-      3. Memory management -- frees a model after ``inactivity_timeout_s`` with no
-         connected clients, or when its backing file is gone.
+      3. Memory management -- frees a WebSocket chat model once it has been
+         ``inactive and empty`` (no connected clients, not kept alive) for longer
+         than ``freeable_chat_grace_period``, or when its backing file is gone.
 
     Every emitted event carries the chat's stable ``chat_id`` (``model.get_id()``).
     """
 
-    inactivity_timeout_s = Float(
-        300.0, config=True, help="Free a chat model after this many seconds with no connected clients."
+    freeable_chat_grace_period = Float(
+        60.0,
+        config=True,
+        help=(
+            "How long (in seconds) a chat may stay inactive and empty -- no "
+            "connected web clients and no open keep_alive() context -- before it "
+            "is marked freeable and reclaimed. Has no effect when RTC is enabled; "
+            "the RTC provider is expected to manage chat memory."
+        ),
     )
-    poll_interval_s = Float(
-        60.0, config=True, help="How often to poll for inactive/deleted chats."
+    freeable_chat_scan_interval = Float(
+        60.0,
+        config=True,
+        help=(
+            "How often (in seconds) the chat manager scans for freeable chats to "
+            "reclaim. Has no effect when RTC is enabled; the RTC provider is "
+            "expected to manage chat memory."
+        ),
     )
 
-    def __init__(self, serverapp: "ServerApp", rtc_enabled: bool = False, start_poller: bool = True, **kwargs):
+    def __init__(self, serverapp: "ServerApp", rtc_enabled: bool = False, start_scanner: bool = True, **kwargs):
         super().__init__(**kwargs)
         self._serverapp = serverapp
         self._settings = serverapp.web_app.settings
@@ -84,9 +98,11 @@ class ChatManager(LoggingConfigurable):
         if rtc_enabled:
             self._wire_rtc_forwarding()
 
-        self._poller = PeriodicCallback(self._poll, self.poll_interval_s * 1000)
-        if start_poller:
-            self._poller.start()
+        self._scanner = PeriodicCallback(
+            self._scan_freeable_chats, self.freeable_chat_scan_interval * 1000
+        )
+        if start_scanner:
+            self._scanner.start()
 
     @property
     def _root_dir(self) -> Path:
@@ -199,7 +215,7 @@ class ChatManager(LoggingConfigurable):
     # ------------------------------------------------------------------
     # Responsibility 3 -- memory management
     # ------------------------------------------------------------------
-    def _poll(self) -> None:
+    def _scan_freeable_chats(self) -> None:
         now = time.time()
         for chat_id in list(self._chats_by_id.keys()):
             model = self._chats_by_id.get(chat_id)
@@ -211,13 +227,13 @@ class ChatManager(LoggingConfigurable):
             if not (self._root_dir / model.get_path()).exists():
                 self._free(chat_id, ChatEventAction.DELETED)
                 continue
-            # Inactivity: only applies to WS models we own the memory for. A
-            # connected client -- or an open ``keep_alive()`` context (e.g. a
-            # persona still writing) -- keeps the chat alive.
+            # A WS model we own the memory for becomes freeable once it has been
+            # inactive and empty (no clients, not kept alive) for longer than the
+            # grace period. While it is still held, reset the grace timer.
             if isinstance(model, WsChatModel):
-                if model.handlers or model.is_kept_alive:
+                if not model.inactive_and_empty:
                     self._last_activity_by_id[chat_id] = now
-                elif now - self._last_activity_by_id.get(chat_id, now) > self.inactivity_timeout_s:
+                elif now - self._last_activity_by_id.get(chat_id, now) > self.freeable_chat_grace_period:
                     self._free(chat_id, ChatEventAction.CLOSED)
 
     def _free(self, chat_id: str, action: ChatEventAction) -> Optional["BaseChatModel"]:
@@ -235,8 +251,8 @@ class ChatManager(LoggingConfigurable):
         return model
 
     def stop(self) -> None:
-        if getattr(self, "_poller", None) is not None:
-            self._poller.stop()
+        if getattr(self, "_scanner", None) is not None:
+            self._scanner.stop()
 
     # ------------------------------------------------------------------
     # WebSocket transport hooks (called by WSChatHandler)
@@ -253,27 +269,17 @@ class ChatManager(LoggingConfigurable):
         self._last_activity_by_id[chat_id] = time.time()
 
     def ws_client_gone(self, chat_id: str) -> None:
-        # The last client for this chat has disconnected. Free the model now
-        # unless a server-side writer (e.g. an AI persona still producing a
-        # reply) is keeping it alive, in which case the poller reclaims it once
-        # the writer stops. Freeing here -- rather than reloading from disk on the
-        # next open -- is what keeps a reopened chat consistent without having to
-        # handle out-of-band file changes.
+        # The last client for this chat has disconnected. Free the model now if
+        # nothing else is holding it (it is now inactive and empty). If a
+        # ``keep_alive()`` context is still open -- e.g. an AI persona finishing a
+        # reply -- leave it: the periodic scan reclaims it once that context exits
+        # and the grace period elapses. Freeing here (rather than reloading from
+        # disk on the next open) keeps a reopened chat consistent without having
+        # to handle out-of-band file changes.
         self._last_activity_by_id[chat_id] = time.time()
-        if not self._has_active_writers(chat_id):
-            self._free(chat_id, ChatEventAction.CLOSED)
-
-    def _has_active_writers(self, chat_id: str) -> bool:
-        """Whether a server-side producer is keeping this chat alive.
-
-        A chat is kept alive while any :meth:`WsChatModel.keep_alive` context is
-        open -- for example an AI persona still producing a reply after every
-        client has disconnected. While kept alive the model is not freed when the
-        last client leaves; the poller reclaims it once no ``keep_alive`` context
-        remains and no clients are connected.
-        """
         model = self._chats_by_id.get(chat_id)
-        return isinstance(model, WsChatModel) and model.is_kept_alive
+        if isinstance(model, WsChatModel) and model.inactive_and_empty:
+            self._free(chat_id, ChatEventAction.CLOSED)
 
     def _get_or_create_ws(self, path: str) -> "WsChatModel":
         # Reuse the live model for this path if one exists (matched by current

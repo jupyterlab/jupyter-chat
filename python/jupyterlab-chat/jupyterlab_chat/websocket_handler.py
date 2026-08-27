@@ -261,7 +261,9 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
                 model.get_path(), client_id, model.get_id()
             )
             if not model.handlers:
-                # Don't free immediately: the manager reclaims the model after a
-                # grace period of inactivity unless a client reconnects.
+                # Last client gone: let the manager decide. It frees the chat now
+                # if nothing else is holding it, or keeps it for an open
+                # keep_alive() context (reclaimed by the periodic scan once that
+                # context exits and the grace period elapses).
                 self._chat_manager.ws_client_gone(model.get_id())
         self.log.info("WS chat client %s disconnected", client_id)

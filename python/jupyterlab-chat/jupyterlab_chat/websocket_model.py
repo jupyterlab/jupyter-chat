@@ -167,8 +167,9 @@ class WsChatModel(BaseChatModel):
                 chat.add_message(NewMessage(body="done", sender=persona_id))
 
         Reentrant: nested or concurrent contexts each hold the chat alive until
-        the last one exits. Once no contexts remain the model is reclaimed
-        normally -- on the next inactivity poll if the last client already left.
+        the last one exits. Once no contexts remain the chat becomes
+        ``inactive and empty`` again and is reclaimed by the chat manager's
+        periodic scan (see ``ChatManager.freeable_chat_grace_period``).
 
         Exclusive to the WebSocket backend. Under real-time collaboration a
         chat's memory is managed by jupyter-collaboration at a higher layer, so
@@ -184,6 +185,19 @@ class WsChatModel(BaseChatModel):
     def is_kept_alive(self) -> bool:
         """Whether at least one :meth:`keep_alive` context is currently open."""
         return self._keep_alive_depth > 0
+
+    @property
+    def inactive_and_empty(self) -> bool:
+        """Whether nothing is currently holding this chat in memory: no connected
+        web clients and no open :meth:`keep_alive` context.
+
+        This is the first state in the WebSocket memory lifecycle
+        (``inactive and empty`` -> ``freeable`` -> ``freed``): the
+        :class:`~jupyterlab_chat.chat_manager.ChatManager` starts a grace timer
+        once a chat is inactive and empty and frees it once it has stayed that
+        way past ``freeable_chat_grace_period``.
+        """
+        return not self.handlers and not self.is_kept_alive
 
     def resolve_message(self, message: dict) -> dict:
         """Return a copy of a message with attachment IDs replaced by full objects."""

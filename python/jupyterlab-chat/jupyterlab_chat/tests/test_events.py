@@ -37,7 +37,7 @@ def _make_manager(tmp_path, capture):
     serverapp = cast(
         "ServerApp", SimpleNamespace(web_app=SimpleNamespace(settings=settings))
     )
-    mgr = ChatManager(serverapp, rtc_enabled=False, start_poller=False)
+    mgr = ChatManager(serverapp, rtc_enabled=False, start_scanner=False)
 
     async def listener(logger, schema_id, data):
         capture.append(data)
@@ -112,7 +112,7 @@ def test_inactivity_frees_model(tmp_path):
 
         mgr._last_activity_by_id[model.get_id()] = time.time() - 10_000  # stale
         capture.clear()
-        mgr._poll()
+        mgr._scan_freeable_chats()
         await _drain()
 
         assert mgr.get(model.get_id()) is None  # garbage-collected
@@ -132,7 +132,7 @@ def test_connected_client_keeps_model_alive(tmp_path):
         model.handlers["client-1"] = object()  # simulate a connected client
         mgr._last_activity_by_id[model.get_id()] = time.time() - 10_000
 
-        mgr._poll()
+        mgr._scan_freeable_chats()
         assert mgr.get(model.get_id()) is model  # kept because a client is connected
         mgr.stop()
 
@@ -149,7 +149,7 @@ def test_deletion_frees_model(tmp_path):
 
         chat.unlink()  # deleted via filesystem/ContentsManager
         capture.clear()
-        mgr._poll()
+        mgr._scan_freeable_chats()
         await _drain()
 
         assert mgr.get(model.get_id()) is None
@@ -226,7 +226,7 @@ def test_client_connected_and_disconnected_events(tmp_path):
             "ServerApp",
             SimpleNamespace(web_app=SimpleNamespace(settings=settings)),
         )
-        mgr = ChatManager(serverapp, rtc_enabled=False, start_poller=False)
+        mgr = ChatManager(serverapp, rtc_enabled=False, start_scanner=False)
 
         async def on_event(logger, schema_id, data):
             if data["action"] in ("client_connected", "client_disconnected"):
