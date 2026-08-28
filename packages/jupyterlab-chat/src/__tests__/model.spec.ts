@@ -126,8 +126,7 @@ describe('LabChatModel', () => {
       const m = new LabChatModel({
         widgetConfig: makeWidgetConfig(),
         user: TEST_USER,
-        sharedModel: sm,
-        collaborative: true
+        sharedModel: sm
       });
       sm.addMessage({
         type: 'msg',
@@ -146,8 +145,7 @@ describe('LabChatModel', () => {
       const m = new LabChatModel({
         widgetConfig: makeWidgetConfig(),
         user: TEST_USER,
-        sharedModel: sm,
-        collaborative: true
+        sharedModel: sm
       });
       sm.addMessage({
         type: 'msg',
@@ -170,8 +168,7 @@ describe('LabChatModel', () => {
       const m = new LabChatModel({
         widgetConfig: makeWidgetConfig(),
         user: TEST_USER,
-        sharedModel: sm,
-        collaborative: true
+        sharedModel: sm
       });
       sm.addMessage({
         type: 'msg',
