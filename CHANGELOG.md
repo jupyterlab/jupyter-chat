@@ -2,6 +2,30 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.24.2
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.24.1...f3a0fc884728ce4665098341aa1622c6750b6ae4))
+
+### Enhancements made
+
+- Backport #519 to 0.24.x: announce the writing indicator to assistive technology [#520](https://github.com/jupyterlab/jupyter-chat/pull/520) ([@opensource-joe](https://github.com/opensource-joe), [@brichet](https://github.com/brichet), [@dlqqq](https://github.com/dlqqq))
+- [0.24.x] Backport #503, 'Allow updating a message without setting the update state' [#504](https://github.com/jupyterlab/jupyter-chat/pull/504) ([@brichet](https://github.com/brichet), [@dlqqq](https://github.com/dlqqq))
+
+### Bugs fixed
+
+- [0.24.x] Backport PR #532: Set ready after load complete [#537](https://github.com/jupyterlab/jupyter-chat/pull/537) ([@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-08-19&to=2026-08-28&type=c))
+
+@brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-08-19..2026-08-28&type=Issues)) | @dlqqq ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2026-08-19..2026-08-28&type=Issues)) | @opensource-joe ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Aopensource-joe+updated%3A2026-08-19..2026-08-28&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.24.1
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.24.0...819a08cb8244b800fc310780c7ef18a645c3bc8f))
@@ -23,8 +47,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-08-14&to=2026-08-19&type=c))
 
 @brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-08-14..2026-08-19&type=Issues)) | @dlqqq ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2026-08-14..2026-08-19&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.24.0
 
