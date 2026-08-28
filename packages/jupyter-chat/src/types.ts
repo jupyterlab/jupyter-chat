@@ -64,6 +64,14 @@ export interface IConfig {
    * Whether to display the 'send with selection' button.
    */
   sendWithSelection?: boolean;
+  /**
+   * Whether to auto-hide the welcome message after the first message.
+   */
+  autoHideWelcomeMessage?: boolean;
+  /**
+   * Whether to always hide the welcome message.
+   */
+  hideWelcomeMessage?: boolean;
 }
 
 /**

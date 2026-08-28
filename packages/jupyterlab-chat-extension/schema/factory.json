@@ -49,6 +49,18 @@
       "default": false,
       "readOnly": false
     },
+    "autoHideWelcomeMessage": {
+      "description": "Whether to auto-hide the welcome message after the first message is sent.",
+      "type": "boolean",
+      "default": true,
+      "readOnly": false
+    },
+    "hideWelcomeMessage": {
+      "description": "Whether to always hide the welcome message.",
+      "type": "boolean",
+      "default": false,
+      "readOnly": false
+    },
     "defaultDirectory": {
       "description": "Default directory where to create and look for chat, the jupyter root directory if empty.",
       "type": "string",
