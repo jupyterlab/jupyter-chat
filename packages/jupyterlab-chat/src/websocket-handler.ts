@@ -9,6 +9,7 @@ import { ServerConnection } from '@jupyterlab/services';
 import { PromiseDelegate, UUID } from '@lumino/coreutils';
 import { ISignal, Signal } from '@lumino/signaling';
 
+import { ILabChatModel } from './token';
 import {
   CLIENT,
   IClientChatWsMessage,
@@ -24,6 +25,7 @@ const WS_PATH = 'api/chat/ws';
 export namespace WebSocketHandler {
   export interface IOptions {
     serverSettings: ServerConnection.ISettings;
+    model: ILabChatModel;
   }
 
   /**
@@ -62,6 +64,7 @@ export namespace WebSocketHandler {
 export class WebSocketHandler {
   constructor(options: WebSocketHandler.IOptions) {
     this._serverSettings = options.serverSettings;
+    this._model = options.model;
   }
 
   /**
@@ -197,9 +200,17 @@ export class WebSocketHandler {
         this._chatId = data.id;
         this._connectedUser = data.user ?? undefined;
         this._usersMap = data.users ?? {};
+        for (const user of Object.values(this._usersMap)) {
+          if (!this._model.sharedModel.getUser(user.username)) {
+            this._model.sharedModel.setUser(user);
+          }
+        }
+        const messages = (data.messages ?? []).map(msg =>
+          this._applyMessage(msg)
+        );
         this._usersChanged.emit(this._usersMap);
-        for (const msg of data.messages ?? []) {
-          this._messageReceived.emit(this._toMessageContent(msg));
+        for (const content of messages) {
+          this._messageReceived.emit(content);
         }
         this._connected = true;
         this._ready.resolve();
@@ -208,15 +219,25 @@ export class WebSocketHandler {
       case 'users': {
         const incoming = data.users ?? {};
         this._usersMap = { ...this._usersMap, ...incoming };
+        for (const user of Object.values(incoming)) {
+          if (!this._model.sharedModel.getUser(user.username)) {
+            this._model.sharedModel.setUser(user);
+          }
+        }
         this._usersChanged.emit(incoming);
         break;
       }
       case 'metadata': {
-        this._metadataChanged.emit(data.metadata ?? {});
+        const metadata = data.metadata ?? {};
+        for (const [key, value] of Object.entries(metadata)) {
+          this._model.sharedModel.setMetadata(key, value);
+        }
+        this._metadataChanged.emit(metadata);
         break;
       }
       case 'message': {
-        this._messageReceived.emit(this._toMessageContent(data.message));
+        const content = this._applyMessage(data.message);
+        this._messageReceived.emit(content);
         break;
       }
       case 'writing': {
@@ -225,18 +246,29 @@ export class WebSocketHandler {
           name: '',
           display_name: ''
         };
-        this._writingChanged.emit({
+        const writing: WebSocketHandler.IWriting = {
           user,
           state: !!data.state,
           messageID: data.messageID,
           typingIndicator: data.typingIndicator
-        });
+        };
+        if (user.username !== this._model.user?.username) {
+          if (writing.state) {
+            this._model.setWritingStatus(writing.user, {
+              messageID: writing.messageID,
+              typingIndicator: writing.typingIndicator
+            });
+          } else {
+            this._model.clearWritingStatus(writing.user);
+          }
+        }
+        this._writingChanged.emit(writing);
         break;
       }
     }
   }
 
-  private _toMessageContent(msg: IWireMessage): IMessageContent {
+  private _applyMessage(msg: IWireMessage): IMessageContent {
     const username = msg.sender;
     const sender: IUser = this._usersMap[username] ?? {
       username,
@@ -272,6 +304,13 @@ export class WebSocketHandler {
       content.mentions = (msg.mentions as string[]).map(
         u => this._usersMap[u] ?? { username: u, name: u, display_name: u }
       );
+    }
+    const ymsg = this._model.toYMessage(content);
+    const index = this._model.sharedModel.getMessageIndex(ymsg.id);
+    if (index >= 0) {
+      this._model.sharedModel.updateMessage(index, ymsg);
+    } else {
+      this._model.sharedModel.addMessage(ymsg);
     }
     return content;
   }
@@ -332,6 +371,7 @@ export class WebSocketHandler {
 
   private _path = '';
   private _disposed = false;
+  private _model: ILabChatModel;
   private _connected = false;
   private _chatId: string | undefined;
   private _connectedUser: IUser | undefined;
