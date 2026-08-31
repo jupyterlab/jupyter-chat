@@ -7,7 +7,6 @@ import { IMessageContent, INewMessage, IUser } from '@jupyter/chat';
 import { URLExt } from '@jupyterlab/coreutils';
 import { ServerConnection } from '@jupyterlab/services';
 import { PromiseDelegate, UUID } from '@lumino/coreutils';
-import { ISignal, Signal } from '@lumino/signaling';
 
 import { ILabChatModel } from './token';
 import {
@@ -27,22 +26,6 @@ export namespace WebSocketHandler {
     serverSettings: ServerConnection.ISettings;
     model: ILabChatModel;
   }
-
-  /**
-   * A writing status pushed by the server (e.g. an AI agent). In RTC-free mode
-   * clients never advertise their own typing, so writers only originate
-   * server-side.
-   */
-  export interface IWriting {
-    /** The user the status is about. */
-    user: IUser;
-    /** True if the user is writing, false if they stopped. */
-    state: boolean;
-    /** The message being edited, if any. */
-    messageID?: string;
-    /** Optional custom typing-indicator text. */
-    typingIndicator?: string;
-  }
 }
 
 /**
@@ -51,9 +34,7 @@ export namespace WebSocketHandler {
  * Responsibilities:
  * - Open and maintain the WS connection (reconnect on abnormal close)
  * - Own the WS protocol: parse raw frames, maintain the users map, resolve
- *   sender/mention usernames to IUser objects
- * - Emit clean IMessageContent objects via `messageReceived` for every
- *   message — both historical (on connection) and live
+ *   sender/mention usernames to IUser objects, and update the model directly
  * - Expose a `ready` promise that resolves once the initial connection
  *   message has been processed
  * - Provide typed send methods (sendMessage / updateMessage / deleteMessage)
@@ -65,38 +46,6 @@ export class WebSocketHandler {
   constructor(options: WebSocketHandler.IOptions) {
     this._serverSettings = options.serverSettings;
     this._model = options.model;
-  }
-
-  /**
-   * Emitted for every message received from the server — including the
-   * historical messages delivered on connection — as a resolved IMessageContent.
-   */
-  get messageReceived(): ISignal<this, IMessageContent> {
-    return this._messageReceived;
-  }
-
-  /**
-   * Emitted whenever the set of known users changes — on the initial
-   * connection message and on every subsequent 'users' update.
-   * The payload is the map of new/updated users received from the server.
-   */
-  get usersChanged(): ISignal<this, Record<string, IUser>> {
-    return this._usersChanged;
-  }
-
-  /**
-   * Emitted whenever chat metadata changes -- on every 'metadata' update pushed
-   * by the server. The payload is the map of new/updated metadata entries.
-   */
-  get metadataChanged(): ISignal<this, Record<string, any>> {
-    return this._metadataChanged;
-  }
-
-  /**
-   * Emitted whenever a writing status is pushed by the server (e.g. an AI agent).
-   */
-  get writingChanged(): ISignal<this, WebSocketHandler.IWriting> {
-    return this._writingChanged;
   }
 
   /**
@@ -188,7 +137,6 @@ export class WebSocketHandler {
     this._disposed = true;
     this._socket?.close();
     this._socket = null;
-    Signal.clearData(this);
   }
 
   private _handleMessage(data: IServerChatWsMessage): void {
@@ -205,12 +153,8 @@ export class WebSocketHandler {
             this._model.sharedModel.setUser(user);
           }
         }
-        const messages = (data.messages ?? []).map(msg =>
-          this._applyMessage(msg)
-        );
-        this._usersChanged.emit(this._usersMap);
-        for (const content of messages) {
-          this._messageReceived.emit(content);
+        for (const msg of data.messages ?? []) {
+          this._applyMessage(msg);
         }
         this._connected = true;
         this._ready.resolve();
@@ -224,7 +168,6 @@ export class WebSocketHandler {
             this._model.sharedModel.setUser(user);
           }
         }
-        this._usersChanged.emit(incoming);
         break;
       }
       case 'metadata': {
@@ -232,12 +175,10 @@ export class WebSocketHandler {
         for (const [key, value] of Object.entries(metadata)) {
           this._model.sharedModel.setMetadata(key, value);
         }
-        this._metadataChanged.emit(metadata);
         break;
       }
       case 'message': {
-        const content = this._applyMessage(data.message);
-        this._messageReceived.emit(content);
+        this._applyMessage(data.message);
         break;
       }
       case 'writing': {
@@ -246,29 +187,22 @@ export class WebSocketHandler {
           name: '',
           display_name: ''
         };
-        const writing: WebSocketHandler.IWriting = {
-          user,
-          state: !!data.state,
-          messageID: data.messageID,
-          typingIndicator: data.typingIndicator
-        };
         if (user.username !== this._model.user?.username) {
-          if (writing.state) {
-            this._model.setWritingStatus(writing.user, {
-              messageID: writing.messageID,
-              typingIndicator: writing.typingIndicator
+          if (data.state) {
+            this._model.setWritingStatus(user, {
+              messageID: data.messageID,
+              typingIndicator: data.typingIndicator
             });
           } else {
-            this._model.clearWritingStatus(writing.user);
+            this._model.clearWritingStatus(user);
           }
         }
-        this._writingChanged.emit(writing);
         break;
       }
     }
   }
 
-  private _applyMessage(msg: IWireMessage): IMessageContent {
+  private _applyMessage(msg: IWireMessage): void {
     const username = msg.sender;
     const sender: IUser = this._usersMap[username] ?? {
       username,
@@ -312,7 +246,6 @@ export class WebSocketHandler {
     } else {
       this._model.sharedModel.addMessage(ymsg);
     }
-    return content;
   }
 
   private _send(data: IClientChatWsMessage): void {
@@ -379,8 +312,4 @@ export class WebSocketHandler {
   private _serverSettings: ServerConnection.ISettings;
   private _usersMap: Record<string, IUser> = {};
   private _ready = new PromiseDelegate<void>();
-  private _messageReceived = new Signal<this, IMessageContent>(this);
-  private _usersChanged = new Signal<this, Record<string, IUser>>(this);
-  private _metadataChanged = new Signal<this, Record<string, any>>(this);
-  private _writingChanged = new Signal<this, WebSocketHandler.IWriting>(this);
 }
