@@ -146,3 +146,9 @@ These settings includes:
 
   Whether to display the button for adding selected text when sending a message.\
   Default: false
+
+- **inputPlaceholder**
+
+  The placeholder to display in the chat input. The default placeholder is used if
+  empty.\
+  Default: ""

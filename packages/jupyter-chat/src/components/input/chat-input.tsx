@@ -40,6 +40,9 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   const [sendWithShiftEnter, setSendWithShiftEnter] = useState<boolean>(
     model.config.sendWithShiftEnter ?? false
   );
+  const [placeholder, setPlaceholder] = useState<string>(
+    model.config.inputPlaceholder ?? ''
+  );
   const [attachments, setAttachments] = useState<IAttachment[]>(
     model.attachments
   );
@@ -70,6 +73,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
 
     const configChanged = (_: IInputModel, config: InputModel.IConfig) => {
       setSendWithShiftEnter(config.sendWithShiftEnter ?? false);
+      setPlaceholder(config.inputPlaceholder ?? '');
     };
     model.configChanged.connect(configChanged);
 
@@ -109,6 +113,11 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   }, [inputToolbarRegistry]);
 
   const inputExists = !!input.trim();
+
+  // An empty configured placeholder means 'use the default one'. It is resolved
+  // here rather than in the settings schema, whose defaults cannot be translated.
+  const inputPlaceholder =
+    placeholder || trans.__('Type a chat message, @ to mention...');
 
   /**
    * `handleKeyDown()`: callback invoked when the user presses any key in the
@@ -231,7 +240,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
               multiline
               maxRows={10}
               onKeyDown={handleKeyDown}
-              placeholder={trans.__('Type a chat message, @ to mention...')}
+              placeholder={inputPlaceholder}
               inputRef={inputRef}
               onSelect={() =>
                 (model.cursorIndex = inputRef.current?.selectionStart ?? null)

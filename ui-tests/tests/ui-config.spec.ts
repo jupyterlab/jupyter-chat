@@ -64,6 +64,85 @@ test.describe('#settings', () => {
   });
 });
 
+test.describe('#inputPlaceholder', () => {
+  const PLACEHOLDER = 'Ask the assistant';
+
+  test.beforeEach(async ({ page }) => {
+    // Create a chat file
+    await page.filebrowser.contents.uploadContent('{}', 'text', FILENAME);
+  });
+
+  test.afterEach(async ({ page }) => {
+    if (await page.filebrowser.contents.fileExists(FILENAME)) {
+      await page.filebrowser.contents.deleteFile(FILENAME);
+    }
+  });
+
+  test('should use the default placeholder', async ({ page }) => {
+    const chatPanel = await openChat(page, FILENAME);
+    const input = chatPanel
+      .locator('.jp-chat-input-container')
+      .getByRole('combobox');
+
+    await expect(input).toHaveAttribute(
+      'placeholder',
+      'Type a chat message, @ to mention...'
+    );
+  });
+
+  test('should update settings value inputPlaceholder on existing chat', async ({
+    page
+  }) => {
+    const chatPanel = await openChat(page, FILENAME);
+    const input = chatPanel
+      .locator('.jp-chat-input-container')
+      .getByRole('combobox');
+
+    // Modify the settings
+    const settings = await openSettings(page);
+    const inputPlaceholder = settings.locator(
+      'input[label="inputPlaceholder"]'
+    );
+    await inputPlaceholder.pressSequentially(PLACEHOLDER);
+
+    // wait for the settings to be saved
+    await expect(page.activity.getTabLocator('Settings')).toHaveAttribute(
+      'class',
+      /jp-mod-dirty/
+    );
+    await expect(page.activity.getTabLocator('Settings')).not.toHaveAttribute(
+      'class',
+      /jp-mod-dirty/
+    );
+
+    // Activate the chat panel
+    await page.activity.activateTab(FILENAME);
+
+    await expect(input).toHaveAttribute('placeholder', PLACEHOLDER);
+
+    // Clearing the setting should restore the default placeholder.
+    await page.activity.activateTab('Settings');
+    await inputPlaceholder.clear();
+
+    // wait for the settings to be saved
+    await expect(page.activity.getTabLocator('Settings')).toHaveAttribute(
+      'class',
+      /jp-mod-dirty/
+    );
+    await expect(page.activity.getTabLocator('Settings')).not.toHaveAttribute(
+      'class',
+      /jp-mod-dirty/
+    );
+
+    await page.activity.activateTab(FILENAME);
+
+    await expect(input).toHaveAttribute(
+      'placeholder',
+      'Type a chat message, @ to mention...'
+    );
+  });
+});
+
 test.describe('#stackedMessages', () => {
   const msg1 = {
     type: 'msg',

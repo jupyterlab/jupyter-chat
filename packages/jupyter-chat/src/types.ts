@@ -64,6 +64,11 @@ export interface IConfig {
    * Whether to display the 'send with selection' button.
    */
   sendWithSelection?: boolean;
+  /**
+   * The placeholder to display in the empty chat input.
+   * The default placeholder is used if empty.
+   */
+  inputPlaceholder?: string;
 }
 
 /**

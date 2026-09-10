@@ -49,6 +49,12 @@
       "default": false,
       "readOnly": false
     },
+    "inputPlaceholder": {
+      "description": "The placeholder to display in the chat input, the default one if empty.",
+      "type": "string",
+      "default": "",
+      "readOnly": false
+    },
     "defaultDirectory": {
       "description": "Default directory where to create and look for chat, the jupyter root directory if empty.",
       "type": "string",
