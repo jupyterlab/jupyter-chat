@@ -56,7 +56,11 @@ export function useChatCommands(
         return;
       }
 
-      if (!currentWord?.length) {
+      const isInsideCodeBlock =
+        inputModel.cursorIndex !== null &&
+        isCursorInsideCodeBlock(inputModel.value, inputModel.cursorIndex);
+
+      if (!currentWord?.length || isInsideCodeBlock) {
         setCommands([]);
         setOpen(false);
         setHighlighted(false);
@@ -234,4 +238,35 @@ export function useChatCommands(
       highlighted
     }
   };
+}
+
+/**
+ * Checks if the given cursor index is inside a Markdown code block
+ * (either inline `code` or a triple-backtick block).
+ */
+export function isCursorInsideCodeBlock(
+  input: string,
+  cursorIndex: number
+): boolean {
+  let insideInline = false;
+  let insideBlock = false;
+  let i = 0;
+
+  while (i < cursorIndex) {
+    if (input.startsWith('```', i)) {
+      if (!insideInline) {
+        insideBlock = !insideBlock;
+      }
+      i += 3;
+    } else if (input[i] === '`') {
+      if (!insideBlock) {
+        insideInline = !insideInline;
+      }
+      i += 1;
+    } else {
+      i += 1;
+    }
+  }
+
+  return insideInline || insideBlock;
 }
