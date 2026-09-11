@@ -31,6 +31,7 @@ from traitlets.config import LoggingConfigurable
 from .events import (
     CHAT_ROOM_EVENT_SCHEMA,
     CHAT_ROOM_EVENT_SCHEMA_ID,
+    JUPYTER_COLLABORATION_AWARENESS_EVENTS_URI,
     JUPYTER_COLLABORATION_EVENTS_URI,
     ChatEvent,
     ChatEventAction,
@@ -319,6 +320,10 @@ class ChatManager(LoggingConfigurable):
                 schema_id=JUPYTER_COLLABORATION_EVENTS_URI,
                 listener=self._on_rtc_room_event,
             )
+            self._event_logger.add_listener(
+                schema_id=JUPYTER_COLLABORATION_AWARENESS_EVENTS_URI,
+                listener=self._on_rtc_awareness_event,
+            )
         except Exception as e:  # pragma: no cover - depends on RTC install
             self.log.warning("Could not attach RTC room-event forwarder: %s", e)
 
@@ -357,6 +362,41 @@ class ChatManager(LoggingConfigurable):
             model = self._model_for_path(path)
             if model is not None:
                 self._free(model.get_id(), ChatEventAction.CLOSED)
+
+    def _model_for_room_id(self, room_id: str) -> Optional["BaseChatModel"]:
+        return next(
+            (m for m in self._chats_by_id.values() if getattr(m, "room_id", None) == room_id),
+            None,
+        )
+
+    async def _on_rtc_awareness_event(self, logger, schema_id: str, data: dict) -> None:
+        room_id = data.get("roomid", "") or ""
+        action = data.get("action")
+        username = data.get("username", "") or ""
+        parts = room_id.split(":")
+        if len(parts) < 2 or parts[1] != "chat":
+            return
+        model = self._model_for_room_id(room_id)
+        if model is None:
+            return
+        if action == "join":
+            self._emit_event(
+                ChatEvent(
+                    path=model.get_path(),
+                    action=ChatEventAction.CLIENT_CONNECTED,
+                    chat_id=model.get_id(),
+                    client_id=username,
+                )
+            )
+        elif action == "leave":
+            self._emit_event(
+                ChatEvent(
+                    path=model.get_path(),
+                    action=ChatEventAction.CLIENT_DISCONNECTED,
+                    chat_id=model.get_id(),
+                    client_id=username,
+                )
+            )
 
     async def _resolve_ychat(self, room_id: str, initial_path: str):
         """Resolve the ``YChat`` for a room via jupyter_collaboration. Mirrors
