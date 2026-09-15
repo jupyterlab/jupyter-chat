@@ -40,8 +40,8 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   const [sendWithShiftEnter, setSendWithShiftEnter] = useState<boolean>(
     model.config.sendWithShiftEnter ?? false
   );
-  const [placeholder, setPlaceholder] = useState<string>(
-    model.config.inputPlaceholder ?? ''
+  const [placeholder, setPlaceholder] = useState<string | undefined>(
+    model.config.inputPlaceholder
   );
   const [attachments, setAttachments] = useState<IAttachment[]>(
     model.attachments
