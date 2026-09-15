@@ -117,7 +117,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   // An empty configured placeholder means 'use the default one'. It is resolved
   // here rather than in the settings schema, whose defaults cannot be translated.
   const inputPlaceholder =
-    placeholder || trans.__('Type a chat message, @ to mention...');
+    placeholder ?? trans.__('Type a chat message, @ to mention...');
 
   /**
    * `handleKeyDown()`: callback invoked when the user presses any key in the
