@@ -341,7 +341,6 @@ const chatConfig: JupyterFrontEndPlugin<IWidgetConfig> = {
           showDeleted: setting.get('showDeleted').composite as boolean,
           sendWithSelection: setting.get('sendWithSelection')
             .composite as boolean,
-          inputPlaceholder: setting.get('inputPlaceholder').composite as string,
           defaultDirectory: currentDirectory
         };
       });
