@@ -8,7 +8,11 @@
  * Originally adapted from jupyterlab-chat's ChatPanel
  */
 
-import { InputDialog, ToolbarRegistry } from '@jupyterlab/apputils';
+import {
+  InputDialog,
+  Notification,
+  ToolbarRegistry
+} from '@jupyterlab/apputils';
 import { IObservableList } from '@jupyterlab/observables';
 import { nullTranslator, TranslationBundle } from '@jupyterlab/translation';
 import {
@@ -554,9 +558,23 @@ class SidePanelWidget extends ReactivePanelWithToolbar implements IChatPanel {
     // Add spinner while loading
     const spinner = new Spinner();
     this.addWidget(spinner);
-    this._chatWidget.model.ready.then(() => {
-      spinner.dispose();
-    });
+    this._chatWidget.model.ready
+      .then(() => {
+        spinner.dispose();
+      })
+      .catch(() => {
+        // The chat could not be opened (e.g. the server closed the WebSocket
+        // because the path was invalid). Dispose the spinner and close this
+        // chat so no loading spinner is left hanging; the side panel stays open.
+        spinner.dispose();
+        Notification.error(
+          trans.__(
+            "Unable to open chat at given path: '%1'.",
+            this._chatWidget.model.name
+          )
+        );
+        options.onClose(this._displayName);
+      });
 
     // Add the chat widget
     this.addWidget(this._chatWidget);

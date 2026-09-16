@@ -2360,7 +2360,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyter/chat@^0.24.0, @jupyter/chat@workspace:packages/jupyter-chat":
+"@jupyter/chat@^0.25.0, @jupyter/chat@workspace:packages/jupyter-chat":
   version: 0.0.0-use.local
   resolution: "@jupyter/chat@workspace:packages/jupyter-chat"
   dependencies:
@@ -3354,7 +3354,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lumino/coreutils@npm:^1.11.0 || ^2.0.0, @lumino/coreutils@npm:^1.11.0 || ^2.2.2, @lumino/coreutils@npm:^2.0.0, @lumino/coreutils@npm:^2.2.1, @lumino/coreutils@npm:^2.2.2":
+"@lumino/coreutils@npm:^1.11.0 || ^2.0.0, @lumino/coreutils@npm:^1.11.0 || ^2.2.2, @lumino/coreutils@npm:^2.2.1, @lumino/coreutils@npm:^2.2.2":
   version: 2.2.2
   resolution: "@lumino/coreutils@npm:2.2.2"
   dependencies:
@@ -8618,31 +8618,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jupyter-chat-example@workspace:docs/jupyter-chat-example":
-  version: 0.0.0-use.local
-  resolution: "jupyter-chat-example@workspace:docs/jupyter-chat-example"
-  dependencies:
-    "@jupyter/builder": ^1.2.0
-    "@jupyter/chat": ^0.24.0
-    "@jupyterlab/application": ^4.5.0
-    "@jupyterlab/apputils": ^4.6.0
-    "@jupyterlab/notebook": ^4.5.0
-    "@jupyterlab/rendermime": ^4.5.0
-    "@jupyterlab/settingregistry": ^4.5.0
-    "@lumino/coreutils": ^2.0.0
-    "@types/json-schema": ^7.0.11
-    "@types/react": ^18.2.0
-    "@types/react-addons-linked-state-mixin": ^0.14.22
-    css-loader: ^6.7.1
-    mkdirp: ^1.0.3
-    npm-run-all: ^4.1.5
-    rimraf: ^5.0.1
-    source-map-loader: ^1.0.2
-    style-loader: ^3.3.1
-    typescript: ~5.9.3
-  languageName: unknown
-  linkType: soft
-
 "jupyter-chat-root@workspace:.":
   version: 0.0.0-use.local
   resolution: "jupyter-chat-root@workspace:."
@@ -8694,7 +8669,7 @@ __metadata:
     "@types/react": ^18.2.0
     "@types/react-addons-linked-state-mixin": ^0.14.22
     css-loader: ^6.7.1
-    jupyterlab-chat: ^0.24.0
+    jupyterlab-chat: ^0.25.0
     mkdirp: ^1.0.3
     npm-run-all: ^4.1.5
     react: ^18.2.0
@@ -8707,11 +8682,11 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"jupyterlab-chat@^0.24.0, jupyterlab-chat@workspace:packages/jupyterlab-chat":
+"jupyterlab-chat@^0.25.0, jupyterlab-chat@workspace:packages/jupyterlab-chat":
   version: 0.0.0-use.local
   resolution: "jupyterlab-chat@workspace:packages/jupyterlab-chat"
   dependencies:
-    "@jupyter/chat": ^0.24.0
+    "@jupyter/chat": ^0.25.0
     "@jupyter/collaborative-drive": ^4.4.0 || ^5.0.0
     "@jupyter/ydoc": ^3.0.0 || ^4.0.0
     "@jupyterlab/application": ^4.5.0
@@ -8729,6 +8704,7 @@ __metadata:
     "@jupyterlab/ui-components": ^4.5.0
     "@lumino/commands": ^2.3.3
     "@lumino/coreutils": ^2.2.2
+    "@lumino/polling": ^2.1.5
     "@lumino/signaling": ^2.1.5
     "@lumino/widgets": ^2.8.0
     "@types/jest": ^29.2.0
@@ -9842,12 +9818,12 @@ __metadata:
   linkType: hard
 
 "postcss-selector-parser@npm:^6.0.13, postcss-selector-parser@npm:^6.0.2, postcss-selector-parser@npm:^6.0.4":
-  version: 6.1.1
-  resolution: "postcss-selector-parser@npm:6.1.1"
+  version: 6.1.4
+  resolution: "postcss-selector-parser@npm:6.1.4"
   dependencies:
     cssesc: ^3.0.0
     util-deprecate: ^1.0.2
-  checksum: 1c6a5adfc3c19c6e1e7d94f8addb89a5166fcca72c41f11713043d381ecbe82ce66360c5524e904e17b54f7fc9e6a077994ff31238a456bc7320c3e02e88d92e
+  checksum: 6dac8996778480a4cd274d2588cccfd989f38c40853b7b83dc31c90ce6ba32e1e1b89811ad3beafdee72887fac9ddf9f1fca3876dc17467eed62d6a825d54bfb
   languageName: node
   linkType: hard
 

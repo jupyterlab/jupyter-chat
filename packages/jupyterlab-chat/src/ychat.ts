@@ -137,9 +137,10 @@ export class YChat extends YDocument<IChatChanges> {
   getSource(): JSONObject {
     const users = this._users.toJSON();
     const messages = this._messages.toJSON();
+    const attachments = this._attachments.toJSON();
     const metadata = this._metadata.toJSON();
 
-    return { users, messages, metadata };
+    return { users, messages, attachments, metadata };
   }
 
   setSource(value: JSONObject): void {
@@ -164,6 +165,11 @@ export class YChat extends YDocument<IChatChanges> {
         this._users.set(key, val as IUser)
       );
 
+      const attachments = value['attachments'] ?? {};
+      Object.entries(attachments).forEach(([key, val]) =>
+        this._attachments.set(key, val as IAttachment)
+      );
+
       const metadata = value['metadata'] ?? {};
       Object.entries(metadata).forEach(([key, val]) =>
         this._metadata.set(key, val as any)
@@ -186,6 +192,17 @@ export class YChat extends YDocument<IChatChanges> {
         user = user.toJSON();
       }
       this._users.set(user.username, user);
+    });
+  }
+
+  /**
+   * Set (or update) a chat-level metadata entry. Used by the RTC-free transport
+   * to apply `metadata` updates pushed by the server; the metadata observer then
+   * emits the change to consumers.
+   */
+  setMetadata(key: string, value: IMetadata): void {
+    this.transact(() => {
+      this._metadata.set(key, value);
     });
   }
 

@@ -10,6 +10,7 @@ import {
   test
 } from '@jupyterlab/galata';
 import { Contents } from '@jupyterlab/services';
+import { collaborativeOnly } from './tags';
 import { ReadonlyJSONObject, UUID } from '@lumino/coreutils';
 
 import { createChat, openChat, openSettings, USER } from './test-utils';
@@ -143,7 +144,7 @@ test.describe('#chatCreation', () => {
   });
 });
 
-test.describe('#ychat', () => {
+test.describe('#ychat', collaborativeOnly, () => {
   const chatContent = {
     messages: [],
     users: {}
@@ -183,7 +184,7 @@ test.describe('#ychat', () => {
   });
 });
 
-test.describe('#outofband', () => {
+test.describe('#outofband', collaborativeOnly, () => {
   const msg = {
     type: 'msg',
     id: UUID.uuid4(),

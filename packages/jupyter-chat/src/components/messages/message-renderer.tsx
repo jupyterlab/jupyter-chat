@@ -20,6 +20,12 @@ const RENDERED_CLASS = 'jp-chat-rendered-message';
 const DEFAULT_MIME_TYPE = 'text/markdown';
 
 /**
+ * The class name added to an output area widget. This is required to display cell
+ * output as a message in the chat.
+ */
+const OUTPUT_AREA_CLASS = 'jp-OutputArea';
+
+/**
  * The type of the props for the MessageRenderer component.
  */
 type MessageRendererProps = {
@@ -55,6 +61,8 @@ function MessageRendererBase(props: MessageRendererProps): JSX.Element {
 
   // Allow edition only on text messages.
   const [canEdit, setCanEdit] = useState<boolean>(false);
+
+  const [isOutputArea, setIsOutputArea] = useState<boolean>(false);
 
   // Each element is a two-tuple with the structure [codeToolbarRoot, codeToolbarProps].
   const [codeToolbarDefns, setCodeToolbarDefns] = useState<
@@ -129,6 +137,8 @@ function MessageRendererBase(props: MessageRendererProps): JSX.Element {
       // This is necessary to render latex.
       MessageLoop.sendMessage(renderer, Widget.Msg.AfterAttach);
 
+      setIsOutputArea(!isMarkdownRenderer);
+
       // Add code toolbar if markdown has been rendered.
       if (isMarkdownRenderer) {
         const newCodeToolbarDefns: [HTMLDivElement, CodeToolbarProps][] = [];
@@ -164,7 +174,7 @@ function MessageRendererBase(props: MessageRendererProps): JSX.Element {
     <>
       {renderedContent && (
         <div
-          className={RENDERED_CLASS}
+          className={`${RENDERED_CLASS}${isOutputArea ? ` ${OUTPUT_AREA_CLASS}` : ''}`}
           ref={node => node && node.replaceChildren(renderedContent)}
         />
       )}

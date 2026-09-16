@@ -41,13 +41,29 @@ function formatWritersText(
     return '';
   }
 
-  const names = writers.map(
-    w =>
-      w.user.display_name ??
-      w.user.name ??
-      w.user.username ??
-      trans.__('Unknown')
-  );
+  const nameOf = (w: IChatModel.IWriter) =>
+    w.user.display_name ??
+    w.user.name ??
+    w.user.username ??
+    trans.__('Unknown');
+
+  // When any writer supplies a custom typing indicator, render per-writer
+  // phrases ("<name> <indicator>"), so e.g. "Jupyternaut is running `ripgrep`".
+  if (writers.some(w => w.typingIndicator)) {
+    const phrases = writers.map(
+      w => `${nameOf(w)} ${w.typingIndicator ?? trans.__('is typing...')}`
+    );
+    if (phrases.length === 1) {
+      return phrases[0];
+    } else if (phrases.length === 2) {
+      return trans.__('%1 and %2', phrases[0], phrases[1]);
+    } else {
+      const allButLast = phrases.slice(0, -1).join(', ');
+      return trans.__('%1, and %2', allButLast, phrases[phrases.length - 1]);
+    }
+  }
+
+  const names = writers.map(nameOf);
 
   if (names.length === 1) {
     return trans.__('%1 is typing...', names[0]);
@@ -76,6 +92,18 @@ export function WritingIndicator(
   return (
     <Box
       className={WRITERS_ELEMENT_CLASSNAME}
+      // The indicator already says something useful, "Alice is typing..." or
+      // "Jupyternaut is running `ripgrep`", but only on screen. Announcing it
+      // politely means a screen reader user learns a reply is coming without
+      // being interrupted mid-sentence.
+      //
+      // The region is the container rather than the text, so it is present in
+      // the accessibility tree before a writer appears and the change is
+      // announced. `aria-atomic` keeps the phrase together: without it a name
+      // change alone can be read out on its own, stripped of its context.
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
       sx={{
         ...props.sx,
         minHeight: '16px'

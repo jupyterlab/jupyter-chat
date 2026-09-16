@@ -10,15 +10,16 @@ import {
   test
 } from '@jupyterlab/galata';
 import { User } from '@jupyterlab/services';
+import { collaborativeOnly } from './tags';
 import { openChat, sendMessage, USER } from './test-utils';
 
 const FILENAME = 'user-mention.chat';
 
-test.use({
-  mockUser: USER
-});
+test.describe('#user-mention', collaborativeOnly, () => {
+  test.use({
+    mockUser: USER
+  });
 
-test.describe('#user-mention', () => {
   let guestPage: IJupyterLabPageFixture;
   test.beforeEach(
     async ({ baseURL, browser, page, tmpPath, waitForApplication }) => {
@@ -159,9 +160,11 @@ test.describe('#bot-mention', () => {
     metadata: {}
   });
 
-  test.use({
-    mockUser: USER
-  });
+  // Intentionally no `mockUser`: the RTC-free WebSocket registers the
+  // authenticated server user as the connected user, so the frontend must use
+  // that same server identity (not a mocked one) for it to be recognised as
+  // "self" and excluded from mention suggestions -- as it is in a real
+  // single-user deployment.
 
   test.beforeEach(async ({ page }) => {
     await page.filebrowser.contents.uploadContent(

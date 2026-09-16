@@ -26,13 +26,29 @@ test.describe('#attachments', () => {
     await page.menu.clickMenuItem('File>New>Markdown File');
     await page.notebook.createNew(NOTEBOOK);
 
-    // Wait for the notebook to be ready before closing it to avoid popup
+    // Wait for the notebook to finish initialising (a freshly created notebook
+    // becomes dirty once its kernel writes metadata).
     await page.waitForCondition(
-      async () => (await page.locator('li.jp-mod-dirty').count()) === 1
+      async () => (await page.locator('li.jp-mod-dirty').count()) >= 1
     );
-    await page.waitForCondition(
-      async () => (await page.locator('li.jp-mod-dirty').count()) === 0
-    );
+    // RTC-free there is no collaborative provider syncing new documents to the
+    // server, so they never auto-report "clean". Explicitly save any dirty
+    // document until the tabs report clean before closing, to avoid the
+    // "Save your changes?" dialog. The notebook re-dirties once right after a
+    // save (kernel metadata), hence saving until the flag stays cleared.
+    // Collaboratively the docs are already clean, so this is a no-op.
+    await page.waitForCondition(async () => {
+      await page.evaluate(async () => {
+        const app = (window as any).jupyterapp;
+        for (const widget of app.shell.widgets('main')) {
+          const context = (widget as any).context;
+          if (context?.model?.dirty) {
+            await context.save();
+          }
+        }
+      });
+      return (await page.locator('li.jp-mod-dirty').count()) === 0;
+    });
     await page.activity.closeAll();
   });
 

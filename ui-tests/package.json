@@ -15,9 +15,9 @@
     "@playwright/test": "^1.60.0"
   },
   "resolutions": {
-    "@playwright/test": "1.61.0",
-    "playwright": "1.61.0",
-    "playwright-core": "1.61.0"
+    "@playwright/test": "^1.62.1",
+    "playwright": "^1.62.1",
+    "playwright-core": "^1.62.1"
   },
   "packageManager": "yarn@3.5.0"
 }

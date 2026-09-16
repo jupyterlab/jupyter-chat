@@ -32,6 +32,7 @@
   padding: 0 1em;
 }
 
+.jp-ThemedContainer .jp-chat-welcome-message .jp-RenderedHTMLCommon,
 .jp-ThemedContainer .jp-chat-rendered-message .jp-RenderedHTMLCommon {
   padding-right: 0;
 }
