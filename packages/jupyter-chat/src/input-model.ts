@@ -687,7 +687,8 @@ export namespace InputModel {
     sendWithSelection?: boolean;
     /**
      * The placeholder to display in the empty chat input.
-     * The default placeholder is used if empty.
+     * The default placeholder is used if undefined, an empty string displays no
+     * placeholder at all.
      */
     inputPlaceholder?: string;
   }

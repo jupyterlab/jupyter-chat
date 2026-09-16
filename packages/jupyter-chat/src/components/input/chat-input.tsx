@@ -73,7 +73,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
 
     const configChanged = (_: IInputModel, config: InputModel.IConfig) => {
       setSendWithShiftEnter(config.sendWithShiftEnter ?? false);
-      setPlaceholder(config.inputPlaceholder ?? '');
+      setPlaceholder(config.inputPlaceholder);
     };
     model.configChanged.connect(configChanged);
 
@@ -114,8 +114,8 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
 
   const inputExists = !!input.trim();
 
-  // An empty configured placeholder means 'use the default one'. It is resolved
-  // here rather than in the settings schema, whose defaults cannot be translated.
+  // The default is resolved here rather than in `IConfig`, so that it can be
+  // translated. Only `undefined` falls back; an empty string is a valid choice.
   const inputPlaceholder =
     placeholder ?? trans.__('Type a chat message, @ to mention...');
 

@@ -64,6 +64,11 @@ describe('ChatInput placeholder', () => {
     expect(placeholder()).toBe('Ask the assistant');
   });
 
+  it('should use an empty configured placeholder as is', () => {
+    render({ inputPlaceholder: '' });
+    expect(placeholder()).toBe('');
+  });
+
   it('should follow a later change of the configuration', () => {
     const model = render();
 
@@ -72,9 +77,23 @@ describe('ChatInput placeholder', () => {
     });
     expect(placeholder()).toBe('Ask the assistant');
 
-    // An empty placeholder means 'use the default one'.
+    // Unsetting it is the way back to the default, an empty string is not.
     act(() => {
       model.config = { inputPlaceholder: '' };
+    });
+    expect(placeholder()).toBe('');
+
+    act(() => {
+      model.config = { inputPlaceholder: undefined };
+    });
+    expect(placeholder()).toBe(DEFAULT_PLACEHOLDER);
+  });
+
+  it('should keep the default placeholder on an unrelated change', () => {
+    const model = render();
+
+    act(() => {
+      model.config = { sendWithShiftEnter: true };
     });
     expect(placeholder()).toBe(DEFAULT_PLACEHOLDER);
   });
