@@ -301,7 +301,8 @@ export abstract class AbstractChatModel implements IChatModel {
       selectionWatcher: options.selectionWatcher,
       documentManager: options.documentManager,
       config: {
-        sendWithShiftEnter: config.sendWithShiftEnter
+        sendWithShiftEnter: config.sendWithShiftEnter,
+        inputPlaceholder: config.inputPlaceholder
       },
       onSend: this.sendMessage.bind(this)
     });
