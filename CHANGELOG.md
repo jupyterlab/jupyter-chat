@@ -2,6 +2,35 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.25.1
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.25.0...512c81de50cbeea29f3d9ee7a5a89385d60db6a3))
+
+### Enhancements made
+
+- Make the chat input placeholder configurable [#541](https://github.com/jupyterlab/jupyter-chat/pull/541) ([@bsundaram1](https://github.com/bsundaram1), [@brichet](https://github.com/brichet))
+
+### Bugs fixed
+
+- Fix the separator between the welcome message and the chat [#543](https://github.com/jupyterlab/jupyter-chat/pull/543) ([@brichet](https://github.com/brichet), [@jtpio](https://github.com/jtpio))
+- Publish awareness events with RTC [#540](https://github.com/jupyterlab/jupyter-chat/pull/540) ([@brichet](https://github.com/brichet), [@jtpio](https://github.com/jtpio))
+
+### Other merged PRs
+
+- Bump the npm_and_yarn group across 1 directory with 4 updates [#544](https://github.com/jupyterlab/jupyter-chat/pull/544) ([@brichet](https://github.com/brichet))
+- Bump postcss-selector-parser from 6.1.1 to 6.1.4 in the npm_and_yarn group across 1 directory [#539](https://github.com/jupyterlab/jupyter-chat/pull/539) ([@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-09-03&to=2026-09-17&type=c))
+
+@brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-09-03..2026-09-17&type=Issues)) | @bsundaram1 ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Absundaram1+updated%3A2026-09-03..2026-09-17&type=Issues)) | @jtpio ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2026-09-03..2026-09-17&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.25.0
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.24.0...9fcf7698d9f839d08b6dc7f28c82f92ee0ef018e))
@@ -51,8 +80,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-08-14&to=2026-09-02&type=c))
 
 @bhavana-nair ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abhavana-nair+updated%3A2026-08-14..2026-09-02&type=Issues)) | @brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-08-14..2026-09-02&type=Issues)) | @dlqqq ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2026-08-14..2026-09-02&type=Issues)) | @opensource-joe ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Aopensource-joe+updated%3A2026-08-14..2026-09-02&type=Issues)) | @uuzzrm ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Auuzzrm+updated%3A2026-08-14..2026-09-02&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.25.0rc0
 
