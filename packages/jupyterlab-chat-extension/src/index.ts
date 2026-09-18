@@ -1078,7 +1078,12 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
                 return chatPanel.current ?? null;
               }
 
-              const openChatArgs = await createChatModel(app, drive, filepath);
+              const openChatArgs = await createChatModel(
+                app,
+                drive,
+                filepath,
+                widgetConfig.config.defaultDirectory
+              );
 
               // Add a chat widget to the side panel.
               chatPanel.open(openChatArgs);
