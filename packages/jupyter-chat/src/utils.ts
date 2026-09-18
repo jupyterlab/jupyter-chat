@@ -19,6 +19,19 @@ import { IUser } from './types';
 const MENTION_CLASS = 'jp-chat-mention';
 
 /**
+ * Regular expression matching the `@mention` tokens in a chat message.
+ *
+ * The first capturing group holds the mention name. Mention names are built
+ * from display names (see {@link IUser.mention_name}), which routinely contain
+ * non-ASCII letters (e.g. "Pérez"), so the character class is Unicode-aware
+ * instead of relying on `\w`, which is ASCII-only in JavaScript.
+ *
+ * The `g` flag must be kept: callers use `matchAll()` over the full input
+ * to collect every `@`-mention.
+ */
+export const MENTION_REGEX = /@([\p{L}\p{N}_-]*)/gu;
+
+/**
  * Gets the editor instance used by a document widget. Returns `null` if unable.
  */
 export function getEditor(
