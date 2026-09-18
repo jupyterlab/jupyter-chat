@@ -23,7 +23,7 @@ import { Debouncer } from '@lumino/polling';
 import { ISignal, Signal } from '@lumino/signaling';
 
 import { enforceAutosaveEnabled } from './autosave';
-import { IWidgetConfig } from './token';
+import { ILabChatModel, IWidgetConfig } from './token';
 import { WebSocketHandler } from './websocket-handler';
 import { IChatChanges, IYmessage, YChat } from './ychat';
 
@@ -191,7 +191,7 @@ class LabChatUser implements IUser {
  */
 export class LabChatModel
   extends AbstractChatModel
-  implements DocumentRegistry.IModel
+  implements ILabChatModel, DocumentRegistry.IModel
 {
   constructor(options: LabChatModel.IOptions) {
     super(options);
@@ -222,12 +222,9 @@ export class LabChatModel
 
     if (!this.collaborative && options.serverSettings) {
       this._wsHandler = new WebSocketHandler({
-        serverSettings: options.serverSettings
+        serverSettings: options.serverSettings,
+        model: this
       });
-      this._wsHandler.messageReceived.connect(this._onWsMessage, this);
-      this._wsHandler.usersChanged.connect(this._onWsUsersChanged, this);
-      this._wsHandler.metadataChanged.connect(this._onWsMetadata, this);
-      this._wsHandler.writingChanged.connect(this._onWsWriting, this);
     }
   }
 
@@ -469,7 +466,7 @@ export class LabChatModel
       raw_time: this.collaborative ? true : false
     };
 
-    this.sharedModel.addMessage(this._contentToYmessage(content));
+    this.sharedModel.addMessage(this.toYMessage(content));
     return content.id;
   }
 
@@ -492,7 +489,7 @@ export class LabChatModel
     const index = this.sharedModel.getMessageIndex(id);
     this.sharedModel.updateMessage(
       index,
-      this._contentToYmessage({
+      this.toYMessage({
         ...updatedMessage,
         id,
         edited: updatedMessage.sender.bot ? updatedMessage.edited : true
@@ -598,29 +595,6 @@ export class LabChatModel
       );
     }
   }
-
-  /**
-   * Handle a writing status pushed by the server (e.g. an AI agent) over the
-   * WebSocket. The sender fully controls the lifecycle via explicit start/stop
-   * frames: a `state: true` frame shows the indicator and it stays visible
-   * until a `state: false` frame clears it -- no re-broadcasting is required.
-   */
-  private _onWsWriting = (
-    _: WebSocketHandler,
-    writing: WebSocketHandler.IWriting
-  ): void => {
-    if (writing.user.username === this.user.username) {
-      return;
-    }
-    if (writing.state) {
-      this.setWritingStatus(writing.user, {
-        messageID: writing.messageID,
-        typingIndicator: writing.typingIndicator
-      });
-    } else {
-      this.clearWritingStatus(writing.user);
-    }
-  };
 
   private _enforceAutosaveEnabled = () => {
     enforceAutosaveEnabled(this.sharedModel.awareness);
@@ -829,37 +803,7 @@ export class LabChatModel
     }
   };
 
-  private _onWsUsersChanged = (
-    _: WebSocketHandler,
-    users: Record<string, IUser>
-  ): void => {
-    for (const user of Object.values(users)) {
-      if (!this._sharedModel.getUser(user.username)) {
-        this._sharedModel.setUser(new LabChatUser(user));
-      }
-    }
-  };
-
-  private _onWsMetadata = (
-    _: WebSocketHandler,
-    metadata: Record<string, any>
-  ): void => {
-    for (const [key, value] of Object.entries(metadata)) {
-      this._sharedModel.setMetadata(key, value);
-    }
-  };
-
-  private _onWsMessage = (_: WebSocketHandler, msg: IMessageContent): void => {
-    const ymsg = this._contentToYmessage(msg);
-    const index = this._sharedModel.getMessageIndex(ymsg.id);
-    if (index >= 0) {
-      this._sharedModel.updateMessage(index, ymsg);
-    } else {
-      this._sharedModel.addMessage(ymsg);
-    }
-  };
-
-  private _contentToYmessage(msg: IMessageContent): IYmessage {
+  toYMessage(msg: IMessageContent): IYmessage {
     const sender = msg.sender as IUser;
     if (!this._sharedModel.getUser(sender.username)) {
       this._sharedModel.setUser(new LabChatUser(sender));

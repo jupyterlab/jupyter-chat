@@ -6,7 +6,9 @@
 import {
   IConfig,
   IActiveCellManager,
+  IChatModel,
   IChatPanel,
+  IMessageContent,
   ISelectionWatcher,
   MultiChatPanel,
   chatIcon
@@ -17,6 +19,7 @@ import { IObservableList } from '@jupyterlab/observables';
 import { Token } from '@lumino/coreutils';
 import { ISignal } from '@lumino/signaling';
 import { ChatWidgetFactory } from './factory';
+import { IYmessage, YChat } from './ychat';
 
 /**
  * The file type for a chat document.
@@ -53,6 +56,15 @@ export type ChatToolbarFactory = (
 export const IChatToolbarFactory = new Token<ChatToolbarFactory>(
   'jupyterlab-chat:IChatToolbarFactory'
 );
+
+/**
+ * The interface for the lab chat model, extending IChatModel with
+ * Yjs-backed shared document access and message conversion.
+ */
+export interface ILabChatModel extends IChatModel {
+  readonly sharedModel: YChat;
+  toYMessage(msg: IMessageContent): IYmessage;
+}
 
 /**
  * The chat configs.
