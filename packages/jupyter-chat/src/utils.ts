@@ -10,7 +10,9 @@ import { DocumentWidget } from '@jupyterlab/docregistry';
 import { FileEditor } from '@jupyterlab/fileeditor';
 import { Notebook } from '@jupyterlab/notebook';
 import { IObservableList, ObservableList } from '@jupyterlab/observables';
+import { IRenderMime } from '@jupyterlab/rendermime';
 import { CommandRegistry } from '@lumino/commands';
+import { MessageLoop } from '@lumino/messaging';
 import { Widget } from '@lumino/widgets';
 
 import { IChatPanel } from './tokens';
@@ -139,4 +141,34 @@ export function injectAreaArg(
 
     return wrapped;
   };
+}
+
+/**
+ * Tears down a rendermime renderer created to display chat content.
+ *
+ * The chat inserts `renderer.node` in the DOM and sends `AfterAttach` by hand,
+ * without attaching the widget. That message sets the `IsAttached` flag, so the
+ * detach messages must be sent back before disposing: `dispose()` would
+ * otherwise detach the widget, which throws when the node is not in the DOM.
+ *
+ * @param renderer - the renderer to dispose of.
+ * @param removeNode - whether to remove the renderer node from the DOM.
+ */
+export function disposeRenderer(
+  renderer: IRenderMime.IRenderer,
+  removeNode = false
+): void {
+  if (renderer.isDisposed) {
+    return;
+  }
+  if (renderer.isAttached) {
+    MessageLoop.sendMessage(renderer, Widget.Msg.BeforeDetach);
+    if (removeNode) {
+      renderer.node.remove();
+    }
+    MessageLoop.sendMessage(renderer, Widget.Msg.AfterDetach);
+  } else if (removeNode) {
+    renderer.node.remove();
+  }
+  renderer.dispose();
 }
