@@ -74,6 +74,120 @@ test.describe('#messagesNavigation', () => {
     });
   });
 
+  test.describe('navigation with deleted messages hidden', () => {
+    const deletedMessagesCount = 50;
+
+    // Build a chat long enough that the messages overflow the viewport, so the
+    // navigation buttons have a reason to show up.
+    const deletedMessagesList = (): any[] => {
+      const list: any[] = [];
+      for (let i = 0; i < deletedMessagesCount; i++) {
+        list.push({
+          type: 'msg',
+          id: UUID.uuid4(),
+          sender: USERNAME,
+          body: `Message ${i}`,
+          time: baseTime + i * 60
+        });
+      }
+      return list;
+    };
+
+    // Upload a chat with a deleted message (hidden by default) and open it.
+    const openChatWithDeletedMessage = async (
+      page: IJupyterLabPageFixture,
+      deleteIndex: number
+    ) => {
+      const chatMessages = deletedMessagesList();
+      chatMessages[deleteIndex].deleted = true;
+      const deletedChatContent = {
+        messages: chatMessages,
+        users: {}
+      };
+      deletedChatContent.users[USERNAME] = USER.identity;
+
+      await page.filebrowser.contents.uploadContent(
+        JSON.stringify(deletedChatContent),
+        'text',
+        FILENAME
+      );
+
+      const chatPanel = await openChat(page, FILENAME);
+      const messages = chatPanel.locator('.jp-chat-message');
+      // The deleted message is not rendered.
+      await expect(messages).toHaveCount(deletedMessagesCount - 1);
+      return chatPanel;
+    };
+
+    test('should navigate to the last message when a message is deleted', async ({
+      page
+    }) => {
+      const chatPanel = await openChatWithDeletedMessage(page, 10);
+      const messages = chatPanel.locator('.jp-chat-message');
+      const lastMessageButton = chatPanel.getByTitle('Go to last message');
+
+      // Mark the chat as read so the bottom button targets the last message
+      // instead of the next unread one.
+      await chatPanel.getByTitle('Mark chat as read').click();
+
+      // Move to the first message.
+      await messages.first().scrollIntoViewIfNeeded();
+
+      await expect(lastMessageButton).toBeAttached();
+      await lastMessageButton.click();
+      await expect(messages.last()).toBeInViewport();
+      await expect(lastMessageButton).not.toBeAttached();
+    });
+
+    test('should navigate when the last message is deleted', async ({
+      page
+    }) => {
+      const chatPanel = await openChatWithDeletedMessage(
+        page,
+        deletedMessagesCount - 1
+      );
+      const messages = chatPanel.locator('.jp-chat-message');
+      const lastMessageButton = chatPanel.getByTitle('Go to last message');
+
+      // Mark the chat as read so the bottom button targets the last message.
+      await chatPanel.getByTitle('Mark chat as read').click();
+
+      // Move to the first message.
+      await messages.first().scrollIntoViewIfNeeded();
+
+      await expect(lastMessageButton).toBeAttached();
+      await lastMessageButton.click();
+      await expect(messages.last()).toBeInViewport();
+      await expect(lastMessageButton).not.toBeAttached();
+    });
+
+    test('should navigate to the next unread message when a message is deleted', async ({
+      page
+    }) => {
+      const chatPanel = await openChatWithDeletedMessage(page, 10);
+      const messages = chatPanel.locator('.jp-chat-message');
+      const navigationBottom = chatPanel.locator('.jp-chat-navigation-bottom');
+      const scrollContainer = chatPanel.locator(
+        '[id^="jupyter-chat-scroll-container"]'
+      );
+
+      // Move to a message just above the deleted one.
+      await messages.nth(9).scrollIntoViewIfNeeded();
+
+      await expect(navigationBottom).toBeAttached();
+      expect(navigationBottom).toHaveClass(/jp-chat-navigation-unread/);
+
+      // Clicking jumps to the next unread message, past the hidden deleted one.
+      const scrollTopBefore = await scrollContainer.evaluate(
+        el => el.scrollTop
+      );
+      await navigationBottom.click();
+      await expect
+        .poll(() => scrollContainer.evaluate(el => el.scrollTop))
+        .toBeGreaterThan(scrollTopBefore);
+    });
+  });
+
   test.describe('navigation with previous unread message', () => {
     let newChatContent = {};
     test.beforeEach(async ({ page }) => {
