@@ -56,11 +56,21 @@ export function useChatCommands(
         return;
       }
 
+      // Fast path: if there is no current word, reset and close immediately.
+      if (!currentWord?.length) {
+        setCommands([]);
+        setOpen(false);
+        setHighlighted(false);
+        return;
+      }
+
+      // Fast path: if the input contains no backticks, it cannot be in a code block.
       const isInsideCodeBlock =
         inputModel.cursorIndex !== null &&
+        inputModel.value.includes('`') &&
         isCursorInsideCodeBlock(inputModel.value, inputModel.cursorIndex);
 
-      if (!currentWord?.length || isInsideCodeBlock) {
+      if (isInsideCodeBlock) {
         setCommands([]);
         setOpen(false);
         setHighlighted(false);
@@ -248,6 +258,15 @@ export function isCursorInsideCodeBlock(
   input: string,
   cursorIndex: number
 ): boolean {
+  // Fast path: if input is empty or has no backticks before cursor, skip iteration.
+  if (
+    !input ||
+    cursorIndex <= 0 ||
+    !input.slice(0, cursorIndex).includes('`')
+  ) {
+    return false;
+  }
+
   let insideInline = false;
   let insideBlock = false;
   let i = 0;
