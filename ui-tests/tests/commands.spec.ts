@@ -7,6 +7,9 @@ import { expect, IJupyterLabPageFixture, test } from '@jupyterlab/galata';
 import { openChat, openChatToSide } from './test-utils';
 
 const FILENAME = 'commands.chat';
+const RENAME_MAIN_FILENAME = 'rename-chat-main.chat';
+const RENAME_SIDE_FILENAME = 'rename-chat-side.chat';
+const RENAME_NEW_NAME = 'rename-chat-renamed';
 
 const fillModal = async (
   page: IJupyterLabPageFixture,
@@ -242,5 +245,59 @@ test.describe('#focusInput', () => {
     // expect the chat to be visible and the input to be focussed
     await expect(chatPanel).toBeVisible();
     await expect(input).toBeFocused();
+  });
+});
+
+test.describe('#renameChat', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.filebrowser.contents.uploadContent(
+      '{}',
+      'text',
+      RENAME_MAIN_FILENAME
+    );
+    await page.filebrowser.contents.uploadContent(
+      '{}',
+      'text',
+      RENAME_SIDE_FILENAME
+    );
+  });
+
+  test.afterEach(async ({ page }) => {
+    for (const filename of [
+      RENAME_MAIN_FILENAME,
+      RENAME_SIDE_FILENAME,
+      `${RENAME_NEW_NAME}.chat`
+    ]) {
+      if (await page.filebrowser.contents.fileExists(filename)) {
+        await page.filebrowser.contents.deleteFile(filename);
+      }
+    }
+  });
+
+  test('should rename the chat visible in the main area', async ({ page }) => {
+    // 1. Open the chat to rename in the main area.
+    await openChat(page, RENAME_MAIN_FILENAME);
+
+    // 2. Open another chat in the side panel.
+    await openChatToSide(page, RENAME_SIDE_FILENAME);
+
+    // 3. Rename from the command palette.
+    await page.keyboard.press('Control+Shift+c');
+    await page
+      .locator(
+        '#modal-command-palette li[data-command="jupyterlab-chat:renameChat"]'
+      )
+      .click();
+    await fillModal(page, RENAME_NEW_NAME);
+
+    await expect(
+      page.activity.getTabLocator(`${RENAME_NEW_NAME}.chat`)
+    ).toBeVisible();
+    expect(
+      await page.filebrowser.contents.fileExists(RENAME_MAIN_FILENAME)
+    ).toBe(false);
+    expect(
+      await page.filebrowser.contents.fileExists(RENAME_SIDE_FILENAME)
+    ).toBe(true);
   });
 });

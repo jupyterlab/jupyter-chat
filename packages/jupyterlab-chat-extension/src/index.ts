@@ -1130,8 +1130,14 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         let oldPath = args.oldPath as string;
         let newPath = args.newPath as string | null;
         if (!oldPath) {
-          if (tracker.currentWidget) {
-            oldPath = tracker.currentWidget.model.name;
+          // The tracker also follows side-panel chats, so prefer the chat
+          // shown in the main area.
+          const current =
+            app.shell.currentWidget instanceof LabChatPanel
+              ? app.shell.currentWidget
+              : tracker.currentWidget;
+          if (current) {
+            oldPath = current.model.name;
           } else {
             showErrorMessage(
               trans.__('Error renaming chat'),
