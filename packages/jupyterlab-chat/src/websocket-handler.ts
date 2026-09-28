@@ -160,7 +160,7 @@ export class WebSocketHandler {
       action: 'edit',
       id,
       body: message.body,
-      edited: true
+      edited: message.edited
     };
     if (message.attachments?.length) {
       msg.attachments = message.attachments;

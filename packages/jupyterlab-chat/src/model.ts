@@ -484,8 +484,12 @@ export class LabChatModel
     id: string,
     updatedMessage: IMessageContent
   ): Promise<boolean | void> | boolean | void {
+    const edited = updatedMessage.sender.bot ? updatedMessage.edited : true;
     if (this._wsHandler) {
-      this._wsHandler.updateMessage(id, updatedMessage);
+      this._wsHandler.updateMessage(id, {
+        ...updatedMessage,
+        edited
+      });
       return;
     }
 
@@ -495,7 +499,7 @@ export class LabChatModel
       this._contentToYmessage({
         ...updatedMessage,
         id,
-        edited: updatedMessage.sender.bot ? updatedMessage.edited : true
+        edited
       })
     );
   }
