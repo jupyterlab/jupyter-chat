@@ -20,6 +20,27 @@ const NAVIGATION_TOP_CLASS = 'jp-chat-navigation-top';
 const NAVIGATION_BOTTOM_CLASS = 'jp-chat-navigation-bottom';
 
 /**
+ * The index of the last message expected to be rendered, or -1 when no message
+ * is rendered at all. Deleted messages are skipped when the 'showDeleted'
+ * setting is disabled, so the navigation should consider the last visible
+ * message instead of the last one in the model.
+ *
+ * @param model - the chat model.
+ * @returns the index of the last rendered message.
+ */
+function lastRenderedMessageIndex(model: IChatModel): number {
+  if (model.config.showDeleted) {
+    return model.messages.length - 1;
+  }
+  for (let i = model.messages.length - 1; i >= 0; i--) {
+    if (!model.messages[i].deleted) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+/**
  * The navigation component props.
  */
 type NavigationProps = {
@@ -44,7 +65,16 @@ export function Navigation(props: NavigationProps): JSX.Element {
   const [unreadAfter, setUnreadAfter] = useState<number | null>(null);
 
   const gotoMessage = (msgIdx: number, alignToTop: boolean = true) => {
-    props.refMsgBox.current?.children.item(msgIdx)?.scrollIntoView(alignToTop);
+    const msgEl = props.refMsgBox.current?.querySelector(
+      `[data-index="${msgIdx}"]`
+    );
+    if (msgEl) {
+      msgEl.scrollIntoView(alignToTop);
+    } else {
+      // The message is not rendered (deleted and hidden), so scroll to the
+      // last visible message instead.
+      props.refMsgBox.current?.scrollIntoView(false);
+    }
   };
 
   // Listen for change in unread messages, and find the first unread message before or
@@ -101,7 +131,7 @@ export function Navigation(props: NavigationProps): JSX.Element {
     unreadChanged(model, model.unreadMessages);
 
     // Move to the last the message after all the messages have been first rendered.
-    gotoMessage(model.messages.length - 1, false);
+    gotoMessage(lastRenderedMessageIndex(model), false);
 
     return () => {
       model.unreadChanged?.disconnect(unreadChanged);
@@ -114,7 +144,7 @@ export function Navigation(props: NavigationProps): JSX.Element {
     const viewportChanged = (model: IChatModel, viewport: number[]) => {
       setLastInViewport(
         model.messages.length === 0 ||
-          viewport.includes(model.messages.length - 1)
+          viewport.includes(lastRenderedMessageIndex(model))
       );
     };
 
@@ -147,7 +177,7 @@ export function Navigation(props: NavigationProps): JSX.Element {
           className={`${NAVIGATION_BUTTON_CLASS} ${unreadAfter !== null ? NAVIGATION_UNREAD_CLASS : ''} ${NAVIGATION_BOTTOM_CLASS}`}
           onClick={
             unreadAfter === null
-              ? () => gotoMessage(model.messages.length - 1, false)
+              ? () => gotoMessage(lastRenderedMessageIndex(model), false)
               : () => gotoMessage(unreadAfter)
           }
           title={
