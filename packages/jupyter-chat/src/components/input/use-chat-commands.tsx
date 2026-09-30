@@ -56,7 +56,21 @@ export function useChatCommands(
         return;
       }
 
+      // Fast path: if there is no current word, reset and close immediately.
       if (!currentWord?.length) {
+        setCommands([]);
+        setOpen(false);
+        setHighlighted(false);
+        return;
+      }
+
+      // Fast path: if the input contains no backticks, it cannot be in a code block.
+      const isInsideCodeBlock =
+        inputModel.cursorIndex !== null &&
+        inputModel.value.includes('`') &&
+        isCursorInsideCodeBlock(inputModel.value, inputModel.cursorIndex);
+
+      if (isInsideCodeBlock) {
         setCommands([]);
         setOpen(false);
         setHighlighted(false);
@@ -234,4 +248,44 @@ export function useChatCommands(
       highlighted
     }
   };
+}
+
+/**
+ * Checks if the given cursor index is inside a Markdown code block
+ * (either inline `code` or a triple-backtick block).
+ */
+export function isCursorInsideCodeBlock(
+  input: string,
+  cursorIndex: number
+): boolean {
+  // Fast path: if input is empty or has no backticks before cursor, skip iteration.
+  if (
+    !input ||
+    cursorIndex <= 0 ||
+    !input.slice(0, cursorIndex).includes('`')
+  ) {
+    return false;
+  }
+
+  let insideInline = false;
+  let insideBlock = false;
+  let i = 0;
+
+  while (i < cursorIndex) {
+    if (input.startsWith('```', i)) {
+      if (!insideInline) {
+        insideBlock = !insideBlock;
+      }
+      i += 3;
+    } else if (input[i] === '`') {
+      if (!insideBlock) {
+        insideInline = !insideInline;
+      }
+      i += 1;
+    } else {
+      i += 1;
+    }
+  }
+
+  return insideInline || insideBlock;
 }
