@@ -252,3 +252,116 @@ def test_client_connected_and_disconnected_events(tmp_path):
         ]
 
     asyncio.run(run())
+
+
+# ---------------------------------------------------------------------------
+# RTC awareness events (_on_rtc_awareness_event)
+# ---------------------------------------------------------------------------
+
+_ROOM_ID = "text:chat:some-room-id"
+_SCHEMA_ID = "https://schema.jupyter.org/jupyter_collaboration/awareness/v1"
+
+
+def _make_manager_with_rtc_model(tmp_path, capture):
+    """Manager with a WsChatModel that has a room_id set (simulating RTC)."""
+    mgr = _make_manager(tmp_path, capture)
+    (tmp_path / "a.chat").write_text("{}")
+    model = mgr.ws_open("a.chat")
+    model.room_id = _ROOM_ID
+    return mgr, model
+
+
+def test_rtc_awareness_join_emits_client_connected(tmp_path):
+    async def run():
+        capture: list = []
+        mgr, model = _make_manager_with_rtc_model(tmp_path, capture)
+        chat_id = model.get_id()
+        await _drain()
+        capture.clear()
+
+        await mgr._on_rtc_awareness_event(
+            None, _SCHEMA_ID, {"roomid": _ROOM_ID, "action": "join", "username": "user-1"}
+        )
+        await _drain()
+
+        assert capture == [
+            {"path": "a.chat", "action": "client_connected", "chat_id": chat_id, "client_id": "user-1"}
+        ]
+        mgr.stop()
+
+    asyncio.run(run())
+
+
+def test_rtc_awareness_leave_emits_client_disconnected(tmp_path):
+    async def run():
+        capture: list = []
+        mgr, model = _make_manager_with_rtc_model(tmp_path, capture)
+        chat_id = model.get_id()
+        await _drain()
+        capture.clear()
+
+        await mgr._on_rtc_awareness_event(
+            None, _SCHEMA_ID, {"roomid": _ROOM_ID, "action": "leave", "username": "user-1"}
+        )
+        await _drain()
+
+        assert capture == [
+            {"path": "a.chat", "action": "client_disconnected", "chat_id": chat_id, "client_id": "user-1"}
+        ]
+        mgr.stop()
+
+    asyncio.run(run())
+
+
+def test_rtc_awareness_non_chat_room_ignored(tmp_path):
+    async def run():
+        capture: list = []
+        mgr, _ = _make_manager_with_rtc_model(tmp_path, capture)
+        await _drain()
+        capture.clear()
+
+        await mgr._on_rtc_awareness_event(
+            None, _SCHEMA_ID, {"roomid": "text:notebook:some-id", "action": "join", "username": "user-1"}
+        )
+        await _drain()
+
+        assert capture == []
+        mgr.stop()
+
+    asyncio.run(run())
+
+
+def test_rtc_awareness_unknown_room_ignored(tmp_path):
+    async def run():
+        capture: list = []
+        mgr, _ = _make_manager_with_rtc_model(tmp_path, capture)
+        await _drain()
+        capture.clear()
+
+        await mgr._on_rtc_awareness_event(
+            None, _SCHEMA_ID, {"roomid": "text:chat:no-such-room", "action": "join", "username": "user-1"}
+        )
+        await _drain()
+
+        assert capture == []
+        mgr.stop()
+
+    asyncio.run(run())
+
+
+def test_rtc_awareness_unknown_action_ignored(tmp_path):
+    async def run():
+        capture: list = []
+        mgr, _ = _make_manager_with_rtc_model(tmp_path, capture)
+        await _drain()
+        capture.clear()
+
+        await mgr._on_rtc_awareness_event(
+            None, _SCHEMA_ID, {"roomid": _ROOM_ID, "action": "update", "username": "user-1"}
+        )
+        await _drain()
+
+        assert capture == []
+        mgr.stop()
+
+    asyncio.run(run())

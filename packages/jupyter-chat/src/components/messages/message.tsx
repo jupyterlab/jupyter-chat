@@ -104,7 +104,8 @@ export function ChatMessageBase(props: ChatMessageProps): JSX.Element {
       selectionWatcher: model.selectionWatcher,
       documentManager: model.documentManager,
       config: {
-        sendWithShiftEnter: model.config.sendWithShiftEnter
+        sendWithShiftEnter: model.config.sendWithShiftEnter,
+        inputPlaceholder: model.config.inputPlaceholder
       },
       attachments: structuredClone(message.attachments ?? []),
       mentions: message.mentions

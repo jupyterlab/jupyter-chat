@@ -193,6 +193,12 @@ interface IConfig {
    * Whether to display deleted messages.
    */
   showDeleted?: boolean;
+  /**
+   * The placeholder to display in the empty chat input.
+   * The default placeholder is used if undefined, an empty string displays no
+   * placeholder at all.
+   */
+  inputPlaceholder?: string;
 }
 ```
 

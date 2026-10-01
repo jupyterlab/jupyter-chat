@@ -29,6 +29,11 @@ JUPYTER_COLLABORATION_EVENTS_URI = (
     "https://schema.jupyter.org/jupyter_collaboration/session/v1"
 )
 
+#: jupyter_collaboration awareness event schema (client join/leave per room).
+JUPYTER_COLLABORATION_AWARENESS_EVENTS_URI = (
+    "https://schema.jupyter.org/jupyter_collaboration/awareness/v1"
+)
+
 #: Inline schema (registered with the EventLogger at startup). Kept as a dict so
 #: the package does not need to ship/locate a yaml resource.
 CHAT_ROOM_EVENT_SCHEMA = {

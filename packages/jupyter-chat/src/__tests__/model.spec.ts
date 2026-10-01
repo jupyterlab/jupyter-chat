@@ -149,6 +149,21 @@ describe('test chat model', () => {
       const model = new MockChatModel({ config: { sendWithShiftEnter: true } });
       expect(model.config.sendWithShiftEnter).toBeTruthy();
     });
+
+    it('should forward the input placeholder to the input model', () => {
+      const model = new MockChatModel({
+        config: { inputPlaceholder: 'Ask the assistant' }
+      });
+      expect(model.input.config.inputPlaceholder).toBe('Ask the assistant');
+    });
+
+    it('should forward a later input placeholder change to the input model', () => {
+      const model = new MockChatModel();
+      expect(model.input.config.inputPlaceholder).toBeUndefined();
+
+      model.config = { inputPlaceholder: 'Ask the assistant' };
+      expect(model.input.config.inputPlaceholder).toBe('Ask the assistant');
+    });
   });
 
   describe('awareness', () => {

@@ -25,6 +25,32 @@ This token is composed of:
 - `tracker`, a widget tracker that allows to track all the opened chats, and to
   retrieve the current one.
 
+### IWidgetConfig
+
+This token gives access to the [settings](#chat-settings) shared by all the chats,
+and to a signal emitted when they change. Assigning to `config` updates the existing
+chats as well as the ones opened later.
+
+Some options have no entry in the settings because they are meant to be set by the
+extension rather than by the user. `inputPlaceholder` is one of them: an extension
+branding the chat around its own assistant can replace the generic placeholder of the
+chat input with a plugin.
+
+```ts
+const inputPlaceholder: JupyterFrontEndPlugin<void> = {
+  id: 'my-extension:input-placeholder',
+  description: 'Update the chat input placeholder',
+  autoStart: true,
+  requires: [IWidgetConfig],
+  activate: (app: JupyterFrontEnd, widgetConfig: IWidgetConfig): void => {
+    widgetConfig.config = {
+      ...widgetConfig.config,
+      inputPlaceholder: 'Ask the assistant'
+    };
+  }
+};
+```
+
 ### IChatPanel
 
 This token is a pointer to the left panel containing chats.\

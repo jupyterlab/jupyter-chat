@@ -29,7 +29,7 @@ export interface IWelcomeMessageProps {
  */
 export function WelcomeMessage(props: IWelcomeMessageProps): JSX.Element {
   const { rmRegistry } = useChatContext();
-  const content = props.content + '\n----\n';
+  const content = props.content + '\n\n---\n';
 
   // ref that tracks the content container to store the rendermime node in
   const renderingContainer = useRef<HTMLDivElement | null>(null);
