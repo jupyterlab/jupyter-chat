@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { IUser } from '@jupyter/chat';
+import { IAttachment, IMimeModelBody, IUser } from '@jupyter/chat';
 
 /**
  * Typed schema for the per-chat `/api/chat/ws` WebSocket protocol.
@@ -41,8 +41,8 @@ export interface IWireMessage {
   edited?: boolean;
   deleted?: boolean;
   metadata?: Record<string, any>;
-  mime_model?: any;
-  attachments?: any[];
+  mime_model?: IMimeModelBody;
+  attachments?: IAttachment[];
   mentions?: string[];
 }
 
@@ -57,8 +57,8 @@ export interface IClientSendMessage {
   sender?: IUser;
   mentions?: string[];
   metadata?: Record<string, any>;
-  attachments?: any[];
-  mime_model?: any;
+  attachments?: IAttachment[];
+  mime_model?: IMimeModelBody;
 }
 
 export interface IClientEditMessage {
@@ -68,9 +68,10 @@ export interface IClientEditMessage {
   body?: string;
   deleted?: boolean;
   edited?: boolean;
+  mime_model?: IMimeModelBody;
   mentions?: string[];
   metadata?: Record<string, any>;
-  attachments?: any[];
+  attachments?: IAttachment[];
 }
 
 export type IClientChatWsMessage = IClientSendMessage | IClientEditMessage;

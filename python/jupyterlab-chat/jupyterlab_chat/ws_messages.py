@@ -37,6 +37,7 @@ import json
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Literal, Optional, Union
 
+
 #: Direction discriminator values (the ``type`` field).
 CLIENT: Literal["client"] = "client"
 SERVER: Literal["server"] = "server"
@@ -68,6 +69,7 @@ class ClientEditMessage:
     body: Optional[str] = None
     deleted: Optional[bool] = None
     edited: Optional[bool] = None
+    mime_model: Optional[dict] = None
     mentions: Optional[List[str]] = None
     metadata: Optional[Dict[str, Any]] = None
     attachments: Optional[List[dict]] = None
@@ -186,6 +188,7 @@ def parse_client_message(data: Any) -> Optional[ClientChatWsMessage]:
             body=data.get("body"),
             deleted=data.get("deleted"),
             edited=data.get("edited"),
+            mime_model=data.get("mime_model"),
             mentions=data.get("mentions"),
             metadata=data.get("metadata"),
             attachments=data.get("attachments"),

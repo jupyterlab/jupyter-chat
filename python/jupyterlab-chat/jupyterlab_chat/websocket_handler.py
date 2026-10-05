@@ -230,6 +230,8 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
             stored["edited"] = msg.edited
         if msg.mentions is not None:
             stored["mentions"] = msg.mentions
+        if msg.mime_model is not None:
+            stored["mime_model"] = msg.mime_model
         if msg.metadata is not None:
             stored["metadata"] = msg.metadata
         if msg.attachments is not None:
