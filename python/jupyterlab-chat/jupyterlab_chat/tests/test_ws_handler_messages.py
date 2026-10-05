@@ -45,7 +45,7 @@ class _HandlerStub(WSChatHandler):
         self._fake_client = fake_client
         model.handlers["client-1"] = fake_client  # type: ignore[assignment]
 
-    @property
+    @property  # type: ignore[misc]
     def current_user(self):
         return _ALICE
 
