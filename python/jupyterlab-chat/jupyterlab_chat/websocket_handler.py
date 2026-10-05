@@ -169,14 +169,26 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
 
     def _handle_new_message(self, msg: ClientSendMessage, model: WsChatModel) -> None:
         timestamp = time.time()
-        # The WS transport is single-user: the sender is always the
-        # authenticated server user, already registered in `open()`.
-        sender = self.current_user.username
+        if msg.sender and isinstance(msg.sender, dict):
+            username = msg.sender.get("username") or self.current_user.username
+            if username not in model._users:
+                name = msg.sender.get("name") or username
+                model.set_user(User(
+                    username=username,
+                    name=name,
+                    display_name=msg.sender.get("display_name") or name,
+                    initials=msg.sender.get("initials") or username[0].upper(),
+                    color=msg.sender.get("color"),
+                    avatar_url=msg.sender.get("avatar_url"),
+                    bot=bool(msg.sender.get("bot")),
+                ))
+        else:
+            username = self.current_user.username
         message: dict = {
             "id": msg.id,
             "body": msg.body,
             "time": timestamp,
-            "sender": sender,
+            "sender": username,
             "type": "msg",
             "raw_time": False,
         }

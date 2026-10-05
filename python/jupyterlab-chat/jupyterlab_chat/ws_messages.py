@@ -51,6 +51,7 @@ class ClientSendMessage:
 
     id: str
     body: str = ""
+    sender: Optional[Dict[str, Any]] = None
     mentions: List[str] = field(default_factory=list)
     metadata: Optional[Dict[str, Any]] = None
     attachments: Optional[List[dict]] = None
@@ -169,9 +170,11 @@ def parse_client_message(data: Any) -> Optional[ClientChatWsMessage]:
 
     action = data.get("action")
     if action == "send":
+        sender = data.get("sender")
         return ClientSendMessage(
             id=msg_id,
             body=data.get("body", "") or "",
+            sender=sender if isinstance(sender, dict) else None,
             mentions=list(data.get("mentions") or []),
             metadata=data.get("metadata"),
             attachments=data.get("attachments"),

@@ -54,6 +54,7 @@ export interface IClientSendMessage {
   action: 'send';
   id: string;
   body: string;
+  sender?: IUser;
   mentions?: string[];
   metadata?: Record<string, any>;
   attachments?: any[];
