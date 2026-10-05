@@ -433,19 +433,19 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
     rmRegistry: IRenderMimeRegistry,
     widgetConfig: IWidgetConfig,
     activeCellManager: IActiveCellManager | null,
-    attachmentOpenerRegistry: IAttachmentOpenerRegistry,
-    chatCommandRegistry: IChatCommandRegistry,
+    attachmentOpenerRegistry: IAttachmentOpenerRegistry | null,
+    chatCommandRegistry: IChatCommandRegistry | null,
     toolbarFactory: ChatToolbarFactory | null,
     drive: ICollaborativeContentProvider | null,
     filebrowser: IDefaultFileBrowser | null,
-    inputToolbarFactory: IInputToolbarRegistryFactory,
-    messageFooterRegistry: IMessageFooterRegistry,
-    messagePreambleRegistry: IMessagePreambleRegistry,
+    inputToolbarFactory: IInputToolbarRegistryFactory | null,
+    messageFooterRegistry: IMessageFooterRegistry | null,
+    messagePreambleRegistry: IMessagePreambleRegistry | null,
     chatBodyPlaceholderFactory: IChatBodyPlaceholderFactory | null,
     selectionWatcher: ISelectionWatcher | null,
     themeManager: IThemeManager | null,
     translator_: ITranslator | null,
-    welcomeMessage: string
+    welcomeMessage: string | null
   ): ChatWidgetFactory => {
     const translator = translator_ ?? nullTranslator;
 
@@ -511,13 +511,13 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
       rmRegistry,
       toolbarFactory: toolbarFactory ?? undefined,
       translator,
-      chatCommandRegistry,
-      attachmentOpenerRegistry,
-      inputToolbarFactory,
-      messageFooterRegistry,
-      messagePreambleRegistry,
+      chatCommandRegistry: chatCommandRegistry ?? undefined,
+      attachmentOpenerRegistry: attachmentOpenerRegistry ?? undefined,
+      inputToolbarFactory: inputToolbarFactory ?? undefined,
+      messageFooterRegistry: messageFooterRegistry ?? undefined,
+      messagePreambleRegistry: messagePreambleRegistry ?? undefined,
       chatBodyPlaceholderFactory: chatBodyPlaceholderFactory ?? undefined,
-      welcomeMessage,
+      welcomeMessage ?? undefined,
       collaborative
     });
 
@@ -1322,18 +1322,18 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     widgetConfig: IWidgetConfig,
     rmRegistry: IRenderMimeRegistry,
     drive: ICollaborativeContentProvider | null,
-    attachmentOpenerRegistry: IAttachmentOpenerRegistry,
-    chatCommandRegistry: IChatCommandRegistry,
+    attachmentOpenerRegistry: IAttachmentOpenerRegistry | null,
+    chatCommandRegistry: IChatCommandRegistry | null,
     chatToolbarFactory: ChatToolbarFactory | null,
-    inputToolbarFactory: IInputToolbarRegistryFactory,
+    inputToolbarFactory: IInputToolbarRegistryFactory | null,
     restorer: ILayoutRestorer | null,
-    messageFooterRegistry: IMessageFooterRegistry,
-    messagePreambleRegistry: IMessagePreambleRegistry,
+    messageFooterRegistry: IMessageFooterRegistry | null,
+    messagePreambleRegistry: IMessagePreambleRegistry | null,
     placeholderFactory: IChatPlaceholderFactory | null,
     chatBodyPlaceholderFactory: IChatBodyPlaceholderFactory | null,
     themeManager: IThemeManager | null,
     translator_: ITranslator | null,
-    welcomeMessage: string
+    welcomeMessage: string | null
   ): MultiChatPanel => {
     const { commands, serviceManager } = app;
     const translator = translator_ ?? nullTranslator;
@@ -1377,12 +1377,12 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
           oldPath
         }) as Promise<string | null>;
       },
-      chatCommandRegistry,
-      attachmentOpenerRegistry,
-      inputToolbarFactory,
-      messageFooterRegistry,
-      messagePreambleRegistry,
-      welcomeMessage,
+      chatCommandRegistry: chatCommandRegistry ?? undefined,
+      attachmentOpenerRegistry: attachmentOpenerRegistry ?? undefined,
+      inputToolbarFactory: inputToolbarFactory ?? undefined,
+      messageFooterRegistry: messageFooterRegistry ?? undefined,
+      messagePreambleRegistry: messagePreambleRegistry ?? undefined,
+      welcomeMessage: welcomeMessage ?? undefined,
       placeholderFactory: placeholderFactory ?? undefined,
       chatBodyPlaceholderFactory: chatBodyPlaceholderFactory ?? undefined,
       chatToolbarFactory: chatToolbarFactory ?? undefined
@@ -1491,11 +1491,11 @@ const selectionWatcher: JupyterFrontEndPlugin<ISelectionWatcher> = {
   optional: [IEditorLanguageRegistry],
   activate: (
     app: JupyterFrontEnd,
-    languages: IEditorLanguageRegistry
+    languages: IEditorLanguageRegistry | null
   ): ISelectionWatcher => {
     return new SelectionWatcher({
       shell: app.shell,
-      languages
+      languages: languages ?? undefined
     });
   }
 };
