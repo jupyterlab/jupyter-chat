@@ -222,6 +222,28 @@ class NotebookAttachment:
     (optional) A list of cells in the notebook.
     """
 
+    def __post_init__(self) -> None:
+        if self.cells is None:
+            return
+
+        cells: list[NotebookAttachmentCell] = []
+        for cell in self.cells:
+            if isinstance(cell, NotebookAttachmentCell):
+                cells.append(cell)
+                continue
+
+            selection = cell.get("selection")
+            if isinstance(selection, dict):
+                selection = AttachmentSelection(**selection)
+            cells.append(
+                NotebookAttachmentCell(
+                    id=cell["id"],
+                    input_type=cell["input_type"],
+                    selection=selection,
+                )
+            )
+        self.cells = cells
+
 
 class ChatMessageAction(str, Enum):
     """The kind of message change surfaced to ``observe_messages`` callbacks."""
