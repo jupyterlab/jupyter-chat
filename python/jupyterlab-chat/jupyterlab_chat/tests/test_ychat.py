@@ -3,12 +3,20 @@
 
 import asyncio
 from dataclasses import asdict
+from typing import cast
 from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
 
-from ..models import message_asdict_factory, Message, NewMessage, User
+from ..models import (
+    AttachmentSelection,
+    Message,
+    NewMessage,
+    NotebookAttachment,
+    NotebookAttachmentCell,
+    User,
+)
 from ..ychat import YChat
 from ..utils import find_mentions
 
@@ -42,6 +50,39 @@ def test_initialize_ychat():
     assert chat._get_messages() == []
     assert chat._get_users() == {}
     assert chat.get_metadata() == {}
+
+
+def test_notebook_attachment_converts_nested_cell_data():
+    attachment = NotebookAttachment(
+        value="notebook.ipynb",
+        cells=cast(
+            list[NotebookAttachmentCell],
+            [
+                {
+                    "id": "cell-1",
+                    "input_type": "code",
+                    "selection": {
+                        "start": (0, 0),
+                        "end": (0, 3),
+                        "content": "sum",
+                    },
+                }
+            ],
+        ),
+    )
+
+    assert attachment.cells is not None
+    cell = attachment.cells[0]
+    assert isinstance(cell, NotebookAttachmentCell)
+    assert isinstance(cell.selection, AttachmentSelection)
+    assert cell.selection.content == "sum"
+
+
+def test_notebook_attachment_preserves_typed_cells_and_none():
+    cell = NotebookAttachmentCell(id="cell-1", input_type="markdown")
+
+    assert NotebookAttachment(value="notebook.ipynb", cells=[cell]).cells == [cell]
+    assert NotebookAttachment(value="notebook.ipynb").cells is None
 
 
 def test_create_id_updates_metadata_synchronously():
