@@ -56,6 +56,71 @@ describe('LabChatModel', () => {
     sharedModel.dispose();
   });
 
+  describe('message update via websocket handler', () => {
+    let wsModel: LabChatModel;
+    let updateMessageSpy: jest.Mock;
+
+    beforeEach(() => {
+      wsModel = new LabChatModel({
+        widgetConfig: makeWidgetConfig(),
+        user: TEST_USER,
+        sharedModel: YChat.create(),
+        collaborative: false
+      });
+      updateMessageSpy = jest.fn();
+      (wsModel as any)._wsHandler = { updateMessage: updateMessageSpy };
+    });
+
+    afterEach(() => {
+      Signal.clearData(wsModel);
+    });
+
+    it('should pass edited=true when a user message is updated via websocket', () => {
+      const id = 'msg-1';
+      wsModel.updateMessage(id, {
+        type: 'msg',
+        id,
+        body: 'updated',
+        time: 1000,
+        sender: TEST_USER
+      });
+
+      expect(updateMessageSpy).toHaveBeenCalledTimes(1);
+      expect(updateMessageSpy.mock.calls[0][1]).toMatchObject({ edited: true });
+    });
+
+    it('should pass edited=undefined when a bot message is updated via websocket', () => {
+      const id = 'msg-1';
+      wsModel.updateMessage(id, {
+        type: 'msg',
+        id,
+        body: 'updated',
+        time: 1000,
+        sender: TEST_BOT
+      });
+
+      expect(updateMessageSpy).toHaveBeenCalledTimes(1);
+      expect(updateMessageSpy.mock.calls[0][1]).toMatchObject({
+        edited: undefined
+      });
+    });
+
+    it('should preserve existing edited value when a bot message is updated via websocket', () => {
+      const id = 'msg-1';
+      wsModel.updateMessage(id, {
+        type: 'msg',
+        id,
+        body: 'updated',
+        time: 1000,
+        sender: TEST_BOT,
+        edited: true
+      });
+
+      expect(updateMessageSpy).toHaveBeenCalledTimes(1);
+      expect(updateMessageSpy.mock.calls[0][1]).toMatchObject({ edited: true });
+    });
+  });
+
   describe('message update from model', () => {
     it('should set edited when user message is updated', async () => {
       const id = model.sendMessage({
