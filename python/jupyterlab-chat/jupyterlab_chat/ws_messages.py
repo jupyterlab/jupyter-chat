@@ -176,7 +176,13 @@ def parse_client_message(data: Any) -> Optional[ClientChatWsMessage]:
         return ClientSendMessage(
             id=msg_id,
             body=data.get("body", "") or "",
-            sender=sender if isinstance(sender, dict) else None,
+            sender=(
+                sender
+                if isinstance(sender, dict)
+                and isinstance(sender.get("username"), str)
+                and sender["username"]
+                else None
+            ),
             mentions=list(data.get("mentions") or []),
             metadata=data.get("metadata"),
             attachments=data.get("attachments"),
