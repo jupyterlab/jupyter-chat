@@ -90,7 +90,12 @@ export type IMimeModelBody = Partial<IRenderMime.IMimeModel> &
  * }
  * ```
  */
-export interface IMessageMetadata {} /* eslint-disable-line @typescript-eslint/no-empty-object-type */
+export interface IMessageMetadata {
+  /**
+   * Optional reasoning content displayed in an accordion.
+   */
+  reasoning?: string;
+}
 
 /**
  * The chat message description.
