@@ -57,6 +57,59 @@ This token is a pointer to the left panel containing chats.\
 It can be used to programmatically open chat in the panel for example, or to list the
 opened chats.
 
+### IChatCommandRegistry
+
+This token allows external extensions to register custom chat command providers.
+
+Command providers implement the `IChatCommandProvider` interface. They supply completion suggestions based on `inputModel.currentWord` and can handle command execution or pre-submission hooks via `onSubmit(inputModel)`.
+
+```ts
+import {
+  ChatCommand,
+  IChatCommandProvider,
+  IChatCommandRegistry,
+  IInputModel
+} from '@jupyter/chat';
+import { JupyterFrontEndPlugin } from '@jupyterlab/application';
+
+class CustomCommandProvider implements IChatCommandProvider {
+  public id = 'my-extension:custom-commands';
+
+  async listCommandCompletions(
+    inputModel: IInputModel
+  ): Promise<ChatCommand[]> {
+    const { currentWord } = inputModel;
+    if (!currentWord || !currentWord.startsWith('/')) {
+      return [];
+    }
+
+    const commands: ChatCommand[] = [
+      {
+        name: '/help',
+        description: 'Show help message',
+        providerId: this.id,
+        replaceWith: ''
+      }
+    ];
+
+    return commands.filter(cmd => cmd.name.startsWith(currentWord));
+  }
+
+  async onSubmit(inputModel: IInputModel): Promise<void> {
+    // Optionally inspect inputModel.value or execute actions prior to submission
+  }
+}
+
+const customCommandsPlugin: JupyterFrontEndPlugin<void> = {
+  id: 'my-extension:custom-commands',
+  autoStart: true,
+  requires: [IChatCommandRegistry],
+  activate: (app, registry: IChatCommandRegistry) => {
+    registry.addProvider(new CustomCommandProvider());
+  }
+};
+```
+
 ## Interact with the chat from the backend
 
 `jupyter_collaboration` provides a websocket server to handle every shared document

@@ -99,7 +99,7 @@ class WsChatModel(BaseChatModel):
     def load_from_file(self) -> None:
         full_path = self.root_dir / self.path
         try:
-            with open(full_path) as f:
+            with open(full_path, encoding="utf-8") as f:
                 content = json.load(f)
             self._messages = content.get("messages", [])
             self._users = content.get("users", {})
@@ -115,7 +115,7 @@ class WsChatModel(BaseChatModel):
 
     def save(self) -> None:
         full_path = self.root_dir / self.path
-        with open(full_path, "w") as f:
+        with open(full_path, "w", encoding="utf-8") as f:
             json.dump(self.to_dict(), f, indent=2)
 
     def broadcast(self, message: str) -> None:

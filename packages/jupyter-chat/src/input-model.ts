@@ -412,11 +412,11 @@ export class InputModel implements IInputModel {
           existingNotebookIndex
         ] as INotebookAttachment;
         const existingCells = existingAttachment.cells || [];
+        const existingCellIds = new Set(existingCells.map(cell => cell.id));
 
         // Filter out duplicate cells
         const newCells = attachment.cells.filter(
-          newCell =>
-            !existingCells.some(existingCell => existingCell.id === newCell.id)
+          newCell => !existingCellIds.has(newCell.id)
         );
 
         if (!newCells.length) {
