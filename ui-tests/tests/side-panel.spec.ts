@@ -35,6 +35,11 @@ test.describe('#sidepanel', () => {
       await expect(items.last()).toHaveClass(/.jp-chat-open/);
     });
 
+    test('chat panel should enforce a minimum width', async ({ page }) => {
+      const panel = await openSidePanel(page);
+      await expect(panel).toHaveCSS('min-width', '300px');
+    });
+
     test('chat panel should not contain a chat at init', async ({ page }) => {
       const panel = await openSidePanel(page);
       const content = panel.locator('.jp-chat-sidepanel-widget');

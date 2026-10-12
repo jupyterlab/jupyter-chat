@@ -129,6 +129,9 @@
 
 /* Sidepanel styles */
 .jp-chat-sidepanel {
+  /* Keep responsive toolbar actions reachable in the overflow menu. */
+  --jp-sidebar-min-width: 300px;
+
   display: flex;
   flex-direction: column;
 }
