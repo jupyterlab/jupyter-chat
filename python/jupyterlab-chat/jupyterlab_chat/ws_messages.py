@@ -37,6 +37,7 @@ import json
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Literal, Optional, Union
 
+
 #: Direction discriminator values (the ``type`` field).
 CLIENT: Literal["client"] = "client"
 SERVER: Literal["server"] = "server"
@@ -51,6 +52,7 @@ class ClientSendMessage:
 
     id: str
     body: str = ""
+    sender: Optional[Dict[str, Any]] = None
     mentions: List[str] = field(default_factory=list)
     metadata: Optional[Dict[str, Any]] = None
     attachments: Optional[List[dict]] = None
@@ -67,6 +69,7 @@ class ClientEditMessage:
     body: Optional[str] = None
     deleted: Optional[bool] = None
     edited: Optional[bool] = None
+    mime_model: Optional[dict] = None
     mentions: Optional[List[str]] = None
     metadata: Optional[Dict[str, Any]] = None
     attachments: Optional[List[dict]] = None
@@ -169,9 +172,17 @@ def parse_client_message(data: Any) -> Optional[ClientChatWsMessage]:
 
     action = data.get("action")
     if action == "send":
+        sender = data.get("sender")
         return ClientSendMessage(
             id=msg_id,
             body=data.get("body", "") or "",
+            sender=(
+                sender
+                if isinstance(sender, dict)
+                and isinstance(sender.get("username"), str)
+                and sender["username"]
+                else None
+            ),
             mentions=list(data.get("mentions") or []),
             metadata=data.get("metadata"),
             attachments=data.get("attachments"),
@@ -183,6 +194,7 @@ def parse_client_message(data: Any) -> Optional[ClientChatWsMessage]:
             body=data.get("body"),
             deleted=data.get("deleted"),
             edited=data.get("edited"),
+            mime_model=data.get("mime_model"),
             mentions=data.get("mentions"),
             metadata=data.get("metadata"),
             attachments=data.get("attachments"),
