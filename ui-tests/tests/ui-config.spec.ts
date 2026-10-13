@@ -413,5 +413,8 @@ test.describe('#showDeletedMessages', () => {
 
     await page.activity.activateTab(FILENAME);
     await expect(messages).toHaveCount(1);
+    await expect(
+      chatPanel.locator('.jp-chat-message-container')
+    ).toHaveAttribute('data-index', '1');
   });
 });
