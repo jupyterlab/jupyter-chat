@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { ReactiveToolbar, ReactWidget } from '@jupyterlab/ui-components';
+import { ReactiveToolbar } from '@jupyterlab/ui-components';
 import { MessageLoop } from '@lumino/messaging';
 import { Panel, Widget } from '@lumino/widgets';
 import {
@@ -14,7 +14,7 @@ import {
   TextField,
   Theme
 } from '@mui/material';
-import { ThemeProvider, useTheme } from '@mui/material/styles';
+import { useTheme } from '@mui/material/styles';
 import clsx from 'clsx';
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -22,54 +22,13 @@ import { InputToolbarRegistry } from './toolbar-registry';
 import { submitInputMessage } from './submit-message';
 import { useChatCommands } from './use-chat-commands';
 import { AttachmentPreviewList } from '../attachments';
-import { Chat } from '../chat';
-import { ChatReactContext, useChatContext, useTranslator } from '../../context';
+import { useChatContext, useTranslator } from '../../context';
 import { IInputModel, InputModel } from '../../input-model';
 import { IAttachment } from '../../types';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
 const INPUT_TEXTFIELD_CLASS = 'jp-chat-input-textfield';
 const INPUT_TOOLBAR_CLASS = 'jp-chat-input-toolbar';
-
-/**
- * Lumino widget wrapping a single toolbar item's React element. Keeping the
- * widget instance stable across prop updates (edit mode, theme, chat context)
- * lets us re-render in place instead of disposing/recreating every item each
- * time the registry fires `itemsChanged` — which was the source of the flicker
- * when a sibling extension appended a button.
- */
-class ToolbarItemWidget extends ReactWidget {
-  constructor(
-    readonly item: InputToolbarRegistry.IToolbarItem,
-    private _props: InputToolbarRegistry.IToolbarItemProps,
-    private _theme: Theme,
-    private _chatContext: Chat.IChatProps
-  ) {
-    super();
-  }
-
-  updateContext(
-    props: InputToolbarRegistry.IToolbarItemProps,
-    theme: Theme,
-    chatContext: Chat.IChatProps
-  ): void {
-    this._props = props;
-    this._theme = theme;
-    this._chatContext = chatContext;
-    this.update();
-  }
-
-  render(): JSX.Element {
-    const Element = this.item.element;
-    return (
-      <ThemeProvider theme={this._theme}>
-        <ChatReactContext.Provider value={this._chatContext}>
-          <Element {...this._props} />
-        </ChatReactContext.Provider>
-      </ThemeProvider>
-    );
-  }
-}
 
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
   const { model } = props;
@@ -97,7 +56,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   const toolbarContainerRef = useRef<HTMLDivElement>(null);
   const toolbarHostRef = useRef<Panel | null>(null);
   const toolbarRef = useRef<ReactiveToolbar | null>(null);
-  const toolbarItemsRef = useRef<Map<string, ToolbarItemWidget>>(new Map());
+  const toolbarItemsRef = useRef<Map<string, Widget>>(new Map());
 
   /**
    * Auto-focus the input when the component is first mounted.
@@ -210,12 +169,16 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   }, []);
 
   /**
-   * Sync the toolbar with the registry whenever its items change or when any
-   * dependency referenced by the wrapped React element changes. Existing
-   * widgets are re-rendered in place; only added/removed items touch the
-   * widget tree. Items are inserted in reverse position order so that
-   * lower-position items (e.g. cancel/attach) are the first to overflow into
-   * the popup, while the send button stays visible on the right.
+   * Sync the toolbar with the registry whenever its items change. New items
+   * are built from the registry's `createWidget` factory with the current
+   * context; existing widgets are reused as-is. Items are inserted in
+   * reverse position order so that lower-position items (e.g. cancel/attach)
+   * are the first to overflow into the popup, while the send button stays
+   * visible on the right.
+   *
+   * Context (model, theme, chat context, edit mode) is captured when the
+   * widget is created, not reactively. ChatInput already remounts on the
+   * relevant switches (notably edit mode), so this stays correct in practice.
    */
   useEffect(() => {
     const toolbar = toolbarRef.current;
@@ -227,11 +190,13 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
       const widgets = toolbarItemsRef.current;
       const entries = Array.from(inputToolbarRegistry?.items ?? []).reverse();
       const nextNames = new Set(entries.map(([name]) => name));
-      const itemProps: InputToolbarRegistry.IToolbarItemProps = {
+      const context: InputToolbarRegistry.IToolbarItemContext = {
         model,
         chatCommandRegistry,
         chatModel,
-        edit: props.edit
+        edit: props.edit,
+        theme,
+        chatContext
       };
       let visibilityChanged = false;
 
@@ -246,19 +211,16 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
         const hidden = item.hidden ?? false;
         const existing = widgets.get(name);
         if (existing) {
-          existing.updateContext(itemProps, theme, chatContext);
           if (existing.isHidden !== hidden) {
             existing.setHidden(hidden);
             visibilityChanged = true;
           }
           return;
         }
-        const widget = new ToolbarItemWidget(
-          item,
-          itemProps,
-          theme,
-          chatContext
-        );
+        if (!item.createWidget) {
+          return;
+        }
+        const widget = item.createWidget(context);
         widget.setHidden(hidden);
         widgets.set(name, widget);
         toolbar.insertItem(idx, name, widget);
@@ -284,15 +246,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     return () => {
       inputToolbarRegistry?.itemsChanged.disconnect(sync);
     };
-  }, [
-    inputToolbarRegistry,
-    props.edit,
-    model,
-    chatCommandRegistry,
-    chatModel,
-    chatContext,
-    theme
-  ]);
+  }, [inputToolbarRegistry]);
 
   const inputExists = !!input.trim();
 

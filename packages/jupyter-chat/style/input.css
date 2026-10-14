@@ -59,8 +59,7 @@
 }
 
 .jp-chat-input-toolbar::part(positioning-region) {
-  flex-direction: row-reverse;
-  flex-wrap: nowrap;
+  flex-flow: row-reverse nowrap;
   justify-content: flex-start;
   align-items: center;
   align-self: center;
