@@ -53,6 +53,11 @@ export interface IInputToolbarRegistry {
   addItem(name: string, item: InputToolbarRegistry.IToolbarItem): void;
 
   /**
+   * Remove a toolbar item. No-op if `name` isn't registered.
+   */
+  removeItem(name: string): void;
+
+  /**
    * Hide an element.
    */
   hide(name: string): void;
@@ -123,6 +128,17 @@ export class InputToolbarRegistry implements IInputToolbarRegistry {
     }
     this._items.set(name, { ...item, createWidget });
     this._itemsChanged.emit();
+  }
+
+  /**
+   * Remove a toolbar item. No-op if `name` isn't registered. The hosting
+   * ChatInput's sync loop disposes the matching widget on the next
+   * `itemsChanged` emission.
+   */
+  removeItem(name: string): void {
+    if (this._items.delete(name)) {
+      this._itemsChanged.emit();
+    }
   }
 
   /**
