@@ -48,4 +48,29 @@ describe('isCursorInsideCodeBlock', () => {
     const commandIndex = text.indexOf('/command');
     expect(isCursorInsideCodeBlock(text, commandIndex)).toBe(true);
   });
+
+  it('should handle multiple inline code blocks', () => {
+    const text = 'prefix `first block` middle `second block` suffix';
+    const firstInside = text.indexOf('first');
+    const middleIndex = text.indexOf('middle');
+    const secondInside = text.indexOf('second');
+    const suffixIndex = text.indexOf('suffix');
+
+    expect(isCursorInsideCodeBlock(text, firstInside)).toBe(true);
+    expect(isCursorInsideCodeBlock(text, middleIndex)).toBe(false);
+    expect(isCursorInsideCodeBlock(text, secondInside)).toBe(true);
+    expect(isCursorInsideCodeBlock(text, suffixIndex)).toBe(false);
+  });
+
+  it('should return false when cursor is before any backtick', () => {
+    const text = 'command here then `code later`';
+    const cursor = text.indexOf('command');
+    expect(isCursorInsideCodeBlock(text, cursor)).toBe(false);
+  });
+
+  it('should return false for empty or non-positive cursor index', () => {
+    expect(isCursorInsideCodeBlock('', 0)).toBe(false);
+    expect(isCursorInsideCodeBlock('`code`', 0)).toBe(false);
+    expect(isCursorInsideCodeBlock('`code`', -1)).toBe(false);
+  });
 });

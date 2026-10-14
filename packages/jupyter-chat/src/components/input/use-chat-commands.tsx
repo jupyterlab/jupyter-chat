@@ -64,10 +64,8 @@ export function useChatCommands(
         return;
       }
 
-      // Fast path: if the input contains no backticks, it cannot be in a code block.
       const isInsideCodeBlock =
         inputModel.cursorIndex !== null &&
-        inputModel.value.includes('`') &&
         isCursorInsideCodeBlock(inputModel.value, inputModel.cursorIndex);
 
       if (isInsideCodeBlock) {
@@ -258,12 +256,7 @@ export function isCursorInsideCodeBlock(
   input: string,
   cursorIndex: number
 ): boolean {
-  // Fast path: if input is empty or has no backticks before cursor, skip iteration.
-  if (
-    !input ||
-    cursorIndex <= 0 ||
-    !input.slice(0, cursorIndex).includes('`')
-  ) {
+  if (!input || cursorIndex <= 0) {
     return false;
   }
 
@@ -272,17 +265,21 @@ export function isCursorInsideCodeBlock(
   let i = 0;
 
   while (i < cursorIndex) {
+    const next = input.indexOf('`', i);
+    if (next === -1 || next >= cursorIndex) {
+      break;
+    }
+
+    i = next;
     if (input.startsWith('```', i)) {
       if (!insideInline) {
         insideBlock = !insideBlock;
       }
       i += 3;
-    } else if (input[i] === '`') {
+    } else {
       if (!insideBlock) {
         insideInline = !insideInline;
       }
-      i += 1;
-    } else {
       i += 1;
     }
   }
