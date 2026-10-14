@@ -42,8 +42,43 @@
   white-space: nowrap;
 }
 
+/*
+ * The toolbar is a `<jp-toolbar>` custom element whose children live inside
+ * the shadow DOM `.positioning-region`. We override the shadow part to
+ * right-align items (via row-reverse) and ensure the host spans the full
+ * width without adding its own padding/background on top of the container.
+ */
+.jp-chat-input-toolbar {
+  display: flex;
+  width: 100%;
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+  border-bottom: none;
+  box-shadow: none;
+}
+
+.jp-chat-input-toolbar::part(positioning-region) {
+  flex-direction: row-reverse;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: center;
+  align-self: center;
+  gap: var(--jp-cell-padding, 8px);
+}
+
 .jp-chat-input-toolbar .jp-chat-send-include-opener {
   padding: 4px 0;
+}
+
+/*
+ * The overflow popup is attached directly to <body> by ReactiveToolbar and
+ * positioned just below the opener via inline `top`. A translate flips it
+ * above instead, offset by roughly the opener's own height so it sits just
+ * on top of the toolbar rather than overlapping it.
+ */
+.jp-chat-input-toolbar-popup {
+  transform: translateY(calc(-100% - 36px));
 }
 
 .jp-chat-input-container:focus-within > div:first-of-type {

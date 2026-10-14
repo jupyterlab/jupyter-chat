@@ -25,6 +25,14 @@ export interface IInputToolbarRegistry {
    */
   readonly itemsChanged: ISignal<IInputToolbarRegistry, void>;
   /**
+   * All toolbar items in order (keyed by registry name), including hidden
+   * ones. Consumers that render the toolbar should prefer this over
+   * `getItems()`: it exposes the registry name so the toolbar can key its
+   * children by name, and hiding/showing an item is a visibility toggle on
+   * the same widget rather than a dispose/recreate cycle.
+   */
+  readonly items: ReadonlyMap<string, InputToolbarRegistry.IToolbarItem>;
+  /**
    * Get a toolbar item.
    */
   get(name: string): InputToolbarRegistry.IToolbarItem | undefined;
@@ -62,6 +70,16 @@ export class InputToolbarRegistry implements IInputToolbarRegistry {
   }
 
   /**
+   * All toolbar items in order (keyed by registry name), including hidden ones.
+   */
+  get items(): ReadonlyMap<string, InputToolbarRegistry.IToolbarItem> {
+    const sorted = Array.from(this._items.entries()).sort(
+      ([, a], [, b]) => a.position - b.position
+    );
+    return new Map(sorted);
+  }
+
+  /**
    * Get a toolbar item.
    */
   get(name: string): InputToolbarRegistry.IToolbarItem | undefined {
@@ -72,9 +90,7 @@ export class InputToolbarRegistry implements IInputToolbarRegistry {
    * Get the list of the visible toolbar items in order.
    */
   getItems(): InputToolbarRegistry.IToolbarItem[] {
-    return Array.from(this._items.values())
-      .filter(item => !item.hidden)
-      .sort((a, b) => a.position - b.position);
+    return Array.from(this.items.values()).filter(item => !item.hidden);
   }
 
   /**

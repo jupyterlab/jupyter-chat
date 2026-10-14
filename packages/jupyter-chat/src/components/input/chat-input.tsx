@@ -3,6 +3,9 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { ReactiveToolbar, ReactWidget } from '@jupyterlab/ui-components';
+import { MessageLoop } from '@lumino/messaging';
+import { Panel, Widget } from '@lumino/widgets';
 import {
   Autocomplete,
   AutocompleteInputChangeReason,
@@ -11,6 +14,7 @@ import {
   TextField,
   Theme
 } from '@mui/material';
+import { ThemeProvider, useTheme } from '@mui/material/styles';
 import clsx from 'clsx';
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -18,7 +22,8 @@ import { InputToolbarRegistry } from './toolbar-registry';
 import { submitInputMessage } from './submit-message';
 import { useChatCommands } from './use-chat-commands';
 import { AttachmentPreviewList } from '../attachments';
-import { useChatContext, useTranslator } from '../../context';
+import { Chat } from '../chat';
+import { ChatReactContext, useChatContext, useTranslator } from '../../context';
 import { IInputModel, InputModel } from '../../input-model';
 import { IAttachment } from '../../types';
 
@@ -26,11 +31,53 @@ const INPUT_BOX_CLASS = 'jp-chat-input-container';
 const INPUT_TEXTFIELD_CLASS = 'jp-chat-input-textfield';
 const INPUT_TOOLBAR_CLASS = 'jp-chat-input-toolbar';
 
+/**
+ * Lumino widget wrapping a single toolbar item's React element. Keeping the
+ * widget instance stable across prop updates (edit mode, theme, chat context)
+ * lets us re-render in place instead of disposing/recreating every item each
+ * time the registry fires `itemsChanged` — which was the source of the flicker
+ * when a sibling extension appended a button.
+ */
+class ToolbarItemWidget extends ReactWidget {
+  constructor(
+    readonly item: InputToolbarRegistry.IToolbarItem,
+    private _props: InputToolbarRegistry.IToolbarItemProps,
+    private _theme: Theme,
+    private _chatContext: Chat.IChatProps
+  ) {
+    super();
+  }
+
+  updateContext(
+    props: InputToolbarRegistry.IToolbarItemProps,
+    theme: Theme,
+    chatContext: Chat.IChatProps
+  ): void {
+    this._props = props;
+    this._theme = theme;
+    this._chatContext = chatContext;
+    this.update();
+  }
+
+  render(): JSX.Element {
+    const Element = this.item.element;
+    return (
+      <ThemeProvider theme={this._theme}>
+        <ChatReactContext.Provider value={this._chatContext}>
+          <Element {...this._props} />
+        </ChatReactContext.Provider>
+      </ThemeProvider>
+    );
+  }
+}
+
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
   const { model } = props;
   const trans = useTranslator();
-  const { area, chatCommandRegistry, inputToolbarRegistry } = useChatContext();
-  const chatModel = useChatContext().model;
+  const chatContext = useChatContext();
+  const { area, chatCommandRegistry, inputToolbarRegistry } = chatContext;
+  const chatModel = chatContext.model;
+  const theme = useTheme();
 
   const [input, setInput] = useState<string>(model.value);
   const inputRef = useRef<HTMLInputElement>();
@@ -46,9 +93,11 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   const [attachments, setAttachments] = useState<IAttachment[]>(
     model.attachments
   );
-  const [toolbarElements, setToolbarElements] = useState<
-    InputToolbarRegistry.IToolbarItem[]
-  >([]);
+
+  const toolbarContainerRef = useRef<HTMLDivElement>(null);
+  const toolbarHostRef = useRef<Panel | null>(null);
+  const toolbarRef = useRef<ReactiveToolbar | null>(null);
+  const toolbarItemsRef = useRef<Map<string, ToolbarItemWidget>>(new Map());
 
   /**
    * Auto-focus the input when the component is first mounted.
@@ -97,20 +146,153 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   }, [model]);
 
   /**
-   * Handle the changes in the toolbar items.
+   * Create the ReactiveToolbar once, attach it to the container, and watch for
+   * resizes so it can move overflow items into the popup opener.
+   *
+   * The toolbar is wrapped in a Lumino `Panel` host rather than attached
+   * directly to the DOM container: `ReactiveToolbar._onResize` bails out
+   * early when `this.parent` is null, so without a Lumino parent the
+   * overflow computation never runs.
    */
   useEffect(() => {
-    const updateToolbar = () => {
-      setToolbarElements(inputToolbarRegistry?.getItems() || []);
-    };
+    const container = toolbarContainerRef.current;
+    if (!container) {
+      return;
+    }
 
-    inputToolbarRegistry?.itemsChanged.connect(updateToolbar);
-    updateToolbar();
+    const host = new Panel();
+    host.addClass(`${INPUT_TOOLBAR_CLASS}-host`);
+    const toolbar = new ReactiveToolbar({ noFocusOnClick: true });
+    toolbar.addClass(INPUT_TOOLBAR_CLASS);
+    host.addWidget(toolbar);
+    Widget.attach(host, container);
+    toolbarHostRef.current = host;
+    toolbarRef.current = toolbar;
+
+    // The overflow popup is a sibling of body (attached by ReactiveToolbar
+    // itself), so we tag it with a dedicated class and flip it above the
+    // opener via CSS. `popupOpener` and `popup` are `protected` on the
+    // JupyterLab types, hence the targeted cast.
+    const popup = (toolbar as unknown as { popupOpener: { popup: Widget } })
+      .popupOpener.popup;
+    popup.addClass(`${INPUT_TOOLBAR_CLASS}-popup`);
+
+    const resizeObserver = new ResizeObserver(() => {
+      if (host.isDisposed || !host.isAttached) {
+        return;
+      }
+      const width = host.node.offsetWidth;
+      const height = host.node.offsetHeight;
+      if (width > 0) {
+        MessageLoop.sendMessage(host, new Widget.ResizeMessage(width, height));
+        MessageLoop.sendMessage(
+          toolbar,
+          new Widget.ResizeMessage(width, height)
+        );
+      }
+    });
+    resizeObserver.observe(container);
 
     return () => {
-      inputToolbarRegistry?.itemsChanged.disconnect(updateToolbar);
+      resizeObserver.disconnect();
+      toolbarItemsRef.current = new Map();
+      // React may have already removed the host DOM node by the time this
+      // cleanup runs, which would make Widget.detach (called from dispose())
+      // throw. Clear the attached flag in that case so dispose() is a no-op
+      // on the DOM side.
+      if (host.isAttached && !host.node.isConnected) {
+        host.clearFlag(Widget.Flag.IsAttached);
+      }
+      host.dispose();
+      toolbarHostRef.current = null;
+      toolbarRef.current = null;
     };
-  }, [inputToolbarRegistry]);
+  }, []);
+
+  /**
+   * Sync the toolbar with the registry whenever its items change or when any
+   * dependency referenced by the wrapped React element changes. Existing
+   * widgets are re-rendered in place; only added/removed items touch the
+   * widget tree. Items are inserted in reverse position order so that
+   * lower-position items (e.g. cancel/attach) are the first to overflow into
+   * the popup, while the send button stays visible on the right.
+   */
+  useEffect(() => {
+    const toolbar = toolbarRef.current;
+    if (!toolbar) {
+      return;
+    }
+
+    const sync = () => {
+      const widgets = toolbarItemsRef.current;
+      const entries = Array.from(inputToolbarRegistry?.items ?? []).reverse();
+      const nextNames = new Set(entries.map(([name]) => name));
+      const itemProps: InputToolbarRegistry.IToolbarItemProps = {
+        model,
+        chatCommandRegistry,
+        chatModel,
+        edit: props.edit
+      };
+      let visibilityChanged = false;
+
+      for (const [name, widget] of widgets) {
+        if (!nextNames.has(name)) {
+          widget.dispose();
+          widgets.delete(name);
+        }
+      }
+
+      entries.forEach(([name, item], idx) => {
+        const hidden = item.hidden ?? false;
+        const existing = widgets.get(name);
+        if (existing) {
+          existing.updateContext(itemProps, theme, chatContext);
+          if (existing.isHidden !== hidden) {
+            existing.setHidden(hidden);
+            visibilityChanged = true;
+          }
+          return;
+        }
+        const widget = new ToolbarItemWidget(
+          item,
+          itemProps,
+          theme,
+          chatContext
+        );
+        widget.setHidden(hidden);
+        widgets.set(name, widget);
+        toolbar.insertItem(idx, name, widget);
+      });
+
+      // Toggling a child's visibility doesn't trigger the toolbar's own
+      // resize path, so overflow would stay stale. Nudge it manually.
+      if (visibilityChanged) {
+        const width = toolbar.node.clientWidth;
+        const height = toolbar.node.clientHeight;
+        if (width > 0) {
+          MessageLoop.sendMessage(
+            toolbar,
+            new Widget.ResizeMessage(width, height)
+          );
+        }
+      }
+    };
+
+    sync();
+    inputToolbarRegistry?.itemsChanged.connect(sync);
+
+    return () => {
+      inputToolbarRegistry?.itemsChanged.disconnect(sync);
+    };
+  }, [
+    inputToolbarRegistry,
+    props.edit,
+    model,
+    chatCommandRegistry,
+    chatModel,
+    chatContext,
+    theme
+  ]);
 
   const inputExists = !!input.trim();
 
@@ -297,28 +479,16 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
           }}
         />
         <Box
-          className={INPUT_TOOLBAR_CLASS}
+          ref={toolbarContainerRef}
+          className={`${INPUT_TOOLBAR_CLASS}-container`}
           sx={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            gap: 2,
             padding: 1.5,
             borderTop: '1px solid',
             borderColor: 'var(--jp-border-color1)',
             backgroundColor: 'var(--jp-layout-color0)',
             transition: 'background-color 0.2s ease'
           }}
-        >
-          {toolbarElements.map((item, index) => (
-            <item.element
-              key={index}
-              model={model}
-              chatCommandRegistry={chatCommandRegistry}
-              chatModel={chatModel}
-              edit={props.edit}
-            />
-          ))}
-        </Box>
+        />
       </Box>
     </Box>
   );
