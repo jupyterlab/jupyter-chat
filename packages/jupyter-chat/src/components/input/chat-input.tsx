@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { ReactiveToolbar } from '@jupyterlab/ui-components';
+import { ReactiveToolbar, Toolbar } from '@jupyterlab/ui-components';
 import { MessageLoop } from '@lumino/messaging';
 import { Panel, Widget } from '@lumino/widgets';
 import {
@@ -28,8 +28,8 @@ import { IAttachment } from '../../types';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
 const INPUT_TEXTFIELD_CLASS = 'jp-chat-input-textfield';
-const INPUT_TOOLBAR_CLASS = 'jp-chat-input-toolbar';
-const INPUT_PINNED_CLASS = 'jp-chat-input-pinned';
+const INPUT_TOOLBAR_CLASS = 'jp-chat-input-reactive-toolbar';
+const INPUT_PINNED_CLASS = 'jp-chat-input-pinned-toolbar';
 
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
   const { model } = props;
@@ -54,13 +54,11 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     model.attachments
   );
 
-  const toolbarContainerRef = useRef<HTMLDivElement>(null);
-  const toolbarHostRef = useRef<Panel | null>(null);
-  const toolbarRef = useRef<ReactiveToolbar | null>(null);
-  const toolbarItemsRef = useRef<Map<string, Widget>>(new Map());
-  const pinnedContainerRef = useRef<HTMLDivElement>(null);
-  const pinnedHostRef = useRef<Panel | null>(null);
-  const pinnedItemsRef = useRef<Map<string, Widget>>(new Map());
+  const toolbarsContainerRef = useRef<HTMLDivElement>(null);
+  const reactiveToolbarRef = useRef<ReactiveToolbar | null>(null);
+  const reactiveToolbarItemsRef = useRef<Map<string, Widget>>(new Map());
+  const pinnedToolbarRef = useRef<Toolbar | null>(null);
+  const pinnedToolbarItemsRef = useRef<Map<string, Widget>>(new Map());
 
   /**
    * Auto-focus the input when the component is first mounted.
@@ -109,101 +107,85 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   }, [model]);
 
   /**
-   * Create the ReactiveToolbar and the sibling pinned panel once, attach them
-   * to their containers, and watch the toolbar's container for resizes so it
-   * can move overflow items into the popup opener.
-   *
-   * Each toolbar is wrapped in a Lumino `Panel` host rather than attached
-   * directly to the DOM container: `ReactiveToolbar._onResize` bails out
-   * early when `this.parent` is null, so without a Lumino parent the
-   * overflow computation never runs. The pinned panel sits in its own host
-   * so pinned items never participate in the overflow computation at all —
-   * they live in a fixed slot to the right of the ReactiveToolbar.
+   * Mount both toolbars inside a shared Lumino Panel host once. A ResizeObserver
+   * bridges DOM resizes to Lumino's message system so the ReactiveToolbar can
+   * compute overflow — it has no internal observer and requires a Lumino parent.
    */
   useEffect(() => {
-    const toolbarContainer = toolbarContainerRef.current;
-    const pinnedContainer = pinnedContainerRef.current;
-    if (!toolbarContainer || !pinnedContainer) {
+    const toolbarsContainer = toolbarsContainerRef.current;
+    if (!toolbarsContainer) {
       return;
     }
 
     const host = new Panel();
     host.addClass(`${INPUT_TOOLBAR_CLASS}-host`);
-    const toolbar = new ReactiveToolbar({ noFocusOnClick: true });
-    toolbar.addClass(INPUT_TOOLBAR_CLASS);
-    host.addWidget(toolbar);
-    Widget.attach(host, toolbarContainer);
-    toolbarHostRef.current = host;
-    toolbarRef.current = toolbar;
+    const reactiveToolbar = new ReactiveToolbar({ noFocusOnClick: true });
+    reactiveToolbar.addClass(INPUT_TOOLBAR_CLASS);
+    host.addWidget(reactiveToolbar);
 
-    const pinnedHost = new Panel();
-    pinnedHost.addClass(INPUT_PINNED_CLASS);
-    Widget.attach(pinnedHost, pinnedContainer);
-    pinnedHostRef.current = pinnedHost;
+    const pinnedToolbar = new Toolbar({ noFocusOnClick: true });
+    pinnedToolbar.addClass(INPUT_PINNED_CLASS);
+    host.addWidget(pinnedToolbar);
 
-    // The overflow popup is a sibling of body (attached by ReactiveToolbar
-    // itself), so we tag it with a dedicated class and flip it above the
-    // opener via CSS. `popupOpener` and `popup` are `protected` on the
-    // JupyterLab types, hence the targeted cast.
-    const popup = (toolbar as unknown as { popupOpener: { popup: Widget } })
-      .popupOpener.popup;
+    Widget.attach(host, toolbarsContainer);
+    reactiveToolbarRef.current = reactiveToolbar;
+    pinnedToolbarRef.current = pinnedToolbar;
+
+    // TODO: improve the way to add the class, `popupOpener` and `popup` are
+    // both protected in the JupyterLab types.
+    const popup = (
+      reactiveToolbar as unknown as { popupOpener: { popup: Widget } }
+    ).popupOpener.popup;
     popup.addClass(`${INPUT_TOOLBAR_CLASS}-popup`);
 
     const resizeObserver = new ResizeObserver(() => {
       if (host.isDisposed || !host.isAttached) {
         return;
       }
-      const width = host.node.offsetWidth;
-      const height = host.node.offsetHeight;
-      if (width > 0) {
-        MessageLoop.sendMessage(host, new Widget.ResizeMessage(width, height));
+      const hostWidth = host.node.offsetWidth;
+      const hostHeight = host.node.offsetHeight;
+      if (hostWidth > 0) {
         MessageLoop.sendMessage(
-          toolbar,
-          new Widget.ResizeMessage(width, height)
+          host,
+          new Widget.ResizeMessage(hostWidth, hostHeight)
+        );
+        // The reactiveToolbar occupies only its flex share, not the full host width.
+        MessageLoop.sendMessage(
+          reactiveToolbar,
+          new Widget.ResizeMessage(reactiveToolbar.node.offsetWidth, hostHeight)
         );
       }
     });
-    resizeObserver.observe(toolbarContainer);
+    resizeObserver.observe(toolbarsContainer);
 
     return () => {
       resizeObserver.disconnect();
-      toolbarItemsRef.current = new Map();
-      pinnedItemsRef.current = new Map();
+      reactiveToolbarItemsRef.current = new Map();
+      pinnedToolbarItemsRef.current = new Map();
       // React may have already removed the host DOM node by the time this
       // cleanup runs, which would make Widget.detach (called from dispose())
       // throw. Clear the attached flag in that case so dispose() is a no-op
       // on the DOM side.
-      for (const h of [host, pinnedHost]) {
-        if (h.isAttached && !h.node.isConnected) {
-          h.clearFlag(Widget.Flag.IsAttached);
-        }
-        h.dispose();
+      if (host.isAttached && !host.node.isConnected) {
+        host.clearFlag(Widget.Flag.IsAttached);
       }
-      toolbarHostRef.current = null;
-      toolbarRef.current = null;
-      pinnedHostRef.current = null;
+      host.dispose();
+      reactiveToolbarRef.current = null;
+      pinnedToolbarRef.current = null;
     };
   }, []);
 
   /**
-   * Sync the toolbar and the pinned slot with the registry whenever its items
-   * change. New items are built from the registry's `createWidget` factory
-   * with the current context; existing widgets are reused as-is.
-   *
-   * Items with `pinned: true` are inserted into the sibling pinned panel (a
-   * fixed slot to the right of the ReactiveToolbar) in position order, so
-   * they never participate in overflow. Unpinned items are inserted into the
-   * ReactiveToolbar in position order; its own overflow algorithm pulls the
-   * last-inserted (= highest-position) widgets into the popup first.
-   *
-   * Context (model, theme, chat context, edit mode) is captured when the
-   * widget is created, not reactively. ChatInput already remounts on the
-   * relevant switches (notably edit mode), so this stays correct in practice.
+   * Sync both toolbars with the registry on every `itemsChanged`. Pinned items
+   * go into the pinned toolbar (fixed slot, never overflows); unpinned items go
+   * into the ReactiveToolbar. Context is captured at widget creation and not
+   * updated reactively; ChatInput remounts on the switches that matter (e.g.
+   * edit mode).
    */
   useEffect(() => {
-    const toolbar = toolbarRef.current;
-    const pinnedHost = pinnedHostRef.current;
-    if (!toolbar || !pinnedHost) {
+    const reactiveToolbar = reactiveToolbarRef.current;
+    const pinnedToolbar = pinnedToolbarRef.current;
+    if (!reactiveToolbar || !pinnedToolbar) {
       return;
     }
 
@@ -222,10 +204,12 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
       const pinnedEntries = entries.filter(([, item]) => item.pinned);
       let visibilityChanged = false;
 
+      // Dispose removed widgets, create missing ones, and sync visibility.
+      // Existing widgets are reused in place, no re-creation on reorder.
       const reconcile = (
         widgets: Map<string, Widget>,
         slotEntries: typeof entries,
-        insert: (idx: number, name: string, widget: Widget) => void
+        toolbar: Toolbar
       ) => {
         const nextNames = new Set(slotEntries.map(([name]) => name));
         for (const [name, widget] of widgets) {
@@ -250,25 +234,25 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
           const widget = item.createWidget(context);
           widget.setHidden(hidden);
           widgets.set(name, widget);
-          insert(idx, name, widget);
+          toolbar.insertItem(idx, name, widget);
         });
       };
 
-      reconcile(toolbarItemsRef.current, toolbarEntries, (idx, name, widget) =>
-        toolbar.insertItem(idx, name, widget)
+      reconcile(
+        reactiveToolbarItemsRef.current,
+        toolbarEntries,
+        reactiveToolbar
       );
-      reconcile(pinnedItemsRef.current, pinnedEntries, (idx, _name, widget) =>
-        pinnedHost.insertWidget(idx, widget)
-      );
+      reconcile(pinnedToolbarItemsRef.current, pinnedEntries, pinnedToolbar);
 
       // Toggling a child's visibility doesn't trigger the toolbar's own
       // resize path, so overflow would stay stale. Nudge it manually.
       if (visibilityChanged) {
-        const width = toolbar.node.clientWidth;
-        const height = toolbar.node.clientHeight;
+        const width = reactiveToolbar.node.clientWidth;
+        const height = reactiveToolbar.node.clientHeight;
         if (width > 0) {
           MessageLoop.sendMessage(
-            toolbar,
+            reactiveToolbar,
             new Widget.ResizeMessage(width, height)
           );
         }
@@ -468,26 +452,16 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
           }}
         />
         <Box
+          ref={toolbarsContainerRef}
           className={`${INPUT_TOOLBAR_CLASS}-container`}
           sx={{
             padding: 1.5,
             borderTop: '1px solid',
             borderColor: 'var(--jp-border-color1)',
             backgroundColor: 'var(--jp-layout-color0)',
-            transition: 'background-color 0.2s ease',
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 1
+            transition: 'background-color 0.2s ease'
           }}
-        >
-          <Box ref={toolbarContainerRef} sx={{ flex: '1 1 0', minWidth: 0 }} />
-          <Box
-            ref={pinnedContainerRef}
-            className={`${INPUT_PINNED_CLASS}-container`}
-            sx={{ flex: '0 0 auto' }}
-          />
-        </Box>
+        />
       </Box>
     </Box>
   );

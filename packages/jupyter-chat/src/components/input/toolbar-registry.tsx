@@ -30,22 +30,13 @@ export interface IInputToolbarRegistry {
    */
   readonly itemsChanged: ISignal<IInputToolbarRegistry, void>;
   /**
-   * All toolbar items in order (keyed by registry name), including hidden
-   * ones. Consumers that render the toolbar should prefer this over
-   * `getItems()`: it exposes the registry name so the toolbar can key its
-   * children by name, and hiding/showing an item is a visibility toggle on
-   * the same widget rather than a dispose/recreate cycle.
+   * All toolbar items in order (keyed by registry name), including hidden ones.
    */
   readonly items: ReadonlyMap<string, InputToolbarRegistry.IToolbarItem>;
   /**
    * Get a toolbar item.
    */
   get(name: string): InputToolbarRegistry.IToolbarItem | undefined;
-
-  /**
-   * Get the list of the visible toolbar items in order.
-   */
-  getItems(): InputToolbarRegistry.IToolbarItem[];
 
   /**
    * Add a toolbar item.
@@ -97,13 +88,6 @@ export class InputToolbarRegistry implements IInputToolbarRegistry {
   }
 
   /**
-   * Get the list of the visible toolbar items in order.
-   */
-  getItems(): InputToolbarRegistry.IToolbarItem[] {
-    return Array.from(this.items.values()).filter(item => !item.hidden);
-  }
-
-  /**
    * Add a toolbar item.
    *
    * The deprecated `element` form is normalized at registration time to the
@@ -146,7 +130,7 @@ export class InputToolbarRegistry implements IInputToolbarRegistry {
    */
   hide(name: string): void {
     const item = this._items.get(name);
-    if (item) {
+    if (item && !item.hidden) {
       item.hidden = true;
       this._itemsChanged.emit();
     }
@@ -157,7 +141,7 @@ export class InputToolbarRegistry implements IInputToolbarRegistry {
    */
   show(name: string): void {
     const item = this._items.get(name);
-    if (item) {
+    if (item && item.hidden) {
       item.hidden = false;
       this._itemsChanged.emit();
     }
@@ -203,11 +187,8 @@ export namespace InputToolbarRegistry {
      */
     hidden?: boolean;
     /**
-     * If true, the item is rendered in a fixed slot next to the toolbar
-     * instead of inside the `ReactiveToolbar`, so it never moves into the
-     * overflow popup. The item itself may still choose to not paint (e.g.
-     * `SendButton` when the input is empty) — "pinned" means "exempt from
-     * overflow", not "always visible".
+     * Whether the item is added in the fixed toolbar or the reactive one.
+     * Default to false.
      */
     pinned?: boolean;
   }

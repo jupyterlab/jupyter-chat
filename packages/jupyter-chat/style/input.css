@@ -43,59 +43,67 @@
 }
 
 /*
- * The toolbar is a `<jp-toolbar>` custom element whose children live inside
- * the shadow DOM `.positioning-region`. We override the shadow part so items
- * flow left-to-right (default row layout, with the popup opener naturally
- * at the right end) and ensure the host spans the full width without adding
- * its own padding/background on top of the container.
+ * The host Panel holds both the ReactiveToolbar and the pinned toolbar side by side.
  */
-.jp-chat-input-toolbar {
+.jp-chat-input-reactive-toolbar-host {
   display: flex;
+  flex-direction: row;
+  align-items: center;
   width: 100%;
+}
+
+/*
+ * The reactive toolbar
+ */
+.jp-chat-input-reactive-toolbar {
+  flex: 1 1 0;
+  min-width: 0;
   min-height: 0;
   padding: 0;
   background: transparent;
   border-bottom: none;
   box-shadow: none;
+  align-items: center;
 }
 
-.jp-chat-input-toolbar::part(positioning-region) {
+.jp-chat-input-reactive-toolbar::part(positioning-region) {
   flex-flow: row nowrap;
   justify-content: flex-end;
-  align-items: center;
-  align-self: center;
   gap: var(--jp-cell-padding, 8px);
 }
 
 /*
- * The pinned slot lives next to the ReactiveToolbar and holds items that
- * never overflow (e.g. send/saveEdit by default, or an extension-contributed
- * stop button). Children are plain Lumino widgets stacked horizontally.
+ * The pinned toolbar holds items that never overflow (e.g. send/saveEdit).
  */
-.jp-chat-input-pinned {
-  display: flex;
-  flex-flow: row nowrap;
+.jp-chat-input-pinned-toolbar {
+  flex: 0 0 auto;
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+  border-bottom: none;
+  box-shadow: none;
   align-items: center;
+}
+
+.jp-chat-input-pinned-toolbar::part(positioning-region) {
+  flex-flow: row nowrap;
   gap: var(--jp-cell-padding, 8px);
 }
 
-.jp-chat-input-toolbar .jp-chat-send-include-opener {
+.jp-chat-input-reactive-toolbar .jp-chat-send-include-opener {
   padding: 4px 0;
 }
 
 /*
- * The overflow popup is attached directly to <body> by ReactiveToolbar and
- * positioned just below the opener via inline `top`. A translate flips it
- * above instead, offset by roughly the opener's own height so it sits just
- * on top of the toolbar rather than overlapping it.
+ * Flip the popup toolbar above the input toolbar.
  */
-.jp-chat-input-toolbar-popup {
-  transform: translateY(calc(-100% - 36px));
+.jp-chat-input-reactive-toolbar-popup {
+  transform: translateY(calc(-100% - var(--jp-private-toolbar-height, 36px)));
   min-height: var(--jp-private-toolbar-height);
   align-items: center;
 }
 
-.jp-chat-input-toolbar-popup::part(positioning-region) {
+.jp-chat-input-reactive-toolbar-popup::part(positioning-region) {
   gap: var(--jp-cell-padding, 8px);
 }
 
