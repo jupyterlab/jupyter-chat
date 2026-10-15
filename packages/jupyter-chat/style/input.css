@@ -90,10 +90,6 @@
   gap: var(--jp-cell-padding, 8px);
 }
 
-.jp-chat-input-reactive-toolbar .jp-chat-send-include-opener {
-  padding: 4px 0;
-}
-
 /*
  * Flip the popup toolbar above the input toolbar.
  */
