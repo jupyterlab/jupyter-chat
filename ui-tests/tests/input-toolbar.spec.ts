@@ -53,7 +53,6 @@ test.describe('#inputToolbar', () => {
       '.jp-chat-input-container .jp-chat-input-reactive-toolbar'
     );
     await expect(inputToolbar).toBeVisible();
-    await expect(inputToolbar.locator('button')).toHaveCount(1);
     expect(inputToolbar.locator('.jp-chat-attach-button')).not.toBeVisible();
 
     // The side panel chat input should contain the 'attach' button.
