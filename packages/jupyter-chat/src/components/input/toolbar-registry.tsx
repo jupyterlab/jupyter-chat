@@ -278,11 +278,11 @@ export namespace InputToolbarRegistry {
     });
     registry.addItem('attach', {
       createWidget: createReactToolbarItem(AttachButton),
-      position: 20
+      position: 100
     });
     registry.addItem('cancel', {
       createWidget: createReactToolbarItem(CancelButton),
-      position: 10
+      position: 95
     });
     return registry;
   }

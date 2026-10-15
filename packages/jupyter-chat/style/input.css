@@ -103,8 +103,8 @@
   align-items: center;
 }
 
-.jp-chat-input-reactive-toolbar-popup::part(positioning-region) {
-  gap: var(--jp-cell-padding, 8px);
+.jp-chat-input-reactive-toolbar-popup > * {
+  margin: 3px;
 }
 
 .jp-chat-input-container:focus-within > div:first-of-type {
