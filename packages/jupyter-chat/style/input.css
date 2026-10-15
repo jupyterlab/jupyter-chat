@@ -44,9 +44,10 @@
 
 /*
  * The toolbar is a `<jp-toolbar>` custom element whose children live inside
- * the shadow DOM `.positioning-region`. We override the shadow part to
- * right-align items (via row-reverse) and ensure the host spans the full
- * width without adding its own padding/background on top of the container.
+ * the shadow DOM `.positioning-region`. We override the shadow part so items
+ * flow left-to-right (default row layout, with the popup opener naturally
+ * at the right end) and ensure the host spans the full width without adding
+ * its own padding/background on top of the container.
  */
 .jp-chat-input-toolbar {
   display: flex;
@@ -59,10 +60,22 @@
 }
 
 .jp-chat-input-toolbar::part(positioning-region) {
-  flex-flow: row-reverse nowrap;
-  justify-content: flex-start;
+  flex-flow: row nowrap;
+  justify-content: flex-end;
   align-items: center;
   align-self: center;
+  gap: var(--jp-cell-padding, 8px);
+}
+
+/*
+ * The pinned slot lives next to the ReactiveToolbar and holds items that
+ * never overflow (e.g. send/saveEdit by default, or an extension-contributed
+ * stop button). Children are plain Lumino widgets stacked horizontally.
+ */
+.jp-chat-input-pinned {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
   gap: var(--jp-cell-padding, 8px);
 }
 
@@ -78,6 +91,12 @@
  */
 .jp-chat-input-toolbar-popup {
   transform: translateY(calc(-100% - 36px));
+  min-height: var(--jp-private-toolbar-height);
+  align-items: center;
+}
+
+.jp-chat-input-toolbar-popup::part(positioning-region) {
+  gap: var(--jp-cell-padding, 8px);
 }
 
 .jp-chat-input-container:focus-within > div:first-of-type {

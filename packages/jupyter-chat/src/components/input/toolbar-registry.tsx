@@ -202,6 +202,14 @@ export namespace InputToolbarRegistry {
      * Whether the button is hidden or not.
      */
     hidden?: boolean;
+    /**
+     * If true, the item is rendered in a fixed slot next to the toolbar
+     * instead of inside the `ReactiveToolbar`, so it never moves into the
+     * overflow popup. The item itself may still choose to not paint (e.g.
+     * `SendButton` when the input is empty) — "pinned" means "exempt from
+     * overflow", not "always visible".
+     */
+    pinned?: boolean;
   }
 
   /**
@@ -279,11 +287,13 @@ export namespace InputToolbarRegistry {
     const registry = new InputToolbarRegistry();
     registry.addItem('send', {
       createWidget: createReactToolbarItem(SendButton),
-      position: 100
+      position: 100,
+      pinned: true
     });
     registry.addItem('saveEdit', {
       createWidget: createReactToolbarItem(SaveEditButton),
-      position: 95
+      position: 95,
+      pinned: true
     });
     registry.addItem('attach', {
       createWidget: createReactToolbarItem(AttachButton),

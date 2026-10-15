@@ -29,6 +29,7 @@ import { IAttachment } from '../../types';
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
 const INPUT_TEXTFIELD_CLASS = 'jp-chat-input-textfield';
 const INPUT_TOOLBAR_CLASS = 'jp-chat-input-toolbar';
+const INPUT_PINNED_CLASS = 'jp-chat-input-pinned';
 
 export function ChatInput(props: ChatInput.IProps): JSX.Element {
   const { model } = props;
@@ -57,6 +58,9 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   const toolbarHostRef = useRef<Panel | null>(null);
   const toolbarRef = useRef<ReactiveToolbar | null>(null);
   const toolbarItemsRef = useRef<Map<string, Widget>>(new Map());
+  const pinnedContainerRef = useRef<HTMLDivElement>(null);
+  const pinnedHostRef = useRef<Panel | null>(null);
+  const pinnedItemsRef = useRef<Map<string, Widget>>(new Map());
 
   /**
    * Auto-focus the input when the component is first mounted.
@@ -105,17 +109,21 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   }, [model]);
 
   /**
-   * Create the ReactiveToolbar once, attach it to the container, and watch for
-   * resizes so it can move overflow items into the popup opener.
+   * Create the ReactiveToolbar and the sibling pinned panel once, attach them
+   * to their containers, and watch the toolbar's container for resizes so it
+   * can move overflow items into the popup opener.
    *
-   * The toolbar is wrapped in a Lumino `Panel` host rather than attached
+   * Each toolbar is wrapped in a Lumino `Panel` host rather than attached
    * directly to the DOM container: `ReactiveToolbar._onResize` bails out
    * early when `this.parent` is null, so without a Lumino parent the
-   * overflow computation never runs.
+   * overflow computation never runs. The pinned panel sits in its own host
+   * so pinned items never participate in the overflow computation at all —
+   * they live in a fixed slot to the right of the ReactiveToolbar.
    */
   useEffect(() => {
-    const container = toolbarContainerRef.current;
-    if (!container) {
+    const toolbarContainer = toolbarContainerRef.current;
+    const pinnedContainer = pinnedContainerRef.current;
+    if (!toolbarContainer || !pinnedContainer) {
       return;
     }
 
@@ -124,9 +132,14 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     const toolbar = new ReactiveToolbar({ noFocusOnClick: true });
     toolbar.addClass(INPUT_TOOLBAR_CLASS);
     host.addWidget(toolbar);
-    Widget.attach(host, container);
+    Widget.attach(host, toolbarContainer);
     toolbarHostRef.current = host;
     toolbarRef.current = toolbar;
+
+    const pinnedHost = new Panel();
+    pinnedHost.addClass(INPUT_PINNED_CLASS);
+    Widget.attach(pinnedHost, pinnedContainer);
+    pinnedHostRef.current = pinnedHost;
 
     // The overflow popup is a sibling of body (attached by ReactiveToolbar
     // itself), so we tag it with a dedicated class and flip it above the
@@ -150,31 +163,38 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
         );
       }
     });
-    resizeObserver.observe(container);
+    resizeObserver.observe(toolbarContainer);
 
     return () => {
       resizeObserver.disconnect();
       toolbarItemsRef.current = new Map();
+      pinnedItemsRef.current = new Map();
       // React may have already removed the host DOM node by the time this
       // cleanup runs, which would make Widget.detach (called from dispose())
       // throw. Clear the attached flag in that case so dispose() is a no-op
       // on the DOM side.
-      if (host.isAttached && !host.node.isConnected) {
-        host.clearFlag(Widget.Flag.IsAttached);
+      for (const h of [host, pinnedHost]) {
+        if (h.isAttached && !h.node.isConnected) {
+          h.clearFlag(Widget.Flag.IsAttached);
+        }
+        h.dispose();
       }
-      host.dispose();
       toolbarHostRef.current = null;
       toolbarRef.current = null;
+      pinnedHostRef.current = null;
     };
   }, []);
 
   /**
-   * Sync the toolbar with the registry whenever its items change. New items
-   * are built from the registry's `createWidget` factory with the current
-   * context; existing widgets are reused as-is. Items are inserted in
-   * reverse position order so that lower-position items (e.g. cancel/attach)
-   * are the first to overflow into the popup, while the send button stays
-   * visible on the right.
+   * Sync the toolbar and the pinned slot with the registry whenever its items
+   * change. New items are built from the registry's `createWidget` factory
+   * with the current context; existing widgets are reused as-is.
+   *
+   * Items with `pinned: true` are inserted into the sibling pinned panel (a
+   * fixed slot to the right of the ReactiveToolbar) in position order, so
+   * they never participate in overflow. Unpinned items are inserted into the
+   * ReactiveToolbar in position order; its own overflow algorithm pulls the
+   * last-inserted (= highest-position) widgets into the popup first.
    *
    * Context (model, theme, chat context, edit mode) is captured when the
    * widget is created, not reactively. ChatInput already remounts on the
@@ -182,14 +202,13 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
    */
   useEffect(() => {
     const toolbar = toolbarRef.current;
-    if (!toolbar) {
+    const pinnedHost = pinnedHostRef.current;
+    if (!toolbar || !pinnedHost) {
       return;
     }
 
     const sync = () => {
-      const widgets = toolbarItemsRef.current;
-      const entries = Array.from(inputToolbarRegistry?.items ?? []).reverse();
-      const nextNames = new Set(entries.map(([name]) => name));
+      const entries = Array.from(inputToolbarRegistry?.items ?? []);
       const context: InputToolbarRegistry.IToolbarItemContext = {
         model,
         chatCommandRegistry,
@@ -198,33 +217,49 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
         theme,
         chatContext
       };
+
+      const toolbarEntries = entries.filter(([, item]) => !item.pinned);
+      const pinnedEntries = entries.filter(([, item]) => item.pinned);
       let visibilityChanged = false;
 
-      for (const [name, widget] of widgets) {
-        if (!nextNames.has(name)) {
-          widget.dispose();
-          widgets.delete(name);
-        }
-      }
-
-      entries.forEach(([name, item], idx) => {
-        const hidden = item.hidden ?? false;
-        const existing = widgets.get(name);
-        if (existing) {
-          if (existing.isHidden !== hidden) {
-            existing.setHidden(hidden);
-            visibilityChanged = true;
+      const reconcile = (
+        widgets: Map<string, Widget>,
+        slotEntries: typeof entries,
+        insert: (idx: number, name: string, widget: Widget) => void
+      ) => {
+        const nextNames = new Set(slotEntries.map(([name]) => name));
+        for (const [name, widget] of widgets) {
+          if (!nextNames.has(name)) {
+            widget.dispose();
+            widgets.delete(name);
           }
-          return;
         }
-        if (!item.createWidget) {
-          return;
-        }
-        const widget = item.createWidget(context);
-        widget.setHidden(hidden);
-        widgets.set(name, widget);
-        toolbar.insertItem(idx, name, widget);
-      });
+        slotEntries.forEach(([name, item], idx) => {
+          const hidden = item.hidden ?? false;
+          const existing = widgets.get(name);
+          if (existing) {
+            if (existing.isHidden !== hidden) {
+              existing.setHidden(hidden);
+              visibilityChanged = true;
+            }
+            return;
+          }
+          if (!item.createWidget) {
+            return;
+          }
+          const widget = item.createWidget(context);
+          widget.setHidden(hidden);
+          widgets.set(name, widget);
+          insert(idx, name, widget);
+        });
+      };
+
+      reconcile(toolbarItemsRef.current, toolbarEntries, (idx, name, widget) =>
+        toolbar.insertItem(idx, name, widget)
+      );
+      reconcile(pinnedItemsRef.current, pinnedEntries, (idx, _name, widget) =>
+        pinnedHost.insertWidget(idx, widget)
+      );
 
       // Toggling a child's visibility doesn't trigger the toolbar's own
       // resize path, so overflow would stay stale. Nudge it manually.
@@ -433,16 +468,26 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
           }}
         />
         <Box
-          ref={toolbarContainerRef}
           className={`${INPUT_TOOLBAR_CLASS}-container`}
           sx={{
             padding: 1.5,
             borderTop: '1px solid',
             borderColor: 'var(--jp-border-color1)',
             backgroundColor: 'var(--jp-layout-color0)',
-            transition: 'background-color 0.2s ease'
+            transition: 'background-color 0.2s ease',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 1
           }}
-        />
+        >
+          <Box ref={toolbarContainerRef} sx={{ flex: '1 1 0', minWidth: 0 }} />
+          <Box
+            ref={pinnedContainerRef}
+            className={`${INPUT_PINNED_CLASS}-container`}
+            sx={{ flex: '0 0 auto' }}
+          />
+        </Box>
       </Box>
     </Box>
   );
