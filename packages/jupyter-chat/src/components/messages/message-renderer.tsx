@@ -69,6 +69,22 @@ function MessageRendererBase(props: MessageRendererProps): JSX.Element {
     Array<[HTMLDivElement, CodeToolbarProps]>
   >([]);
 
+  // Accumulate reasoning chunks in state and persist to localStorage so it survives refresh.
+  // Each MessageRenderer owns its own buffer; the backend streams partial chunks, so we sum them.
+  const [reasoningBuffer, setReasoningBuffer] = useState<string>(
+    () => message.metadata?.reasoning || localStorage.getItem('chat-reasoning-' + message.id) || ''
+  );
+
+  useEffect(() => {
+    if (message.metadata?.reasoning) {
+      setReasoningBuffer(prev => {
+        const next = prev + message.metadata!.reasoning;
+        localStorage.setItem('chat-reasoning-' + message.id, next);
+        return next;
+      });
+    }
+  }, [message.metadata?.reasoning, message.id]);
+
   useEffect(() => {
     const renderContent = async () => {
       let isMarkdownRenderer = true;
@@ -172,6 +188,12 @@ function MessageRendererBase(props: MessageRendererProps): JSX.Element {
 
   return (
     <>
+      {reasoningBuffer && (
+        <details style={{ marginBottom: 8, padding: 6, background: '#f5f5f5', borderRadius: 4, fontSize: 12 }}>
+          <summary style={{ cursor: 'pointer', fontWeight: 600 }}>Reasoning ▼</summary>
+          <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: '4px 0 0 0' }}>{reasoningBuffer}</pre>
+        </details>
+      )}
       {renderedContent && (
         <div
           className={`${RENDERED_CLASS}${isOutputArea ? ` ${OUTPUT_AREA_CLASS}` : ''}`}
