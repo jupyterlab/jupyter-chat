@@ -44,7 +44,9 @@ export function Navigation(props: NavigationProps): JSX.Element {
   const [unreadAfter, setUnreadAfter] = useState<number | null>(null);
 
   const gotoMessage = (msgIdx: number, alignToTop: boolean = true) => {
-    props.refMsgBox.current?.children.item(msgIdx)?.scrollIntoView(alignToTop);
+    props.refMsgBox.current
+      ?.querySelector(`[data-index="${msgIdx}"]`)
+      ?.scrollIntoView(alignToTop);
   };
 
   // Listen for change in unread messages, and find the first unread message before or
