@@ -2360,7 +2360,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jupyter/chat@^0.25.1, @jupyter/chat@workspace:packages/jupyter-chat":
+"@jupyter/chat@^0.25.2, @jupyter/chat@workspace:packages/jupyter-chat":
   version: 0.0.0-use.local
   resolution: "@jupyter/chat@workspace:packages/jupyter-chat"
   dependencies:
@@ -8669,7 +8669,7 @@ __metadata:
     "@types/react": ^18.2.0
     "@types/react-addons-linked-state-mixin": ^0.14.22
     css-loader: ^6.7.1
-    jupyterlab-chat: ^0.25.1
+    jupyterlab-chat: ^0.25.2
     mkdirp: ^1.0.3
     npm-run-all: ^4.1.5
     react: ^18.2.0
@@ -8682,11 +8682,11 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"jupyterlab-chat@^0.25.1, jupyterlab-chat@workspace:packages/jupyterlab-chat":
+"jupyterlab-chat@^0.25.2, jupyterlab-chat@workspace:packages/jupyterlab-chat":
   version: 0.0.0-use.local
   resolution: "jupyterlab-chat@workspace:packages/jupyterlab-chat"
   dependencies:
-    "@jupyter/chat": ^0.25.1
+    "@jupyter/chat": ^0.25.2
     "@jupyter/collaborative-drive": ^4.4.0 || ^5.0.0
     "@jupyter/ydoc": ^3.0.0 || ^4.0.0
     "@jupyterlab/application": ^4.5.0
@@ -10448,9 +10448,9 @@ __metadata:
   linkType: hard
 
 "shell-quote@npm:^1.6.1":
-  version: 1.10.0
-  resolution: "shell-quote@npm:1.10.0"
-  checksum: d4bc0757ae0e493d0f6e3327c93be7d5af1d39e9969eb4332ed4e40bb2c3f9112ec31e979d713d302605f7e3431d9f5f061719e0e177077ffd9c03c0b9cc5f73
+  version: 1.12.0
+  resolution: "shell-quote@npm:1.12.0"
+  checksum: bbb3b6b244069da4114c5c0d2192786ff146123e1c29c298348871a3b8219cf45bdc9540c2f948e8874e2f7309186480a7ac0097159d0958aaafec25c5074731
   languageName: node
   linkType: hard
 
