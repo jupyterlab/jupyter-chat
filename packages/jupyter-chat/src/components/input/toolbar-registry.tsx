@@ -2,8 +2,11 @@
  * Copyright (c) Jupyter Development Team.
  * Distributed under the terms of the Modified BSD License.
  */
+import { ReactWidget } from '@jupyterlab/ui-components';
 import { Token } from '@lumino/coreutils';
 import { ISignal, Signal } from '@lumino/signaling';
+import { Widget } from '@lumino/widgets';
+import { Theme, ThemeProvider } from '@mui/material/styles';
 import * as React from 'react';
 
 import {
@@ -12,6 +15,8 @@ import {
   SaveEditButton,
   SendButton
 } from './buttons';
+import { Chat } from '../chat';
+import { ChatReactContext } from '../../context';
 import { IInputModel } from '../../input-model';
 import { IChatCommandRegistry } from '../../registers';
 import { IChatModel } from '../../model';
@@ -25,19 +30,23 @@ export interface IInputToolbarRegistry {
    */
   readonly itemsChanged: ISignal<IInputToolbarRegistry, void>;
   /**
+   * All toolbar items in order (keyed by registry name), including hidden ones.
+   */
+  readonly items: ReadonlyMap<string, InputToolbarRegistry.IToolbarItem>;
+  /**
    * Get a toolbar item.
    */
   get(name: string): InputToolbarRegistry.IToolbarItem | undefined;
 
   /**
-   * Get the list of the visible toolbar items in order.
-   */
-  getItems(): InputToolbarRegistry.IToolbarItem[];
-
-  /**
    * Add a toolbar item.
    */
   addItem(name: string, item: InputToolbarRegistry.IToolbarItem): void;
+
+  /**
+   * Remove a toolbar item. No-op if `name` isn't registered.
+   */
+  removeItem(name: string): void;
 
   /**
    * Hide an element.
@@ -62,6 +71,16 @@ export class InputToolbarRegistry implements IInputToolbarRegistry {
   }
 
   /**
+   * All toolbar items in order (keyed by registry name), including hidden ones.
+   */
+  get items(): ReadonlyMap<string, InputToolbarRegistry.IToolbarItem> {
+    const sorted = Array.from(this._items.entries()).sort(
+      ([, a], [, b]) => a.position - b.position
+    );
+    return new Map(sorted);
+  }
+
+  /**
    * Get a toolbar item.
    */
   get(name: string): InputToolbarRegistry.IToolbarItem | undefined {
@@ -69,23 +88,40 @@ export class InputToolbarRegistry implements IInputToolbarRegistry {
   }
 
   /**
-   * Get the list of the visible toolbar items in order.
+   * Add a toolbar item.
+   *
+   * The deprecated `element` form is normalized at registration time to the
+   * `createWidget` factory form, so downstream code only has to deal with the
+   * widget factory.
    */
-  getItems(): InputToolbarRegistry.IToolbarItem[] {
-    return Array.from(this._items.values())
-      .filter(item => !item.hidden)
-      .sort((a, b) => a.position - b.position);
+  addItem(name: string, item: InputToolbarRegistry.IToolbarItem): void {
+    if (this._items.has(name)) {
+      console.warn(`A chat input toolbar item '${name}' is already registered`);
+      return;
+    }
+    const createWidget =
+      item.createWidget ??
+      (item.element
+        ? InputToolbarRegistry.createReactToolbarItem(item.element)
+        : undefined);
+    if (!createWidget) {
+      console.error(
+        `Chat input toolbar item '${name}' has neither 'createWidget' nor 'element'`
+      );
+      return;
+    }
+    this._items.set(name, { ...item, createWidget });
+    this._itemsChanged.emit();
   }
 
   /**
-   * Add a toolbar item.
+   * Remove a toolbar item. No-op if `name` isn't registered. The hosting
+   * ChatInput's sync loop disposes the matching widget on the next
+   * `itemsChanged` emission.
    */
-  addItem(name: string, item: InputToolbarRegistry.IToolbarItem): void {
-    if (!this._items.has(name)) {
-      this._items.set(name, item);
+  removeItem(name: string): void {
+    if (this._items.delete(name)) {
       this._itemsChanged.emit();
-    } else {
-      console.warn(`A chat input toolbar item '${name}' is already registered`);
     }
   }
 
@@ -94,7 +130,7 @@ export class InputToolbarRegistry implements IInputToolbarRegistry {
    */
   hide(name: string): void {
     const item = this._items.get(name);
-    if (item) {
+    if (item && !item.hidden) {
       item.hidden = true;
       this._itemsChanged.emit();
     }
@@ -105,7 +141,7 @@ export class InputToolbarRegistry implements IInputToolbarRegistry {
    */
   show(name: string): void {
     const item = this._items.get(name);
-    if (item) {
+    if (item && item.hidden) {
       item.hidden = false;
       this._itemsChanged.emit();
     }
@@ -118,15 +154,30 @@ export class InputToolbarRegistry implements IInputToolbarRegistry {
 export namespace InputToolbarRegistry {
   /**
    * The toolbar item interface.
+   *
+   * Items must provide either `createWidget` (preferred) or the deprecated
+   * `element` React component. The registry normalizes `element` into a
+   * `createWidget` factory at registration time.
    */
   export interface IToolbarItem {
     /**
-     * The react functional component with the button.
+     * Factory producing the Lumino widget to insert into the toolbar.
      *
-     * NOTE:
-     * This component must be a TooltippedButton for a good integration in the toolbar.
+     * The context is captured when the widget is created and is not reactive;
+     * if the host chat remounts (e.g. switching edit mode), a new widget is
+     * built with a fresh context.
      */
-    element: React.FunctionComponent<IToolbarItemProps>;
+    createWidget?: ToolbarItemFactory;
+    /**
+     * The React functional component with the button.
+     *
+     * NOTE: This component must be a TooltippedButton for a good integration
+     * in the toolbar.
+     *
+     * @deprecated Provide `createWidget` instead; use
+     * {@link createReactToolbarItem} to wrap an existing React component.
+     */
+    element?: React.FunctionComponent<IToolbarItemProps>;
     /**
      * The position of the button in the toolbar.
      */
@@ -135,6 +186,11 @@ export namespace InputToolbarRegistry {
      * Whether the button is hidden or not.
      */
     hidden?: boolean;
+    /**
+     * Whether the item is added in the fixed toolbar or the reactive one.
+     * Default to false.
+     */
+    pinned?: boolean;
   }
 
   /**
@@ -162,31 +218,71 @@ export namespace InputToolbarRegistry {
   }
 
   /**
+   * Context passed to a {@link ToolbarItemFactory}. Extends the React props
+   * with the Lumino/React bridges that a React widget needs (MUI theme and
+   * the shared chat context) so factory authors can build either plain Lumino
+   * widgets or React widgets rooted outside of the host component tree.
+   */
+  export interface IToolbarItemContext extends IToolbarItemProps {
+    /**
+     * The MUI theme in effect when the host chat was last rendered.
+     */
+    theme: Theme;
+    /**
+     * The chat context exposed to React descendants of the host chat.
+     */
+    chatContext: Chat.IChatProps;
+  }
+
+  /**
+   * Factory signature for a toolbar item: produces the Lumino widget to
+   * insert into the toolbar from the current host context.
+   */
+  export type ToolbarItemFactory = (context: IToolbarItemContext) => Widget;
+
+  /**
+   * Wrap a React component (receiving {@link IToolbarItemProps}) into a
+   * {@link ToolbarItemFactory}. The resulting widget hosts the component
+   * under the MUI theme and chat context so that hooks like
+   * `useChatContext()` keep working across the Lumino widget boundary.
+   */
+  export function createReactToolbarItem(
+    Comp: React.FunctionComponent<IToolbarItemProps>
+  ): ToolbarItemFactory {
+    return context => {
+      const { theme, chatContext, ...props } = context;
+      return ReactWidget.create(
+        <ThemeProvider theme={theme}>
+          <ChatReactContext.Provider value={chatContext}>
+            <Comp {...props} />
+          </ChatReactContext.Provider>
+        </ThemeProvider>
+      );
+    };
+  }
+
+  /**
    * The default toolbar registry if none is provided.
    */
   export function defaultToolbarRegistry(): InputToolbarRegistry {
     const registry = new InputToolbarRegistry();
-
-    // TODO: Re-enable stop button once logic is fully implemented
-    // registry.addItem('stop', {
-    //   element: StopButton,
-    //   position: 90
-    // });
     registry.addItem('send', {
-      element: SendButton,
-      position: 100
+      createWidget: createReactToolbarItem(SendButton),
+      position: 100,
+      pinned: true
     });
     registry.addItem('saveEdit', {
-      element: SaveEditButton,
-      position: 95
+      createWidget: createReactToolbarItem(SaveEditButton),
+      position: 95,
+      pinned: true
     });
     registry.addItem('attach', {
-      element: AttachButton,
-      position: 20
+      createWidget: createReactToolbarItem(AttachButton),
+      position: 100
     });
     registry.addItem('cancel', {
-      element: CancelButton,
-      position: 10
+      createWidget: createReactToolbarItem(CancelButton),
+      position: 95
     });
     return registry;
   }
