@@ -172,7 +172,7 @@ export class SelectionWatcher {
         this._languages
       );
     }
-    if (prevSelection?.text !== currSelection?.text) {
+    if (!selectionsEqual(prevSelection, currSelection)) {
       this._selection = currSelection;
       this._selectionChanged.emit(currSelection);
     }
@@ -186,6 +186,28 @@ export class SelectionWatcher {
     SelectionWatcher.Selection | null
   >(this);
   private _languages: IEditorLanguageRegistry;
+}
+
+/**
+ * Whether two selections are the same: same text, widget and cell, at the same
+ * range. Two `null` selections are equal.
+ */
+export function selectionsEqual(
+  a: SelectionWatcher.Selection | null,
+  b: SelectionWatcher.Selection | null
+): boolean {
+  if (!a || !b) {
+    return !a && !b;
+  }
+  return (
+    a.text === b.text &&
+    a.widgetId === b.widgetId &&
+    a.cellId === b.cellId &&
+    a.start.line === b.start.line &&
+    a.start.column === b.start.column &&
+    a.end.line === b.end.line &&
+    a.end.column === b.end.column
+  );
 }
 
 /**
