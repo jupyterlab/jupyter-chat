@@ -210,6 +210,9 @@ export function ChatMessages(): JSX.Element {
     };
   }, [messages, showDeleted, allRendered]);
 
+  const visibleMessages = messages
+    .map((message, index) => ({ message, index }))
+    .filter(({ message }) => showDeleted || !message.deleted);
   const horizontalPadding = area === 'main' ? 8 : 4;
   return (
     <>
@@ -230,10 +233,7 @@ export function ChatMessages(): JSX.Element {
           className={clsx(MESSAGES_BOX_CLASS)}
         >
           {/* Filter the deleted message if user don't expect to see it. */}
-          {(showDeleted
-            ? messages
-            : messages.filter(message => !message.deleted)
-          ).map((message, i) => {
+          {visibleMessages.map(({ message, index }) => {
             const isCurrentUser =
               model.user !== undefined &&
               model.user.username === message.sender.username;
@@ -262,7 +262,7 @@ export function ChatMessages(): JSX.Element {
                 {messagePreambleRegistry && (
                   <MessagePreambleComponent message={message} />
                 )}
-                <ChatMessage message={message} index={i} />
+                <ChatMessage message={message} index={index} />
                 {messageFooterRegistry && (
                   <MessageFooterComponent message={message} />
                 )}

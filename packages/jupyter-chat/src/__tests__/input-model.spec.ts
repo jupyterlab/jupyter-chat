@@ -4,7 +4,7 @@
  */
 
 import { InputModel } from '../input-model';
-import { INewMessage } from '../types';
+import { INewMessage, INotebookAttachment } from '../types';
 
 describe('test input model', () => {
   describe('metadata', () => {
@@ -113,6 +113,86 @@ describe('test input model', () => {
       model.updateMetadata({ persona: 'kiro' });
       model.send('hello');
       expect(model.getMetadata()).toEqual({ persona: 'kiro' });
+    });
+  });
+
+  describe('attachments', () => {
+    it('should add attachments', () => {
+      const model = new InputModel({ onSend: jest.fn() });
+      model.addAttachment({ type: 'file', value: 'data.csv' });
+      expect(model.attachments).toEqual([{ type: 'file', value: 'data.csv' }]);
+    });
+
+    it('should not add duplicate file attachments', () => {
+      const model = new InputModel({ onSend: jest.fn() });
+      model.addAttachment({ type: 'file', value: 'data.csv' });
+      model.addAttachment({ type: 'file', value: 'data.csv' });
+      expect(model.attachments).toHaveLength(1);
+    });
+
+    it('should merge cells from same notebook and filter duplicate cells', () => {
+      const model = new InputModel({ onSend: jest.fn() });
+      model.addAttachment({
+        type: 'notebook',
+        value: 'analysis.ipynb',
+        cells: [
+          { id: 'cell-1', input_type: 'code' },
+          { id: 'cell-2', input_type: 'markdown' }
+        ]
+      });
+
+      // Add overlapping and new cells
+      model.addAttachment({
+        type: 'notebook',
+        value: 'analysis.ipynb',
+        cells: [
+          { id: 'cell-2', input_type: 'markdown' },
+          { id: 'cell-3', input_type: 'code' }
+        ]
+      });
+
+      expect(model.attachments).toHaveLength(1);
+      const nbAttachment = model.attachments[0] as INotebookAttachment;
+      expect(nbAttachment.cells).toEqual([
+        { id: 'cell-1', input_type: 'code' },
+        { id: 'cell-2', input_type: 'markdown' },
+        { id: 'cell-3', input_type: 'code' }
+      ]);
+    });
+
+    it('should do nothing if all added cells already exist in the attachment', () => {
+      const model = new InputModel({ onSend: jest.fn() });
+      const emitted: any[] = [];
+      model.attachmentsChanged?.connect((_, atts) => {
+        emitted.push(atts);
+      });
+
+      model.addAttachment({
+        type: 'notebook',
+        value: 'analysis.ipynb',
+        cells: [{ id: 'cell-1', input_type: 'code' }]
+      });
+
+      expect(emitted).toHaveLength(1);
+
+      // Re-adding the exact same cell should early-return without emitting
+      model.addAttachment({
+        type: 'notebook',
+        value: 'analysis.ipynb',
+        cells: [{ id: 'cell-1', input_type: 'code' }]
+      });
+
+      expect(emitted).toHaveLength(1);
+    });
+
+    it('should remove attachments', () => {
+      const model = new InputModel({ onSend: jest.fn() });
+      const attachment = { type: 'file' as const, value: 'data.csv' };
+      model.addAttachment(attachment);
+      expect(model.attachments).toHaveLength(1);
+
+      model.removeAttachment(attachment);
+      expect(model.attachments).toHaveLength(0);
     });
   });
 });

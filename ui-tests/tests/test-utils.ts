@@ -5,12 +5,14 @@
 
 import { IJupyterLabPageFixture } from '@jupyterlab/galata';
 import { User } from '@jupyterlab/services';
-import { UUID } from '@lumino/coreutils';
 import { Locator } from '@playwright/test';
 
 export const USER: User.IUser = {
   identity: {
-    username: UUID.uuid4(),
+    // Deterministic username matching the server's fixed test identity (see
+    // ui-tests/jupyter_server_test_config.py), so the RTC-free chat's
+    // server-assigned identity equals this frontend identity.
+    username: 'test-user',
     name: 'jovyan',
     display_name: 'jovyan',
     initials: 'JP',

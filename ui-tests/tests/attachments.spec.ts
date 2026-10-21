@@ -26,29 +26,9 @@ test.describe('#attachments', () => {
     await page.menu.clickMenuItem('File>New>Markdown File');
     await page.notebook.createNew(NOTEBOOK);
 
-    // Wait for the notebook to finish initialising (a freshly created notebook
-    // becomes dirty once its kernel writes metadata).
-    await page.waitForCondition(
-      async () => (await page.locator('li.jp-mod-dirty').count()) >= 1
-    );
-    // RTC-free there is no collaborative provider syncing new documents to the
-    // server, so they never auto-report "clean". Explicitly save any dirty
-    // document until the tabs report clean before closing, to avoid the
-    // "Save your changes?" dialog. The notebook re-dirties once right after a
-    // save (kernel metadata), hence saving until the flag stays cleared.
-    // Collaboratively the docs are already clean, so this is a no-op.
-    await page.waitForCondition(async () => {
-      await page.evaluate(async () => {
-        const app = (window as any).jupyterapp;
-        for (const widget of app.shell.widgets('main')) {
-          const context = (widget as any).context;
-          if (context?.model?.dirty) {
-            await context.save();
-          }
-        }
-      });
-      return (await page.locator('li.jp-mod-dirty').count()) === 0;
-    });
+    // Wait for the kernel to be ready, then save and close.
+    await page.locator('text=Python 3 (ipykernel) | Idle').waitFor();
+    await page.notebook.save();
     await page.activity.closeAll();
   });
 
@@ -168,6 +148,8 @@ test.describe('#attachments', () => {
   }) => {
     // Open the notebook created in beforeEach and add 2 more cells.
     await page.notebook.open(NOTEBOOK);
+    // Wait for the kernel to be ready before interacting with the notebook.
+    await page.locator('text=Python 3 (ipykernel) | Idle').waitFor();
     await page.notebook.addCell('code', 'print("cell 1")');
     await page.notebook.addCell('code', 'print("cell 2")');
 
@@ -216,7 +198,8 @@ test.describe('#attachments', () => {
     // Send the message.
     await input.locator('.jp-chat-send-button').click();
 
-    // close the notebook
+    // Wait for the kernel to be idle, then save and close.
+    await page.locator('text=Python 3 (ipykernel) | Idle').waitFor();
     await page.notebook.save();
     await page.notebook.close();
 

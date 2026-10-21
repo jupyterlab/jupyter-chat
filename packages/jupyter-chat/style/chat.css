@@ -8,8 +8,16 @@
   flex-grow: 1;
 }
 
+.jp-chat-messages-container {
+  overflow-x: hidden;
+}
+
 .jp-chat-message-container {
   position: relative;
+}
+
+.jp-chat-rendered-message {
+  overflow-x: auto;
 }
 
 .jp-chat-rendered-message hr {
@@ -32,6 +40,7 @@
   padding: 0 1em;
 }
 
+.jp-ThemedContainer .jp-chat-welcome-message .jp-RenderedHTMLCommon,
 .jp-ThemedContainer .jp-chat-rendered-message .jp-RenderedHTMLCommon {
   padding-right: 0;
 }

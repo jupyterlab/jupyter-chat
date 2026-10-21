@@ -3,6 +3,7 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from enum import Enum
 from typing import Any, Callable, Literal, Optional, Tuple, Union
 from jupyter_server.auth import User as JupyterUser
 
@@ -221,6 +222,71 @@ class NotebookAttachment:
     (optional) A list of cells in the notebook.
     """
 
+    def __post_init__(self) -> None:
+        if self.cells is None:
+            return
+
+        cells: list[NotebookAttachmentCell] = []
+        for cell in self.cells:
+            if isinstance(cell, NotebookAttachmentCell):
+                cells.append(cell)
+                continue
+
+            selection = cell.get("selection")
+            if isinstance(selection, dict):
+                selection = AttachmentSelection(**selection)
+            cells.append(
+                NotebookAttachmentCell(
+                    id=cell["id"],
+                    input_type=cell["input_type"],
+                    selection=selection,
+                )
+            )
+        self.cells = cells
+
+
+class ChatMessageAction(str, Enum):
+    """The kind of message change surfaced to ``observe_messages`` callbacks."""
+
+    CLIENT_MSG_RECEIVED = "client_msg_received"
+    """A new message was received from a client (human user)."""
+
+    CLIENT_MSG_EDITED = "client_msg_edited"
+    """An existing message was edited by a client (human user)."""
+
+    SERVER_MSG_SENT = "server_msg_sent"
+    """A new message was sent from the server (e.g. an AI persona)."""
+
+    SERVER_MSG_UPDATED = "server_msg_updated"
+    """An existing server message was updated (e.g. a streaming response)."""
+
+
+@dataclass
+class ChatMessageEvent:
+    """A single message change delivered to ``observe_messages`` callbacks."""
+
+    action: ChatMessageAction
+    """What happened to the message."""
+
+    message: Message
+    """The affected message (its current state)."""
+
+
+MessageObserverCallback = Callable[["ChatMessageEvent"], None]
+""" A callback invoked with a :class:`ChatMessageEvent` for each message change. """
+
+
+@dataclass
+class MessageObserver:
+    """Opaque handle returned by :meth:`BaseChatModel.observe_messages`.
+
+    The consumer MUST pass it back to :meth:`BaseChatModel.unobserve_messages`
+    when it no longer wants updates; otherwise the underlying subscription (and
+    the callback it references) leaks for the lifetime of the model.
+    """
+
+    _handle: Any = field(repr=False, compare=False)
+
 
 class BaseChatModel(ABC):
     """
@@ -230,7 +296,15 @@ class BaseChatModel(ABC):
     """
 
     @abstractmethod
-    def get_id(self) -> Optional[str]:
+    def get_id(self) -> str:
+        """Return the stable unique id of this chat. Always a string."""
+        ...
+
+    @abstractmethod
+    def get_path(self) -> str:
+        """Return the path of the file backing this chat model, relative to
+        ``ContentsManager.root_dir``.
+        """
         ...
 
     @abstractmethod
@@ -282,4 +356,44 @@ class BaseChatModel(ABC):
 
     @abstractmethod
     def set_metadata(self, name: str, metadata: Any) -> None:
+        ...
+
+    @abstractmethod
+    def observe_messages(
+        self, callback: MessageObserverCallback
+    ) -> MessageObserver:
+        """Register ``callback`` to be invoked with a :class:`ChatMessageEvent`
+        for each message change.
+
+        Returns a :class:`MessageObserver` handle; pass it to
+        :meth:`unobserve_messages` to stop receiving updates and release the
+        underlying subscription.
+        """
+        ...
+
+    @abstractmethod
+    def unobserve_messages(self, observer: MessageObserver) -> None:
+        """Stop a message observer previously registered via
+        :meth:`observe_messages`."""
+        ...
+
+    @abstractmethod
+    def broadcast_writing_status(
+        self,
+        user: "User",
+        status: Optional[dict] = None,
+    ) -> None:
+        """Broadcast an ephemeral "user is writing" status on behalf of ``user``.
+
+        ``user`` is a :class:`User`, allowing server-side senders such as AI
+        agents -- which each have their own user identity -- to advertise a
+        typing indicator. ``status`` is ``None`` when the user stopped, or a
+        mapping with optional ``messageID`` and ``typingIndicator`` keys.
+
+        This is abstract: every transport MUST implement it so the writers API
+        stays transport-complete. The WebSocket model relays a ``writing`` frame
+        to connected clients; the collaborative (:class:`YChat`) model writes the
+        status into the shared awareness channel. Both surface the writer through
+        the same frontend ``writersChanged`` signal.
+        """
         ...

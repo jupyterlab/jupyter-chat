@@ -412,11 +412,11 @@ export class InputModel implements IInputModel {
           existingNotebookIndex
         ] as INotebookAttachment;
         const existingCells = existingAttachment.cells || [];
+        const existingCellIds = new Set(existingCells.map(cell => cell.id));
 
         // Filter out duplicate cells
         const newCells = attachment.cells.filter(
-          newCell =>
-            !existingCells.some(existingCell => existingCell.id === newCell.id)
+          newCell => !existingCellIds.has(newCell.id)
         );
 
         if (!newCells.length) {
@@ -685,6 +685,12 @@ export namespace InputModel {
      * Whether to display the 'send with selection' button.
      */
     sendWithSelection?: boolean;
+    /**
+     * The placeholder to display in the empty chat input.
+     * The default placeholder is used if undefined, an empty string displays no
+     * placeholder at all.
+     */
+    inputPlaceholder?: string;
   }
 }
 

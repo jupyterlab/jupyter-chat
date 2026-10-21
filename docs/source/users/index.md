@@ -96,14 +96,22 @@ available:
 - replace the content of the active cell with the code:
   ![code toolbar cell replace](../_static/images/code-toolbar-replace.png){w=24px}
 
-(chat-settings)=
-
 ### Attachments
 
 Files can be attached to the messages using the clip icon next to the send icon in the input.
 It opens a Dialog allowing to select and atach files.
 
 Attachments can then be opened by clicking on the preview icon.
+
+### Chat commands
+
+The chat input includes a command and autocompletion framework triggered by special prefix characters:
+
+- **Emoji completion**: Type a colon (`:`) followed by letters to open the emoji suggestions menu (e.g. `:smile:` 🙂, `:heart:` ❤, `:thinking:` 🤔, `:cool:` 😎). Selecting a command replaces the shortcode with the corresponding emoji.
+- **User mentions**: Type `@` to mention collaborators in the chat session. In collaborative sessions, a list of active users appears to easily tag them.
+- **Keyboard navigation**: When the suggestions menu is visible, navigate through options using the <kbd>&uparrow;</kbd> and <kbd>&downarrow;</kbd> arrow keys, press <kbd>Enter</kbd> or <kbd>Tab</kbd> to accept the selected command, and press <kbd>Escape</kbd> to dismiss.
+
+(chat-settings)=
 
 ## Chat settings
 

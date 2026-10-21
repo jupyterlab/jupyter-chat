@@ -19,14 +19,111 @@ import { IChangedArgs } from '@jupyterlab/coreutils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { ServerConnection, User } from '@jupyterlab/services';
 import { PartialJSONObject, UUID } from '@lumino/coreutils';
+import { Debouncer } from '@lumino/polling';
 import { ISignal, Signal } from '@lumino/signaling';
 
 import { enforceAutosaveEnabled } from './autosave';
-import { IWidgetConfig } from './token';
+import { ILabChatModel, IWidgetConfig } from './token';
 import { WebSocketHandler } from './websocket-handler';
 import { IChatChanges, IYmessage, YChat } from './ychat';
 
 const WRITING_DELAY = 1000;
+
+/**
+ * Coerce an untrusted value to an `IUser`, or `null` if it is not one.
+ * Awareness state is written by arbitrary clients, so the only field we rely on
+ * is a string `username`.
+ */
+function asUser(value: unknown): IUser | null {
+  if (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof (value as { username?: unknown }).username === 'string'
+  ) {
+    return value as IUser;
+  }
+  return null;
+}
+
+/**
+ * Coerce an untrusted value to an `IWriter`, or `null` if it is not one.
+ */
+function asWriter(value: unknown): IChatModel.IWriter | null {
+  if (typeof value !== 'object' || value === null) {
+    return null;
+  }
+  const record = value as Record<string, unknown>;
+  const user = asUser(record.user);
+  if (!user) {
+    return null;
+  }
+  return {
+    user,
+    messageID:
+      typeof record.messageID === 'string' ? record.messageID : undefined,
+    typingIndicator:
+      typeof record.typingIndicator === 'string'
+        ? record.typingIndicator
+        : undefined
+  };
+}
+
+/**
+ * Build the writers list from the raw awareness states of a collaborative chat.
+ *
+ * Two shapes appear on the shared awareness channel: a peer advertising its own
+ * typing on its own slot (`isWriting`), and the set of writers a server-side
+ * sender (e.g. AI personas) publishes as a `writers` list on a single slot,
+ * since those senders have no awareness client of their own. Duplicate
+ * usernames are collapsed downstream by `updateWriters`.
+ *
+ * Awareness state is untrusted (any client can write anything), so every field
+ * is validated before use and malformed entries are dropped. Exported for tests.
+ */
+export function collectWritersFromAwareness(
+  states: Map<number, Record<string, unknown>>,
+  localUsername: string
+): IChatModel.IWriter[] {
+  const writers: IChatModel.IWriter[] = [];
+  // The current user must never see themselves as a writer, whichever slot
+  // advertises them (their own typing slot, or a server-published set).
+  const pushWriter = (writer: IChatModel.IWriter | null): void => {
+    if (writer && writer.user.username !== localUsername) {
+      writers.push(writer);
+    }
+  };
+  for (const state of states.values()) {
+    if (typeof state !== 'object' || state === null) {
+      continue;
+    }
+
+    // A server-side sender publishes the whole writer set on one slot.
+    if (Array.isArray(state.writers)) {
+      for (const entry of state.writers) {
+        pushWriter(asWriter(entry));
+      }
+    }
+
+    // A peer advertises its own typing on its own slot. `isWriting` is `true`
+    // (writing, no target message) or the string ID of the message being
+    // written; anything else is ignored.
+    const isWriting = state.isWriting;
+    if (isWriting === true || (typeof isWriting === 'string' && isWriting)) {
+      const user = asUser(state.user);
+      if (user) {
+        pushWriter({
+          user,
+          messageID: typeof isWriting === 'string' ? isWriting : undefined,
+          typingIndicator:
+            typeof state.typingIndicator === 'string'
+              ? state.typingIndicator
+              : undefined
+        });
+      }
+    }
+  }
+  return writers;
+}
 
 /**
  * Chat model namespace.
@@ -94,7 +191,7 @@ class LabChatUser implements IUser {
  */
 export class LabChatModel
   extends AbstractChatModel
-  implements DocumentRegistry.IModel
+  implements ILabChatModel, DocumentRegistry.IModel
 {
   constructor(options: LabChatModel.IOptions) {
     super(options);
@@ -126,10 +223,8 @@ export class LabChatModel
     if (!this.collaborative && options.serverSettings) {
       this._wsHandler = new WebSocketHandler({
         serverSettings: options.serverSettings,
-        user: this._user
+        model: this
       });
-      this._wsHandler.messageReceived.connect(this._onWsMessage, this);
-      this._wsHandler.usersChanged.connect(this._onWsUsersChanged, this);
     }
   }
 
@@ -162,7 +257,15 @@ export class LabChatModel
     return this._dirty;
   }
   set dirty(value: boolean) {
+    const old = this._dirty;
     this._dirty = value;
+    if (old !== value) {
+      this._stateChanged.emit({
+        name: 'dirty',
+        oldValue: old,
+        newValue: value
+      });
+    }
   }
 
   get readOnly(): boolean {
@@ -172,11 +275,20 @@ export class LabChatModel
     this._readOnly = value;
   }
 
+  // Declaring `set id` in this subclass shadows the base class's accessor
+  // property entirely, so `get id` must be redeclared here too or reading
+  // `.id` on a LabChatModel returns undefined even after `_id` is set.
+  get id(): string | undefined {
+    return super.id;
+  }
   set id(value: string | undefined) {
     super.id = value;
-    if (value) {
-      this.setReady();
-    }
+  }
+
+  protected setReady(id: string): void {
+    this._documentSynced = true;
+    this._flushPreReadyMessages();
+    super.setReady(id);
   }
 
   /**
@@ -199,17 +311,70 @@ export class LabChatModel
       this._wsHandler.initialize();
       this._wsHandler.ready
         .then(() => {
-          if (!this.id) {
-            this.id = UUID.uuid4();
+          // The connection frame carries both the chat id and the identity the
+          // server registered for this connection. The chat is not ready until
+          // both are known: the client adopts the server-assigned identity (the
+          // RTC-free server owns identity) and takes the server's chat id.
+          const wsUser = this._wsHandler!.connectedUser;
+          const serverId = this._wsHandler!.chatId;
+          if (!wsUser || !serverId) {
+            console.error(
+              'WS chat connection frame did not include the user identity ' +
+                'and chat id; the chat cannot become ready. Is the server up ' +
+                'to date?'
+            );
+            return;
           }
+          this._user = new LabChatUser(wsUser);
+          this.id = serverId;
+          this.setReady(serverId);
         })
-        .catch(e => console.error('WS chat connection failed', e));
+        .catch(e => {
+          this._wsHandler?.dispose();
+          this._wsHandler = null;
+          if ((e as { wsCloseCode?: number }).wsCloseCode !== 1006) {
+            // The server was reachable but rejected the connection (e.g. invalid
+            // path): surface the error rather than silently falling back.
+            this.setError(e);
+            return;
+          }
+          // Server unreachable (e.g. JupyterLite): fall back to the shared model.
+          console.warn(
+            'WS chat connection failed, falling back to shared model',
+            e
+          );
+          // Restore content from disk before wiring the change handler, so the
+          // initial population doesn't itself trigger a save. `ready` is
+          // resolved only after the load completes (see #532).
+          void this._loadContent().then(() => {
+            if (!this._sharedModel.id) {
+              this._sharedModel.id = UUID.uuid4();
+            }
+            const id = this._sharedModel.id;
+            // Any subsequent change must be saved by the frontend (no backend).
+            this._sharedModel.changed.connect(this._onServerLessChange, this);
+            this.setReady(id);
+          });
+        });
       return;
     }
-    if (!this._sharedModel.id) {
-      // Assigning the shared ID emits a metadata change, which sets the model
-      // ID - and therefore resolves `ready` - through `_onchange`.
-      this._sharedModel.id = UUID.uuid4();
+    // The synced document's `id` metadata is the single source of truth for the
+    // chat id under RTC: the server writes it (the same value `chat.get_id()`
+    // returns) and it reaches us through the shared document. When it is already
+    // present at sync time, adopt it and resolve `ready` with it - the initial
+    // sync populates it without emitting an `_onchange` metadata delta, so
+    // nothing else would set the model id and `ready` would never resolve.
+    if (this._sharedModel.id) {
+      const id = this._sharedModel.id;
+      this.id = id; // no _onchange delta fires for the existing id at sync time
+      this.setReady(id);
+    } else {
+      // Brand-new document: writing the id to the shared model fires _onchange
+      // synchronously, which sets this.id (and thus super.id) via metadataChanges.
+      // setReady() then flushes buffered messages and resolves `ready`.
+      const id = UUID.uuid4();
+      this._sharedModel.id = id;
+      this.setReady(id);
     }
   }
 
@@ -217,6 +382,7 @@ export class LabChatModel
     if (this.isDisposed) {
       return;
     }
+    this._saveDebouncer.dispose();
     this._wsHandler?.dispose();
     this._wsHandler = null;
     super.dispose();
@@ -227,34 +393,44 @@ export class LabChatModel
   }
 
   toString(): string {
-    return JSON.stringify({}, null, 2);
+    return JSON.stringify(this._sharedModel.getSource(), null, 2);
   }
 
-  fromString(data: string): void {
-    /** */
+  fromString(_data: string): void {
+    // Content is loaded on demand via _loadContent() in the serverless
+    // (JupyterLite) fallback; in RTC/WS modes the transport owns the data.
   }
 
   toJSON(): PartialJSONObject {
     return JSON.parse(this.toString());
   }
 
-  fromJSON(data: PartialJSONObject): void {
-    // nothing to do
+  fromJSON(_data: PartialJSONObject): void {
+    // nothing to do — see fromString
   }
 
   createChatContext(): IChatContext {
     return new LabChatContext({ model: this });
   }
 
-  async messagesInserted(
-    index: number,
-    messages: IMessageContent[]
-  ): Promise<void> {
-    // Ensure the chat has an ID before inserting the messages, to properly catch the
-    // unread messages (the last read message is saved using the chat ID).
-    return this.ready.then(() => {
+  messagesInserted(index: number, messages: IMessageContent[]): void {
+    // Buffer messages that arrive before the document is synced. They are
+    // flushed synchronously in markDocumentSynced() so that `ready` resolves
+    // only after all initial messages and metadata are already in the model.
+    // This ensures that the chat has an ID before inserting the messages, to properly
+    // catch the unread messages (the last read message is saved using the chat ID).
+    if (!this._documentSynced) {
+      this._preReadyMessages.push({ index, messages });
+      return;
+    }
+    super.messagesInserted(index, messages);
+  }
+
+  private _flushPreReadyMessages(): void {
+    for (const { index, messages } of this._preReadyMessages) {
       super.messagesInserted(index, messages);
-    });
+    }
+    this._preReadyMessages = [];
   }
 
   sendMessage(message: INewMessage): string | null {
@@ -267,9 +443,10 @@ export class LabChatModel
     ) {
       return null;
     }
-    this._resetWritingStatus();
+    this.broadcastWritingStatus(null);
     if (this._timeoutWriting !== null) {
       window.clearTimeout(this._timeoutWriting);
+      this._timeoutWriting = null;
     }
 
     if (this._wsHandler) {
@@ -283,10 +460,13 @@ export class LabChatModel
       body: message.body ?? '',
       time: Date.now() / 1000,
       sender: message.sender ?? this._user,
-      raw_time: true
+      // Set the raw time only if there is a server to update the time to a reference
+      // one (the server time is source of truth). At that stage, without collaboration,
+      // this means that the chat is running without server (jupyterlite).
+      raw_time: this.collaborative ? true : false
     };
 
-    this.sharedModel.addMessage(this._contentToYmessage(content));
+    this.sharedModel.addMessage(this.toYMessage(content));
     return content.id;
   }
 
@@ -301,15 +481,23 @@ export class LabChatModel
     id: string,
     updatedMessage: IMessageContent
   ): Promise<boolean | void> | boolean | void {
+    const edited = updatedMessage.sender.bot ? updatedMessage.edited : true;
     if (this._wsHandler) {
-      this._wsHandler.updateMessage(id, updatedMessage);
+      this._wsHandler.updateMessage(id, {
+        ...updatedMessage,
+        edited
+      });
       return;
     }
 
     const index = this.sharedModel.getMessageIndex(id);
     this.sharedModel.updateMessage(
       index,
-      this._contentToYmessage({ ...updatedMessage, id, edited: true })
+      this.toYMessage({
+        ...updatedMessage,
+        id,
+        edited
+      })
     );
   }
 
@@ -337,16 +525,22 @@ export class LabChatModel
    * @param messageID - The ID of the message being edited, if any.
    */
   onInputChanged = (value: string, messageID?: string): void => {
-    if (!value || !this.config.sendTypingNotification) {
+    if (!this.config.sendTypingNotification) {
       return;
     }
-    const awareness = this.sharedModel.awareness;
     if (this._timeoutWriting !== null) {
       window.clearTimeout(this._timeoutWriting);
+      this._timeoutWriting = null;
     }
-    awareness.setLocalStateField('isWriting', messageID ?? true);
+    // Empty input (including right after sending) means the user stopped.
+    if (!value) {
+      this.broadcastWritingStatus(null);
+      return;
+    }
+    this.broadcastWritingStatus({ messageID });
     this._timeoutWriting = window.setTimeout(() => {
-      this._resetWritingStatus();
+      this._timeoutWriting = null;
+      this.broadcastWritingStatus(null);
     }, WRITING_DELAY);
   };
 
@@ -368,38 +562,96 @@ export class LabChatModel
 
   /**
    * Triggered when an awareness state changes.
-   * Used to populate the writers list.
+   * Used to populate the writers list from the shared awareness channel.
    */
   onAwarenessChange = () => {
-    const writers: IChatModel.IWriter[] = [];
-    const states = this.sharedModel.awareness.getStates();
-    for (const stateID of states.keys()) {
-      const state = states.get(stateID);
-      if (!state || !state.user || state.user.username === this.user.username) {
-        continue;
-      }
-      if (state.isWriting !== undefined && state.isWriting !== false) {
-        const writer: IChatModel.IWriter = {
-          user: state.user,
-          messageID: state.isWriting === true ? undefined : state.isWriting
-        };
-        writers.push(writer);
-      }
-    }
-    this.updateWriters(writers);
+    this.updateWriters(
+      collectWritersFromAwareness(
+        this.sharedModel.awareness.getStates(),
+        this.user.username
+      )
+    );
   };
 
-  private _resetWritingStatus() {
+  /**
+   * Broadcast the current user's writing status.
+   *
+   * Collaborative (RTC) mode advertises it over the awareness channel so peers
+   * see it. RTC-free (WebSocket) mode is effectively single-user, so the client
+   * does not advertise its own typing at all -- writers only ever come from the
+   * server (e.g. AI agents). Hence this is a no-op without RTC.
+   */
+  broadcastWritingStatus(status: IChatModel.IWritingStatus | null): void {
+    if (!this.collaborative) {
+      return;
+    }
     const awareness = this.sharedModel.awareness;
-    const states = awareness.getLocalState();
-    delete states?.isWriting;
-    awareness.setLocalState(states);
-    this._timeoutWriting = null;
+    if (status === null) {
+      const local = awareness.getLocalState() ?? {};
+      delete local.isWriting;
+      delete local.typingIndicator;
+      awareness.setLocalState(local);
+    } else {
+      awareness.setLocalStateField('isWriting', status.messageID ?? true);
+      awareness.setLocalStateField(
+        'typingIndicator',
+        status.typingIndicator ?? null
+      );
+    }
   }
 
   private _enforceAutosaveEnabled = () => {
     enforceAutosaveEnabled(this.sharedModel.awareness);
   };
+
+  /**
+   * Triggered when there is no backend and a change occur in the shared model (e.g.
+   * Jupyterlite). It is used to save the chat content from the frontend.
+   */
+  private _onServerLessChange = (): void => {
+    this.dirty = true;
+    void this._saveDebouncer.invoke();
+  };
+
+  /**
+   * Load the chat content when no backend is available (e.g. Jupyterlite).
+   * Should be called once when initializing the chat.
+   */
+  private async _loadContent(): Promise<void> {
+    if (!this.documentManager) {
+      return;
+    }
+    try {
+      const file = await this.documentManager.services.contents.get(this.name, {
+        content: true,
+        format: 'text'
+      });
+      if (typeof file.content === 'string' && file.content) {
+        this._sharedModel.setSource(JSON.parse(file.content));
+      }
+    } catch {
+      // Missing or invalid file — start with an empty chat.
+    }
+  }
+
+  /**
+   * Save the content to a file when no backend is available (e.g. Jupyterlite).
+   */
+  private async _saveContent(): Promise<void> {
+    if (!this.documentManager) {
+      return;
+    }
+    try {
+      await this.documentManager.services.contents.save(this.name, {
+        type: 'file',
+        format: 'text',
+        content: this.toString()
+      });
+      this.dirty = false;
+    } catch (e) {
+      console.error('Failed to save chat file', e);
+    }
+  }
 
   private _onchange = async (_: YChat, changes: IChatChanges) => {
     if (changes.messageListChanges) {
@@ -501,7 +753,8 @@ export class LabChatModel
               'raw_time',
               'deleted',
               'edited',
-              'metadata'
+              'metadata',
+              'mime_model'
             ].includes(key)
           ) {
             const update: Partial<IMessageContent> = {};
@@ -547,33 +800,14 @@ export class LabChatModel
           change => change.name === 'dirty' && !change.newValue
         )
       ) {
-        this._sharedModel.id = UUID.uuid4();
+        const id = UUID.uuid4();
+        this._sharedModel.id = id;
+        this.setReady(id);
       }
     }
   };
 
-  private _onWsUsersChanged = (
-    _: WebSocketHandler,
-    users: Record<string, IUser>
-  ): void => {
-    for (const user of Object.values(users)) {
-      if (!this._sharedModel.getUser(user.username)) {
-        this._sharedModel.setUser(new LabChatUser(user));
-      }
-    }
-  };
-
-  private _onWsMessage = (_: WebSocketHandler, msg: IMessageContent): void => {
-    const ymsg = this._contentToYmessage(msg);
-    const index = this._sharedModel.getMessageIndex(ymsg.id);
-    if (index >= 0) {
-      this._sharedModel.updateMessage(index, ymsg);
-    } else {
-      this._sharedModel.addMessage(ymsg);
-    }
-  };
-
-  private _contentToYmessage(msg: IMessageContent): IYmessage {
+  toYMessage(msg: IMessageContent): IYmessage {
     const sender = msg.sender as IUser;
     if (!this._sharedModel.getUser(sender.username)) {
       this._sharedModel.setUser(new LabChatUser(sender));
@@ -630,6 +864,11 @@ export class LabChatModel
 
   private _sharedModel: YChat;
 
+  private _documentSynced = false;
+  private _preReadyMessages: Array<{
+    index: number;
+    messages: IMessageContent[];
+  }> = [];
   private _dirty = false;
   private _readOnly = false;
   private _contentChanged = new Signal<this, void>(this);
@@ -637,7 +876,13 @@ export class LabChatModel
   private _timeoutWriting: number | null = null;
 
   private _user: IUser;
+
+  // Web socket to use if RTC is not available
   private _wsHandler: WebSocketHandler | null = null;
+
+  // Debouncer used to save file from the frontend if RTC and web socket are not
+  // available (e.g. jupyterlite).
+  private _saveDebouncer = new Debouncer(() => this._saveContent(), 500);
 }
 
 /**

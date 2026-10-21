@@ -21,6 +21,7 @@ const POPUP_ITEM_CLASS = 'jp-chat-selector-popup-item';
 const POPUP_ITEM_ACTIVE_CLASS = 'jp-chat-selector-popup-item-active';
 const POPUP_ITEM_LABEL_CLASS = 'jp-chat-selector-popup-item-label';
 const POPUP_EMPTY_CLASS = 'jp-chat-selector-popup-empty';
+const CHAT_NAME_COLLATOR = new Intl.Collator(undefined, { numeric: true });
 
 /**
  * A popup widget for selecting a chat from a filtered list.
@@ -281,9 +282,9 @@ export class ChatSelectorPopup extends ReactWidget {
       }
     });
 
-    // Sort each group alphabetically by name
-    loadedChats.sort();
-    nonLoadedChats.sort();
+    // Sort each group naturally by name
+    loadedChats.sort(CHAT_NAME_COLLATOR.compare);
+    nonLoadedChats.sort(CHAT_NAME_COLLATOR.compare);
 
     // Combine: loaded first, then non-loaded
     this._filteredChats = [...loadedChats, ...nonLoadedChats];

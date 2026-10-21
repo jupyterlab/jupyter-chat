@@ -30,3 +30,24 @@ export const COLLABORATIVE_TAG = '@collaborative';
  * The exclusion is then visible both in the source and in the Playwright report.
  */
 export const collaborativeOnly = { tag: COLLABORATIVE_TAG };
+
+/**
+ * Shared Playwright tag for tests that only make sense with the RTC-free
+ * WebSocket transport (no real-time collaboration).
+ *
+ * The collaborative CI jobs exclude them with `--grep-invert @websocket`; the
+ * RTC-free jobs run them. Centralised here so the CI filter and the tests never
+ * drift apart.
+ */
+export const WEBSOCKET_TAG = '@websocket';
+
+/**
+ * Marks a `test` or `test.describe` block as WebSocket-only (RTC-free).
+ *
+ * ```ts
+ * import { webSocketOnly } from './tags';
+ *
+ * test.describe('#invalid-path', webSocketOnly, () => { ... });
+ * ```
+ */
+export const webSocketOnly = { tag: WEBSOCKET_TAG };

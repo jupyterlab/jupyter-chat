@@ -1,10 +1,22 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+import asyncio
 from dataclasses import asdict
-import pytest
+from typing import cast
+from unittest.mock import patch
 from uuid import uuid4
-from ..models import message_asdict_factory, Message, NewMessage, User
+
+import pytest
+
+from ..models import (
+    AttachmentSelection,
+    Message,
+    NewMessage,
+    NotebookAttachment,
+    NotebookAttachmentCell,
+    User,
+)
 from ..ychat import YChat
 from ..utils import find_mentions
 
@@ -38,6 +50,74 @@ def test_initialize_ychat():
     assert chat._get_messages() == []
     assert chat._get_users() == {}
     assert chat.get_metadata() == {}
+
+
+def test_notebook_attachment_converts_nested_cell_data():
+    attachment = NotebookAttachment(
+        value="notebook.ipynb",
+        cells=cast(
+            list[NotebookAttachmentCell],
+            [
+                {
+                    "id": "cell-1",
+                    "input_type": "code",
+                    "selection": {
+                        "start": (0, 0),
+                        "end": (0, 3),
+                        "content": "sum",
+                    },
+                }
+            ],
+        ),
+    )
+
+    assert attachment.cells is not None
+    cell = attachment.cells[0]
+    assert isinstance(cell, NotebookAttachmentCell)
+    assert isinstance(cell.selection, AttachmentSelection)
+    assert cell.selection.content == "sum"
+
+
+def test_notebook_attachment_preserves_typed_cells_and_none():
+    cell = NotebookAttachmentCell(id="cell-1", input_type="markdown")
+
+    assert NotebookAttachment(value="notebook.ipynb", cells=[cell]).cells == [cell]
+    assert NotebookAttachment(value="notebook.ipynb").cells is None
+
+
+def test_create_id_updates_metadata_synchronously():
+    chat = YChat()
+
+    document_id = chat.create_id()
+
+    assert document_id == chat.get_id()
+
+
+@pytest.mark.asyncio
+async def test_initialize_creates_id():
+    chat = YChat()
+
+    chat.dirty = False
+    await asyncio.sleep(0)
+
+    assert chat._ymetadata.get("id") is not None
+
+
+@pytest.mark.asyncio
+async def test_raw_message_timestamp_is_updated():
+    chat = YChat()
+    chat.set_id("test-chat")
+    chat.dirty = False
+    timestamp = 123.0
+
+    with patch("jupyterlab_chat.ychat.time.time", return_value=timestamp):
+        chat.add_message(create_new_message())
+    await asyncio.sleep(0)
+
+    message = chat.get_messages()[0]
+    assert message.time == timestamp
+    assert message.raw_time is False
+
 
 def test_user_ignores_mention_name_ctor_arg():
     user = User(
