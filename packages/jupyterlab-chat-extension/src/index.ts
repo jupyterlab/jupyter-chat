@@ -90,7 +90,9 @@ const pluginIds = {
   chatToolbarFactory: 'jupyterlab-chat-extension:toolbar-factory',
   chatTracker: 'jupyterlab-chat-extension:tracker',
   docFactories: 'jupyterlab-chat-extension:factory',
+  footerRegistry: 'jupyterlab-chat-extension:footerRegistry',
   inputToolbarFactory: 'jupyterlab-chat-extension:inputToolbarFactory',
+  preambleRegistry: 'jupyterlab-chat-extension:preambleRegistry',
   selectionWatcher: 'jupyterlab-chat-extension:selectionWatcher',
   widgetConfig: 'jupyterlab-chat-extension:widget-config'
 };
@@ -1524,7 +1526,7 @@ const inputToolbarFactory: JupyterFrontEndPlugin<IInputToolbarRegistryFactory> =
  * Extension providing the message footer registry.
  */
 const footerRegistry: JupyterFrontEndPlugin<IMessageFooterRegistry> = {
-  id: 'jupyterlab-chat/footerRegistry',
+  id: pluginIds.footerRegistry,
   description: 'The footer registry plugin.',
   autoStart: true,
   provides: IMessageFooterRegistry,
@@ -1537,7 +1539,7 @@ const footerRegistry: JupyterFrontEndPlugin<IMessageFooterRegistry> = {
  * Extension providing the message preamble registry.
  */
 const preambleRegistry: JupyterFrontEndPlugin<IMessagePreambleRegistry> = {
-  id: 'jupyterlab-chat/preambleRegistry',
+  id: pluginIds.preambleRegistry,
   description: 'The preamble registry plugin.',
   autoStart: true,
   provides: IMessagePreambleRegistry,
