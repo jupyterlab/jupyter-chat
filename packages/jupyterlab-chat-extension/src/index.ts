@@ -517,7 +517,7 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
       messageFooterRegistry: messageFooterRegistry ?? undefined,
       messagePreambleRegistry: messagePreambleRegistry ?? undefined,
       chatBodyPlaceholderFactory: chatBodyPlaceholderFactory ?? undefined,
-      welcomeMessage ?? undefined,
+      welcomeMessage: welcomeMessage ?? undefined,
       collaborative
     });
 
