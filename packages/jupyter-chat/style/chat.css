@@ -8,8 +8,16 @@
   flex-grow: 1;
 }
 
+.jp-chat-messages-container {
+  overflow-x: hidden;
+}
+
 .jp-chat-message-container {
   position: relative;
+}
+
+.jp-chat-rendered-message {
+  overflow-x: auto;
 }
 
 .jp-chat-rendered-message hr {
