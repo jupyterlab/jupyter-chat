@@ -3,7 +3,6 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { NotebookShell } from '@jupyter-notebook/application';
 import {
   ActiveCellManager,
   AttachmentOpenerRegistry,
@@ -1062,8 +1061,11 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
                * `activateById` when it is already opened.
                * See https://github.com/jupyter/notebook/issues/7534
                */
+              const { NotebookShell } = await import(
+                '@jupyter-notebook/application'
+              );
               if (app.shell instanceof NotebookShell) {
-                const shell: NotebookShell = app.shell;
+                const shell = app.shell;
                 if (
                   shell.leftHandler?.currentWidget?.id !== chatPanel.id ||
                   !shell.leftHandler.isVisible
