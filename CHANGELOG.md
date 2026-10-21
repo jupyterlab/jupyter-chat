@@ -2,6 +2,35 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.25.3
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.25.2...d363c7c319b5fd39cf6e690e8ade15517a335400))
+
+### Enhancements made
+
+- Sort numbered chat names naturally [#564](https://github.com/jupyterlab/jupyter-chat/pull/564) ([@nightcityblade](https://github.com/nightcityblade), [@brichet](https://github.com/brichet))
+- Fix #176: Do not show commands menu when user is typing in a code block [#542](https://github.com/jupyterlab/jupyter-chat/pull/542) ([@Yash990-bit](https://github.com/Yash990-bit), [@brichet](https://github.com/brichet), [@dlqqq](https://github.com/dlqqq))
+
+### Bugs fixed
+
+- Fix message overflow [#569](https://github.com/jupyterlab/jupyter-chat/pull/569) ([@brichet](https://github.com/brichet), [@jtpio](https://github.com/jtpio))
+- Fix navigation with hidden deleted messages [#567](https://github.com/jupyterlab/jupyter-chat/pull/567) ([@nightcityblade](https://github.com/nightcityblade), [@brichet](https://github.com/brichet))
+
+### Other merged PRs
+
+- Bump shell-quote from 1.10.0 to 1.12.0 in the npm_and_yarn group across 1 directory [#563](https://github.com/jupyterlab/jupyter-chat/pull/563) ([@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-10-13&to=2026-10-21&type=c))
+
+@brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-10-13..2026-10-21&type=Issues)) | @dlqqq ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2026-10-13..2026-10-21&type=Issues)) | @jtpio ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2026-10-13..2026-10-21&type=Issues)) | @nightcityblade ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Anightcityblade+updated%3A2026-10-13..2026-10-21&type=Issues)) | @Yash990-bit ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3AYash990-bit+updated%3A2026-10-13..2026-10-21&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.25.2
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.25.1...3fd58c14bdd91b18860e7ea73506ae45e42de2fa))
@@ -36,8 +65,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-09-17&to=2026-10-13&type=c))
 
 @am-3 ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Aam-3+updated%3A2026-09-17..2026-10-13&type=Issues)) | @brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-09-17..2026-10-13&type=Issues)) | @claude ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Aclaude+updated%3A2026-09-17..2026-10-13&type=Issues)) | @Copilot ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3ACopilot+updated%3A2026-09-17..2026-10-13&type=Issues)) | @dlqqq ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Adlqqq+updated%3A2026-09-17..2026-10-13&type=Issues)) | @jtpio ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2026-09-17..2026-10-13&type=Issues)) | @Yash990-bit ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3AYash990-bit+updated%3A2026-09-17..2026-10-13&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.25.1
 
