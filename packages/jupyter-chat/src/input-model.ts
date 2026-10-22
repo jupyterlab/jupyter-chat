@@ -15,8 +15,15 @@ import {
   IMessageMetadata,
   INewMessage,
   INotebookAttachment,
-  IUser
+  IUser,
+  PendingSnippet
 } from './types';
+
+/**
+ * The maximum length, in UTF-16 code units, of the content of a snippet staged
+ * in the input.
+ */
+export const MAX_SNIPPET_LENGTH = 20_000;
 
 /**
  * The chat input interface.
@@ -134,6 +141,31 @@ export interface IInputModel extends IDisposable {
   readonly attachmentsChanged?: ISignal<IInputModel, IAttachment[]>;
 
   /**
+   * The selections staged in the input, composed into the body of the next
+   * message when it is sent.
+   */
+  readonly pendingSnippets?: PendingSnippet[];
+
+  /**
+   * Stage a selection to be sent with the next message.
+   *
+   * @returns `false` if the content is longer than `MAX_SNIPPET_LENGTH`, in
+   * which case nothing is staged. Otherwise `true`, also when an equal snippet
+   * is already staged.
+   */
+  addPendingSnippet?(snippet: PendingSnippet): boolean;
+
+  /**
+   * Remove a staged selection, matched by identity rather than by value.
+   */
+  removePendingSnippet?(snippet: PendingSnippet): void;
+
+  /**
+   * A signal emitting when the staged selections have changed.
+   */
+  readonly pendingSnippetsChanged?: ISignal<IInputModel, PendingSnippet[]>;
+
+  /**
    * Replace the current word in the input with a new one.
    */
   replaceCurrentWord(newWord: string): void;
@@ -226,8 +258,15 @@ export class InputModel implements IInputModel {
    * Function to send a message.
    */
   send = (input: string): void => {
+    // Compose the staged snippets here, after the command providers have run
+    // on the typed text, whichever path led to this call.
+    const snippets = composeSnippets(this._pendingSnippets);
     const message: INewMessage = {
-      body: input
+      body: snippets
+        ? input.trim()
+          ? `${input}\n\n${snippets}`
+          : snippets
+        : input
     };
 
     // Add the attachments
@@ -252,6 +291,7 @@ export class InputModel implements IInputModel {
     this.value = '';
     this.clearAttachments();
     this.clearMentions();
+    this._clearPendingSnippets();
   };
 
   /**
@@ -469,6 +509,54 @@ export class InputModel implements IInputModel {
   }
 
   /**
+   * The selections staged in the input.
+   */
+  get pendingSnippets(): PendingSnippet[] {
+    return this._pendingSnippets;
+  }
+
+  /**
+   * Stage a selection to be sent with the next message.
+   *
+   * @returns `false` if the content is longer than `MAX_SNIPPET_LENGTH`, in
+   * which case nothing is staged. Otherwise `true`, also when an equal snippet
+   * is already staged.
+   */
+  addPendingSnippet = (snippet: PendingSnippet): boolean => {
+    if (snippet.selection.content.length > MAX_SNIPPET_LENGTH) {
+      return false;
+    }
+    if (
+      !this._pendingSnippets.some(staged =>
+        Private.sameSnippet(staged, snippet)
+      )
+    ) {
+      this._pendingSnippets.push(snippet);
+      this._pendingSnippetsChanged.emit([...this._pendingSnippets]);
+    }
+    return true;
+  };
+
+  /**
+   * Remove a staged selection, matched by identity rather than by value.
+   */
+  removePendingSnippet = (snippet: PendingSnippet): void => {
+    const index = this._pendingSnippets.indexOf(snippet);
+    if (index === -1) {
+      return;
+    }
+    this._pendingSnippets.splice(index, 1);
+    this._pendingSnippetsChanged.emit([...this._pendingSnippets]);
+  };
+
+  /**
+   * A signal emitting when the staged selections have changed.
+   */
+  get pendingSnippetsChanged(): ISignal<IInputModel, PendingSnippet[]> {
+    return this._pendingSnippetsChanged;
+  }
+
+  /**
    * Replace the current word in the input with a new one.
    */
   replaceCurrentWord(newWord: string): void {
@@ -555,6 +643,14 @@ export class InputModel implements IInputModel {
     return this._metadataChanged;
   }
 
+  private _clearPendingSnippets(): void {
+    if (!this._pendingSnippets.length) {
+      return;
+    }
+    this._pendingSnippets = [];
+    this._pendingSnippetsChanged.emit([]);
+  }
+
   /**
    * Dispose the input model.
    */
@@ -587,6 +683,7 @@ export class InputModel implements IInputModel {
   private _cursorIndex: number | null = null;
   private _currentWord: string | null = null;
   private _attachments: IAttachment[];
+  private _pendingSnippets: PendingSnippet[] = [];
   private _mentions: IUser[];
   private _metadata: IMessageMetadata;
   private _activeCellManager: IActiveCellManager | null;
@@ -599,6 +696,9 @@ export class InputModel implements IInputModel {
   private _configChanged = new Signal<IInputModel, InputModel.IConfig>(this);
   private _focusInputSignal = new Signal<InputModel, void>(this);
   private _attachmentsChanged = new Signal<InputModel, IAttachment[]>(this);
+  private _pendingSnippetsChanged = new Signal<InputModel, PendingSnippet[]>(
+    this
+  );
   private _metadataChanged = new Signal<InputModel, IMessageMetadata>(this);
   private _onDisposed = new Signal<InputModel, void>(this);
   private _isDisposed = false;
@@ -694,8 +794,71 @@ export namespace InputModel {
   }
 }
 
+/**
+ * Compose staged snippets into the text appended to the body of a message: for
+ * each snippet a header line, then its content in a fenced block. The snippets
+ * are separated by a blank line.
+ */
+function composeSnippets(snippets: PendingSnippet[]): string {
+  return snippets
+    .map(({ path, cellId, selection }) => {
+      // Only an id that follows the nbformat rule is sent: the chip shows just
+      // 8 characters of it.
+      const cell =
+        cellId && /^[\w-]{1,64}$/.test(cellId)
+          ? ` (cell ${Private.codeSpan(cellId)})`
+          : '';
+      const range = ` lines ${selection.start[0] + 1}-${selection.end[0] + 1}`;
+      const { content } = selection;
+      const fence = '`'.repeat(
+        Math.max(3, Private.longestBacktickRun(content) + 1)
+      );
+      const newline = content.endsWith('\n') ? '' : '\n';
+      return (
+        `From ${Private.codeSpan(path)}${cell}${range}:\n` +
+        `${fence}\n${content}${newline}${fence}`
+      );
+    })
+    .join('\n\n');
+}
+
 namespace Private {
   const WHITESPACE = new Set([' ', '\n', '\t']);
+
+  /**
+   * The length of the longest run of backticks in a text.
+   */
+  export function longestBacktickRun(text: string): number {
+    return (text.match(/`+/g) ?? []).reduce(
+      (longest, run) => Math.max(longest, run.length),
+      0
+    );
+  }
+
+  /**
+   * Wrap a text in a markdown code span that no backtick inside can end early,
+   * and that stays on one line.
+   */
+  export function codeSpan(text: string): string {
+    const line = text.replace(/[\r\n\u2028\u2029]/g, ' ');
+    const ticks = '`'.repeat(longestBacktickRun(line) + 1);
+    return `${ticks} ${line} ${ticks}`;
+  }
+
+  /**
+   * Whether two snippets have the same path, cell, range and content.
+   */
+  export function sameSnippet(a: PendingSnippet, b: PendingSnippet): boolean {
+    return (
+      a.path === b.path &&
+      a.cellId === b.cellId &&
+      a.selection.start[0] === b.selection.start[0] &&
+      a.selection.start[1] === b.selection.start[1] &&
+      a.selection.end[0] === b.selection.end[0] &&
+      a.selection.end[1] === b.selection.end[1] &&
+      a.selection.content === b.selection.content
+    );
+  }
 
   /**
    * Returns the start index (inclusive) & end index (exclusive) that contain

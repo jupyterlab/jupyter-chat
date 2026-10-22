@@ -56,12 +56,16 @@ export function SendButton(
 
   useEffect(() => {
     const inputChanged = () => {
-      const inputExist = !!model.value.trim() || model.attachments.length;
+      const inputExist =
+        !!model.value.trim() ||
+        model.attachments.length ||
+        model.pendingSnippets?.length;
       setDisabled(!inputExist);
     };
 
     model.valueChanged.connect(inputChanged);
     model.attachmentsChanged?.connect(inputChanged);
+    model.pendingSnippetsChanged?.connect(inputChanged);
 
     inputChanged();
 
@@ -83,6 +87,7 @@ export function SendButton(
     return () => {
       model.valueChanged.disconnect(inputChanged);
       model.attachmentsChanged?.disconnect(inputChanged);
+      model.pendingSnippetsChanged?.disconnect(inputChanged);
       model.configChanged?.disconnect(configChanged);
     };
   }, [model]);

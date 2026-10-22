@@ -274,6 +274,26 @@ export interface IAttachmentSelection {
 }
 
 /**
+ * A selection staged in the chat input. It is composed into the body of the
+ * message when the message is sent.
+ */
+export type PendingSnippet = {
+  /**
+   * The path of the document containing the selection, relative to
+   * `ContentsManager.root_dir` (`drive:path` for a document of another drive).
+   */
+  path: string;
+  /**
+   * The ID of the cell containing the selection, if the document is a notebook.
+   */
+  cellId?: string;
+  /**
+   * The selected range and its content.
+   */
+  selection: IAttachmentSelection;
+};
+
+/**
  * An empty interface to describe optional settings that could be fetched from server.
  */
 export interface ISettings {} /* eslint-disable-line @typescript-eslint/no-empty-object-type */
