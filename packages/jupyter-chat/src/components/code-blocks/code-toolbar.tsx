@@ -73,9 +73,11 @@ export function CodeToolbar(props: CodeToolbarProps): JSX.Element {
     };
   }, [model]);
 
-  return activeCellManager === null || !toolbarEnable ? (
-    <></>
-  ) : (
+  if (!toolbarEnable) {
+    return <></>;
+  }
+
+  return (
     <Box
       sx={{
         display: 'flex',
@@ -87,15 +89,27 @@ export function CodeToolbar(props: CodeToolbarProps): JSX.Element {
       }}
       className={CODE_TOOLBAR_CLASS}
     >
-      <InsertAboveButton
-        {...toolbarBtnProps}
-        className={CODE_TOOLBAR_ITEM_CLASS}
-      />
-      <InsertBelowButton
-        {...toolbarBtnProps}
-        className={CODE_TOOLBAR_ITEM_CLASS}
-      />
-      <ReplaceButton {...toolbarBtnProps} className={CODE_TOOLBAR_ITEM_CLASS} />
+      {/*
+        The insert and replace actions need an active cell. Copying does not,
+        so a chat without an active cell manager still gets the copy button
+        instead of losing the whole toolbar.
+      */}
+      {activeCellManager !== null && (
+        <>
+          <InsertAboveButton
+            {...toolbarBtnProps}
+            className={CODE_TOOLBAR_ITEM_CLASS}
+          />
+          <InsertBelowButton
+            {...toolbarBtnProps}
+            className={CODE_TOOLBAR_ITEM_CLASS}
+          />
+          <ReplaceButton
+            {...toolbarBtnProps}
+            className={CODE_TOOLBAR_ITEM_CLASS}
+          />
+        </>
+      )}
       <CopyButton value={content} className={CODE_TOOLBAR_ITEM_CLASS} />
     </Box>
   );
