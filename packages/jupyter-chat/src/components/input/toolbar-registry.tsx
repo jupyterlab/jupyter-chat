@@ -162,10 +162,6 @@ export namespace InputToolbarRegistry {
   export interface IToolbarItem {
     /**
      * Factory producing the Lumino widget to insert into the toolbar.
-     *
-     * The context is captured when the widget is created and is not reactive;
-     * if the host chat remounts (e.g. switching edit mode), a new widget is
-     * built with a fresh context.
      */
     createWidget?: ToolbarItemFactory;
     /**

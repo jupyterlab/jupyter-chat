@@ -178,9 +178,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   /**
    * Sync both toolbars with the registry on every `itemsChanged`. Pinned items
    * go into the pinned toolbar (fixed slot, never overflows); unpinned items go
-   * into the ReactiveToolbar. Context is captured at widget creation and not
-   * updated reactively; ChatInput remounts on the switches that matter (e.g.
-   * edit mode).
+   * into the ReactiveToolbar.
    */
   useEffect(() => {
     const reactiveToolbar = reactiveToolbarRef.current;
@@ -188,6 +186,16 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     if (!reactiveToolbar || !pinnedToolbar) {
       return;
     }
+
+    // Rebuild the items, to change the theme if necessary.
+    for (const widget of reactiveToolbarItemsRef.current.values()) {
+      widget.dispose();
+    }
+    reactiveToolbarItemsRef.current.clear();
+    for (const widget of pinnedToolbarItemsRef.current.values()) {
+      widget.dispose();
+    }
+    pinnedToolbarItemsRef.current.clear();
 
     const sync = () => {
       const entries = Array.from(inputToolbarRegistry?.items ?? []);
@@ -265,7 +273,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     return () => {
       inputToolbarRegistry?.itemsChanged.disconnect(sync);
     };
-  }, [inputToolbarRegistry]);
+  }, [inputToolbarRegistry, theme]);
 
   const inputExists = !!input.trim();
 
