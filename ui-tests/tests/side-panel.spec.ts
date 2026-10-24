@@ -117,6 +117,40 @@ test.describe('#sidepanel', () => {
       await expect(chatList.locator('li').last()).toHaveText(name);
     });
 
+    test('should not select a chat while confirming an IME candidate', async ({
+      page
+    }) => {
+      panel = await openSidePanel(page);
+      const chatList = page.locator('.jp-chat-selector-popup');
+      const searchInput = panel.locator('.jp-chat-search-input');
+
+      await panel
+        .locator('> .jp-Toolbar .jp-Toolbar-item.jp-chat-open')
+        .click();
+      await chatList.waitFor();
+      await expect(chatList.getByTitle(name)).toBeVisible();
+
+      await searchInput.evaluate(element => {
+        const event = new KeyboardEvent('keydown', {
+          bubbles: true,
+          cancelable: true,
+          key: 'Enter'
+        });
+        Object.defineProperty(event, 'isComposing', { value: true });
+        element.dispatchEvent(event);
+      });
+
+      // Confirming an IME candidate should leave the chat selector open.
+      await expect(chatList).toBeVisible();
+
+      // A regular Enter still selects the highlighted chat.
+      await searchInput.press('Enter');
+      await expect(chatList).not.toBeVisible();
+      await expect(panel.locator('.jp-chat-sidepanel-widget-title')).toHaveText(
+        name
+      );
+    });
+
     test('should attach a spinner while loading the chat', async ({ page }) => {
       panel = await openSidePanel(page);
       const chatList = page.locator('.jp-chat-selector-popup');
