@@ -1,0 +1,29 @@
+/*
+ * Copyright (c) Jupyter Development Team.
+ * Distributed under the terms of the Modified BSD License.
+ */
+
+/* Selection popup */
+.jp-chat-selection-popup.jp-ThemedContainer {
+  background: var(--jp-layout-color1);
+  border: 1px solid var(--jp-border-color1);
+  border-radius: 4px;
+  box-shadow: var(--jp-elevation-z2);
+  position: fixed;
+  z-index: 10;
+}
+
+.jp-chat-selection-popup-toolbar {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+}
+
+.jp-chat-selection-popup-action {
+  color: var(--jp-ui-font-color1);
+  font-size: var(--jp-ui-font-size1);
+}
+
+.jp-chat-selection-popup-label {
+  margin-left: 4px;
+}
