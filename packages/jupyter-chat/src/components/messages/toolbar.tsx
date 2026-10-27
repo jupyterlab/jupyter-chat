@@ -23,6 +23,7 @@ export function MessageToolbar(props: MessageToolbar.IProps): JSX.Element {
   if (props.edit !== undefined) {
     const editButton = (
       <TooltippedIconButton
+        key="edit"
         tooltip={trans.__('Edit')}
         onClick={props.edit}
         aria-label={trans.__('Edit')}
@@ -36,6 +37,7 @@ export function MessageToolbar(props: MessageToolbar.IProps): JSX.Element {
   if (props.delete !== undefined) {
     const deleteButton = (
       <TooltippedIconButton
+        key="delete"
         tooltip={trans.__('Delete')}
         onClick={props.delete}
         aria-label={trans.__('Delete')}
