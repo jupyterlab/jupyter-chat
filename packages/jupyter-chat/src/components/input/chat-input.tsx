@@ -90,6 +90,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     model.attachmentsChanged?.connect(attachmentChanged);
 
     return () => {
+      model.valueChanged?.disconnect(inputChanged);
       model.configChanged?.disconnect(configChanged);
       model.focusInputSignal?.disconnect(focusInputElement);
       model.attachmentsChanged?.disconnect(attachmentChanged);
