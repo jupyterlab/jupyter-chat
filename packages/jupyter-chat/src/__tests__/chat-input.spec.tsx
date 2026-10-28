@@ -97,4 +97,27 @@ describe('ChatInput placeholder', () => {
     });
     expect(placeholder()).toBe(DEFAULT_PLACEHOLDER);
   });
+
+  it('should disconnect valueChanged signal when unmounted', () => {
+    const model = new MockChatModel();
+    const disconnectSpy = jest.spyOn(model.input.valueChanged, 'disconnect');
+
+    act(() => {
+      root.render(
+        <ChatReactContext.Provider
+          value={{ model, rmRegistry: {} as IRenderMimeRegistry }}
+        >
+          <ChatInput model={model.input} />
+        </ChatReactContext.Provider>
+      );
+    });
+
+    expect(disconnectSpy).not.toHaveBeenCalled();
+
+    act(() => {
+      root.unmount();
+    });
+
+    expect(disconnectSpy).toHaveBeenCalledTimes(1);
+  });
 });
