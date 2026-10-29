@@ -49,6 +49,12 @@
       "default": false,
       "readOnly": false
     },
+    "showSelectionActions": {
+      "description": "Show a popup with actions, such as 'Add to chat', over the text selected in an editor.",
+      "type": "boolean",
+      "default": false,
+      "readOnly": false
+    },
     "defaultDirectory": {
       "description": "Default directory where to create and look for chat, the jupyter root directory if empty.",
       "type": "string",
