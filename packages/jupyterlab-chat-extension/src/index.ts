@@ -3,7 +3,6 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { NotebookShell } from '@jupyter-notebook/application';
 import {
   ActiveCellManager,
   AttachmentOpenerRegistry,
@@ -91,7 +90,9 @@ const pluginIds = {
   chatToolbarFactory: 'jupyterlab-chat-extension:toolbar-factory',
   chatTracker: 'jupyterlab-chat-extension:tracker',
   docFactories: 'jupyterlab-chat-extension:factory',
+  footerRegistry: 'jupyterlab-chat-extension:footerRegistry',
   inputToolbarFactory: 'jupyterlab-chat-extension:inputToolbarFactory',
+  preambleRegistry: 'jupyterlab-chat-extension:preambleRegistry',
   selectionWatcher: 'jupyterlab-chat-extension:selectionWatcher',
   widgetConfig: 'jupyterlab-chat-extension:widget-config'
 };
@@ -433,19 +434,19 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
     rmRegistry: IRenderMimeRegistry,
     widgetConfig: IWidgetConfig,
     activeCellManager: IActiveCellManager | null,
-    attachmentOpenerRegistry: IAttachmentOpenerRegistry,
-    chatCommandRegistry: IChatCommandRegistry,
+    attachmentOpenerRegistry: IAttachmentOpenerRegistry | null,
+    chatCommandRegistry: IChatCommandRegistry | null,
     toolbarFactory: ChatToolbarFactory | null,
     drive: ICollaborativeContentProvider | null,
     filebrowser: IDefaultFileBrowser | null,
-    inputToolbarFactory: IInputToolbarRegistryFactory,
-    messageFooterRegistry: IMessageFooterRegistry,
-    messagePreambleRegistry: IMessagePreambleRegistry,
+    inputToolbarFactory: IInputToolbarRegistryFactory | null,
+    messageFooterRegistry: IMessageFooterRegistry | null,
+    messagePreambleRegistry: IMessagePreambleRegistry | null,
     chatBodyPlaceholderFactory: IChatBodyPlaceholderFactory | null,
     selectionWatcher: ISelectionWatcher | null,
     themeManager: IThemeManager | null,
     translator_: ITranslator | null,
-    welcomeMessage: string
+    welcomeMessage: string | null
   ): ChatWidgetFactory => {
     const translator = translator_ ?? nullTranslator;
 
@@ -511,13 +512,13 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
       rmRegistry,
       toolbarFactory: toolbarFactory ?? undefined,
       translator,
-      chatCommandRegistry,
-      attachmentOpenerRegistry,
-      inputToolbarFactory,
-      messageFooterRegistry,
-      messagePreambleRegistry,
+      chatCommandRegistry: chatCommandRegistry ?? undefined,
+      attachmentOpenerRegistry: attachmentOpenerRegistry ?? undefined,
+      inputToolbarFactory: inputToolbarFactory ?? undefined,
+      messageFooterRegistry: messageFooterRegistry ?? undefined,
+      messagePreambleRegistry: messagePreambleRegistry ?? undefined,
       chatBodyPlaceholderFactory: chatBodyPlaceholderFactory ?? undefined,
-      welcomeMessage,
+      welcomeMessage: welcomeMessage ?? undefined,
       collaborative
     });
 
@@ -1062,8 +1063,11 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
                * `activateById` when it is already opened.
                * See https://github.com/jupyter/notebook/issues/7534
                */
+              const { NotebookShell } = await import(
+                '@jupyter-notebook/application'
+              );
               if (app.shell instanceof NotebookShell) {
-                const shell: NotebookShell = app.shell;
+                const shell = app.shell;
                 if (
                   shell.leftHandler?.currentWidget?.id !== chatPanel.id ||
                   !shell.leftHandler.isVisible
@@ -1322,18 +1326,18 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     widgetConfig: IWidgetConfig,
     rmRegistry: IRenderMimeRegistry,
     drive: ICollaborativeContentProvider | null,
-    attachmentOpenerRegistry: IAttachmentOpenerRegistry,
-    chatCommandRegistry: IChatCommandRegistry,
+    attachmentOpenerRegistry: IAttachmentOpenerRegistry | null,
+    chatCommandRegistry: IChatCommandRegistry | null,
     chatToolbarFactory: ChatToolbarFactory | null,
-    inputToolbarFactory: IInputToolbarRegistryFactory,
+    inputToolbarFactory: IInputToolbarRegistryFactory | null,
     restorer: ILayoutRestorer | null,
-    messageFooterRegistry: IMessageFooterRegistry,
-    messagePreambleRegistry: IMessagePreambleRegistry,
+    messageFooterRegistry: IMessageFooterRegistry | null,
+    messagePreambleRegistry: IMessagePreambleRegistry | null,
     placeholderFactory: IChatPlaceholderFactory | null,
     chatBodyPlaceholderFactory: IChatBodyPlaceholderFactory | null,
     themeManager: IThemeManager | null,
     translator_: ITranslator | null,
-    welcomeMessage: string
+    welcomeMessage: string | null
   ): MultiChatPanel => {
     const { commands, serviceManager } = app;
     const translator = translator_ ?? nullTranslator;
@@ -1377,12 +1381,12 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
           oldPath
         }) as Promise<string | null>;
       },
-      chatCommandRegistry,
-      attachmentOpenerRegistry,
-      inputToolbarFactory,
-      messageFooterRegistry,
-      messagePreambleRegistry,
-      welcomeMessage,
+      chatCommandRegistry: chatCommandRegistry ?? undefined,
+      attachmentOpenerRegistry: attachmentOpenerRegistry ?? undefined,
+      inputToolbarFactory: inputToolbarFactory ?? undefined,
+      messageFooterRegistry: messageFooterRegistry ?? undefined,
+      messagePreambleRegistry: messagePreambleRegistry ?? undefined,
+      welcomeMessage: welcomeMessage ?? undefined,
       placeholderFactory: placeholderFactory ?? undefined,
       chatBodyPlaceholderFactory: chatBodyPlaceholderFactory ?? undefined,
       chatToolbarFactory: chatToolbarFactory ?? undefined
@@ -1491,11 +1495,11 @@ const selectionWatcher: JupyterFrontEndPlugin<ISelectionWatcher> = {
   optional: [IEditorLanguageRegistry],
   activate: (
     app: JupyterFrontEnd,
-    languages: IEditorLanguageRegistry
+    languages: IEditorLanguageRegistry | null
   ): ISelectionWatcher => {
     return new SelectionWatcher({
       shell: app.shell,
-      languages
+      languages: languages ?? undefined
     });
   }
 };
@@ -1522,7 +1526,7 @@ const inputToolbarFactory: JupyterFrontEndPlugin<IInputToolbarRegistryFactory> =
  * Extension providing the message footer registry.
  */
 const footerRegistry: JupyterFrontEndPlugin<IMessageFooterRegistry> = {
-  id: 'jupyterlab-chat/footerRegistry',
+  id: pluginIds.footerRegistry,
   description: 'The footer registry plugin.',
   autoStart: true,
   provides: IMessageFooterRegistry,
@@ -1535,7 +1539,7 @@ const footerRegistry: JupyterFrontEndPlugin<IMessageFooterRegistry> = {
  * Extension providing the message preamble registry.
  */
 const preambleRegistry: JupyterFrontEndPlugin<IMessagePreambleRegistry> = {
-  id: 'jupyterlab-chat/preambleRegistry',
+  id: pluginIds.preambleRegistry,
   description: 'The preamble registry plugin.',
   autoStart: true,
   provides: IMessagePreambleRegistry,
