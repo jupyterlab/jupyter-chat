@@ -90,6 +90,9 @@ export class WebSocketHandler {
       id,
       body: message.body ?? ''
     };
+    if (message.sender) {
+      msg.sender = message.sender;
+    }
     if (message.mime_model) {
       msg.mime_model = message.mime_model;
     }
@@ -114,6 +117,9 @@ export class WebSocketHandler {
       body: message.body,
       edited: message.edited
     };
+    if (message.mime_model) {
+      msg.mime_model = message.mime_model;
+    }
     if (message.attachments?.length) {
       msg.attachments = message.attachments;
     }
