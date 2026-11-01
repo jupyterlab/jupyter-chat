@@ -110,6 +110,51 @@ const customCommandsPlugin: JupyterFrontEndPlugin<void> = {
 };
 ```
 
+### ISelectionActionRegistry
+
+This token allows external extensions to register actions in the popup displayed over
+the text selected in a notebook cell or in a file editor (see the `showSelectionActions`
+[setting](#chat-settings)). The built-in _Add to chat_ action is registered this way.
+
+An action receives a `SelectionActionContext`: the selection (`path`, `cellId` and
+`selection` with the range and the content) and the destination chat (`inputModel` and
+`chatModel`, `null` when no chat is open). When no chat is open and the chat panel is
+available, the context also has `openNewChat()`, which creates a chat, opens it in the
+panel and resolves with its model (or `null` if it could not). The built-in action uses it
+to stay enabled with no chat; an action that does not need a chat can ignore it. The
+actions are displayed in the order they were added. Only chats of the `jupyterlab-chat`
+extension can receive a selection.
+
+```ts
+import { ISelectionActionRegistry } from '@jupyter/chat';
+import { JupyterFrontEndPlugin } from '@jupyterlab/application';
+
+const selectionActionPlugin: JupyterFrontEndPlugin<void> = {
+  id: 'my-extension:selection-action',
+  autoStart: true,
+  requires: [ISelectionActionRegistry],
+  activate: (app, registry: ISelectionActionRegistry) => {
+    registry.addAction({
+      id: 'my-extension:explain',
+      label: 'Explain',
+      isEnabled: context => context.inputModel !== null,
+      run: context => {
+        context.inputModel?.addPendingSnippet?.({
+          path: context.path,
+          cellId: context.cellId,
+          selection: context.selection
+        });
+      }
+    });
+  }
+};
+```
+
+The token is provided by `jupyterlab-chat-extension`. An extension using it must share
+`@jupyter/chat` with the host (`"bundled": false, "singleton": true` in the
+`jupyterlab.sharedPackages` section of its `package.json`), otherwise the token of its
+own copy of the package may not match the one provided.
+
 ## Interact with the chat from the backend
 
 `jupyter_collaboration` provides a websocket server to handle every shared document
