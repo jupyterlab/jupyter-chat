@@ -83,17 +83,17 @@ const FACTORY = 'Chat';
 const CHAT_LIST_UPDATE_INTERVAL = 2000;
 
 const pluginIds = {
-  activeCellManager: 'jupyterlab-chat-extension:activeCellManager',
-  attachmentOpenerRegistry: 'jupyterlab-chat-extension:attachmentOpener',
+  activeCellManager: 'jupyterlab-chat-extension:active-cell-manager',
+  attachmentOpenerRegistry: 'jupyterlab-chat-extension:attachment-opener',
   chatCommands: 'jupyterlab-chat-extension:commands',
   chatPanel: 'jupyterlab-chat-extension:chat-panel',
   chatToolbarFactory: 'jupyterlab-chat-extension:toolbar-factory',
   chatTracker: 'jupyterlab-chat-extension:tracker',
   docFactories: 'jupyterlab-chat-extension:factory',
-  footerRegistry: 'jupyterlab-chat-extension:footerRegistry',
-  inputToolbarFactory: 'jupyterlab-chat-extension:inputToolbarFactory',
-  preambleRegistry: 'jupyterlab-chat-extension:preambleRegistry',
-  selectionWatcher: 'jupyterlab-chat-extension:selectionWatcher',
+  footerRegistry: 'jupyterlab-chat-extension:footer-registry',
+  inputToolbarFactory: 'jupyterlab-chat-extension:input-toolbar-factory',
+  preambleRegistry: 'jupyterlab-chat-extension:preamble-registry',
+  selectionWatcher: 'jupyterlab-chat-extension:selection-watcher',
   widgetConfig: 'jupyterlab-chat-extension:widget-config'
 };
 

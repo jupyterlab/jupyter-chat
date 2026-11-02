@@ -239,7 +239,7 @@ test.describe('#attachmentOpenerRegistry', () => {
     await page.evaluate(async () => {
       // change the registered callback on attachment click.
       const registry = await window.getPlugin(
-        'jupyterlab-chat-extension:attachmentOpener'
+        'jupyterlab-chat-extension:attachment-opener'
       );
       registry.set('file', attachment =>
         console.log(`Attached file: ${attachment.value}`)

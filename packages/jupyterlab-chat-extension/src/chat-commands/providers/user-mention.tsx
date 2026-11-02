@@ -15,7 +15,7 @@ import {
 import { JupyterFrontEndPlugin } from '@jupyterlab/application';
 
 export const mentionCommandsPlugin: JupyterFrontEndPlugin<void> = {
-  id: 'jupyterlab-chat-extension:mentionCommandsPlugin',
+  id: 'jupyterlab-chat-extension:mention-commands',
   description: 'Plugin which adds user mention commands.',
   autoStart: true,
   requires: [IChatCommandRegistry],
