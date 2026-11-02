@@ -42,8 +42,65 @@
   white-space: nowrap;
 }
 
-.jp-chat-input-toolbar .jp-chat-send-include-opener {
-  padding: 4px 0;
+/*
+ * The host Panel holds both the ReactiveToolbar and the pinned toolbar side by side.
+ */
+.jp-chat-input-reactive-toolbar-host {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+}
+
+/*
+ * The reactive toolbar
+ */
+.jp-chat-input-reactive-toolbar {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+  border-bottom: none;
+  box-shadow: none;
+  align-items: center;
+}
+
+.jp-chat-input-reactive-toolbar::part(positioning-region) {
+  flex-flow: row nowrap;
+  justify-content: flex-end;
+  gap: var(--jp-cell-padding, 8px);
+}
+
+/*
+ * The pinned toolbar holds items that never overflow (e.g. send/saveEdit).
+ */
+.jp-chat-input-pinned-toolbar {
+  flex: 0 0 auto;
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+  border-bottom: none;
+  box-shadow: none;
+  align-items: center;
+}
+
+.jp-chat-input-pinned-toolbar::part(positioning-region) {
+  flex-flow: row nowrap;
+  gap: var(--jp-cell-padding, 8px);
+}
+
+/*
+ * Flip the popup toolbar above the input toolbar.
+ */
+.jp-chat-input-reactive-toolbar-popup {
+  transform: translateY(calc(-100% - var(--jp-private-toolbar-height, 36px)));
+  min-height: var(--jp-private-toolbar-height);
+  align-items: center;
+}
+
+.jp-chat-input-reactive-toolbar-popup > * {
+  margin: 3px;
 }
 
 .jp-chat-input-container:focus-within > div:first-of-type {

@@ -71,9 +71,9 @@ export function CodeToolbar(props: CodeToolbarProps): JSX.Element {
       selectionWatcher?.selectionChanged.disconnect(selectionStatusChange);
       model.configChanged.disconnect(toggleToolbar);
     };
-  }, [model]);
+  }, [model, content]);
 
-  return activeCellManager === null || !toolbarEnable ? (
+  return !toolbarEnable ? (
     <></>
   ) : (
     <Box
@@ -87,15 +87,22 @@ export function CodeToolbar(props: CodeToolbarProps): JSX.Element {
       }}
       className={CODE_TOOLBAR_CLASS}
     >
-      <InsertAboveButton
-        {...toolbarBtnProps}
-        className={CODE_TOOLBAR_ITEM_CLASS}
-      />
-      <InsertBelowButton
-        {...toolbarBtnProps}
-        className={CODE_TOOLBAR_ITEM_CLASS}
-      />
-      <ReplaceButton {...toolbarBtnProps} className={CODE_TOOLBAR_ITEM_CLASS} />
+      {activeCellManager && (
+        <>
+          <InsertAboveButton
+            {...toolbarBtnProps}
+            className={CODE_TOOLBAR_ITEM_CLASS}
+          />
+          <InsertBelowButton
+            {...toolbarBtnProps}
+            className={CODE_TOOLBAR_ITEM_CLASS}
+          />
+          <ReplaceButton
+            {...toolbarBtnProps}
+            className={CODE_TOOLBAR_ITEM_CLASS}
+          />
+        </>
+      )}
       <CopyButton value={content} className={CODE_TOOLBAR_ITEM_CLASS} />
     </Box>
   );

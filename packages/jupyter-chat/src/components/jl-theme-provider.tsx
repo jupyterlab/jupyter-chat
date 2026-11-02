@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import type { IThemeManager } from '@jupyterlab/apputils';
-import { Theme, ThemeProvider, createTheme } from '@mui/material/styles';
+import { Theme, ThemeProvider } from '@mui/material/styles';
 
 import { getJupyterLabTheme } from '../theme-provider';
 
@@ -13,7 +13,12 @@ export function JlThemeProvider(props: {
   themeManager: IThemeManager | null;
   children: React.ReactNode;
 }): JSX.Element {
-  const [theme, setTheme] = useState<Theme>(createTheme());
+  // Wait for the real JupyterLab theme before rendering children. Rendering a
+  // stub theme first and then swapping to the real one causes MUI's
+  // ThemeProvider to switch its inner provider (ThemeProviderNoVars <->
+  // CssVarsProvider), which forces React to unmount and remount the whole
+  // subtree. That remount races with the ReactiveToolbar's throttled resizer.
+  const [theme, setTheme] = useState<Theme | null>(null);
 
   useEffect(() => {
     async function setJlTheme() {
@@ -23,6 +28,10 @@ export function JlThemeProvider(props: {
     setJlTheme();
     props.themeManager?.themeChanged.connect(setJlTheme);
   }, []);
+
+  if (!theme) {
+    return <></>;
+  }
 
   return <ThemeProvider theme={theme}>{props.children}</ThemeProvider>;
 }
