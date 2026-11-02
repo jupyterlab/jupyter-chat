@@ -9,7 +9,7 @@ import { IChatCommandRegistry, ChatCommandRegistry } from '@jupyter/chat';
 
 export const chatCommandRegistryPlugin: JupyterFrontEndPlugin<IChatCommandRegistry> =
   {
-    id: 'jupyterlab-chat-extension:chatCommandRegistry',
+    id: 'jupyterlab-chat-extension:chat-command-registry',
     description:
       'The chat command registry used by the jupyterlab-chat-extension.',
     autoStart: true,

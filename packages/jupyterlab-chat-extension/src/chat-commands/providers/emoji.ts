@@ -84,7 +84,7 @@ export class EmojiCommandProvider implements IChatCommandProvider {
 }
 
 export const emojiCommandsPlugin: JupyterFrontEndPlugin<void> = {
-  id: 'jupyterlab-chat-extension:emojiCommandsPlugin',
+  id: 'jupyterlab-chat-extension:emoji-commands',
   description: 'Plugin which adds emoji commands to the chat.',
   autoStart: true,
   requires: [IChatCommandRegistry],
