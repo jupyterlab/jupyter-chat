@@ -10,7 +10,8 @@ import {
   ChatCommand,
   IInputModel,
   Avatar,
-  IUser
+  IUser,
+  MENTION_REGEX
 } from '@jupyter/chat';
 import { JupyterFrontEndPlugin } from '@jupyterlab/application';
 
@@ -34,7 +35,7 @@ class MentionCommandProvider implements IChatCommandProvider {
    * IMPORTANT: the 'g' flag must be set to return multiple `@`-mentions when
    * parsing the entire input `inputModel.value`.
    */
-  private _regex: RegExp = /@([\w-]*)/g;
+  private _regex: RegExp = MENTION_REGEX;
 
   /**
    * Lists all valid user mentions that complete the current word.

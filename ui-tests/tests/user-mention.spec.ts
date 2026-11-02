@@ -221,3 +221,108 @@ test.describe('#bot-mention', () => {
     await expect(message.locator('.jp-chat-mention')).toHaveCount(0);
   });
 });
+
+test.describe('#non-ascii-mention', () => {
+  const NON_ASCII_FILENAME = 'non-ascii-mention.chat';
+  // A chat whose user list contains someone with an accented display name
+  // (the mention name keeps the accent, see IUser.mention_name). Both users
+  // have sent a message, so they are both populated as chat users.
+  const CONTENT = JSON.stringify({
+    messages: [
+      {
+        id: 'a5b14f7e-0d29-4e4a-9a8f-1f1b9f6d3d21',
+        type: 'msg',
+        body: 'hi from main',
+        sender: 'human_user',
+        time: 1700000000,
+        raw_time: false
+      },
+      {
+        id: 'e0f6c8aa-2a4b-4f5e-b7a2-3c6d9f0e1b33',
+        type: 'msg',
+        body: 'hola desde guest',
+        sender: 'guest_user',
+        time: 1700000001,
+        raw_time: false
+      }
+    ],
+    users: {
+      human_user: {
+        username: 'human_user',
+        name: 'human_user',
+        display_name: 'human_user'
+      },
+      guest_user: {
+        username: 'guest_user',
+        name: 'guest_user',
+        display_name: 'Élodie'
+      }
+    },
+    attachments: {},
+    metadata: {}
+  });
+
+  test.use({
+    mockUser: USER
+  });
+
+  test.beforeEach(async ({ page }) => {
+    await page.filebrowser.contents.uploadContent(
+      CONTENT,
+      'text',
+      NON_ASCII_FILENAME
+    );
+  });
+
+  test.afterEach(async ({ page }) => {
+    if (await page.filebrowser.contents.fileExists(NON_ASCII_FILENAME)) {
+      await page.filebrowser.contents.deleteFile(NON_ASCII_FILENAME);
+    }
+  });
+
+  test('should suggest a user with an accented display name', async ({
+    page
+  }) => {
+    const chatPanel = await openChat(page, NON_ASCII_FILENAME);
+
+    // Wait for the seeded messages to render, so the user list is loaded
+    // before querying completions.
+    await expect(chatPanel.locator('.jp-chat-message')).toHaveCount(2);
+
+    const input = chatPanel
+      .locator('.jp-chat-input-container')
+      .getByRole('combobox');
+    const chatCommandName = page.locator('.jp-chat-command-name');
+
+    await input.fill('');
+    await input.pressSequentially('@Él');
+    await expect(chatCommandName).toHaveCount(1);
+    expect(await chatCommandName.nth(0).textContent()).toBe('@Élodie');
+  });
+
+  test('should attach a mention for an accented display name on submit', async ({
+    page
+  }) => {
+    const chatPanel = await openChat(page, NON_ASCII_FILENAME);
+
+    // Wait for the seeded messages to render, so the user list is loaded
+    // before submitting (mentions resolve on submit).
+    await expect(chatPanel.locator('.jp-chat-message')).toHaveCount(2);
+
+    const input = chatPanel
+      .locator('.jp-chat-input-container')
+      .getByRole('combobox');
+    const sendButton = chatPanel.locator(
+      '.jp-chat-input-container .jp-chat-send-button'
+    );
+
+    await input.fill('');
+    await input.pressSequentially('hi @Élodie');
+    await sendButton.click();
+
+    const message = chatPanel.locator('.jp-chat-message').last();
+    await expect(message).toContainText('hi @Élodie');
+    await expect(message.locator('.jp-chat-mention')).toHaveCount(1);
+    await expect(message.locator('.jp-chat-mention')).toContainText('@Élodie');
+  });
+});
