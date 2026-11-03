@@ -236,7 +236,7 @@ export function PendingSnippetPreview(props: {
       </Tooltip>
       {props.onRemove && (
         <TooltippedIconButton
-          tooltip={trans.__('Remove snippet')}
+          tooltip={trans.__('Remove from message')}
           onClick={() => props.onRemove!(props.snippet)}
           className={PENDING_SNIPPET_REMOVE_CLASS}
           inputToolbar={false}

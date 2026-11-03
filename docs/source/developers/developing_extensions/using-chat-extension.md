@@ -121,9 +121,12 @@ An action receives a `SelectionActionContext`: the selection (`path`, `cellId` a
 `chatModel`, `null` when no chat is open). When no chat is open and the chat panel is
 available, the context also has `openNewChat()`, which creates a chat, opens it in the
 panel and resolves with its model (or `null` if it could not). The built-in action uses it
-to stay enabled with no chat; an action that does not need a chat can ignore it. The
-actions are displayed in the order they were added. Only chats of the `jupyterlab-chat`
-extension can receive a selection.
+to stay enabled with no chat; an action that does not need a chat can ignore it. Before
+an action runs, a hidden destination chat is brought to the front; set
+`revealsDestination: false` on an action that does not use the chat. The actions are
+displayed in the order they were added. The popup is meant for the mouse: an action added
+here has no keyboard route unless its extension also registers a command. Only chats of
+the `jupyterlab-chat` extension can receive a selection.
 
 ```ts
 import { ISelectionActionRegistry } from '@jupyter/chat';
@@ -149,6 +152,12 @@ const selectionActionPlugin: JupyterFrontEndPlugin<void> = {
   }
 };
 ```
+
+`addPendingSnippet` returns `false`, and stages nothing, when the selected text is longer
+than `MAX_SNIPPET_LENGTH` (20,000 characters); the built-in action shows a warning then.
+An extension that replaces the _send_ item of the input toolbar should also count
+`pendingSnippets` and listen to `pendingSnippetsChanged`, or its button stays disabled when
+only a selection is staged.
 
 The token is provided by `jupyterlab-chat-extension`. An extension using it must share
 `@jupyter/chat` with the host (`"bundled": false, "singleton": true` in the

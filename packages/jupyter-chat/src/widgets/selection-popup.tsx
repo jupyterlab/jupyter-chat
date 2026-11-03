@@ -314,7 +314,7 @@ export namespace SelectionPopup {
     ) => SelectionActionContext | null;
     /**
      * Called when the popup has to follow its selection again: when a scroller
-     * scrolls or the window is resized.
+     * scrolls, the window is resized, and every 250 ms while it has a selection.
      */
     reposition?: () => void;
   }
