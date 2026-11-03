@@ -3,7 +3,6 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { Signal } from '@lumino/signaling';
 import React, { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 
@@ -14,20 +13,7 @@ import { createRoot, Root } from 'react-dom/client';
 import { IActiveCellManager } from '../active-cell-manager';
 import { SendButton } from '../components/input/buttons/send-button';
 import { ChatReactContext } from '../context';
-import { MockChatModel } from './mocks';
-
-function createMockActiveCellManager(available = false): IActiveCellManager {
-  return {
-    available,
-    activeCellError: null,
-    availabilityChanged: new Signal({} as any),
-    activeCellErrorChanged: new Signal({} as any),
-    getContent: () => ({ type: 'code', source: 'a = 1', language: 'python' }),
-    insertAbove: jest.fn(),
-    insertBelow: jest.fn(),
-    replace: jest.fn()
-  };
-}
+import { MockChatModel, createMockActiveCellManager } from './mocks';
 
 describe('SendButton', () => {
   let container: HTMLDivElement;
