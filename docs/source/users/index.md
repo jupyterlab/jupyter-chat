@@ -108,8 +108,9 @@ Attachments can then be opened by clicking on the preview icon.
 When the `showSelectionActions` [setting](#chat-settings) is enabled, selecting text in a
 notebook cell or in a file editor displays a small popup next to the selection. Its
 _Add to chat_ button stages the selection in the input of the current chat (or the first
-visible chat if the current one is hidden), where it is shown as a chip (file, cell and
-lines) until the message is sent. The message then contains the selected text in a code
+visible chat if the current one is hidden; when no chat is visible, the current one is
+brought to the front), where it is shown as a chip (file, cell and lines) until the
+message is sent. The message then contains the selected text in a code
 block, after the typed text, with the path of the file and the id of the cell. A staged
 selection can be removed from the chip, and the popup is dismissed with <kbd>Escape</kbd>
 or by clicking elsewhere.

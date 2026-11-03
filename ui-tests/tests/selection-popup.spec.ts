@@ -101,10 +101,7 @@ test.describe('#selectionPopupWithoutChat', () => {
     }
   });
 
-  test.beforeEach(async ({ page }) => {
-    await page.filebrowser.contents.createDirectory(CHAT_DIR);
-  });
-
+  // The extension creates the directory itself when it loads the setting.
   test.afterEach(async ({ page }) => {
     if (await page.filebrowser.contents.directoryExists(CHAT_DIR)) {
       await page.filebrowser.contents.deleteDirectory(CHAT_DIR);

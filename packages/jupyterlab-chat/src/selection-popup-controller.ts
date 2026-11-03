@@ -116,8 +116,8 @@ export class SelectionPopupController {
   }
 
   /**
-   * Show the popup next to the selection again, after a scroll or a resize.
-   * At most once per frame.
+   * Show the popup next to the selection again, after a scroll, a resize or a
+   * tick of the popup's timer. At most once per frame.
    */
   reposition = (): void => {
     if (!this._listening || this._frame) {
