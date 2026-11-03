@@ -3,7 +3,6 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { Signal } from '@lumino/signaling';
 import React, { act } from 'react';
 import { createRoot, Root } from 'react-dom/client';
 
@@ -15,20 +14,7 @@ import { IActiveCellManager } from '../active-cell-manager';
 import { CodeToolbar } from '../components/code-blocks/code-toolbar';
 import { ChatReactContext } from '../context';
 import { IConfig } from '../types';
-import { MockChatModel } from './mocks';
-
-function createMockActiveCellManager(available = false): IActiveCellManager {
-  return {
-    available,
-    activeCellError: null,
-    availabilityChanged: new Signal({} as any),
-    activeCellErrorChanged: new Signal({} as any),
-    getContent: () => null,
-    insertAbove: jest.fn(),
-    insertBelow: jest.fn(),
-    replace: jest.fn()
-  };
-}
+import { MockChatModel, createMockActiveCellManager } from './mocks';
 
 describe('CodeToolbar', () => {
   let container: HTMLDivElement;

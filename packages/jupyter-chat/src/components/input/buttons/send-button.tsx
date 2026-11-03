@@ -128,9 +128,11 @@ export function SendButton(
       language = content?.language;
     }
 
-    let body = model.value;
+    let body = model.value.trim();
     if (source) {
-      body += `\n\n\`\`\`${language ?? ''}\n${source}\n\`\`\`\n`;
+      body = body
+        ? `${body}\n\n\`\`\`${language ?? ''}\n${source}\n\`\`\`\n`
+        : `\`\`\`${language ?? ''}\n${source}\n\`\`\`\n`;
     }
 
     closeMenu();
@@ -161,7 +163,7 @@ export function SendButton(
           <TooltippedIconButton
             onClick={e => openMenu(e.currentTarget)}
             tooltip={trans.__('Send with selection')}
-            disabled={disabled}
+            disabled={disabled && disableInclude}
             sx={{
               borderRadius:
                 '0 var(--jp-border-radius) var(--jp-border-radius) 0 !important',
