@@ -35,7 +35,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Literal
 
 
 #: Direction discriminator values (the ``type`` field).
@@ -52,11 +52,11 @@ class ClientSendMessage:
 
     id: str
     body: str = ""
-    sender: Optional[Dict[str, Any]] = None
-    mentions: List[str] = field(default_factory=list)
-    metadata: Optional[Dict[str, Any]] = None
-    attachments: Optional[List[dict]] = None
-    mime_model: Optional[dict] = None
+    sender: dict[str, Any] | None = None
+    mentions: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] | None = None
+    attachments: list[dict] | None = None
+    mime_model: dict | None = None
     type: Literal["client"] = CLIENT
     action: Literal["send"] = "send"
 
@@ -66,18 +66,18 @@ class ClientEditMessage:
     """A web client asks the server to edit (or delete) an existing message."""
 
     id: str
-    body: Optional[str] = None
-    deleted: Optional[bool] = None
-    edited: Optional[bool] = None
-    mime_model: Optional[dict] = None
-    mentions: Optional[List[str]] = None
-    metadata: Optional[Dict[str, Any]] = None
-    attachments: Optional[List[dict]] = None
+    body: str | None = None
+    deleted: bool | None = None
+    edited: bool | None = None
+    mime_model: dict | None = None
+    mentions: list[str] | None = None
+    metadata: dict[str, Any] | None = None
+    attachments: list[dict] | None = None
     type: Literal["client"] = CLIENT
     action: Literal["edit"] = "edit"
 
 
-ClientChatWsMessage = Union[ClientSendMessage, ClientEditMessage]
+ClientChatWsMessage = ClientSendMessage | ClientEditMessage
 
 
 # ---------------------------------------------------------------------------
@@ -90,9 +90,9 @@ class ServerConnectionMessage:
 
     client_id: str
     id: str
-    user: Dict[str, Any]
-    messages: List[dict]
-    users: Dict[str, dict]
+    user: dict[str, Any]
+    messages: list[dict]
+    users: dict[str, dict]
     type: Literal["server"] = SERVER
     action: Literal["connection"] = "connection"
 
@@ -101,7 +101,7 @@ class ServerConnectionMessage:
 class ServerMessageMessage:
     """A new or updated message (already attachment-resolved)."""
 
-    message: Dict[str, Any]
+    message: dict[str, Any]
     type: Literal["server"] = SERVER
     action: Literal["message"] = "message"
 
@@ -110,7 +110,7 @@ class ServerMessageMessage:
 class ServerUsersMessage:
     """An add/update to the users map. Clients merge it into their local map."""
 
-    users: Dict[str, dict]
+    users: dict[str, dict]
     type: Literal["server"] = SERVER
     action: Literal["users"] = "users"
 
@@ -119,7 +119,7 @@ class ServerUsersMessage:
 class ServerMetadataMessage:
     """An add/update to the chat metadata map. Clients merge it in."""
 
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
     type: Literal["server"] = SERVER
     action: Literal["metadata"] = "metadata"
 
@@ -129,23 +129,23 @@ class ServerWritingMessage:
     """An ephemeral writing/typing status pushed by the server (e.g. an AI
     persona). Not persisted to the ``.chat`` file."""
 
-    user: Dict[str, Any]
+    user: dict[str, Any]
     state: bool
-    messageID: Optional[str] = None
-    typingIndicator: Optional[str] = None
+    messageID: str | None = None
+    typingIndicator: str | None = None
     type: Literal["server"] = SERVER
     action: Literal["writing"] = "writing"
 
 
-ServerChatWsMessage = Union[
-    ServerConnectionMessage,
-    ServerMessageMessage,
-    ServerUsersMessage,
-    ServerMetadataMessage,
-    ServerWritingMessage,
-]
+ServerChatWsMessage = (
+    ServerConnectionMessage
+    | ServerMessageMessage
+    | ServerUsersMessage
+    | ServerMetadataMessage
+    | ServerWritingMessage
+)
 
-ChatWsMessage = Union[ClientChatWsMessage, ServerChatWsMessage]
+ChatWsMessage = ClientChatWsMessage | ServerChatWsMessage
 
 
 # ---------------------------------------------------------------------------
@@ -158,7 +158,7 @@ def to_wire(message: ServerChatWsMessage) -> str:
     return json.dumps(payload)
 
 
-def parse_client_message(data: Any) -> Optional[ClientChatWsMessage]:
+def parse_client_message(data: Any) -> ClientChatWsMessage | None:
     """Validate and narrow a decoded client frame.
 
     Returns the typed message, or ``None`` if ``data`` is not a well-formed

@@ -6,10 +6,11 @@ import logging
 import os
 import time
 import uuid
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterator, List, Optional, Union
+from typing import Any
 
 from jupyter_events import EventLogger
 from jupyter_server.services.contents.manager import ContentsManager
@@ -56,11 +57,11 @@ class WsChatModel(BaseChatModel):
         self,
         path: str,
         root_dir: Path,
-        event_logger: Optional[EventLogger] = None,
+        event_logger: EventLogger | None = None,
     ):
         self.path = path
         self.root_dir = root_dir
-        self.handlers: Dict[str, websocket.WebSocketHandler] = {}
+        self.handlers: dict[str, websocket.WebSocketHandler] = {}
         # Number of open ``keep_alive()`` contexts. While > 0 the ChatManager
         # will not free this model even with no connected clients (see
         # ``keep_alive`` / ``is_kept_alive``). An int -- not a bool -- so nested
@@ -68,10 +69,10 @@ class WsChatModel(BaseChatModel):
         self._keep_alive_depth = 0
         self._messages: list[dict] = []
         self._indexes_by_id: dict[str, int] = {}
-        self._users: Dict[str, dict] = {}
-        self._attachments: Dict[str, dict] = {}
-        self._metadata: Dict[str, object] = {}
-        self._message_observers: List[MessageObserverCallback] = []
+        self._users: dict[str, dict] = {}
+        self._attachments: dict[str, dict] = {}
+        self._metadata: dict[str, object] = {}
+        self._message_observers: list[MessageObserverCallback] = []
 
         # Track in-band moves: a rename via the ContentsManager updates our
         # tracked path, so subsequent saves go to the file's new location. This
@@ -261,7 +262,7 @@ class WsChatModel(BaseChatModel):
                 listener=self._on_contents_event,
             )
 
-    def get_message(self, id: str) -> Optional[Message]:
+    def get_message(self, id: str) -> Message | None:
         idx = self._indexes_by_id.get(id)
         if idx is None:
             return None
@@ -279,8 +280,8 @@ class WsChatModel(BaseChatModel):
     def get_metadata(self) -> dict[str, Any]:
         return dict(self._metadata)  # type: ignore[arg-type]
 
-    def get_attachments(self) -> dict[str, Union[FileAttachment, NotebookAttachment]]:
-        result: dict[str, Union[FileAttachment, NotebookAttachment]] = {}
+    def get_attachments(self) -> dict[str, FileAttachment | NotebookAttachment]:
+        result: dict[str, FileAttachment | NotebookAttachment] = {}
         for att_id, att_dict in self._attachments.items():
             if att_dict.get("type") == "notebook":
                 result[att_id] = NotebookAttachment(**att_dict)
@@ -345,7 +346,7 @@ class WsChatModel(BaseChatModel):
             )
 
     def set_attachment(
-        self, attachment: Union[FileAttachment, NotebookAttachment]
+        self, attachment: FileAttachment | NotebookAttachment
     ) -> str:
         att_dict = asdict(attachment)
         att_json = json.dumps(att_dict, sort_keys=True)

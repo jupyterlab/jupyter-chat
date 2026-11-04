@@ -7,7 +7,6 @@ Covers ``observe_messages``/``unobserve_messages`` on both the WebSocket model
 """
 import asyncio
 from pathlib import Path
-from typing import List
 
 import pytest
 from pycrdt import Map
@@ -34,7 +33,7 @@ def _ws_model(tmp_path: Path) -> WsChatModel:
 # --------------------------------------------------------------------------
 def test_ws_server_msg_sent_and_unobserve(tmp_path: Path) -> None:
     model = _ws_model(tmp_path)
-    events: List[ChatMessageEvent] = []
+    events: list[ChatMessageEvent] = []
     token = model.observe_messages(events.append)
 
     model.add_message(NewMessage(body="hi", sender="agent"))
@@ -52,7 +51,7 @@ def test_ws_server_msg_updated(tmp_path: Path) -> None:
     model = _ws_model(tmp_path)
     msg_id = model.add_message(NewMessage(body="v1", sender="agent"))
 
-    events: List[ChatMessageEvent] = []
+    events: list[ChatMessageEvent] = []
     model.observe_messages(events.append)
 
     updated = model.get_message(msg_id)
@@ -72,7 +71,7 @@ def test_ws_client_events(tmp_path: Path) -> None:
     message = model.get_message(msg_id)
     assert message is not None
 
-    events: List[ChatMessageEvent] = []
+    events: list[ChatMessageEvent] = []
     model.observe_messages(events.append)
     model._emit_message_event(ChatMessageAction.CLIENT_MSG_RECEIVED, message)
     model._emit_message_event(ChatMessageAction.CLIENT_MSG_EDITED, message)
@@ -85,8 +84,8 @@ def test_ws_client_events(tmp_path: Path) -> None:
 
 def test_ws_multiple_observers(tmp_path: Path) -> None:
     model = _ws_model(tmp_path)
-    a: List[ChatMessageEvent] = []
-    b: List[ChatMessageEvent] = []
+    a: list[ChatMessageEvent] = []
+    b: list[ChatMessageEvent] = []
     token_a = model.observe_messages(a.append)
     model.observe_messages(b.append)
 
@@ -100,7 +99,7 @@ def test_ws_multiple_observers(tmp_path: Path) -> None:
 
 def test_ws_observer_error_is_isolated(tmp_path: Path) -> None:
     model = _ws_model(tmp_path)
-    good: List[ChatMessageEvent] = []
+    good: list[ChatMessageEvent] = []
 
     def boom(event: ChatMessageEvent) -> None:
         raise RuntimeError("observer blew up")
@@ -132,7 +131,7 @@ def test_ychat_insert_classification_and_unobserve() -> None:
     chat.set_user(User(username="human", name="H", display_name="H"))
     chat.set_user(User(username="bot", name="B", display_name="B", bot=True))
 
-    events: List[ChatMessageEvent] = []
+    events: list[ChatMessageEvent] = []
     token = chat.observe_messages(events.append)
 
     _insert_ymessage(
@@ -158,7 +157,7 @@ async def test_ychat_timestamp_update_preserves_insert_event() -> None:
     chat = YChat()
     chat.set_id("test-chat")
     chat.dirty = False
-    events: List[ChatMessageEvent] = []
+    events: list[ChatMessageEvent] = []
     chat.observe_messages(events.append)
 
     chat.add_message(NewMessage(body="from human", sender="human"))

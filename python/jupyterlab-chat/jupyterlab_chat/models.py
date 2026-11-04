@@ -2,9 +2,10 @@
 # Distributed under the terms of the Modified BSD License.
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Any, Callable, Literal, Optional, Tuple, Union
+from typing import Any, Literal
 from jupyter_server.auth import User as JupyterUser
 
 
@@ -20,10 +21,10 @@ class MimeModel:
     data: dict[str, Any]
     """ The data containing the mime bundles. """
 
-    metadata: Optional[dict] = None
+    metadata: dict | None = None
     """ The metadata associated to the mime bundle. """
 
-    trusted: Optional[bool] = None
+    trusted: bool | None = None
     """ Whether the data is trusted """
 
 
@@ -47,34 +48,34 @@ class Message:
     # optional arguments, with defaults.
     type: Literal["msg"] = "msg"
 
-    attachments: Optional[list[str]] = None
+    attachments: list[str] | None = None
     """ The message attachments, a list of attachment ID """
 
     mentions: list[str] = field(default_factory=list)
     """ Users mentioned in the message """
 
-    raw_time: Optional[bool] = None
+    raw_time: bool | None = None
     """
     Whether the timestamp is raw (from client) or not (from server, unified)
     Default to None
     """
 
-    deleted: Optional[bool] = None
+    deleted: bool | None = None
     """
     Whether the message has been deleted or not (body should be empty if True)
     Default to None.
     """
 
-    edited: Optional[bool] = None
+    edited: bool | None = None
     """
     Whether the message has been edited or not
     Default to None.
     """
 
-    metadata: Optional[dict] = None
+    metadata: dict | None = None
     """ Optional metadata attached to this message. """
 
-    mime_model: Optional[MimeModel] = None
+    mime_model: MimeModel | None = None
     """
     Optional mime model data.
     If provided, it should be prioritized over the body.
@@ -91,7 +92,7 @@ class NewMessage:
     sender: str
     """ The message sender unique id """
 
-    mime_model: Optional[MimeModel] = None
+    mime_model: MimeModel | None = None
     """
     Optional mime model data.
     If provided, it should be prioritized over the body.
@@ -101,7 +102,7 @@ class NewMessage:
 class User(JupyterUser):
     """ Object representing a user """
 
-    bot: Optional[bool] = False
+    bot: bool | None = False
     """ Boolean identifying if user is a bot """
 
     def __init__(self, *args, **kwargs):
@@ -132,12 +133,12 @@ class User(JupyterUser):
 
 @dataclass(kw_only=True)
 class AttachmentSelection:
-    start: Tuple[int, int]
+    start: tuple[int, int]
     """
     The line number & column number of where the selection begins (inclusive).
     """
 
-    end: Tuple[int, int]
+    end: tuple[int, int]
     """
     The line number & column number of where the selection ends (inclusive).
     """
@@ -162,12 +163,12 @@ class FileAttachment:
 
     type: Literal['file'] = 'file'
 
-    mimetype: Optional[str] = None
+    mimetype: str | None = None
     """
     (optional) The mime type of the file. Defaults to `None`.
     """
 
-    selection: Optional[AttachmentSelection] = None
+    selection: AttachmentSelection | None = None
     """
     (optional) A selection range within the file. See `AttachmentSelection` for
     more info.
@@ -191,7 +192,7 @@ class NotebookAttachmentCell:
     The type of the cell.
     """
 
-    selection: Optional[AttachmentSelection] = None
+    selection: AttachmentSelection | None = None
     """
     (optional) A selection range within the cell. See `AttachmentSelection` for
     more info.
@@ -212,12 +213,12 @@ class NotebookAttachment:
 
     type: Literal['notebook'] = 'notebook'
 
-    mimetype: Optional[str] = None
+    mimetype: str | None = None
     """
     (optional) The mime type of the notebook. Defaults to `None`.
     """
 
-    cells: Optional[list[NotebookAttachmentCell]] = None
+    cells: list[NotebookAttachmentCell] | None = None
     """
     (optional) A list of cells in the notebook.
     """
@@ -308,7 +309,7 @@ class BaseChatModel(ABC):
         ...
 
     @abstractmethod
-    def get_message(self, id: str) -> Optional[Message]:
+    def get_message(self, id: str) -> Message | None:
         ...
 
     @abstractmethod
@@ -324,7 +325,7 @@ class BaseChatModel(ABC):
         ...
 
     @abstractmethod
-    def get_attachments(self) -> dict[str, Union[FileAttachment, NotebookAttachment]]:
+    def get_attachments(self) -> dict[str, FileAttachment | NotebookAttachment]:
         ...
 
     @abstractmethod
@@ -346,7 +347,7 @@ class BaseChatModel(ABC):
 
     @abstractmethod
     def set_attachment(
-        self, attachment: Union[FileAttachment, NotebookAttachment]
+        self, attachment: FileAttachment | NotebookAttachment
     ) -> str:
         ...
 
@@ -381,7 +382,7 @@ class BaseChatModel(ABC):
     def broadcast_writing_status(
         self,
         user: "User",
-        status: Optional[dict] = None,
+        status: dict | None = None,
     ) -> None:
         """Broadcast an ephemeral "user is writing" status on behalf of ``user``.
 

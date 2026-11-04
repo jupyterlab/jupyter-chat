@@ -7,7 +7,7 @@ import time
 import uuid
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from jupyter_server.base.handlers import JupyterHandler
 from tornado import web, websocket
