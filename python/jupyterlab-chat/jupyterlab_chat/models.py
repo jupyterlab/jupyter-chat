@@ -3,7 +3,7 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import Any, Callable, Literal, Optional, Tuple, Union
 from jupyter_server.auth import User as JupyterUser
 
@@ -245,7 +245,7 @@ class NotebookAttachment:
         self.cells = cells
 
 
-class ChatMessageAction(str, Enum):
+class ChatMessageAction(StrEnum):
     """The kind of message change surfaced to ``observe_messages`` callbacks."""
 
     CLIENT_MSG_RECEIVED = "client_msg_received"

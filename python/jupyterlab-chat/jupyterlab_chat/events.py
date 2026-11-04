@@ -18,7 +18,7 @@ directly.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 from typing import Optional
 
 #: Jupyter Events schema id for the generic (transport-agnostic) chat lifecycle bus.
@@ -81,7 +81,7 @@ CHAT_ROOM_EVENT_SCHEMA = {
 }
 
 
-class ChatEventAction(str, Enum):
+class ChatEventAction(StrEnum):
     """Actions on the generic chat event bus."""
 
     OPENED = "opened"
