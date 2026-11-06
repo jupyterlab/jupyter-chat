@@ -4,7 +4,7 @@
 """Utility functions for jupyter-chat."""
 
 import re
-from typing import TYPE_CHECKING, Set
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .models import Message
@@ -23,7 +23,7 @@ def find_mentions(message: "Message", chat: "YChat") -> None:
         chat: The YChat instance for accessing user data
     """
     mention_pattern = re.compile(r"@([\w-]+):?")
-    mentioned_names: Set[str] = set(re.findall(mention_pattern, message.body))
+    mentioned_names: set[str] = set(re.findall(mention_pattern, message.body))
     users = chat.get_users()
     mentioned_usernames = []
     for username, user in users.items():

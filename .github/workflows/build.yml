@@ -41,7 +41,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.10', '3.14']
+        python-version: ['3.11', '3.15']
         collaboration:
           # JupyterLab < 4.6 + Jupyter Collaboration v4
           - label: 'JupyterLab <4.6 + Collaboration v4'

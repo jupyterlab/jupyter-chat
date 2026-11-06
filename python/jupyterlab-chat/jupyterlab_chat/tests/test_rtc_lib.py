@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 # --- Fakes -------------------------------------------------------------------
 
 
-def make_serverapp(*, extensions=None, apps=None, config=None) -> "ServerApp":
+def make_serverapp(*, extensions=None, apps=None, config=None) -> ServerApp:
     """Build a fake ServerApp exposing just what rtc_lib inspects.
 
     Parameters

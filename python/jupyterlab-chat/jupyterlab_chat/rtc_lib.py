@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import importlib.util
 from dataclasses import asdict, dataclass, field
-from typing import TYPE_CHECKING, Literal, Optional
+from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
     from jupyter_server.serverapp import ServerApp
@@ -58,7 +58,7 @@ def _is_installed(name: str) -> bool:
     return importlib.util.find_spec(name) is not None
 
 
-def _is_enabled(serverapp: "ServerApp", name: str) -> bool:
+def _is_enabled(serverapp: ServerApp, name: str) -> bool:
     """True iff ``name`` is a server extension *configured AND enabled* for THIS
     session.
 
@@ -72,7 +72,7 @@ def _is_enabled(serverapp: "ServerApp", name: str) -> bool:
     return bool(ext and ext.enabled)
 
 
-def _provider_app(serverapp: "ServerApp", name: RTCProvider):
+def _provider_app(serverapp: ServerApp, name: RTCProvider):
     """The live ``ExtensionApp`` instance for a provider, or ``None``.
 
     Both RTC providers sort alphabetically before ``jupyterlab_chat``, so when a
@@ -103,7 +103,7 @@ def _coerce_bool(value: object) -> bool:
     return bool(value)
 
 
-def is_rtc_disabled_by_trait(serverapp: "ServerApp") -> bool:
+def is_rtc_disabled_by_trait(serverapp: ServerApp) -> bool:
     """True iff ``YDocExtension.disable_rtc`` is set for this session.
 
     Prefers the live ``jupyter_server_ydoc`` extension app, whose ``disable_rtc``
@@ -120,12 +120,12 @@ def is_rtc_disabled_by_trait(serverapp: "ServerApp") -> bool:
     return _coerce_bool(ydoc_cfg.get("disable_rtc", False))
 
 
-def _enabled_by_server(serverapp: "ServerApp") -> set[RTCProvider]:
+def _enabled_by_server(serverapp: ServerApp) -> set[RTCProvider]:
     """RTC providers whose server extension is enabled this session."""
     return {name for name in RTC_PROVIDERS if _is_enabled(serverapp, name)}
 
 
-def _enabled_by_trait(serverapp: "ServerApp") -> set[RTCProvider]:
+def _enabled_by_trait(serverapp: ServerApp) -> set[RTCProvider]:
     """RTC providers that are not turned off by a trait this session.
 
     JSD has no disabling trait, so it is always here. JSY is here unless
@@ -140,7 +140,7 @@ def _enabled_by_trait(serverapp: "ServerApp") -> set[RTCProvider]:
 # --- Resolution --------------------------------------------------------------
 
 
-def get_rtc_provider(serverapp: "ServerApp") -> Optional[RTCProvider]:
+def get_rtc_provider(serverapp: ServerApp) -> RTCProvider | None:
     """Name of the active RTC provider for this session, or ``None`` if RTC is off.
 
     A provider is active only when it is enabled on *both* axes: its server
@@ -196,7 +196,7 @@ class ServerSessionRtcInfo:
     ``provider is not None``). False when JSY is enabled but ``disable_rtc`` is
     set."""
 
-    provider: Optional[RTCProvider]
+    provider: RTCProvider | None
     """Which RTC backend is active (informational), or ``None``."""
 
     providerDetails: RtcProviderDetails
@@ -210,14 +210,14 @@ class ServerSessionRtcInfo:
         return asdict(self)
 
 
-def get_server_session_rtc_info(serverapp: "ServerApp") -> ServerSessionRtcInfo:
+def get_server_session_rtc_info(serverapp: ServerApp) -> ServerSessionRtcInfo:
     """Build the :class:`ServerSessionRtcInfo` for this session."""
     by_server = _enabled_by_server(serverapp)
     by_trait = _enabled_by_trait(serverapp)
     active = by_server & by_trait
 
     if "jupyter_server_documents" in active:
-        provider: Optional[RTCProvider] = "jupyter_server_documents"
+        provider: RTCProvider | None = "jupyter_server_documents"
     elif "jupyter_server_ydoc" in active:
         provider = "jupyter_server_ydoc"
     else:
@@ -240,7 +240,7 @@ def get_server_session_rtc_info(serverapp: "ServerApp") -> ServerSessionRtcInfo:
 PAGE_CONFIG_KEY = "serverSessionRtcInfo"
 
 
-def publish_rtc_info(serverapp: "ServerApp") -> ServerSessionRtcInfo:
+def publish_rtc_info(serverapp: ServerApp) -> ServerSessionRtcInfo:
     """Compute the session RTC info and write it into ``page_config_data``.
 
     Returns the computed info so the caller can also use it to decide which

@@ -21,8 +21,9 @@ generic schema; under WebSocket, the handler notifies the manager directly.
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Optional
+from typing import TYPE_CHECKING
 
 from tornado.ioloop import PeriodicCallback
 from traitlets import Float
@@ -78,7 +79,7 @@ class ChatManager(LoggingConfigurable):
         ),
     )
 
-    def __init__(self, serverapp: "ServerApp", rtc_enabled: bool = False, start_scanner: bool = True, **kwargs):
+    def __init__(self, serverapp: ServerApp, rtc_enabled: bool = False, start_scanner: bool = True, **kwargs):
         super().__init__(**kwargs)
         self._serverapp = serverapp
         self._settings = serverapp.web_app.settings
@@ -88,7 +89,7 @@ class ChatManager(LoggingConfigurable):
         # Live chat models keyed by their stable chat id (``chat.get_id()``) --
         # the only stable identifier of a chat (paths change on rename; room ids
         # exist only under RTC). ``_last_activity_by_id`` is keyed the same way.
-        self._chats_by_id: dict[str, "BaseChatModel"] = {}
+        self._chats_by_id: dict[str, BaseChatModel] = {}
         self._last_activity_by_id: dict[str, float] = {}
 
         # Exposed for server-side consumers under the ``chats_by_id`` settings key
@@ -182,7 +183,7 @@ class ChatManager(LoggingConfigurable):
     # ------------------------------------------------------------------
     # Responsibility 2 -- model access
     # ------------------------------------------------------------------
-    def get(self, chat_id: str) -> Optional["BaseChatModel"]:
+    def get(self, chat_id: str) -> BaseChatModel | None:
         """Return the live model for a stable ``chat_id`` (``chat.get_id()``), or
         ``None`` if that chat is not currently live.
 
@@ -192,7 +193,7 @@ class ChatManager(LoggingConfigurable):
         """
         return self._chats_by_id.get(chat_id)
 
-    async def create(self, path: str) -> Optional["BaseChatModel"]:
+    async def create(self, path: str) -> BaseChatModel | None:
         """Async get-or-create by ``path`` (the WS connection parameter).
 
         WS: get-or-create a ``WsChatModel`` (loading from disk; creating an empty
@@ -205,7 +206,7 @@ class ChatManager(LoggingConfigurable):
             return existing
         return self._get_or_create_ws(path)
 
-    def _model_for_path(self, path: str) -> Optional["BaseChatModel"]:
+    def _model_for_path(self, path: str) -> BaseChatModel | None:
         """Find the live model whose current path is ``path`` (linear scan over
         the handful of live chats). Uses ``get_path()`` so a renamed chat is
         matched by its current path, never a stale key."""
@@ -237,7 +238,7 @@ class ChatManager(LoggingConfigurable):
                 elif now - self._last_activity_by_id.get(chat_id, now) > self.freeable_chat_grace_period:
                     self._free(chat_id, ChatEventAction.CLOSED)
 
-    def _free(self, chat_id: str, action: ChatEventAction) -> Optional["BaseChatModel"]:
+    def _free(self, chat_id: str, action: ChatEventAction) -> BaseChatModel | None:
         model = self._chats_by_id.pop(chat_id, None)
         self._last_activity_by_id.pop(chat_id, None)
         if model is None:
@@ -258,7 +259,7 @@ class ChatManager(LoggingConfigurable):
     # ------------------------------------------------------------------
     # WebSocket transport hooks (called by WSChatHandler)
     # ------------------------------------------------------------------
-    def ws_open(self, path: str) -> "WsChatModel":
+    def ws_open(self, path: str) -> WsChatModel:
         """First/any client connecting to ``path``: get-or-create the model and
         (on first creation) emit ``opened``. Returns the model; the caller reads
         ``model.get_id()`` for the stable chat id."""
@@ -282,7 +283,7 @@ class ChatManager(LoggingConfigurable):
         if isinstance(model, WsChatModel) and model.inactive_and_empty:
             self._free(chat_id, ChatEventAction.CLOSED)
 
-    def _get_or_create_ws(self, path: str) -> "WsChatModel":
+    def _get_or_create_ws(self, path: str) -> WsChatModel:
         # Reuse the live model for this path if one exists (matched by current
         # path, so a renamed chat is still found). A cached model is the live
         # in-memory session: reuse it verbatim -- we do not reload from disk
@@ -363,7 +364,7 @@ class ChatManager(LoggingConfigurable):
             if model is not None:
                 self._free(model.get_id(), ChatEventAction.CLOSED)
 
-    def _model_for_room_id(self, room_id: str) -> Optional["BaseChatModel"]:
+    def _model_for_room_id(self, room_id: str) -> BaseChatModel | None:
         return next(
             (m for m in self._chats_by_id.values() if getattr(m, "room_id", None) == room_id),
             None,

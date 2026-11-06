@@ -9,7 +9,8 @@ import time
 import asyncio
 from functools import partial
 from jupyter_ydoc.ybasedoc import YBaseDoc
-from typing import Any, Callable, Optional, Union
+from collections.abc import Callable
+from typing import Any
 from uuid import uuid4
 from pycrdt import Array, ArrayEvent, Map, MapEvent, Subscription
 
@@ -46,18 +47,18 @@ class YChat(YBaseDoc, BaseChatModel):
         # room id ("{format}:{type}:{file_id}") lets get_path() recover the file
         # id; initial_path is the path recorded when the room was created and is
         # used as a fallback. Both are None until the chat is resolved.
-        self.room_id: Optional[str] = None
-        self.initial_path: Optional[str] = None
+        self.room_id: str | None = None
+        self.initial_path: str | None = None
         self._ydoc["users"] = self._yusers = Map()  # type:ignore[var-annotated]
         self._ydoc["messages"] = self._ymessages = Array()  # type:ignore[var-annotated]
         self._ydoc["attachments"] = self._yattachments = Map()  # type:ignore[var-annotated]
         self._ydoc["metadata"] = self._ymetadata = Map()  # type:ignore[var-annotated]
-        self._ymessages_subscription: Optional[Subscription] = self._ymessages.observe(
+        self._ymessages_subscription: Subscription | None = self._ymessages.observe(
             self._on_messages_change
         )
 
         # Observe the state to initialize the file as soon as the document is not dirty.
-        self._ystate_subscription: Optional[Subscription] = self._ystate.observe(
+        self._ystate_subscription: Subscription | None = self._ystate.observe(
             self._initialize
         )
 
@@ -104,13 +105,13 @@ class YChat(YBaseDoc, BaseChatModel):
     def ymetadata(self) -> Map:
         return self._ymetadata
 
-    def get_user(self, username: str) -> Optional[User]:
+    def get_user(self, username: str) -> User | None:
         """
         Returns a user from its id, or None
         """
         return self.get_users().get(username, None)
 
-    def get_user_by_name(self, name: str) -> Optional[User]:
+    def get_user_by_name(self, name: str) -> User | None:
         """
         Returns a user from its name property, or None.
         """
@@ -142,7 +143,7 @@ class YChat(YBaseDoc, BaseChatModel):
                 user.username: asdict(user)
             })
 
-    def get_message(self, id: str) -> Optional[Message]:
+    def get_message(self, id: str) -> Message | None:
         """
         Returns a message and its index from its id, or None.
         """
@@ -231,14 +232,14 @@ class YChat(YBaseDoc, BaseChatModel):
                 elif update_dict[key] is not None:
                     message.update({ key: update_dict[key] })
 
-    def get_attachments(self) -> dict[str, Union[FileAttachment, NotebookAttachment]]:
+    def get_attachments(self) -> dict[str, FileAttachment | NotebookAttachment]:
         """
         Returns all attachments in the chat as a dictionary, indexed by
         attachment ID.
 
         Values are typed as `FileAttachment` or `NotebookAttachment`
         """
-        result: dict[str, Union[FileAttachment, NotebookAttachment]] = {}
+        result: dict[str, FileAttachment | NotebookAttachment] = {}
         for att_id, att_dict in (self._yattachments.to_py() or {}).items():
             if att_dict.get("type") == "notebook":
                 result[att_id] = NotebookAttachment(**att_dict)
@@ -246,7 +247,7 @@ class YChat(YBaseDoc, BaseChatModel):
                 result[att_id] = FileAttachment(**att_dict)
         return result
 
-    def set_attachment(self, attachment: Union[FileAttachment, NotebookAttachment]) -> str:
+    def set_attachment(self, attachment: FileAttachment | NotebookAttachment) -> str:
         """
         Add or modify an attachment in the chat, and returns the ID of the
         attachment.
@@ -288,7 +289,7 @@ class YChat(YBaseDoc, BaseChatModel):
     def broadcast_writing_status(
         self,
         user: User,
-        status: Optional[dict] = None,
+        status: dict | None = None,
     ) -> None:
         """Broadcast ``user``'s writing status over the awareness channel.
 
@@ -424,7 +425,7 @@ class YChat(YBaseDoc, BaseChatModel):
         return self.initial_path
 
     @staticmethod
-    def _get_file_id_manager() -> Optional[Any]:
+    def _get_file_id_manager() -> Any | None:
         """Best-effort reference to the server's File ID manager.
 
         Returns ``None`` when there is no running server or when
