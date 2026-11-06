@@ -16,7 +16,7 @@ import { MessageLoop } from '@lumino/messaging';
 import { Widget } from '@lumino/widgets';
 
 import { IChatPanel } from './tokens';
-import { IUser } from './types';
+import { IAttachmentSelection, IUser } from './types';
 
 const MENTION_CLASS = 'jp-chat-mention';
 
@@ -44,6 +44,43 @@ export function getEditor(
   }
 
   return editor;
+}
+
+/**
+ * Converts the offsets of a selection in an editor into an attachment selection.
+ *
+ * The end of the range is inclusive: one is subtracted from the end offset
+ * before it is converted, as subtracting one from a `{line, column}` position
+ * would underflow at the start of a line.
+ *
+ * @param getPositionAt - converts an offset to a position, as
+ * `CodeEditor.IEditor.getPositionAt` does.
+ * @param from - the offset where the selection starts.
+ * @param to - the offset where the selection ends (exclusive).
+ * @param content - the selected text.
+ * @returns the selection, or `null` if an offset cannot be converted.
+ */
+export function selectionFromOffsets(
+  getPositionAt: (offset: number) => CodeEditor.IPosition | undefined,
+  from: number,
+  to: number,
+  content: string
+): IAttachmentSelection | null {
+  try {
+    const start = getPositionAt(from);
+    const end = getPositionAt(Math.max(from, to - 1));
+    if (!start || !end) {
+      return null;
+    }
+    return {
+      start: [start.line, start.column],
+      end: [end.line, end.column],
+      content
+    };
+  } catch {
+    // CodeMirror throws for an offset out of the document.
+    return null;
+  }
 }
 
 /**

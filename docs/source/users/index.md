@@ -103,6 +103,25 @@ It opens a Dialog allowing to select and atach files.
 
 Attachments can then be opened by clicking on the preview icon.
 
+### Add a selection to the chat
+
+When the `showSelectionActions` [setting](#chat-settings) is enabled, selecting text in a
+notebook cell or in a file editor displays a small popup next to the selection. Its
+_Add to chat_ button stages the selection in the input of the current chat (or the first
+visible chat if the current one is hidden; when no chat is visible, the current one is
+brought to the front), where it is shown as a chip (file, cell and lines) until the
+message is sent. The message then contains the selected text in a code
+block, after the typed text, with the path of the file and the id of the cell. A staged
+selection can be removed from the chip, and the popup is dismissed with <kbd>Escape</kbd>
+or by clicking elsewhere.
+
+If no chat is open, the button creates a new chat (an `untitled.chat` file in the
+default directory, like the _Create a new chat_ button of the chat panel) and opens it in the chat
+panel, with the selection staged. The chat is not removed afterwards.
+
+The same action is available from the command palette (_Add selection to chat_), which
+does not require the setting, and also creates a chat if none is open.
+
 ### Chat commands
 
 The chat input includes a command and autocompletion framework triggered by special prefix characters:
@@ -153,4 +172,10 @@ These settings includes:
 - **sendWithSelection**
 
   Whether to display the button for adding selected text when sending a message.\
+  Default: false
+
+- **showSelectionActions**
+
+  Whether to display a popup with actions, such as _Add to chat_, over the text selected
+  in an editor.\
   Default: false
