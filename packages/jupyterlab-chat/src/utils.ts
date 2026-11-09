@@ -3,9 +3,24 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
+import { IChatModel } from '@jupyter/chat';
 import { PathExt } from '@jupyterlab/coreutils';
 
-import { chatFileType } from './token';
+import { chatFileType, ILabChatModel } from './token';
+
+/**
+ * Return the path of the chat file of a model.
+ *
+ * Useful when the model is only known as a generic chat model (e.g. from the
+ * chat tracker).
+ *
+ * @param model - the chat model.
+ * @returns - the path of the chat file, or undefined if the model has no path
+ *   (e.g. a chat model that is not a lab chat model).
+ */
+export function getChatPath(model: IChatModel): string | undefined {
+  return (model as ILabChatModel).path;
+}
 
 /**
  * Return the name of the chat from its path.
