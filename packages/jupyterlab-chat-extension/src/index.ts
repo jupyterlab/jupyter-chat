@@ -170,6 +170,7 @@ async function createChatModel(
 
   return {
     model: chatModel,
+    key: fileModel.path,
     displayName: getDisplayName(fileModel.path, defaultDirectory)
   };
 }
@@ -900,11 +901,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
               filepath: path
             });
             if (widget !== null) {
-              const name = getDisplayName(
-                path,
-                widgetConfig.config.defaultDirectory
-              );
-              chatPanel.unsetLoadedModel(name);
+              chatPanel.unsetLoadedModel(path);
             }
           } catch (e) {
             console.error(`Error moving chat to main area`, e);
@@ -1205,7 +1202,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           if (widget.area === 'sidebar' && chatPanel) {
             // The chat is the side panel.
             app.shell.activateById(chatPanel.id);
-            chatPanel.openIfLoaded(widget.model.name);
+            chatPanel.openIfLoaded(getChatPath(widget.model) ?? '');
           } else {
             // The chat is in the main area.
             app.shell.activateById(widget.id);
@@ -1357,20 +1354,19 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
 
     const chatFileExtension = chatFileType.extensions[0];
 
-    // Get the chat in default directory
+    // Get the chats in default directory, mapping their paths to their names.
     const getChatNames = async () => {
       const dirContents = await serviceManager.contents.get(
         widgetConfig.config.defaultDirectory ?? '',
         { content: true }
       );
-      const names: { [name: string]: string } = {};
+      const names: { [path: string]: string } = {};
       for (const file of dirContents.content) {
         if (
           (file.type === 'file' || file.type === chatFileType.contentType) &&
           file.name.endsWith(chatFileExtension)
         ) {
-          const nameWithoutExt = file.name.replace(chatFileExtension, '');
-          names[nameWithoutExt] = file.path;
+          names[file.path] = file.name.replace(chatFileExtension, '');
         }
       }
       return names;
@@ -1419,11 +1415,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
         chatPanel.updateChatList();
         if (change.oldValue?.path) {
           // Dispose of the model if the chat is loaded in the side panel.
-          const oldName = getDisplayName(
-            change.oldValue.path,
-            widgetConfig.config.defaultDirectory
-          );
-          chatPanel.unsetLoadedModel(oldName);
+          chatPanel.unsetLoadedModel(change.oldValue.path);
         }
       }
       const updateActions = ['new', 'rename'];
@@ -1432,20 +1424,16 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
         change.newValue?.path?.endsWith(chatFileType.extensions[0])
       ) {
         chatPanel.updateChatList();
-        // Update the displayed name if the current chat file is renamed.
+        // Update the key and the name of the chat if it is loaded in the side
+        // panel and its file is renamed.
         const oldPath = change.oldValue?.path;
         const newPath = change.newValue?.path;
-        if (oldPath && newPath) {
-          const oldName = getDisplayName(
+        if (oldPath && newPath && oldPath !== newPath) {
+          chatPanel.updateLoadedChat(
             oldPath,
-            widgetConfig.config.defaultDirectory
+            newPath,
+            getDisplayName(newPath, widgetConfig.config.defaultDirectory)
           );
-          if (chatPanel.current?.name === oldName) {
-            chatPanel.current.name = getDisplayName(
-              newPath,
-              widgetConfig.config.defaultDirectory
-            );
-          }
         }
       }
     });
