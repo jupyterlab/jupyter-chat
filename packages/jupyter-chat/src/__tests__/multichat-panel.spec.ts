@@ -82,6 +82,116 @@ describe('MultiChatPanel', () => {
     });
   });
 
+  describe('chat key', () => {
+    it('should key the loaded models by key, not by display name', () => {
+      const panel = new MultiChatPanel({ rmRegistry });
+      const model1 = new MockChatModel();
+      const model2 = new MockChatModel();
+      panel.open({ model: model1, key: 'a/chat.chat', displayName: 'chat' });
+      panel.open({ model: model2, key: 'b/chat.chat', displayName: 'chat' });
+
+      expect(panel.getLoadedModel('a/chat.chat')).toBe(model1);
+      expect(panel.getLoadedModel('b/chat.chat')).toBe(model2);
+      expect(panel.getLoadedModel('chat')).toBeUndefined();
+      expect(panel.getLoadedModelKeys()).toEqual([
+        'a/chat.chat',
+        'b/chat.chat'
+      ]);
+      panel.dispose();
+    });
+
+    it('should display the name and keep the key of the current chat', () => {
+      const panel = new MultiChatPanel({ rmRegistry });
+      panel.open({
+        model: new MockChatModel(),
+        key: 'chats/a.chat',
+        displayName: 'a'
+      });
+
+      expect(panel.current?.chatKey).toBe('chats/a.chat');
+      expect(panel.current?.name).toBe('a');
+      panel.dispose();
+    });
+
+    it('should open a loaded chat by key', () => {
+      const panel = new MultiChatPanel({ rmRegistry });
+      const model = new MockChatModel();
+      panel.open({ model, key: 'chats/a.chat', displayName: 'a' });
+      panel.open({
+        model: new MockChatModel(),
+        key: 'chats/b.chat',
+        displayName: 'b'
+      });
+
+      expect(panel.openIfLoaded('a')).toBe(false);
+      expect(panel.openIfLoaded('chats/a.chat')).toBe(true);
+      expect(panel.current?.model).toBe(model);
+      panel.dispose();
+    });
+
+    it('should update the key and the name of a loaded chat', () => {
+      const panel = new MultiChatPanel({ rmRegistry });
+      const model = new MockChatModel();
+      panel.open({ model, key: 'chats/a.chat', displayName: 'a' });
+
+      panel.updateLoadedChat('chats/a.chat', 'chats/b.chat', 'b');
+
+      expect(panel.getLoadedModel('chats/a.chat')).toBeUndefined();
+      expect(panel.getLoadedModel('chats/b.chat')).toBe(model);
+      expect(panel.current?.chatKey).toBe('chats/b.chat');
+      expect(panel.current?.name).toBe('b');
+
+      // Closing the chat uses the new key.
+      panel.unsetLoadedModel('chats/b.chat');
+      expect(model.isDisposed).toBe(true);
+      panel.dispose();
+    });
+
+    it('should create the model from the key selected in the placeholder', async () => {
+      const factory: IChatPlaceholderFactory = {
+        create: jest.fn().mockReturnValue(new Widget())
+      };
+      const model = new MockChatModel();
+      const createModel = jest
+        .fn()
+        .mockResolvedValue({ model, displayName: 'a' });
+      const panel = new MultiChatPanel({
+        rmRegistry,
+        placeholderFactory: factory,
+        createModel
+      });
+      const props = (factory.create as jest.Mock).mock
+        .calls[0][0] as Placeholder.IProps;
+
+      await props.open('chats/a.chat');
+
+      expect(createModel).toHaveBeenCalledWith('chats/a.chat');
+      expect(panel.getLoadedModel('chats/a.chat')).toBe(model);
+      expect(panel.current?.name).toBe('a');
+      panel.dispose();
+    });
+
+    it('should call renameChat with the chat key', () => {
+      const renameChat = jest.fn().mockResolvedValue(null);
+      const panel = new MultiChatPanel({ rmRegistry, renameChat });
+      panel.open({
+        model: new MockChatModel(),
+        key: 'chats/a.chat',
+        displayName: 'a'
+      });
+
+      const toolbar = panel.current!.toolbar;
+      const names = Array.from(toolbar.names());
+      const renameButton = (toolbar.layout as any).widgets[
+        names.indexOf('rename')
+      ] as ToolbarButton;
+      renameButton.onClick();
+
+      expect(renameChat).toHaveBeenCalledWith('chats/a.chat');
+      panel.dispose();
+    });
+  });
+
   describe('placeholderFactory', () => {
     it('should use defaultPlaceholder when no factory is provided', () => {
       const panel = new MultiChatPanel({ rmRegistry });
