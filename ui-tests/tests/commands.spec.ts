@@ -31,10 +31,10 @@ test.describe('#commandPalette', () => {
     }
   });
 
-  test('should have 3 commands in palette', async ({ page }) => {
+  test('should have 4 commands in palette', async ({ page }) => {
     await expect(
       page.locator('#modal-command-palette li[data-command^="jupyterlab-chat"]')
-    ).toHaveCount(3);
+    ).toHaveCount(4);
   });
 
   test('should create an untitled chat from command palette', async ({

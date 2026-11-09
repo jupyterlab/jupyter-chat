@@ -74,6 +74,12 @@ export interface ILabChatConfig extends IConfig {
    * The default directory where to create and look for chat.
    */
   defaultDirectory?: string;
+
+  /**
+   * Whether to show a popup with actions, such as "Add to chat", over a
+   * selection in an editor.
+   */
+  showSelectionActions?: boolean;
 }
 
 /**
@@ -139,7 +145,11 @@ export const CommandIDs = {
   /**
    * Open a chat and send a message into it.
    */
-  openWithMessage: 'jupyterlab-chat:openWithMessage'
+  openWithMessage: 'jupyterlab-chat:openWithMessage',
+  /**
+   * Stage the editor selection in a chat input.
+   */
+  addToChat: 'jupyterlab-chat:addToChat'
 };
 
 /**

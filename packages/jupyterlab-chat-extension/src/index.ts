@@ -78,6 +78,10 @@ import {
 import { chatCommandRegistryPlugin } from './chat-commands/plugins';
 import { emojiCommandsPlugin } from './chat-commands/providers/emoji';
 import { mentionCommandsPlugin } from './chat-commands/providers/user-mention';
+import {
+  selectionActionRegistryPlugin,
+  selectionPopupPlugin
+} from './selection-actions/plugins';
 
 const FACTORY = 'Chat';
 const CHAT_LIST_UPDATE_INTERVAL = 2000;
@@ -341,6 +345,8 @@ const chatConfig: JupyterFrontEndPlugin<IWidgetConfig> = {
             .composite as boolean,
           showDeleted: setting.get('showDeleted').composite as boolean,
           sendWithSelection: setting.get('sendWithSelection')
+            .composite as boolean,
+          showSelectionActions: setting.get('showSelectionActions')
             .composite as boolean,
           defaultDirectory: currentDirectory
         };
@@ -1561,6 +1567,8 @@ export default [
   footerRegistry,
   inputToolbarFactory,
   preambleRegistry,
+  selectionActionRegistryPlugin,
+  selectionPopupPlugin,
   selectionWatcher,
   emojiCommandsPlugin,
   mentionCommandsPlugin
