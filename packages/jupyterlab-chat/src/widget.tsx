@@ -22,7 +22,7 @@ export class LabChatPanel
   constructor(options: DocumentWidget.IOptions<ChatWidget, LabChatModel>) {
     super(options);
     this.addClass(MAIN_PANEL_CLASS);
-    this.model.name = this.context.localPath;
+    this.model.path = this.context.localPath;
     this.model.unreadChanged.connect(this._unreadChanged);
     // The context is ready once the document content has been loaded, which is
     // when the chat can be given an ID and become usable.
@@ -34,7 +34,7 @@ export class LabChatPanel
     // is left hanging, and let the user know.
     this.model.ready.catch(() => {
       Notification.error(
-        `Unable to open chat at given path: '${this.model.name}'.`
+        `Unable to open chat at given path: '${this.model.path}'.`
       );
       this.dispose();
     });

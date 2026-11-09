@@ -275,6 +275,18 @@ export class LabChatModel
     this._readOnly = value;
   }
 
+  /**
+   * The path of the chat file, relative to the server root.
+   *
+   * For now, it is the same value as the model `name`.
+   */
+  get path(): string {
+    return this.name;
+  }
+  set path(value: string) {
+    this.name = value;
+  }
+
   // Declaring `set id` in this subclass shadows the base class's accessor
   // property entirely, so `get id` must be redeclared here too or reading
   // `.id` on a LabChatModel returns undefined even after `_id` is set.
@@ -307,7 +319,7 @@ export class LabChatModel
    */
   markDocumentSynced(): void {
     if (this._wsHandler) {
-      this._wsHandler.setPath(this.name);
+      this._wsHandler.setPath(this.path);
       this._wsHandler.initialize();
       this._wsHandler.ready
         .then(() => {
@@ -622,7 +634,7 @@ export class LabChatModel
       return;
     }
     try {
-      const file = await this.documentManager.services.contents.get(this.name, {
+      const file = await this.documentManager.services.contents.get(this.path, {
         content: true,
         format: 'text'
       });
@@ -642,7 +654,7 @@ export class LabChatModel
       return;
     }
     try {
-      await this.documentManager.services.contents.save(this.name, {
+      await this.documentManager.services.contents.save(this.path, {
         type: 'file',
         format: 'text',
         content: this.toString()

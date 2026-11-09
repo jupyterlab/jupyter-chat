@@ -62,6 +62,7 @@ import {
   IActiveCellManagerToken,
   IChatFactory,
   IChatToolbarFactory,
+  ILabChatModel,
   IMultiChatPanel,
   ISelectionWatcherToken,
   IWelcomeMessage,
@@ -71,6 +72,7 @@ import {
   WidgetConfig,
   YChat,
   chatFileType,
+  getChatPath,
   getDisplayName,
   isCollaborative,
   resolveChatRenamePath
@@ -148,7 +150,7 @@ async function createChatModel(
 
   // The LabChatModel initialize a shared model if undefined.
   const chatModel = modelFactory.createNew({ sharedModel });
-  chatModel.name = fileModel.path;
+  chatModel.path = fileModel.path;
 
   if (contentProvider) {
     // Chats opened in the side panel have no document context, so the provider
@@ -583,11 +585,15 @@ const chatTracker: JupyterFrontEndPlugin<IChatTracker> = {
         const newPath = change.newValue?.path;
         if (oldPath && newPath && oldPath !== newPath) {
           // Loop on all the model in tracker that have the old path as name.
-          let widget = tracker.find(widget => widget.model.name === oldPath);
+          let widget = tracker.find(
+            widget => getChatPath(widget.model) === oldPath
+          );
           while (widget) {
-            widget.model.name = newPath;
+            (widget.model as ILabChatModel).path = newPath;
             tracker.save(widget);
-            widget = tracker.find(widget => widget.model.name === oldPath);
+            widget = tracker.find(
+              widget => getChatPath(widget.model) === oldPath
+            );
           }
         }
       }
@@ -608,13 +614,15 @@ const chatTracker: JupyterFrontEndPlugin<IChatTracker> = {
       void restorer.restore(tracker, {
         command: CommandIDs.openChat,
         args: widget => ({
-          filepath: widget.model.name ?? '',
+          filepath: getChatPath(widget.model) ?? '',
           inSidePanel: widget.area === 'sidebar',
           startup: true
         }),
         name: widget => {
           const area = widget.area ?? 'main';
-          return area === 'main' ? widget.model.name : 'sidebar';
+          return area === 'main'
+            ? (getChatPath(widget.model) ?? '')
+            : 'sidebar';
         },
         when: openCommandReady.promise
       });
@@ -880,7 +888,10 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           if (!current) {
             return;
           }
-          const path = current.model.name;
+          const path = getChatPath(current.model);
+          if (!path) {
+            return;
+          }
           try {
             const widget = await commands.execute(CommandIDs.openChat, {
               filepath: path
@@ -1133,16 +1144,15 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
       execute: async (args): Promise<string | null> => {
         let oldPath = args.oldPath as string;
         let newPath = args.newPath as string | null;
+        if (!oldPath && tracker.currentWidget) {
+          oldPath = getChatPath(tracker.currentWidget.model) ?? '';
+        }
         if (!oldPath) {
-          if (tracker.currentWidget) {
-            oldPath = tracker.currentWidget.model.name;
-          } else {
-            showErrorMessage(
-              trans.__('Error renaming chat'),
-              trans.__('Missing old path')
-            );
-            return null;
-          }
+          showErrorMessage(
+            trans.__('Error renaming chat'),
+            trans.__('Missing old path')
+          );
+          return null;
         }
 
         // Ask user if new name not passed in args
