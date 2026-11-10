@@ -14,6 +14,12 @@ import { MultiChatPanel } from '../widgets/multichat-panel';
 import { defaultPlaceholder, Placeholder } from '../widgets/placeholder';
 import { MockChatModel } from './mocks';
 
+function namedModel(name: string): MockChatModel {
+  const model = new MockChatModel();
+  model.name = name;
+  return model;
+}
+
 describe('MultiChatPanel', () => {
   let rmRegistry: RenderMimeRegistry;
 
@@ -26,7 +32,8 @@ describe('MultiChatPanel', () => {
       const panel = new MultiChatPanel({ rmRegistry });
       const { MockChatModel } = await import('./mocks');
       const model = new MockChatModel();
-      panel.open({ model, displayName: 'test-chat' });
+      model.name = 'test-chat';
+      panel.open({ model });
 
       panel.unsetLoadedModel('test-chat');
 
@@ -38,7 +45,8 @@ describe('MultiChatPanel', () => {
       const panel = new MultiChatPanel({ rmRegistry });
       const { MockChatModel } = await import('./mocks');
       const model = new MockChatModel();
-      panel.open({ model, displayName: 'test-chat' });
+      model.name = 'test-chat';
+      panel.open({ model });
 
       panel.unsetLoadedModel('test-chat', false);
 
@@ -51,7 +59,8 @@ describe('MultiChatPanel', () => {
       const panel = new MultiChatPanel({ rmRegistry });
       const { MockChatModel } = await import('./mocks');
       const model = new MockChatModel();
-      panel.open({ model, displayName: 'test-chat' });
+      model.name = 'test-chat';
+      panel.open({ model });
 
       const toolbar = panel.current!.toolbar;
       const names = Array.from(toolbar.names());
@@ -72,7 +81,8 @@ describe('MultiChatPanel', () => {
       const panel = new MultiChatPanel({ rmRegistry });
       const { MockChatModel } = await import('./mocks');
       const model = new MockChatModel();
-      panel.open({ model, displayName: 'test-chat' });
+      model.name = 'test-chat';
+      panel.open({ model });
 
       panel.unsetLoadedModel('test-chat', false);
 
@@ -87,8 +97,10 @@ describe('MultiChatPanel', () => {
       const panel = new MultiChatPanel({ rmRegistry });
       const model1 = new MockChatModel();
       const model2 = new MockChatModel();
-      panel.open({ model: model1, key: 'a/chat.chat', displayName: 'chat' });
-      panel.open({ model: model2, key: 'b/chat.chat', displayName: 'chat' });
+      model1.name = 'chat';
+      panel.open({ model: model1, key: 'a/chat.chat' });
+      model2.name = 'chat';
+      panel.open({ model: model2, key: 'b/chat.chat' });
 
       expect(panel.getLoadedModel('a/chat.chat')).toBe(model1);
       expect(panel.getLoadedModel('b/chat.chat')).toBe(model2);
@@ -103,9 +115,8 @@ describe('MultiChatPanel', () => {
     it('should display the name and keep the key of the current chat', () => {
       const panel = new MultiChatPanel({ rmRegistry });
       panel.open({
-        model: new MockChatModel(),
-        key: 'chats/a.chat',
-        displayName: 'a'
+        model: namedModel('a'),
+        key: 'chats/a.chat'
       });
 
       expect(panel.current?.chatKey).toBe('chats/a.chat');
@@ -116,11 +127,11 @@ describe('MultiChatPanel', () => {
     it('should open a loaded chat by key', () => {
       const panel = new MultiChatPanel({ rmRegistry });
       const model = new MockChatModel();
-      panel.open({ model, key: 'chats/a.chat', displayName: 'a' });
+      model.name = 'a';
+      panel.open({ model, key: 'chats/a.chat' });
       panel.open({
-        model: new MockChatModel(),
-        key: 'chats/b.chat',
-        displayName: 'b'
+        model: namedModel('b'),
+        key: 'chats/b.chat'
       });
 
       expect(panel.openIfLoaded('a')).toBe(false);
@@ -129,17 +140,18 @@ describe('MultiChatPanel', () => {
       panel.dispose();
     });
 
-    it('should update the key and the name of a loaded chat', () => {
+    it('should update the key of a loaded chat', () => {
       const panel = new MultiChatPanel({ rmRegistry });
       const model = new MockChatModel();
-      panel.open({ model, key: 'chats/a.chat', displayName: 'a' });
+      model.name = 'a';
+      panel.open({ model, key: 'chats/a.chat' });
 
-      panel.updateLoadedChat('chats/a.chat', 'chats/b.chat', 'b');
+      panel.updateLoadedChat('chats/a.chat', 'chats/b.chat');
 
       expect(panel.getLoadedModel('chats/a.chat')).toBeUndefined();
       expect(panel.getLoadedModel('chats/b.chat')).toBe(model);
       expect(panel.current?.chatKey).toBe('chats/b.chat');
-      expect(panel.current?.name).toBe('b');
+      expect(panel.current?.name).toBe('a');
 
       // Closing the chat uses the new key.
       panel.unsetLoadedModel('chats/b.chat');
@@ -151,10 +163,8 @@ describe('MultiChatPanel', () => {
       const factory: IChatPlaceholderFactory = {
         create: jest.fn().mockReturnValue(new Widget())
       };
-      const model = new MockChatModel();
-      const createModel = jest
-        .fn()
-        .mockResolvedValue({ model, displayName: 'a' });
+      const model = namedModel('a');
+      const createModel = jest.fn().mockResolvedValue({ model });
       const panel = new MultiChatPanel({
         rmRegistry,
         placeholderFactory: factory,
@@ -175,9 +185,8 @@ describe('MultiChatPanel', () => {
       const renameChat = jest.fn().mockResolvedValue(null);
       const panel = new MultiChatPanel({ rmRegistry, renameChat });
       panel.open({
-        model: new MockChatModel(),
-        key: 'chats/a.chat',
-        displayName: 'a'
+        model: namedModel('a'),
+        key: 'chats/a.chat'
       });
 
       const toolbar = panel.current!.toolbar;
@@ -207,11 +216,17 @@ describe('MultiChatPanel', () => {
     it('should display the new model name of the current chat', () => {
       const panel = new MultiChatPanel({ rmRegistry });
       const model = new MockChatModel();
-      panel.open({ model, key: 'chats/a.chat', displayName: 'a' });
+      model.name = 'a';
+      panel.open({ model, key: 'chats/a.chat' });
 
       model.name = 'My chat';
 
       expect(panel.current?.name).toBe('My chat');
+      expect(panel.current?.title.label).toBe('My chat');
+      expect(
+        panel.current?.node.querySelector('.jp-chat-sidepanel-widget-title')
+          ?.textContent
+      ).toBe('My chat');
       expect(panel.current?.chatKey).toBe('chats/a.chat');
       panel.dispose();
     });
@@ -219,11 +234,11 @@ describe('MultiChatPanel', () => {
     it('should use the new model name when reopening a chat', () => {
       const panel = new MultiChatPanel({ rmRegistry });
       const model = new MockChatModel();
-      panel.open({ model, key: 'chats/a.chat', displayName: 'a' });
+      model.name = 'a';
+      panel.open({ model, key: 'chats/a.chat' });
       panel.open({
-        model: new MockChatModel(),
-        key: 'chats/b.chat',
-        displayName: 'b'
+        model: namedModel('b'),
+        key: 'chats/b.chat'
       });
 
       // The model name changes while the chat is not displayed.
@@ -237,7 +252,8 @@ describe('MultiChatPanel', () => {
     it('should not follow the model name once the chat is closed', () => {
       const panel = new MultiChatPanel({ rmRegistry });
       const model = new MockChatModel();
-      panel.open({ model, key: 'chats/a.chat', displayName: 'a' });
+      model.name = 'a';
+      panel.open({ model, key: 'chats/a.chat' });
       panel.unsetLoadedModel('chats/a.chat', false);
 
       model.name = 'My chat';
@@ -267,7 +283,8 @@ describe('MultiChatPanel', () => {
       props.chatNamesChanged!.connect((_, names) => emitted.push(names));
 
       const model = new MockChatModel();
-      panel.open({ model, key: 'chats/a.chat', displayName: 'a' });
+      model.name = 'a';
+      panel.open({ model, key: 'chats/a.chat' });
       model.name = 'My chat';
 
       expect(emitted).toEqual([
@@ -415,7 +432,8 @@ describe('MultiChatPanel', () => {
 
       // Simulate opening and closing a chat to trigger _addPlaceholder again.
       const model = new MockChatModel();
-      panel.open({ model, displayName: 'test-chat' });
+      model.name = 'test-chat';
+      panel.open({ model });
       panel.unsetLoadedModel('test-chat');
 
       expect(factory.create).toHaveBeenCalledTimes(2);
@@ -426,9 +444,7 @@ describe('MultiChatPanel', () => {
   describe('side panel toolbar', () => {
     it('should include the responsive toolbar opener for overflow actions', async () => {
       const panel = new MultiChatPanel({ rmRegistry });
-      const { MockChatModel } = await import('./mocks');
-
-      panel.open({ model: new MockChatModel(), displayName: 'test-chat' });
+      panel.open({ model: namedModel('test-chat') });
 
       const opener = panel.current?.toolbar.node.querySelector(
         '.jp-Toolbar-responsive-opener'
@@ -449,7 +465,8 @@ describe('MultiChatPanel', () => {
         chatToolbarFactory: factory
       });
       const model = new MockChatModel();
-      const chatWidget = panel.open({ model, displayName: 'test' });
+      model.name = 'test';
+      const chatWidget = panel.open({ model });
       expect(factory).toHaveBeenCalledTimes(1);
       expect(factory.mock.calls[0][0].widget).toBe(chatWidget);
       panel.dispose();
@@ -463,7 +480,8 @@ describe('MultiChatPanel', () => {
         ])
       });
       const model = new MockChatModel();
-      panel.open({ model, displayName: 'test' });
+      model.name = 'test';
+      panel.open({ model });
       const toolbar = (panel.current as unknown as PanelWithToolbar).toolbar;
       expect(Array.from(toolbar.names())).toContain('myButton');
       panel.dispose();
@@ -477,7 +495,8 @@ describe('MultiChatPanel', () => {
         ])
       });
       const model = new MockChatModel();
-      panel.open({ model, displayName: 'test' });
+      model.name = 'test';
+      panel.open({ model });
       const toolbar = (panel.current as unknown as PanelWithToolbar).toolbar;
       const names = Array.from(toolbar.names());
       expect(names.indexOf('myButton')).toBeLessThan(names.indexOf('close'));
@@ -493,7 +512,8 @@ describe('MultiChatPanel', () => {
         ])
       });
       const model = new MockChatModel();
-      panel.open({ model, displayName: 'test' });
+      model.name = 'test';
+      panel.open({ model });
       const toolbar = (panel.current as unknown as PanelWithToolbar).toolbar;
       const names = Array.from(toolbar.names());
       expect(names).toContain('item1');
@@ -513,11 +533,13 @@ describe('MultiChatPanel', () => {
         chatToolbarFactory: factory
       });
       const model1 = new MockChatModel();
-      panel.open({ model: model1, displayName: 'chat1' });
+      model1.name = 'chat1';
+      panel.open({ model: model1 });
       panel.unsetLoadedModel('chat1');
 
       const model2 = new MockChatModel();
-      panel.open({ model: model2, displayName: 'chat2' });
+      model2.name = 'chat2';
+      panel.open({ model: model2 });
 
       expect(factory).toHaveBeenCalledTimes(2);
       expect(factory.mock.results[0].value).not.toBe(

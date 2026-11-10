@@ -170,8 +170,7 @@ async function createChatModel(
 
   return {
     model: chatModel,
-    key: fileModel.path,
-    displayName: chatModel.name
+    key: fileModel.path
   };
 }
 

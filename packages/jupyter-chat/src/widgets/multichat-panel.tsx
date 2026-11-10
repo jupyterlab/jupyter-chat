@@ -171,10 +171,9 @@ export class MultiChatPanel extends PanelWithToolbar {
   /**
    * Add a chat to the panel by creating or showing its widget.
    *
-   * The chat is identified by `args.key`, defaulting to the display name, or to
-   * the model name.
+   * The chat is identified by `args.key`, defaulting to the model name.
    *
-   * @param args - the chat args including model, key and display name.
+   * @param args - the chat args including model and key.
    */
   open(args: MultiChatPanel.IOpenChatArgs): ChatWidget | undefined {
     const { model } = args;
@@ -182,12 +181,11 @@ export class MultiChatPanel extends PanelWithToolbar {
       return;
     }
 
-    const key = args.key ?? args.displayName ?? model.name;
+    const key = args.key ?? model.name;
 
     // Add model to loaded models
     if (!this._loadedModels.has(key)) {
-      const name = args.displayName ?? this._chatNames[key] ?? model.name;
-      this._loadedModels.set(key, { model, name });
+      this._loadedModels.set(key, model);
       model.nameChanged.connect(this._loadedModelNameChanged, this);
       this._updateLoadedChats();
     }
@@ -200,7 +198,7 @@ export class MultiChatPanel extends PanelWithToolbar {
    * Get a loaded model by chat key, or undefined if not loaded.
    */
   getLoadedModel(key: string): IChatModel | undefined {
-    return this._loadedModels.get(key)?.model;
+    return this._loadedModels.get(key);
   }
 
   /**
@@ -211,32 +209,22 @@ export class MultiChatPanel extends PanelWithToolbar {
   }
 
   /**
-   * Update the key and optionally the name of a loaded chat (e.g. when the chat
-   * file has been renamed).
+   * Update the key of a loaded chat (e.g. when the chat file has been renamed).
    *
    * @param oldKey - the current key of the chat.
    * @param newKey - the new key of the chat.
-   * @param name - the new name of the chat, unchanged if not provided.
    */
-  updateLoadedChat(oldKey: string, newKey: string, name?: string): void {
-    const loaded = this._loadedModels.get(oldKey);
-    if (!loaded) {
+  updateLoadedChat(oldKey: string, newKey: string): void {
+    const model = this._loadedModels.get(oldKey);
+    if (!model || newKey === oldKey) {
       return;
     }
-    if (newKey !== oldKey) {
-      this._loadedModels.delete(oldKey);
-      this._loadedModels.set(newKey, loaded);
-    }
+    this._loadedModels.delete(oldKey);
+    this._loadedModels.set(newKey, model);
     const current = this.current;
     if (current?.chatKey === oldKey) {
       current.chatKey = newKey;
-      if (name !== undefined) {
-        // Updates the loaded chat name through the nameChanged signal.
-        current.name = name;
-      }
       this._chatSelectorPopup?.setCurrentChat(newKey);
-    } else if (name !== undefined) {
-      loaded.name = name;
     }
     this._updateLoadedChats();
   }
@@ -249,11 +237,10 @@ export class MultiChatPanel extends PanelWithToolbar {
    * @param dispose - whether to dispose of the model.
    */
   unsetLoadedModel(key: string, dispose = true): void {
-    const loaded = this._loadedModels.get(key);
-    if (loaded) {
+    const model = this._loadedModels.get(key);
+    if (model) {
       // If this is the currently displayed chat, remove it.
-      if (this.current?.model === loaded.model) {
-        this.current.nameChanged.disconnect(this._modelNameChanged);
+      if (this.current?.model === model) {
         this.current.dispose();
         this._currentWidget = undefined;
 
@@ -264,9 +251,9 @@ export class MultiChatPanel extends PanelWithToolbar {
         this._addPlaceholder();
       }
 
-      loaded.model.nameChanged.disconnect(this._loadedModelNameChanged, this);
+      model.nameChanged.disconnect(this._loadedModelNameChanged, this);
       if (dispose) {
-        loaded.model.dispose();
+        model.dispose();
       }
       this._loadedModels.delete(key);
       this._updateLoadedChats();
@@ -274,7 +261,8 @@ export class MultiChatPanel extends PanelWithToolbar {
   }
 
   /**
-   * Update the name of a loaded chat when its model name changes.
+   * Update the name of a loaded chat in the chat selector when its model name
+   * changes.
    *
    * The name is also updated in the chat list, to be up to date once the chat
    * is unloaded.
@@ -282,21 +270,18 @@ export class MultiChatPanel extends PanelWithToolbar {
   private _loadedModelNameChanged(model: IChatModel, name: string): void {
     let chatNamesChanged = false;
     for (const [key, loaded] of this._loadedModels) {
-      if (loaded.model === model) {
-        loaded.name = name;
-        if (key in this._chatNames && this._chatNames[key] !== name) {
-          this._chatNames = { ...this._chatNames, [key]: name };
-          chatNamesChanged = true;
-        }
+      if (
+        loaded === model &&
+        key in this._chatNames &&
+        this._chatNames[key] !== name
+      ) {
+        this._chatNames = { ...this._chatNames, [key]: name };
+        chatNamesChanged = true;
       }
     }
     if (chatNamesChanged) {
       this._chatSelectorPopup?.updateChats(this._chatNames);
       this._chatNamesChanged.emit(this._chatNames);
-    }
-    if (this.current?.model === model) {
-      // Also updates the loaded chats through the nameChanged signal.
-      this.current.name = name;
     }
     this._updateLoadedChats();
   }
@@ -306,8 +291,8 @@ export class MultiChatPanel extends PanelWithToolbar {
    */
   private _updateLoadedChats(): void {
     const loaded: { [key: string]: string } = {};
-    for (const [key, { name }] of this._loadedModels) {
-      loaded[key] = name;
+    for (const [key, model] of this._loadedModels) {
+      loaded[key] = model.name;
     }
     this._chatSelectorPopup?.setLoadedModels(loaded);
   }
@@ -349,15 +334,13 @@ export class MultiChatPanel extends PanelWithToolbar {
    * Open a specific chat by key, creating a new sidepanel widget.
    */
   private _open(key: string): ChatWidget | undefined {
-    const loaded = this._loadedModels.get(key);
-    if (!loaded) {
+    const model = this._loadedModels.get(key);
+    if (!model) {
       return;
     }
-    const { model, name } = loaded;
 
     // Dispose of the current chat widget or placeholder.
     if (this._currentWidget) {
-      this.current?.nameChanged.disconnect(this._modelNameChanged);
       this._currentWidget.dispose();
     }
 
@@ -379,7 +362,6 @@ export class MultiChatPanel extends PanelWithToolbar {
     const widget = new SidePanelWidget({
       widget: chatWidget,
       chatKey: key,
-      displayName: name,
       renameChat: this._renameChat,
       toolbarFactory: this._chatToolbarFactory,
       onClose: (key: string, disposeModel = true) => {
@@ -392,8 +374,6 @@ export class MultiChatPanel extends PanelWithToolbar {
     this.addWidget(widget);
     this.update();
     this._currentWidget = widget;
-
-    this.current?.nameChanged.connect(this._modelNameChanged);
 
     // Update selector to show current chat
     if (this._chatSelectorPopup) {
@@ -469,7 +449,7 @@ export class MultiChatPanel extends PanelWithToolbar {
   dispose(): void {
     this._updateChatListDebouncer.dispose();
     // Dispose all loaded models
-    for (const { model } of this._loadedModels.values()) {
+    for (const model of this._loadedModels.values()) {
       model.dispose();
     }
     this._loadedModels.clear();
@@ -480,20 +460,6 @@ export class MultiChatPanel extends PanelWithToolbar {
     }
     super.dispose();
   }
-
-  /**
-   * Update the loaded chat name when the current widget updates its name.
-   */
-  private _modelNameChanged = (
-    widget: SidePanelWidget,
-    change: { old: string; new: string }
-  ) => {
-    const loaded = this._loadedModels.get(widget.chatKey);
-    if (loaded) {
-      loaded.name = change.new;
-      this._updateLoadedChats();
-    }
-  };
 
   /**
    * Handle chat selection from the popup or the placeholder.
@@ -531,10 +497,7 @@ export class MultiChatPanel extends PanelWithToolbar {
   private _placeholderFactory?: IChatPlaceholderFactory;
   private _openChatWidget?: ReactWidget;
   private _chatSelectorPopup?: ChatSelectorPopup;
-  private _loadedModels = new Map<
-    string,
-    { model: IChatModel; name: string }
-  >();
+  private _loadedModels = new Map<string, IChatModel>();
   private _currentWidget?: SidePanelWidget | Widget;
   private _chatNames: { [key: string]: string } = {};
   private _visibilityChanged = new Signal<MultiChatPanel, boolean>(this);
@@ -604,14 +567,10 @@ export namespace MultiChatPanel {
      */
     model?: IChatModel;
     /**
-     * The unique key of the chat in the panel (e.g. the value returned by
-     * `getChatNames`). Defaults to the display name, or to the model name.
+     * The unique key of the chat in the panel (e.g. the keys returned by
+     * `getChatNames`). Defaults to the model name.
      */
     key?: string;
-    /**
-     * The display name of the chat, shown in the toolbar.
-     */
-    displayName?: string;
   }
 }
 
@@ -623,7 +582,6 @@ class SidePanelWidget extends ReactivePanelWithToolbar implements IChatPanel {
     super();
     this._chatWidget = options.widget;
     this._chatKey = options.chatKey;
-    this._displayName = options.displayName ?? options.widget.model.name;
     const trans = options.trans;
 
     this.addClass(SIDEPANEL_WIDGET_CLASS);
@@ -631,6 +589,7 @@ class SidePanelWidget extends ReactivePanelWithToolbar implements IChatPanel {
     this.toolbar.addClass('jp-SidePanel-toolbar');
     this.toolbar.addClass(TOOLBAR_CLASS);
     this._updateTitle();
+    this.model.nameChanged.connect(this._updateTitle, this);
     this.toolbar.addItem('titleSpacer', Toolbar.createSpacerItem());
 
     this.addWidget(this.toolbar);
@@ -762,32 +721,20 @@ class SidePanelWidget extends ReactivePanelWithToolbar implements IChatPanel {
   }
 
   /**
-   * The displayed name of the widget.
+   * The displayed name of the widget, which is the model name.
    */
   get name(): string {
-    return this._displayName;
-  }
-  set name(value: string) {
-    const old = this._displayName;
-    if (old === value) {
-      return;
-    }
-    this._displayName = value;
-    this._updateTitle();
-    this._nameChanged.emit({ old, new: value });
-  }
-
-  /**
-   * A signal emitting when the name has changed.
-   */
-  get nameChanged(): ISignal<SidePanelWidget, { old: string; new: string }> {
-    return this._nameChanged;
+    return this.model.name;
   }
 
   /**
    * Dispose of the resources held by the widget.
    */
   dispose(): void {
+    if (this.isDisposed) {
+      return;
+    }
+    this.model.nameChanged.disconnect(this._updateTitle, this);
     super.dispose();
   }
 
@@ -795,13 +742,14 @@ class SidePanelWidget extends ReactivePanelWithToolbar implements IChatPanel {
    * Update the title based on the chat name.
    */
   private _updateTitle(): void {
-    this.title.label = this.model.name;
-    this.title.caption = this._displayName;
+    const name = this.model.name;
+    this.title.label = name;
+    this.title.caption = name;
 
     const titleElement = document.createElement('span');
     titleElement.classList.add('jp-chat-sidepanel-widget-title');
-    titleElement.title = this._displayName;
-    titleElement.textContent = this._displayName;
+    titleElement.title = name;
+    titleElement.textContent = name;
 
     // Dispose of the previous widget.
     if (this._titleWidget) {
@@ -830,12 +778,7 @@ class SidePanelWidget extends ReactivePanelWithToolbar implements IChatPanel {
 
   private _chatWidget: ChatWidget;
   private _chatKey: string;
-  private _displayName: string;
   private _titleWidget: Widget | undefined;
-  private _nameChanged = new Signal<
-    SidePanelWidget,
-    { old: string; new: string }
-  >(this);
 }
 
 /**
@@ -858,10 +801,6 @@ namespace SidePanelWidget {
      * The callback when closing the chat, called with the chat key.
      */
     onClose: (key: string, disposeModel?: boolean) => void;
-    /**
-     * The displayed name of the chat.
-     */
-    displayName?: string;
     /**
      * The callback to rename the chat.
      */
