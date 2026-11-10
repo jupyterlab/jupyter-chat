@@ -5,6 +5,7 @@ import json
 
 from jupyterlab_chat.ws_messages import (
     ClientEditMessage,
+    ClientMetadataMessage,
     ClientSendMessage,
     ServerUsersMessage,
     ServerWritingMessage,
@@ -45,6 +46,24 @@ def test_parse_client_edit():
     )
     assert isinstance(msg, ClientEditMessage)
     assert msg.deleted is True and msg.body == ""
+
+
+def test_parse_client_metadata():
+    msg = parse_client_message(
+        {"type": "client", "action": "metadata", "metadata": {"title": "My chat"}}
+    )
+    assert isinstance(msg, ClientMetadataMessage)
+    assert msg.metadata == {"title": "My chat"}
+
+
+def test_parse_rejects_malformed_metadata():
+    assert parse_client_message({"type": "client", "action": "metadata"}) is None
+    assert (
+        parse_client_message(
+            {"type": "client", "action": "metadata", "metadata": "title"}
+        )
+        is None
+    )
 
 
 def test_parse_rejects_non_client_and_malformed():

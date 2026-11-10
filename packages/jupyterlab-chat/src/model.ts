@@ -293,12 +293,31 @@ export class LabChatModel
   }
 
   /**
+   * The title of the chat, stored in its metadata, or undefined if it has none.
+   *
+   * The chat name is its title if it has one. Setting an empty title removes it,
+   * the chat name being built from its path in that case.
+   */
+  get title(): string | undefined {
+    return validTitle(this._sharedModel.getMetadata(TITLE_METADATA_KEY));
+  }
+  set title(value: string | undefined) {
+    const title = value?.trim() ?? '';
+    if (this._wsHandler) {
+      // The server stores the title and pushes it back to the shared model.
+      this._wsHandler.setMetadata({ [TITLE_METADATA_KEY]: title });
+    } else {
+      this._sharedModel.setMetadata(TITLE_METADATA_KEY, title);
+    }
+  }
+
+  /**
    * Update the name of the chat: its title if it has one, or a name built from
    * its path otherwise (relative to the default directory, without extension).
    */
   private _updateName(): void {
     this.name =
-      validTitle(this._sharedModel.getMetadata(TITLE_METADATA_KEY)) ??
+      this.title ??
       getDisplayName(
         this._path,
         (this.config as ILabChatConfig).defaultDirectory

@@ -13,6 +13,7 @@ import {
   CLIENT,
   IClientChatWsMessage,
   IClientEditMessage,
+  IClientMetadataMessage,
   IClientSendMessage,
   IServerChatWsMessage,
   IWireMessage,
@@ -129,6 +130,19 @@ export class WebSocketHandler {
     this._send(msg);
   }
 
+  /**
+   * Ask the server to add/update chat-level metadata entries. The server pushes
+   * them back to all the clients, including this one.
+   */
+  setMetadata(metadata: Record<string, any>): void {
+    const msg: IClientMetadataMessage = {
+      type: CLIENT,
+      action: 'metadata',
+      metadata
+    };
+    this._send(msg);
+  }
+
   deleteMessage(id: string): void {
     this._send({
       type: CLIENT,
@@ -162,6 +176,10 @@ export class WebSocketHandler {
         for (const msg of data.messages ?? []) {
           this._applyMessage(msg);
         }
+        const metadata = data.metadata ?? {};
+        Object.entries(metadata).forEach(([key, value]) => {
+          this._model.sharedModel.setMetadata(key, value);
+        });
         this._connected = true;
         this._ready.resolve();
         break;

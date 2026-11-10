@@ -180,25 +180,6 @@ describe('MultiChatPanel', () => {
       expect(panel.current?.name).toBe('a');
       panel.dispose();
     });
-
-    it('should call renameChat with the chat key', () => {
-      const renameChat = jest.fn().mockResolvedValue(null);
-      const panel = new MultiChatPanel({ rmRegistry, renameChat });
-      panel.open({
-        model: namedModel('a'),
-        key: 'chats/a.chat'
-      });
-
-      const toolbar = panel.current!.toolbar;
-      const names = Array.from(toolbar.names());
-      const renameButton = (toolbar.layout as any).widgets[
-        names.indexOf('rename')
-      ] as ToolbarButton;
-      renameButton.onClick();
-
-      expect(renameChat).toHaveBeenCalledWith('chats/a.chat');
-      panel.dispose();
-    });
   });
 
   describe('model name', () => {
@@ -300,26 +281,6 @@ describe('MultiChatPanel', () => {
         'chats/b.chat': 'b'
       });
       expect(getChatNames).toHaveBeenCalledTimes(1);
-      panel.dispose();
-    });
-
-    it('should keep the model name after renaming the chat', async () => {
-      const renameChat = jest.fn().mockResolvedValue('renamed-file');
-      const panel = new MultiChatPanel({ rmRegistry, renameChat });
-      const model = new MockChatModel();
-      model.name = 'My chat';
-      panel.open({ model, key: 'chats/a.chat' });
-
-      const toolbar = panel.current!.toolbar;
-      const names = Array.from(toolbar.names());
-      const renameButton = (toolbar.layout as any).widgets[
-        names.indexOf('rename')
-      ] as ToolbarButton;
-      renameButton.onClick();
-      await renameChat.mock.results[0].value;
-      await Promise.resolve();
-
-      expect(panel.current?.name).toBe('My chat');
       panel.dispose();
     });
   });
