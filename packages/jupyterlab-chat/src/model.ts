@@ -23,7 +23,8 @@ import { Debouncer } from '@lumino/polling';
 import { ISignal, Signal } from '@lumino/signaling';
 
 import { enforceAutosaveEnabled } from './autosave';
-import { ILabChatModel, IWidgetConfig } from './token';
+import { ILabChatConfig, ILabChatModel, IWidgetConfig } from './token';
+import { getDisplayName, validTitle, TITLE_METADATA_KEY } from './utils';
 import { WebSocketHandler } from './websocket-handler';
 import { IChatChanges, IYmessage, YChat } from './ychat';
 
@@ -211,6 +212,8 @@ export class LabChatModel
 
     widgetConfig.configChanged.connect((_, config) => {
       this.config = config;
+      // The default name depends on the default directory.
+      this._updateName();
     });
 
     this.sharedModel.awareness.on('change', this.onAwarenessChange);
@@ -277,14 +280,29 @@ export class LabChatModel
 
   /**
    * The path of the chat file, relative to the server root.
-   *
-   * For now, it is the same value as the model `name`.
    */
   get path(): string {
-    return this.name;
+    return this._path;
   }
   set path(value: string) {
-    this.name = value;
+    if (this._path === value) {
+      return;
+    }
+    this._path = value;
+    this._updateName();
+  }
+
+  /**
+   * Update the name of the chat: its title if it has one, or a name built from
+   * its path otherwise (relative to the default directory, without extension).
+   */
+  private _updateName(): void {
+    this.name =
+      validTitle(this._sharedModel.getMetadata(TITLE_METADATA_KEY)) ??
+      getDisplayName(
+        this._path,
+        (this.config as ILabChatConfig).defaultDirectory
+      );
   }
 
   // Declaring `set id` in this subclass shadows the base class's accessor
@@ -299,6 +317,9 @@ export class LabChatModel
 
   protected setReady(id: string): void {
     this._documentSynced = true;
+    // The initial sync of the shared document may not emit the metadata
+    // changes, update the name from the synced title.
+    this._updateName();
     this._flushPreReadyMessages();
     super.setReady(id);
   }
@@ -787,6 +808,8 @@ export class LabChatModel
         // update the model ID.
         if (change.key === 'id') {
           this.id = change.newValue as string;
+        } else if (change.key === TITLE_METADATA_KEY) {
+          this._updateName();
         }
       });
     }
@@ -881,6 +904,7 @@ export class LabChatModel
     index: number;
     messages: IMessageContent[];
   }> = [];
+  private _path = '';
   private _dirty = false;
   private _readOnly = false;
   private _contentChanged = new Signal<this, void>(this);

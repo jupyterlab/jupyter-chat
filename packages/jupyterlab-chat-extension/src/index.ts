@@ -73,6 +73,7 @@ import {
   YChat,
   chatFileType,
   getChatPath,
+  getChatTitleFromContent,
   getDisplayName,
   isCollaborative,
   resolveChatRenamePath
@@ -170,7 +171,7 @@ async function createChatModel(
   return {
     model: chatModel,
     key: fileModel.path,
-    displayName: getDisplayName(fileModel.path, defaultDirectory)
+    displayName: chatModel.name
   };
 }
 
@@ -1351,21 +1352,68 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
 
     const chatFileExtension = chatFileType.extensions[0];
 
-    // Get the chats in default directory, mapping their paths to their names.
+    // The titles read from the chat files, cached by path with the file's last
+    // modification time, to avoid reading again the files that did not change.
+    const titlesCache = new Map<
+      string,
+      { lastModified: string; title: string | undefined }
+    >();
+
+    // Get the title of a chat file (stored in its metadata), using the cache.
+    const getTitle = async (
+      file: Contents.IModel
+    ): Promise<string | undefined> => {
+      const cached = titlesCache.get(file.path);
+      if (cached && cached.lastModified === file.last_modified) {
+        return cached.title;
+      }
+      try {
+        const model = await serviceManager.contents.get(file.path, {
+          content: true,
+          type: 'file',
+          format: 'text'
+        });
+        const title = getChatTitleFromContent(model.content);
+        titlesCache.set(file.path, {
+          lastModified: file.last_modified,
+          title
+        });
+        return title;
+      } catch (e) {
+        // Not cached, to retry on the next update.
+        console.warn(`Cannot read the title of the chat '${file.path}'`, e);
+        return undefined;
+      }
+    };
+
+    // Get the chats in default directory, mapping their paths to their names:
+    // their title if they have one, or their file name otherwise.
     const getChatNames = async () => {
       const dirContents = await serviceManager.contents.get(
         widgetConfig.config.defaultDirectory ?? '',
         { content: true }
       );
-      const names: { [path: string]: string } = {};
-      for (const file of dirContents.content) {
-        if (
+      const files = (dirContents.content as Contents.IModel[]).filter(
+        file =>
           (file.type === 'file' || file.type === chatFileType.contentType) &&
           file.name.endsWith(chatFileExtension)
-        ) {
-          names[file.path] = file.name.replace(chatFileExtension, '');
+      );
+
+      // Drop the cached titles of the files that are no longer listed.
+      const paths = new Set(files.map(file => file.path));
+      for (const path of titlesCache.keys()) {
+        if (!paths.has(path)) {
+          titlesCache.delete(path);
         }
       }
+
+      const names: { [path: string]: string } = {};
+      await Promise.all(
+        files.map(async file => {
+          names[file.path] =
+            (await getTitle(file)) ?? file.name.replace(chatFileExtension, '');
+        })
+      );
       return names;
     };
 
@@ -1415,22 +1463,19 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
           chatPanel.unsetLoadedModel(change.oldValue.path);
         }
       }
-      const updateActions = ['new', 'rename'];
+      // A saved file may have a new title.
+      const updateActions = ['new', 'rename', 'save'];
       if (
         updateActions.includes(change.type) &&
         change.newValue?.path?.endsWith(chatFileType.extensions[0])
       ) {
         chatPanel.updateChatList();
-        // Update the key and the name of the chat if it is loaded in the side
-        // panel and its file is renamed.
+        // Update the key of the chat if it is loaded in the side panel and its
+        // file is renamed. Its name follows the model name.
         const oldPath = change.oldValue?.path;
         const newPath = change.newValue?.path;
         if (oldPath && newPath && oldPath !== newPath) {
-          chatPanel.updateLoadedChat(
-            oldPath,
-            newPath,
-            getDisplayName(newPath, widgetConfig.config.defaultDirectory)
-          );
+          chatPanel.updateLoadedChat(oldPath, newPath);
         }
       }
     });

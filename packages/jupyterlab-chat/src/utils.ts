@@ -9,6 +9,41 @@ import { PathExt } from '@jupyterlab/coreutils';
 import { chatFileType, ILabChatModel } from './token';
 
 /**
+ * The chat-level metadata key holding the optional title of the chat.
+ */
+export const TITLE_METADATA_KEY = 'title';
+
+/**
+ * Return the title of a chat from the content of its file.
+ *
+ * @param content - the content of the chat file (JSON string or parsed object).
+ * @returns - the title, or undefined if the chat has no valid title or if the
+ *   content cannot be parsed.
+ */
+export function getChatTitleFromContent(content: unknown): string | undefined {
+  let source = content;
+  if (typeof source === 'string') {
+    try {
+      source = JSON.parse(source);
+    } catch {
+      return undefined;
+    }
+  }
+  const metadata = (source as { metadata?: unknown } | null)?.metadata;
+  if (typeof metadata !== 'object' || metadata === null) {
+    return undefined;
+  }
+  return validTitle((metadata as Record<string, unknown>)[TITLE_METADATA_KEY]);
+}
+
+/**
+ * Return the value if it is a valid title (a non-empty string), or undefined.
+ */
+export function validTitle(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() ? value : undefined;
+}
+
+/**
  * Return the path of the chat file of a model.
  *
  * Useful when the model is only known as a generic chat model (e.g. from the
