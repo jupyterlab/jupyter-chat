@@ -132,6 +132,7 @@ describe('LabChatModel', () => {
 
       expect(model.title).toBeUndefined();
       expect(model.name).toBe('chats/my-chat');
+      expect(sharedModel.getSource().metadata).not.toHaveProperty('title');
     });
 
     it('should send the title to the server in websocket mode', () => {
@@ -150,6 +151,10 @@ describe('LabChatModel', () => {
       expect(setMetadata).toHaveBeenCalledWith({ title: 'My chat' });
       // The shared model is updated when the server pushes the title back.
       expect(wsSharedModel.getMetadata('title')).toBeUndefined();
+
+      // An empty title asks the server to remove it.
+      wsModel.title = ' ';
+      expect(setMetadata).toHaveBeenLastCalledWith({ title: null });
       Signal.clearData(wsModel);
       wsSharedModel.dispose();
     });

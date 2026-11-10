@@ -217,6 +217,17 @@ export class YChat extends YDocument<IChatChanges> {
     });
   }
 
+  /**
+   * Delete a chat-level metadata entry.
+   *
+   * @param key - the metadata key.
+   */
+  deleteMetadata(key: string): void {
+    this.transact(() => {
+      this._metadata.delete(key);
+    });
+  }
+
   getMessage(index: number): IYmessage | undefined {
     return this._messages.get(index).toJSON() as IYmessage;
   }

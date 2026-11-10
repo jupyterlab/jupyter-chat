@@ -302,12 +302,15 @@ export class LabChatModel
     return validTitle(this._sharedModel.getMetadata(TITLE_METADATA_KEY));
   }
   set title(value: string | undefined) {
-    const title = value?.trim() ?? '';
+    const title = value?.trim() || null;
     if (this._wsHandler) {
-      // The server stores the title and pushes it back to the shared model.
+      // The server stores the title and pushes it back to the shared model,
+      // a null value removing it.
       this._wsHandler.setMetadata({ [TITLE_METADATA_KEY]: title });
-    } else {
+    } else if (title) {
       this._sharedModel.setMetadata(TITLE_METADATA_KEY, title);
+    } else {
+      this._sharedModel.deleteMetadata(TITLE_METADATA_KEY);
     }
   }
 

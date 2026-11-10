@@ -255,7 +255,8 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
     ) -> None:
         """Add/update chat-level metadata entries, and push them to the clients.
 
-        The chat ID is owned by the server and cannot be changed by a client.
+        A ``None`` value removes the entry. The chat ID is owned by the server and
+        cannot be changed by a client.
         """
         updated = False
         for key, value in msg.metadata.items():
@@ -263,7 +264,10 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
                 self.log.warning("Ignoring a client update of the chat ID")
                 continue
             # Also broadcasts the change to the connected clients.
-            model.set_metadata(key, value)
+            if value is None:
+                model.delete_metadata(key)
+            else:
+                model.set_metadata(key, value)
             updated = True
         if updated:
             model.save()

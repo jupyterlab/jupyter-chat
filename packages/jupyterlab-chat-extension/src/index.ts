@@ -1164,10 +1164,10 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
               description:
                 'The area of the chat panel (main or sidebar). Uses the current chat if not provided.'
             },
-            title: {
+            name: {
               type: 'string',
               description:
-                'The new title of the chat, an empty title removes it. Prompts the user if not provided.'
+                'The new name of the chat, stored as its title. An empty name removes the title. Prompts the user if not provided.'
             }
           }
         }
@@ -1178,8 +1178,8 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         if (!model) {
           return;
         }
-        let title = args.title as string | undefined;
-        if (title === undefined) {
+        let name = args.name as string | undefined;
+        if (name === undefined) {
           const result = await InputDialog.getText({
             title: trans.__('Rename Chat'),
             text: model.name,
@@ -1188,9 +1188,9 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           if (!result.button.accept) {
             return;
           }
-          title = result.value ?? '';
+          name = result.value ?? '';
         }
-        model.title = title;
+        model.title = name;
       }
     });
 

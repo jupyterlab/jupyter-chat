@@ -374,6 +374,11 @@ class WsChatModel(BaseChatModel):
         # Push the change to connected clients (same rationale as set_user).
         self.broadcast(to_wire(ServerMetadataMessage(metadata={name: metadata})))
 
+    def delete_metadata(self, name: str) -> None:
+        if self._metadata.pop(name, None) is None:
+            return
+        self.broadcast(to_wire(ServerMetadataMessage(metadata={name: None})))
+
     # ------------------------------------------------------------------
     # Message observers
     # ------------------------------------------------------------------

@@ -360,6 +360,10 @@ class BaseChatModel(ABC):
         ...
 
     @abstractmethod
+    def delete_metadata(self, name: str) -> None:
+        ...
+
+    @abstractmethod
     def observe_messages(
         self, callback: MessageObserverCallback
     ) -> MessageObserver:
