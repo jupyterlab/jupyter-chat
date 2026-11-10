@@ -47,7 +47,7 @@ test.describe('#invalid-chat-path', webSocketOnly, () => {
         const model = factory.createNew({});
         model.path = unsafePath;
         model.markDocumentSynced();
-        chatPanel.open({ model, displayName: 'invalid-chat' });
+        chatPanel.open({ model, key: unsafePath });
       },
       { unsafePath: UNSAFE_PATH, panelId: CHAT_PANEL_ID }
     );
