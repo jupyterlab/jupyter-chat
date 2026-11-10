@@ -1150,6 +1150,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
     // Command to rename a chat, by setting its title. The chat file is not
     // renamed, this can be done from the file browser.
     commands.addCommand(CommandIDs.renameChat, {
+      label: args => (args.area ? '' : trans.__('Rename chat')),
       caption: trans.__('Rename the chat'),
       icon: editIcon,
       describedBy: {
@@ -1187,6 +1188,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           }
           name = result.value ?? '';
         }
+        await model.ready;
         model.title = name;
       }
     });
@@ -1379,10 +1381,17 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     const getTitle = async (
       file: Contents.IModel
     ): Promise<string | undefined> => {
+      // Avoid getting content from opened chat.
+      const loaded = chatPanel.getLoadedModel(file.path);
+      if (loaded && 'title' in loaded) {
+        return (loaded as ILabChatModel).title;
+      }
+      // Check for cache.
       const cached = titlesCache.get(file.path);
       if (cached && cached.lastModified === file.last_modified) {
         return cached.title;
       }
+      // Load the file content to get the title.
       try {
         const model = await serviceManager.contents.get(file.path, {
           content: true,
@@ -1481,11 +1490,17 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
         change.newValue?.path?.endsWith(chatFileType.extensions[0])
       ) {
         chatPanel.updateChatList();
-        // Update the key of the chat if it is loaded in the side panel and its
-        // file is renamed. Its name follows the model name.
+        // Update the path and the key of the chat if it is loaded in the side
+        // panel and its file is renamed. Its name follows the model name.
+        // The path must be updated here, since a loaded chat which is not
+        // displayed has no widget in the tracker.
         const oldPath = change.oldValue?.path;
         const newPath = change.newValue?.path;
         if (oldPath && newPath && oldPath !== newPath) {
+          const model = chatPanel.getLoadedModel(oldPath);
+          if (model && getChatPath(model) !== undefined) {
+            (model as ILabChatModel).path = newPath;
+          }
           chatPanel.updateLoadedChat(oldPath, newPath);
         }
       }
