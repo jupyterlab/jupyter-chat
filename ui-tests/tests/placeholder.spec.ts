@@ -122,9 +122,7 @@ test.describe('#placeholder', () => {
         '.jp-chat-sidepanel-widget .jp-chat-sidepanel-widget-toolbar'
       );
       await expect(chatToolbar).toBeVisible();
-      await expect(
-        chatToolbar.locator('.jp-chat-sidepanel-widget-title')
-      ).toHaveText(CHAT_NAME);
+      await expect(chatToolbar.locator('.jp-chat-name')).toHaveText(CHAT_NAME);
     });
 
     test('should hide the placeholder after opening a chat', async ({

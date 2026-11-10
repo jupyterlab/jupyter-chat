@@ -224,8 +224,7 @@ describe('MultiChatPanel', () => {
       expect(panel.current?.name).toBe('My chat');
       expect(panel.current?.title.label).toBe('My chat');
       expect(
-        panel.current?.node.querySelector('.jp-chat-sidepanel-widget-title')
-          ?.textContent
+        panel.current?.node.querySelector('.jp-chat-name')?.textContent
       ).toBe('My chat');
       expect(panel.current?.chatKey).toBe('chats/a.chat');
       panel.dispose();
@@ -487,19 +486,68 @@ describe('MultiChatPanel', () => {
       panel.dispose();
     });
 
-    it('should insert the item before "close"', () => {
+    it('should insert the items at the beginning of the toolbar', () => {
+      const panel = new MultiChatPanel({
+        rmRegistry,
+        chatToolbarFactory: makeFactory([
+          { name: 'item1', widget: new Widget() },
+          { name: 'item2', widget: new Widget() }
+        ])
+      });
+      panel.open({ model: namedModel('test') });
+      const toolbar = (panel.current as unknown as PanelWithToolbar).toolbar;
+      expect(Array.from(toolbar.names()).slice(0, 2)).toEqual([
+        'item1',
+        'item2'
+      ]);
+      panel.dispose();
+    });
+
+    it('should insert the items added later at their index', () => {
+      const items = new ObservableList<ToolbarRegistry.IToolbarItem>({
+        values: [
+          { name: 'item1', widget: new Widget() },
+          { name: 'item3', widget: new Widget() }
+        ]
+      });
+      const panel = new MultiChatPanel({
+        rmRegistry,
+        chatToolbarFactory: jest.fn().mockReturnValue(items)
+      });
+      panel.open({ model: namedModel('test') });
+
+      items.insert(1, { name: 'item2', widget: new Widget() });
+
+      const toolbar = (panel.current as unknown as PanelWithToolbar).toolbar;
+      expect(Array.from(toolbar.names()).slice(0, 3)).toEqual([
+        'item1',
+        'item2',
+        'item3'
+      ]);
+      panel.dispose();
+    });
+
+    it('should not add the default title when a factory is provided', () => {
       const panel = new MultiChatPanel({
         rmRegistry,
         chatToolbarFactory: makeFactory([
           { name: 'myButton', widget: new Widget() }
         ])
       });
-      const model = new MockChatModel();
-      model.name = 'test';
-      panel.open({ model });
+      panel.open({ model: namedModel('test') });
       const toolbar = (panel.current as unknown as PanelWithToolbar).toolbar;
-      const names = Array.from(toolbar.names());
-      expect(names.indexOf('myButton')).toBeLessThan(names.indexOf('close'));
+      expect(Array.from(toolbar.names())).not.toContain('chatName');
+      panel.dispose();
+    });
+
+    it('should add the default title when no factory is provided', () => {
+      const panel = new MultiChatPanel({ rmRegistry });
+      panel.open({ model: namedModel('test') });
+      const toolbar = (panel.current as unknown as PanelWithToolbar).toolbar;
+      expect(Array.from(toolbar.names()).slice(0, 2)).toEqual([
+        'chatName',
+        'chatNameSpacer'
+      ]);
       panel.dispose();
     });
 
