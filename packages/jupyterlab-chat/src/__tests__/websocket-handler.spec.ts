@@ -124,6 +124,13 @@ describe('WebSocketHandler._handleMessage', () => {
       const metadata = model.sharedModel.getSource().metadata;
       expect(metadata).toMatchObject({ foo: 'a', bar: 'b' });
     });
+
+    it('removes the metadata keys with a null value', () => {
+      dispatch(handler, { action: 'metadata', metadata: { foo: 'a' } });
+      dispatch(handler, { action: 'metadata', metadata: { foo: null } });
+
+      expect(model.sharedModel.getSource().metadata).not.toHaveProperty('foo');
+    });
   });
 
   describe('users frame', () => {

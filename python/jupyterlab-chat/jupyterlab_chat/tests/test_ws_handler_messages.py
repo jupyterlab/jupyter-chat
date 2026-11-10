@@ -211,6 +211,28 @@ def test_metadata_message_sets_saves_and_broadcasts(tmp_path):
     ]
 
 
+def test_metadata_message_with_none_removes_the_entry(tmp_path):
+    """A None value removes the entry, saves the file and broadcasts a null."""
+    model, client, handler = _setup(tmp_path)
+    handler._handle_metadata_message(
+        ClientMetadataMessage(metadata={"title": "My chat"}), model
+    )
+
+    handler._handle_metadata_message(
+        ClientMetadataMessage(metadata={"title": None}), model
+    )
+
+    assert "title" not in model.get_metadata()
+    content = json.loads((tmp_path / "chat.chat").read_text(encoding="utf-8"))
+    assert "title" not in content["metadata"]
+    frames = _frames_of(client, "metadata")
+    assert frames[-1] == {
+        "type": "server",
+        "action": "metadata",
+        "metadata": {"title": None},
+    }
+
+
 def test_metadata_message_cannot_change_the_chat_id(tmp_path):
     """A client cannot overwrite the chat ID owned by the server."""
     model, client, handler = _setup(tmp_path)

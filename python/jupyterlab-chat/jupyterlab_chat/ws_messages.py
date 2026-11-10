@@ -81,7 +81,7 @@ class ClientEditMessage:
 @dataclass
 class ClientMetadataMessage:
     """A web client asks the server to add/update chat-level metadata entries
-    (e.g. the chat title)."""
+    (e.g. the chat title). A ``None`` (null) value removes the entry."""
 
     metadata: dict[str, Any]
     type: Literal["client"] = CLIENT
@@ -129,7 +129,8 @@ class ServerUsersMessage:
 
 @dataclass
 class ServerMetadataMessage:
-    """An add/update to the chat metadata map. Clients merge it in."""
+    """An add/update to the chat metadata map. Clients merge it in, a ``None``
+    (null) value meaning the entry has been removed."""
 
     metadata: dict[str, Any]
     type: Literal["server"] = SERVER

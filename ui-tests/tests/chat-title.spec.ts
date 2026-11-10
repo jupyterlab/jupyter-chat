@@ -89,9 +89,12 @@ test.describe('#chatTitle', () => {
       async () => (await readMetadata(page)).title === 'New title'
     );
 
-    // An empty title falls back to the file name.
+    // An empty name removes the title, and falls back to the file name.
     await renameChat(page, toolbar, '');
     await expect(name).toHaveText('chat-title');
+    await page.waitForCondition(
+      async () => !('title' in (await readMetadata(page)))
+    );
   });
 
   test('should update the title from the side panel', async ({ page }) => {

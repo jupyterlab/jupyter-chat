@@ -131,8 +131,9 @@ export class WebSocketHandler {
   }
 
   /**
-   * Ask the server to add/update chat-level metadata entries. The server pushes
-   * them back to all the clients, including this one.
+   * Ask the server to add/update chat-level metadata entries, a null value
+   * removing the entry. The server pushes them back to all the clients,
+   * including this one.
    */
   setMetadata(metadata: Record<string, any>): void {
     const msg: IClientMetadataMessage = {
@@ -197,7 +198,11 @@ export class WebSocketHandler {
       case 'metadata': {
         const metadata = data.metadata ?? {};
         for (const [key, value] of Object.entries(metadata)) {
-          this._model.sharedModel.setMetadata(key, value);
+          if (value === null) {
+            this._model.sharedModel.deleteMetadata(key);
+          } else {
+            this._model.sharedModel.setMetadata(key, value);
+          }
         }
         break;
       }
