@@ -57,9 +57,7 @@ test.describe('#sidepanel', () => {
         '.jp-chat-sidepanel-widget .jp-chat-sidepanel-widget-toolbar'
       );
       await expect(chatToolbar).toBeAttached();
-      await expect(
-        chatToolbar.locator('.jp-chat-sidepanel-widget-title')
-      ).toHaveText('untitled');
+      await expect(chatToolbar.locator('.jp-chat-name')).toHaveText('untitled');
 
       // Cleanup files
       if (await page.filebrowser.contents.fileExists('untitled.chat')) {
@@ -144,9 +142,7 @@ test.describe('#sidepanel', () => {
       );
       await expect(chatToolbar).toBeVisible();
       await page.sidebar.setWidth(SIDEPANEL_WIDTH, 'left');
-      await expect(
-        chatToolbar.locator('.jp-chat-sidepanel-widget-title')
-      ).toHaveText(name);
+      await expect(chatToolbar.locator('.jp-chat-name')).toHaveText(name);
 
       const closeButton = chatToolbar.getByTitle('Close the chat');
       await expect(closeButton).toBeVisible();
@@ -241,9 +237,9 @@ test.describe('#sidepanel', () => {
         '.jp-chat-sidepanel-widget .jp-chat-sidepanel-widget-toolbar'
       );
       await expect(chatToolbar).toBeVisible();
-      await expect(
-        chatToolbar.locator('.jp-chat-sidepanel-widget-title')
-      ).toHaveText(FILENAME.split('.')[0]);
+      await expect(chatToolbar.locator('.jp-chat-name')).toHaveText(
+        FILENAME.split('.')[0]
+      );
     });
 
     test('chat should contain the file path', async ({ page }) => {
@@ -264,9 +260,9 @@ test.describe('#sidepanel', () => {
       const chatToolbar = sidePanel.locator(
         '.jp-chat-sidepanel-widget .jp-chat-sidepanel-widget-toolbar'
       );
-      await expect(
-        chatToolbar.locator('.jp-chat-sidepanel-widget-title')
-      ).toHaveText(nestedPath.split('.')[0]);
+      await expect(chatToolbar.locator('.jp-chat-name')).toHaveText(
+        nestedPath.split('.')[0]
+      );
     });
 
     test('side panel should contain a button to move the chat', async ({

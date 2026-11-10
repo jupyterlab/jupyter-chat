@@ -33,6 +33,7 @@ import { Panel, Widget } from '@lumino/widgets';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { ChatSelectorPopup } from './chat-selector-popup';
+import { ChatName } from './chat-name';
 import { ChatWidget } from './chat-widget';
 import { defaultPlaceholder, Placeholder } from './placeholder';
 import {
@@ -590,7 +591,11 @@ class SidePanelWidget extends ReactivePanelWithToolbar implements IChatPanel {
     this.toolbar.addClass(TOOLBAR_CLASS);
     this._updateTitle();
     this.model.nameChanged.connect(this._updateTitle, this);
-    this.toolbar.addItem('titleSpacer', Toolbar.createSpacerItem());
+    if (!options.toolbarFactory) {
+      // Without toolbar factory, the toolbar starts with the chat name.
+      this.toolbar.addItem('chatName', new ChatName({ model: this.model }));
+      this.toolbar.addItem('chatNameSpacer', Toolbar.createSpacerItem());
+    }
 
     this.addWidget(this.toolbar);
 
@@ -660,16 +665,18 @@ class SidePanelWidget extends ReactivePanelWithToolbar implements IChatPanel {
     this.toolbar.addItem('close', closeButton);
 
     if (options.toolbarFactory) {
+      // The items from the toolbar factory are inserted at the beginning of the
+      // toolbar, in their order.
       const items = options.toolbarFactory(this);
       for (let i = 0; i < items.length; i++) {
         const { name, widget } = items.get(i);
-        this.toolbar.insertBefore('close', name, widget);
+        this.toolbar.insertItem(i, name, widget);
       }
       items.changed.connect((_, change) => {
         if (change.type === 'add') {
-          for (const { name, widget } of change.newValues) {
-            this.toolbar.insertBefore('close', name, widget);
-          }
+          change.newValues.forEach(({ name, widget }, i) => {
+            this.toolbar.insertItem(change.newIndex + i, name, widget);
+          });
         } else if (change.type === 'remove') {
           for (const { widget } of change.oldValues) {
             widget.dispose();
@@ -739,26 +746,11 @@ class SidePanelWidget extends ReactivePanelWithToolbar implements IChatPanel {
   }
 
   /**
-   * Update the title based on the chat name.
+   * Update the widget title based on the chat name.
    */
   private _updateTitle(): void {
-    const name = this.model.name;
-    this.title.label = name;
-    this.title.caption = name;
-
-    const titleElement = document.createElement('span');
-    titleElement.classList.add('jp-chat-sidepanel-widget-title');
-    titleElement.title = name;
-    titleElement.textContent = name;
-
-    // Dispose of the previous widget.
-    if (this._titleWidget) {
-      this._titleWidget.dispose();
-    }
-
-    // Insert the new title widget in toolbar.
-    this._titleWidget = new Widget({ node: titleElement });
-    this.toolbar.insertItem(0, 'title', this._titleWidget);
+    this.title.label = this.model.name;
+    this.title.caption = this.model.name;
   }
 
   /**
@@ -778,7 +770,6 @@ class SidePanelWidget extends ReactivePanelWithToolbar implements IChatPanel {
 
   private _chatWidget: ChatWidget;
   private _chatKey: string;
-  private _titleWidget: Widget | undefined;
 }
 
 /**

@@ -6,6 +6,7 @@
 import {
   ActiveCellManager,
   AttachmentOpenerRegistry,
+  ChatName,
   IActiveCellManager,
   IAttachment,
   IAttachmentOpenerRegistry,
@@ -393,6 +394,12 @@ const chatToolbarFactoryPlugin: JupyterFrontEndPlugin<ChatToolbarFactory | null>
       if (!settingRegistry || !toolbarRegistry) {
         return null;
       }
+      // The chat name, displayed at the beginning of the toolbar.
+      toolbarRegistry.addFactory<IChatPanel>(
+        FACTORY,
+        'chatName',
+        panel => new ChatName({ model: panel.model })
+      );
       const translator = translator_ ?? nullTranslator;
       return injectAreaArg(
         createToolbarFactory(

@@ -5,6 +5,15 @@
   "jupyter.lab.toolbars": {
     "Chat": [
       {
+        "name": "chatName",
+        "rank": 0
+      },
+      {
+        "name": "chatNameSpacer",
+        "type": "spacer",
+        "rank": 1
+      },
+      {
         "name": "moveChat",
         "command": "jupyterlab-chat:moveChat"
       },
