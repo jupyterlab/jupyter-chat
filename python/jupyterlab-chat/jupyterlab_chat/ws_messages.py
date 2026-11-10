@@ -16,6 +16,7 @@ discriminated by two fields:
 
     ClientChatWsMessage = ClientSendMessage      # action="send"
                         | ClientEditMessage      # action="edit"
+                        | ClientMetadataMessage  # action="metadata"
 
     ServerChatWsMessage = ServerConnectionMessage  # action="connection"
                         | ServerMessageMessage     # action="message"
@@ -77,7 +78,17 @@ class ClientEditMessage:
     action: Literal["edit"] = "edit"
 
 
-ClientChatWsMessage = ClientSendMessage | ClientEditMessage
+@dataclass
+class ClientMetadataMessage:
+    """A web client asks the server to add/update chat-level metadata entries
+    (e.g. the chat title)."""
+
+    metadata: dict[str, Any]
+    type: Literal["client"] = CLIENT
+    action: Literal["metadata"] = "metadata"
+
+
+ClientChatWsMessage = ClientSendMessage | ClientEditMessage | ClientMetadataMessage
 
 
 # ---------------------------------------------------------------------------
@@ -93,6 +104,7 @@ class ServerConnectionMessage:
     user: dict[str, Any]
     messages: list[dict]
     users: dict[str, dict]
+    metadata: dict[str, Any]
     type: Literal["server"] = SERVER
     action: Literal["connection"] = "connection"
 
@@ -166,11 +178,18 @@ def parse_client_message(data: Any) -> ClientChatWsMessage | None:
     """
     if not isinstance(data, dict) or data.get("type") != CLIENT:
         return None
+
+    action = data.get("action")
+    if action == "metadata":
+        metadata = data.get("metadata")
+        if not isinstance(metadata, dict):
+            return None
+        return ClientMetadataMessage(metadata=metadata)
+
     msg_id = data.get("id")
     if not isinstance(msg_id, str) or not msg_id:
         return None
 
-    action = data.get("action")
     if action == "send":
         sender = data.get("sender")
         return ClientSendMessage(

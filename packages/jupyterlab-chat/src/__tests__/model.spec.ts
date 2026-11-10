@@ -112,6 +112,49 @@ describe('LabChatModel', () => {
     });
   });
 
+  describe('title', () => {
+    it('should set the title in the shared model and update the name', () => {
+      model.path = 'chats/my-chat.chat';
+      expect(model.title).toBeUndefined();
+
+      model.title = '  My chat ';
+
+      expect(sharedModel.getMetadata('title')).toBe('My chat');
+      expect(model.title).toBe('My chat');
+      expect(model.name).toBe('My chat');
+    });
+
+    it('should fall back to the path when the title is emptied', () => {
+      model.path = 'chats/my-chat.chat';
+      model.title = 'My chat';
+
+      model.title = '';
+
+      expect(model.title).toBeUndefined();
+      expect(model.name).toBe('chats/my-chat');
+    });
+
+    it('should send the title to the server in websocket mode', () => {
+      const wsSharedModel = YChat.create();
+      const wsModel = new LabChatModel({
+        widgetConfig: makeWidgetConfig(),
+        user: TEST_USER,
+        sharedModel: wsSharedModel,
+        collaborative: false
+      });
+      const setMetadata = jest.fn();
+      (wsModel as any)._wsHandler = { setMetadata };
+
+      wsModel.title = 'My chat';
+
+      expect(setMetadata).toHaveBeenCalledWith({ title: 'My chat' });
+      // The shared model is updated when the server pushes the title back.
+      expect(wsSharedModel.getMetadata('title')).toBeUndefined();
+      Signal.clearData(wsModel);
+      wsSharedModel.dispose();
+    });
+  });
+
   describe('message update via websocket handler', () => {
     let wsModel: LabChatModel;
     let updateMessageSpy: jest.Mock;

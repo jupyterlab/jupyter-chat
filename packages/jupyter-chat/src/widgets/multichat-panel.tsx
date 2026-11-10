@@ -8,11 +8,7 @@
  * Originally adapted from jupyterlab-chat's ChatPanel
  */
 
-import {
-  InputDialog,
-  Notification,
-  ToolbarRegistry
-} from '@jupyterlab/apputils';
+import { Notification, ToolbarRegistry } from '@jupyterlab/apputils';
 import { IObservableList } from '@jupyterlab/observables';
 import { nullTranslator, TranslationBundle } from '@jupyterlab/translation';
 import {
@@ -96,7 +92,6 @@ export class MultiChatPanel extends PanelWithToolbar {
 
     this._getChatNames = options.getChatNames;
     this._createModel = options.createModel;
-    this._renameChat = options.renameChat;
     this._placeholderFactory = options.placeholderFactory;
 
     if (this._createModel) {
@@ -363,7 +358,6 @@ export class MultiChatPanel extends PanelWithToolbar {
     const widget = new SidePanelWidget({
       widget: chatWidget,
       chatKey: key,
-      renameChat: this._renameChat,
       toolbarFactory: this._chatToolbarFactory,
       onClose: (key: string, disposeModel = true) => {
         this.unsetLoadedModel(key, disposeModel);
@@ -494,7 +488,6 @@ export class MultiChatPanel extends PanelWithToolbar {
     key?: string
   ) => Promise<MultiChatPanel.IOpenChatArgs>;
   private _getChatNames?: () => Promise<{ [key: string]: string }>;
-  private _renameChat?: boolean | ((key: string) => Promise<string | null>);
   private _placeholderFactory?: IChatPlaceholderFactory;
   private _openChatWidget?: ReactWidget;
   private _chatSelectorPopup?: ChatSelectorPopup;
@@ -539,16 +532,6 @@ export namespace MultiChatPanel {
      * @returns an object mapping the chat keys to their display names.
      */
     getChatNames?: () => Promise<{ [key: string]: string }>;
-    /**
-     * An optional callback to rename a chat.
-     *
-     * If `true`, the user is prompted for a new name, which is set to the
-     * model.
-     * If a function, it is called with the chat key and returns the new name,
-     * or null if the chat has not been renamed.
-     * In both cases, the displayed name follows the model name.
-     */
-    renameChat?: boolean | ((key: string) => Promise<string | null>);
     /**
      * An optional factory to create a placeholder widget displayed when no chat
      * is opened. Falls back to the default placeholder if not provided.
@@ -622,37 +605,6 @@ class SidePanelWidget extends ReactivePanelWithToolbar implements IChatPanel {
 
     // Add the chat widget
     this.addWidget(this._chatWidget);
-
-    if (options.renameChat) {
-      const renameButton = new ToolbarButton({
-        iconClass: 'jp-EditIcon',
-        iconLabel: trans.__('Rename chat'),
-        className: 'jp-mod-styled',
-        onClick: async () => {
-          if (!options.renameChat) {
-            return;
-          }
-          if (options.renameChat === true) {
-            // If rename chat is true, let's provide a input to select new name.
-            const result = await InputDialog.getText({
-              title: trans.__('Rename Chat'),
-              text: this.model.name,
-              placeholder: trans.__('new-name')
-            });
-            if (!result.button.accept && result.value) {
-              return;
-            }
-            if (result.value) {
-              this.model.name = result.value;
-            }
-          } else {
-            // Rename chat is a function, let's call it.
-            await options.renameChat(this._chatKey);
-          }
-        }
-      });
-      this.toolbar.addItem('rename', renameButton);
-    }
 
     const closeButton = new ToolbarButton({
       icon: closeIcon,
@@ -792,10 +744,6 @@ namespace SidePanelWidget {
      * The callback when closing the chat, called with the chat key.
      */
     onClose: (key: string, disposeModel?: boolean) => void;
-    /**
-     * The callback to rename the chat.
-     */
-    renameChat?: boolean | ((key: string) => Promise<string | null>);
     /**
      * An optional toolbar factory.
      */

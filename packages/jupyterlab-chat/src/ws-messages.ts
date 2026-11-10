@@ -16,6 +16,7 @@ import { IAttachment, IMimeModelBody, IUser } from '@jupyter/chat';
  * ```
  * ChatWsMessage       = ClientChatWsMessage | ServerChatWsMessage
  * ClientChatWsMessage = IClientSendMessage | IClientEditMessage
+ *                     | IClientMetadataMessage
  * ServerChatWsMessage = IServerConnectionMessage | IServerMessageMessage
  *                     | IServerUsersMessage | IServerMetadataMessage
  *                     | IServerWritingMessage
@@ -74,7 +75,16 @@ export interface IClientEditMessage {
   attachments?: IAttachment[];
 }
 
-export type IClientChatWsMessage = IClientSendMessage | IClientEditMessage;
+export interface IClientMetadataMessage {
+  type: typeof CLIENT;
+  action: 'metadata';
+  metadata: Record<string, any>;
+}
+
+export type IClientChatWsMessage =
+  | IClientSendMessage
+  | IClientEditMessage
+  | IClientMetadataMessage;
 
 // ---------------------------------------------------------------------------
 // Server -> client
@@ -87,6 +97,7 @@ export interface IServerConnectionMessage {
   user: IUser;
   messages: IWireMessage[];
   users: Record<string, IUser>;
+  metadata?: Record<string, any>;
 }
 
 export interface IServerMessageMessage {

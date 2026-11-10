@@ -16,6 +16,7 @@ from .models import ChatMessageAction, User
 from .websocket_model import WsChatModel
 from .ws_messages import (
     ClientEditMessage,
+    ClientMetadataMessage,
     ClientSendMessage,
     ServerConnectionMessage,
     ServerMessageMessage,
@@ -133,6 +134,7 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
                     user=asdict(user),
                     messages=[model.resolve_message(m) for m in model._messages],
                     users=model._users,
+                    metadata=model._metadata,
                 )
             )
         )
@@ -164,6 +166,8 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
 
         if isinstance(message, ClientSendMessage):
             self._handle_new_message(message, model)
+        elif isinstance(message, ClientMetadataMessage):
+            self._handle_metadata_message(message, model)
         else:
             self._handle_update_message(message, model)
 
@@ -245,6 +249,24 @@ class WSChatHandler(JupyterHandler, websocket.WebSocketHandler):
             model._emit_message_event(
                 ChatMessageAction.CLIENT_MSG_EDITED, edited
             )
+
+    def _handle_metadata_message(
+        self, msg: ClientMetadataMessage, model: WsChatModel
+    ) -> None:
+        """Add/update chat-level metadata entries, and push them to the clients.
+
+        The chat ID is owned by the server and cannot be changed by a client.
+        """
+        updated = False
+        for key, value in msg.metadata.items():
+            if key == "id":
+                self.log.warning("Ignoring a client update of the chat ID")
+                continue
+            # Also broadcasts the change to the connected clients.
+            model.set_metadata(key, value)
+            updated = True
+        if updated:
+            model.save()
 
     def _store_attachments(self, attachments: list[dict], model: WsChatModel) -> list[str]:
         """Store attachment dicts via the model's set_attachment, return their IDs."""

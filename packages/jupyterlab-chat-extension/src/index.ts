@@ -11,6 +11,7 @@ import {
   IAttachment,
   IAttachmentOpenerRegistry,
   IChatCommandRegistry,
+  IChatModel,
   IChatPanel,
   IChatTracker,
   IMessageFooterRegistry,
@@ -53,7 +54,7 @@ import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { Contents, ServerConnection } from '@jupyterlab/services';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { ITranslator, nullTranslator } from '@jupyterlab/translation';
-import { launchIcon } from '@jupyterlab/ui-components';
+import { editIcon, launchIcon } from '@jupyterlab/ui-components';
 import { PromiseDelegate } from '@lumino/coreutils';
 import { Widget } from '@lumino/widgets';
 import {
@@ -75,9 +76,7 @@ import {
   chatFileType,
   getChatPath,
   getChatTitleFromContent,
-  getDisplayName,
-  isCollaborative,
-  resolveChatRenamePath
+  isCollaborative
 } from 'jupyterlab-chat';
 import { chatCommandRegistryPlugin } from './chat-commands/plugins';
 import { emojiCommandsPlugin } from './chat-commands/providers/emoji';
@@ -1125,69 +1124,80 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         console.error('The command to open a chat is not initialized\n', e)
       );
 
-    // Command to rename a chat
+    /**
+     * Get the model of the chat to rename: the chat displayed in the side panel
+     * or in the main area, depending on the area, or the current chat if the
+     * area is not provided.
+     */
+    const getChatToRename = (area?: string): ILabChatModel | null => {
+      let model: IChatModel | undefined;
+      if (area === 'sidebar') {
+        model = chatPanel?.current?.model;
+      } else if (area === 'main') {
+        const widget = app.shell.currentWidget;
+        if (
+          widget instanceof LabChatPanel &&
+          Array.from(app.shell.widgets('main')).includes(widget)
+        ) {
+          model = widget.model;
+        }
+      } else {
+        model = tracker.currentWidget?.model;
+      }
+      return model && 'title' in model ? (model as ILabChatModel) : null;
+    };
+
+    // Command to rename a chat, by setting its title. The chat file is not
+    // renamed, this can be done from the file browser.
     commands.addCommand(CommandIDs.renameChat, {
-      label: trans.__('Rename chat'),
+      caption: trans.__('Rename the chat'),
+      icon: editIcon,
       describedBy: {
         args: {
           type: 'object',
           properties: {
-            oldPath: {
+            area: {
               type: 'string',
               description:
-                'The current path of the chat file. Uses the current widget if not provided.'
+                'The area of the chat panel (main or sidebar). Uses the current chat if not provided.'
             },
-            newPath: {
+            title: {
               type: 'string',
               description:
-                'The new path for the chat file. Prompts the user if not provided.'
+                'The new title of the chat, an empty title removes it. Prompts the user if not provided.'
             }
           }
         }
       },
-      execute: async (args): Promise<string | null> => {
-        let oldPath = args.oldPath as string;
-        let newPath = args.newPath as string | null;
-        if (!oldPath && tracker.currentWidget) {
-          oldPath = getChatPath(tracker.currentWidget.model) ?? '';
+      isEnabled: args => getChatToRename(args.area as string) !== null,
+      execute: async args => {
+        const model = getChatToRename(args.area as string);
+        if (!model) {
+          return;
         }
-        if (!oldPath) {
-          showErrorMessage(
-            trans.__('Error renaming chat'),
-            trans.__('Missing old path')
-          );
-          return null;
-        }
-
-        // Ask user if new name not passed in args
-        if (!newPath) {
+        let title = args.title as string | undefined;
+        if (title === undefined) {
           const result = await InputDialog.getText({
             title: trans.__('Rename Chat'),
-            text: PathExt.basename(oldPath).replace(/\.chat$/, ''), // strip extension
-            placeholder: trans.__('new-name')
+            text: model.name,
+            placeholder: trans.__('Leave empty to use the file name')
           });
           if (!result.button.accept) {
-            return null;
+            return;
           }
-          newPath = result.value;
+          title = result.value ?? '';
         }
-
-        if (!newPath) {
-          return null;
-        }
-
-        // Ensure `.chat` extension and keep the chat in its current directory.
-        newPath = resolveChatRenamePath(oldPath, newPath);
-
-        try {
-          await app.serviceManager.contents.rename(oldPath, newPath);
-          return getDisplayName(newPath, widgetConfig.config.defaultDirectory);
-        } catch (err) {
-          console.error('Error renaming chat', err);
-          showErrorMessage(trans.__('Error renaming chat'), `${err}`);
-        }
-        return null;
+        model.title = title;
       }
+    });
+
+    // Update the 'renameChat' command status when the current widget changes or
+    // a side panel chat is opened.
+    tracker.currentChanged.connect(() => {
+      commands.notifyCommandChanged(CommandIDs.renameChat);
+    });
+    chatPanel?.chatOpened.connect(() => {
+      commands.notifyCommandChanged(CommandIDs.renameChat);
     });
 
     // The command to focus the input of the current chat widget.
@@ -1353,7 +1363,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     translator_: ITranslator | null,
     welcomeMessage: string | null
   ): MultiChatPanel => {
-    const { commands, serviceManager } = app;
+    const { serviceManager } = app;
     const translator = translator_ ?? nullTranslator;
 
     const chatFileExtension = chatFileType.extensions[0];
@@ -1435,11 +1445,6 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
           path,
           widgetConfig.config.defaultDirectory
         );
-      },
-      renameChat: (oldPath: string) => {
-        return commands.execute(CommandIDs.renameChat, {
-          oldPath
-        }) as Promise<string | null>;
       },
       chatCommandRegistry: chatCommandRegistry ?? undefined,
       attachmentOpenerRegistry: attachmentOpenerRegistry ?? undefined,
