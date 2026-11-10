@@ -5,7 +5,11 @@
 
 import { IChatModel } from '@jupyter/chat';
 
-import { getChatPath, resolveChatRenamePath } from '../utils';
+import {
+  getChatPath,
+  getChatTitleFromContent,
+  resolveChatRenamePath
+} from '../utils';
 
 describe('resolveChatRenamePath', () => {
   it('keeps a renamed chat in its original directory', () => {
@@ -46,5 +50,37 @@ describe('getChatPath', () => {
   it('returns undefined if the model has no path', () => {
     const model = { name: 'chats/a.chat' };
     expect(getChatPath(model as unknown as IChatModel)).toBeUndefined();
+  });
+});
+
+describe('getChatTitleFromContent', () => {
+  it('reads the title from the chat file content', () => {
+    const content = JSON.stringify({
+      messages: [],
+      metadata: { id: 'abc', title: 'My chat' }
+    });
+    expect(getChatTitleFromContent(content)).toBe('My chat');
+  });
+
+  it('accepts already parsed content', () => {
+    expect(getChatTitleFromContent({ metadata: { title: 'My chat' } })).toBe(
+      'My chat'
+    );
+  });
+
+  it('returns undefined without a valid title', () => {
+    expect(
+      getChatTitleFromContent(JSON.stringify({ metadata: { id: 'abc' } }))
+    ).toBeUndefined();
+    expect(getChatTitleFromContent(JSON.stringify({}))).toBeUndefined();
+    expect(getChatTitleFromContent('')).toBeUndefined();
+    expect(getChatTitleFromContent('not json')).toBeUndefined();
+    expect(getChatTitleFromContent(null)).toBeUndefined();
+    expect(
+      getChatTitleFromContent({ metadata: { title: '  ' } })
+    ).toBeUndefined();
+    expect(
+      getChatTitleFromContent({ metadata: { title: 42 } })
+    ).toBeUndefined();
   });
 });

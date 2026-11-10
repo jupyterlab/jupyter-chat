@@ -188,6 +188,7 @@ export class MultiChatPanel extends PanelWithToolbar {
     if (!this._loadedModels.has(key)) {
       const name = args.displayName ?? this._chatNames[key] ?? model.name;
       this._loadedModels.set(key, { model, name });
+      model.nameChanged.connect(this._loadedModelNameChanged, this);
       this._updateLoadedChats();
     }
 
@@ -263,12 +264,41 @@ export class MultiChatPanel extends PanelWithToolbar {
         this._addPlaceholder();
       }
 
+      loaded.model.nameChanged.disconnect(this._loadedModelNameChanged, this);
       if (dispose) {
         loaded.model.dispose();
       }
       this._loadedModels.delete(key);
       this._updateLoadedChats();
     }
+  }
+
+  /**
+   * Update the name of a loaded chat when its model name changes.
+   *
+   * The name is also updated in the chat list, to be up to date once the chat
+   * is unloaded.
+   */
+  private _loadedModelNameChanged(model: IChatModel, name: string): void {
+    let chatNamesChanged = false;
+    for (const [key, loaded] of this._loadedModels) {
+      if (loaded.model === model) {
+        loaded.name = name;
+        if (key in this._chatNames && this._chatNames[key] !== name) {
+          this._chatNames = { ...this._chatNames, [key]: name };
+          chatNamesChanged = true;
+        }
+      }
+    }
+    if (chatNamesChanged) {
+      this._chatSelectorPopup?.updateChats(this._chatNames);
+      this._chatNamesChanged.emit(this._chatNames);
+    }
+    if (this.current?.model === model) {
+      // Also updates the loaded chats through the nameChanged signal.
+      this.current.name = name;
+    }
+    this._updateLoadedChats();
   }
 
   /**
@@ -437,6 +467,7 @@ export class MultiChatPanel extends PanelWithToolbar {
    * Dispose of the resources held by the widget.
    */
   dispose(): void {
+    this._updateChatListDebouncer.dispose();
     // Dispose all loaded models
     for (const { model } of this._loadedModels.values()) {
       model.dispose();
@@ -548,9 +579,10 @@ export namespace MultiChatPanel {
      * An optional callback to rename a chat.
      *
      * If `true`, the user is prompted for a new name, which is set to the
-     * model and the displayed name.
-     * If a function, it is called with the chat key and returns the new
-     * displayed name, or null if the chat has not been renamed.
+     * model.
+     * If a function, it is called with the chat key and returns the new name,
+     * or null if the chat has not been renamed.
+     * In both cases, the displayed name follows the model name.
      */
     renameChat?: boolean | ((key: string) => Promise<string | null>);
     /**
@@ -636,7 +668,6 @@ class SidePanelWidget extends ReactivePanelWithToolbar implements IChatPanel {
           if (!options.renameChat) {
             return;
           }
-          let newName: string | null;
           if (options.renameChat === true) {
             // If rename chat is true, let's provide a input to select new name.
             const result = await InputDialog.getText({
@@ -647,16 +678,12 @@ class SidePanelWidget extends ReactivePanelWithToolbar implements IChatPanel {
             if (!result.button.accept && result.value) {
               return;
             }
-            newName = result.value;
-            if (newName) {
-              this.model.name = newName;
+            if (result.value) {
+              this.model.name = result.value;
             }
           } else {
             // Rename chat is a function, let's call it.
-            newName = await options.renameChat(this._chatKey);
-          }
-          if (newName) {
-            this.name = newName;
+            await options.renameChat(this._chatKey);
           }
         }
       });

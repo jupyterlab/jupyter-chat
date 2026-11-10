@@ -192,6 +192,122 @@ describe('MultiChatPanel', () => {
     });
   });
 
+  describe('model name', () => {
+    it('should emit nameChanged only when the name changes', () => {
+      const model = new MockChatModel();
+      const names: string[] = [];
+      model.nameChanged.connect((_, name) => names.push(name));
+      model.name = 'a';
+      model.name = 'a';
+      model.name = 'b';
+      expect(names).toEqual(['a', 'b']);
+      model.dispose();
+    });
+
+    it('should display the new model name of the current chat', () => {
+      const panel = new MultiChatPanel({ rmRegistry });
+      const model = new MockChatModel();
+      panel.open({ model, key: 'chats/a.chat', displayName: 'a' });
+
+      model.name = 'My chat';
+
+      expect(panel.current?.name).toBe('My chat');
+      expect(panel.current?.chatKey).toBe('chats/a.chat');
+      panel.dispose();
+    });
+
+    it('should use the new model name when reopening a chat', () => {
+      const panel = new MultiChatPanel({ rmRegistry });
+      const model = new MockChatModel();
+      panel.open({ model, key: 'chats/a.chat', displayName: 'a' });
+      panel.open({
+        model: new MockChatModel(),
+        key: 'chats/b.chat',
+        displayName: 'b'
+      });
+
+      // The model name changes while the chat is not displayed.
+      model.name = 'My chat';
+      panel.openIfLoaded('chats/a.chat');
+
+      expect(panel.current?.name).toBe('My chat');
+      panel.dispose();
+    });
+
+    it('should not follow the model name once the chat is closed', () => {
+      const panel = new MultiChatPanel({ rmRegistry });
+      const model = new MockChatModel();
+      panel.open({ model, key: 'chats/a.chat', displayName: 'a' });
+      panel.unsetLoadedModel('chats/a.chat', false);
+
+      model.name = 'My chat';
+
+      expect(panel.getLoadedModel('chats/a.chat')).toBeUndefined();
+      model.dispose();
+      panel.dispose();
+    });
+
+    it('should update the chat list with the new model name', async () => {
+      const getChatNames = jest
+        .fn()
+        .mockResolvedValue({ 'chats/a.chat': 'a', 'chats/b.chat': 'b' });
+      const factory: IChatPlaceholderFactory = {
+        create: jest.fn().mockReturnValue(new Widget())
+      };
+      const panel = new MultiChatPanel({
+        rmRegistry,
+        getChatNames,
+        placeholderFactory: factory
+      });
+      await (panel as any)._updateChatList();
+
+      const props = (factory.create as jest.Mock).mock
+        .calls[0][0] as Placeholder.IProps;
+      const emitted: { [key: string]: string }[] = [];
+      props.chatNamesChanged!.connect((_, names) => emitted.push(names));
+
+      const model = new MockChatModel();
+      panel.open({ model, key: 'chats/a.chat', displayName: 'a' });
+      model.name = 'My chat';
+
+      expect(emitted).toEqual([
+        { 'chats/a.chat': 'My chat', 'chats/b.chat': 'b' }
+      ]);
+
+      // The unloaded chat is listed with the new name, without fetching the
+      // chat list again.
+      panel.unsetLoadedModel('chats/a.chat');
+      const calls = (factory.create as jest.Mock).mock.calls;
+      const newProps = calls[calls.length - 1][0] as Placeholder.IProps;
+      expect(newProps.chatNames).toEqual({
+        'chats/a.chat': 'My chat',
+        'chats/b.chat': 'b'
+      });
+      expect(getChatNames).toHaveBeenCalledTimes(1);
+      panel.dispose();
+    });
+
+    it('should keep the model name after renaming the chat', async () => {
+      const renameChat = jest.fn().mockResolvedValue('renamed-file');
+      const panel = new MultiChatPanel({ rmRegistry, renameChat });
+      const model = new MockChatModel();
+      model.name = 'My chat';
+      panel.open({ model, key: 'chats/a.chat' });
+
+      const toolbar = panel.current!.toolbar;
+      const names = Array.from(toolbar.names());
+      const renameButton = (toolbar.layout as any).widgets[
+        names.indexOf('rename')
+      ] as ToolbarButton;
+      renameButton.onClick();
+      await renameChat.mock.results[0].value;
+      await Promise.resolve();
+
+      expect(panel.current?.name).toBe('My chat');
+      panel.dispose();
+    });
+  });
+
   describe('placeholderFactory', () => {
     it('should use defaultPlaceholder when no factory is provided', () => {
       const panel = new MultiChatPanel({ rmRegistry });

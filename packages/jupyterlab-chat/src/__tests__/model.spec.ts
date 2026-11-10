@@ -56,6 +56,62 @@ describe('LabChatModel', () => {
     sharedModel.dispose();
   });
 
+  describe('name', () => {
+    it('should be built from the path without title', () => {
+      model.path = 'chats/my-chat.chat';
+      expect(model.path).toBe('chats/my-chat.chat');
+      expect(model.name).toBe('chats/my-chat');
+    });
+
+    it('should be relative to the default directory', () => {
+      const widgetConfig = makeWidgetConfig();
+      widgetConfig.config = { defaultDirectory: 'chats' } as any;
+      const other = new LabChatModel({
+        widgetConfig,
+        user: TEST_USER,
+        collaborative: true
+      });
+      other.path = 'chats/my-chat.chat';
+      expect(other.name).toBe('my-chat');
+      other.dispose();
+    });
+
+    it('should be the title when the chat has one', () => {
+      model.path = 'chats/my-chat.chat';
+      const names: string[] = [];
+      model.nameChanged.connect((_, name) => names.push(name));
+
+      sharedModel.setMetadata('title', 'My chat');
+      expect(model.name).toBe('My chat');
+
+      // The title is kept when the file is renamed.
+      model.path = 'chats/renamed.chat';
+      expect(model.name).toBe('My chat');
+
+      // An empty title falls back to the path.
+      sharedModel.setMetadata('title', '  ');
+      expect(model.name).toBe('chats/renamed');
+
+      expect(names).toEqual(['My chat', 'chats/renamed']);
+    });
+
+    it('should be the title of the synced document when ready', () => {
+      const other = YChat.create();
+      other.setSource({ metadata: { id: 'abc', title: 'My chat' } });
+      const otherModel = new LabChatModel({
+        widgetConfig: makeWidgetConfig(),
+        user: TEST_USER,
+        sharedModel: other,
+        collaborative: true
+      });
+      otherModel.path = 'chats/my-chat.chat';
+      otherModel.markDocumentSynced();
+      expect(otherModel.name).toBe('My chat');
+      otherModel.dispose();
+      other.dispose();
+    });
+  });
+
   describe('message update via websocket handler', () => {
     let wsModel: LabChatModel;
     let updateMessageSpy: jest.Mock;

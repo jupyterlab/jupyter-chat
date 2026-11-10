@@ -39,9 +39,14 @@ export interface IChatModel extends IDisposable {
   id?: string;
 
   /**
-   * The chat model name.
+   * The chat model name, which can be displayed in the UI.
    */
   name: string;
+
+  /**
+   * A signal emitting the new name when the chat name changes.
+   */
+  readonly nameChanged: ISignal<IChatModel, string>;
 
   /**
    * The configuration for the chat panel.
@@ -347,13 +352,24 @@ export abstract class AbstractChatModel implements IChatModel {
   }
 
   /**
-   * The chat model name.
+   * The chat model name, which can be displayed in the UI.
    */
   get name(): string {
     return this._name;
   }
   set name(value: string) {
+    if (this._name === value) {
+      return;
+    }
     this._name = value;
+    this._nameChanged.emit(value);
+  }
+
+  /**
+   * A signal emitting the new name when the chat name changes.
+   */
+  get nameChanged(): ISignal<IChatModel, string> {
+    return this._nameChanged;
   }
 
   /**
@@ -870,6 +886,7 @@ export abstract class AbstractChatModel implements IChatModel {
   private _messagesInViewport: number[] = [];
   private _id: string | undefined;
   private _name: string = '';
+  private _nameChanged = new Signal<IChatModel, string>(this);
   private _config: IConfig;
   protected _trans: TranslationBundle;
   private _readyDelegate = new PromiseDelegate<string>();
