@@ -23,7 +23,8 @@ import { Debouncer } from '@lumino/polling';
 import { ISignal, Signal } from '@lumino/signaling';
 
 import { enforceAutosaveEnabled } from './autosave';
-import { ILabChatModel, IWidgetConfig } from './token';
+import { ILabChatConfig, ILabChatModel, IWidgetConfig } from './token';
+import { getDisplayName, validTitle, TITLE_METADATA_KEY } from './utils';
 import { WebSocketHandler } from './websocket-handler';
 import { IChatChanges, IYmessage, YChat } from './ychat';
 
@@ -211,6 +212,8 @@ export class LabChatModel
 
     widgetConfig.configChanged.connect((_, config) => {
       this.config = config;
+      // The default name depends on the default directory.
+      this._updateName();
     });
 
     this.sharedModel.awareness.on('change', this.onAwarenessChange);
@@ -275,6 +278,55 @@ export class LabChatModel
     this._readOnly = value;
   }
 
+  /**
+   * The path of the chat file, relative to the server root.
+   */
+  get path(): string {
+    return this._path;
+  }
+  set path(value: string) {
+    if (this._path === value) {
+      return;
+    }
+    this._path = value;
+    this._updateName();
+  }
+
+  /**
+   * The title of the chat, stored in its metadata, or undefined if it has none.
+   *
+   * The chat name is its title if it has one. Setting an empty title removes it,
+   * the chat name being built from its path in that case.
+   */
+  get title(): string | undefined {
+    return validTitle(this._sharedModel.getMetadata(TITLE_METADATA_KEY));
+  }
+  set title(value: string | undefined) {
+    const title = value?.trim() || null;
+    if (this._wsHandler) {
+      // The server stores the title and pushes it back to the shared model,
+      // a null value removing it.
+      this._wsHandler.setMetadata({ [TITLE_METADATA_KEY]: title });
+    } else if (title) {
+      this._sharedModel.setMetadata(TITLE_METADATA_KEY, title);
+    } else {
+      this._sharedModel.deleteMetadata(TITLE_METADATA_KEY);
+    }
+  }
+
+  /**
+   * Update the name of the chat: its title if it has one, or a name built from
+   * its path otherwise (relative to the default directory, without extension).
+   */
+  private _updateName(): void {
+    this.name =
+      this.title ??
+      getDisplayName(
+        this._path,
+        (this.config as ILabChatConfig).defaultDirectory
+      );
+  }
+
   // Declaring `set id` in this subclass shadows the base class's accessor
   // property entirely, so `get id` must be redeclared here too or reading
   // `.id` on a LabChatModel returns undefined even after `_id` is set.
@@ -287,6 +339,9 @@ export class LabChatModel
 
   protected setReady(id: string): void {
     this._documentSynced = true;
+    // The initial sync of the shared document may not emit the metadata
+    // changes, update the name from the synced title.
+    this._updateName();
     this._flushPreReadyMessages();
     super.setReady(id);
   }
@@ -307,7 +362,7 @@ export class LabChatModel
    */
   markDocumentSynced(): void {
     if (this._wsHandler) {
-      this._wsHandler.setPath(this.name);
+      this._wsHandler.setPath(this.path);
       this._wsHandler.initialize();
       this._wsHandler.ready
         .then(() => {
@@ -622,7 +677,7 @@ export class LabChatModel
       return;
     }
     try {
-      const file = await this.documentManager.services.contents.get(this.name, {
+      const file = await this.documentManager.services.contents.get(this.path, {
         content: true,
         format: 'text'
       });
@@ -642,7 +697,7 @@ export class LabChatModel
       return;
     }
     try {
-      await this.documentManager.services.contents.save(this.name, {
+      await this.documentManager.services.contents.save(this.path, {
         type: 'file',
         format: 'text',
         content: this.toString()
@@ -775,6 +830,8 @@ export class LabChatModel
         // update the model ID.
         if (change.key === 'id') {
           this.id = change.newValue as string;
+        } else if (change.key === TITLE_METADATA_KEY) {
+          this._updateName();
         }
       });
     }
@@ -869,6 +926,7 @@ export class LabChatModel
     index: number;
     messages: IMessageContent[];
   }> = [];
+  private _path = '';
   private _dirty = false;
   private _readOnly = false;
   private _contentChanged = new Signal<this, void>(this);

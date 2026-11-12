@@ -8,7 +8,7 @@ import { Signal } from '@lumino/signaling';
 import { LabChatModel } from '../model';
 import { IWidgetConfig } from '../token';
 import { WebSocketHandler } from '../websocket-handler';
-import { SERVER } from '../ws-messages';
+import { CLIENT, SERVER } from '../ws-messages';
 import { YChat } from '../ychat';
 
 const TEST_USER = {
@@ -124,6 +124,13 @@ describe('WebSocketHandler._handleMessage', () => {
       const metadata = model.sharedModel.getSource().metadata;
       expect(metadata).toMatchObject({ foo: 'a', bar: 'b' });
     });
+
+    it('removes the metadata keys with a null value', () => {
+      dispatch(handler, { action: 'metadata', metadata: { foo: 'a' } });
+      dispatch(handler, { action: 'metadata', metadata: { foo: null } });
+
+      expect(model.sharedModel.getSource().metadata).not.toHaveProperty('foo');
+    });
   });
 
   describe('users frame', () => {
@@ -152,5 +159,25 @@ describe('WebSocketHandler._handleMessage', () => {
         'Original'
       );
     });
+  });
+});
+
+describe('WebSocketHandler.setMetadata', () => {
+  it('sends a metadata frame to the server', () => {
+    const model = makeModel();
+    const handler = makeHandler(model);
+    const send = jest.fn();
+    (handler as any)._socket = { send, close: jest.fn() };
+
+    handler.setMetadata({ title: 'My chat' });
+
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(send.mock.calls[0][0])).toEqual({
+      type: CLIENT,
+      action: 'metadata',
+      metadata: { title: 'My chat' }
+    });
+    Signal.clearData(model);
+    handler.dispose();
   });
 });

@@ -6,10 +6,12 @@
 import {
   ActiveCellManager,
   AttachmentOpenerRegistry,
+  ChatName,
   IActiveCellManager,
   IAttachment,
   IAttachmentOpenerRegistry,
   IChatCommandRegistry,
+  IChatModel,
   IChatPanel,
   IChatTracker,
   IMessageFooterRegistry,
@@ -52,7 +54,7 @@ import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
 import { Contents, ServerConnection } from '@jupyterlab/services';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { ITranslator, nullTranslator } from '@jupyterlab/translation';
-import { launchIcon } from '@jupyterlab/ui-components';
+import { editIcon, launchIcon } from '@jupyterlab/ui-components';
 import { PromiseDelegate } from '@lumino/coreutils';
 import { Widget } from '@lumino/widgets';
 import {
@@ -62,6 +64,7 @@ import {
   IActiveCellManagerToken,
   IChatFactory,
   IChatToolbarFactory,
+  ILabChatModel,
   IMultiChatPanel,
   ISelectionWatcherToken,
   IWelcomeMessage,
@@ -71,9 +74,9 @@ import {
   WidgetConfig,
   YChat,
   chatFileType,
-  getDisplayName,
-  isCollaborative,
-  resolveChatRenamePath
+  getChatPath,
+  getChatTitleFromContent,
+  isCollaborative
 } from 'jupyterlab-chat';
 import { chatCommandRegistryPlugin } from './chat-commands/plugins';
 import { emojiCommandsPlugin } from './chat-commands/providers/emoji';
@@ -148,7 +151,7 @@ async function createChatModel(
 
   // The LabChatModel initialize a shared model if undefined.
   const chatModel = modelFactory.createNew({ sharedModel });
-  chatModel.name = fileModel.path;
+  chatModel.path = fileModel.path;
 
   if (contentProvider) {
     // Chats opened in the side panel have no document context, so the provider
@@ -167,7 +170,7 @@ async function createChatModel(
 
   return {
     model: chatModel,
-    displayName: getDisplayName(fileModel.path, defaultDirectory)
+    key: fileModel.path
   };
 }
 
@@ -390,6 +393,12 @@ const chatToolbarFactoryPlugin: JupyterFrontEndPlugin<ChatToolbarFactory | null>
       if (!settingRegistry || !toolbarRegistry) {
         return null;
       }
+      // The chat name, displayed at the beginning of the toolbar.
+      toolbarRegistry.addFactory<IChatPanel>(
+        FACTORY,
+        'chatName',
+        panel => new ChatName({ model: panel.model })
+      );
       const translator = translator_ ?? nullTranslator;
       return injectAreaArg(
         createToolbarFactory(
@@ -583,11 +592,15 @@ const chatTracker: JupyterFrontEndPlugin<IChatTracker> = {
         const newPath = change.newValue?.path;
         if (oldPath && newPath && oldPath !== newPath) {
           // Loop on all the model in tracker that have the old path as name.
-          let widget = tracker.find(widget => widget.model.name === oldPath);
+          let widget = tracker.find(
+            widget => getChatPath(widget.model) === oldPath
+          );
           while (widget) {
-            widget.model.name = newPath;
+            (widget.model as ILabChatModel).path = newPath;
             tracker.save(widget);
-            widget = tracker.find(widget => widget.model.name === oldPath);
+            widget = tracker.find(
+              widget => getChatPath(widget.model) === oldPath
+            );
           }
         }
       }
@@ -608,13 +621,15 @@ const chatTracker: JupyterFrontEndPlugin<IChatTracker> = {
       void restorer.restore(tracker, {
         command: CommandIDs.openChat,
         args: widget => ({
-          filepath: widget.model.name ?? '',
+          filepath: getChatPath(widget.model) ?? '',
           inSidePanel: widget.area === 'sidebar',
           startup: true
         }),
         name: widget => {
           const area = widget.area ?? 'main';
-          return area === 'main' ? widget.model.name : 'sidebar';
+          return area === 'main'
+            ? (getChatPath(widget.model) ?? '')
+            : 'sidebar';
         },
         when: openCommandReady.promise
       });
@@ -880,17 +895,16 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           if (!current) {
             return;
           }
-          const path = current.model.name;
+          const path = getChatPath(current.model);
+          if (!path) {
+            return;
+          }
           try {
             const widget = await commands.execute(CommandIDs.openChat, {
               filepath: path
             });
             if (widget !== null) {
-              const name = getDisplayName(
-                path,
-                widgetConfig.config.defaultDirectory
-              );
-              chatPanel.unsetLoadedModel(name);
+              chatPanel.unsetLoadedModel(path);
             }
           } catch (e) {
             console.error(`Error moving chat to main area`, e);
@@ -1110,70 +1124,82 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
         console.error('The command to open a chat is not initialized\n', e)
       );
 
-    // Command to rename a chat
+    /**
+     * Get the model of the chat to rename: the chat displayed in the side panel
+     * or in the main area, depending on the area, or the current chat if the
+     * area is not provided.
+     */
+    const getChatToRename = (area?: string): ILabChatModel | null => {
+      let model: IChatModel | undefined;
+      if (area === 'sidebar') {
+        model = chatPanel?.current?.model;
+      } else if (area === 'main') {
+        const widget = app.shell.currentWidget;
+        if (
+          widget instanceof LabChatPanel &&
+          Array.from(app.shell.widgets('main')).includes(widget)
+        ) {
+          model = widget.model;
+        }
+      } else {
+        model = tracker.currentWidget?.model;
+      }
+      return model && 'title' in model ? (model as ILabChatModel) : null;
+    };
+
+    // Command to rename a chat, by setting its title. The chat file is not
+    // renamed, this can be done from the file browser.
     commands.addCommand(CommandIDs.renameChat, {
-      label: trans.__('Rename chat'),
+      label: args => (args.area ? '' : trans.__('Rename chat')),
+      caption: trans.__('Rename the chat'),
+      icon: editIcon,
       describedBy: {
         args: {
           type: 'object',
           properties: {
-            oldPath: {
+            area: {
               type: 'string',
               description:
-                'The current path of the chat file. Uses the current widget if not provided.'
+                'The area of the chat panel (main or sidebar). Uses the current chat if not provided.'
             },
-            newPath: {
+            name: {
               type: 'string',
               description:
-                'The new path for the chat file. Prompts the user if not provided.'
+                'The new name of the chat, stored as its title. An empty name removes the title. Prompts the user if not provided.'
             }
           }
         }
       },
-      execute: async (args): Promise<string | null> => {
-        let oldPath = args.oldPath as string;
-        let newPath = args.newPath as string | null;
-        if (!oldPath) {
-          if (tracker.currentWidget) {
-            oldPath = tracker.currentWidget.model.name;
-          } else {
-            showErrorMessage(
-              trans.__('Error renaming chat'),
-              trans.__('Missing old path')
-            );
-            return null;
-          }
+      isEnabled: args => getChatToRename(args.area as string) !== null,
+      execute: async args => {
+        const model = getChatToRename(args.area as string);
+        if (!model) {
+          return;
         }
-
-        // Ask user if new name not passed in args
-        if (!newPath) {
+        let name = args.name as string | undefined;
+        if (name === undefined) {
           const result = await InputDialog.getText({
             title: trans.__('Rename Chat'),
-            text: PathExt.basename(oldPath).replace(/\.chat$/, ''), // strip extension
-            placeholder: trans.__('new-name')
+            text: model.name,
+            placeholder: trans.__('Leave empty to use the file name')
           });
           if (!result.button.accept) {
-            return null;
+            return;
           }
-          newPath = result.value;
+          name = result.value ?? '';
         }
-
-        if (!newPath) {
-          return null;
-        }
-
-        // Ensure `.chat` extension and keep the chat in its current directory.
-        newPath = resolveChatRenamePath(oldPath, newPath);
-
-        try {
-          await app.serviceManager.contents.rename(oldPath, newPath);
-          return getDisplayName(newPath, widgetConfig.config.defaultDirectory);
-        } catch (err) {
-          console.error('Error renaming chat', err);
-          showErrorMessage(trans.__('Error renaming chat'), `${err}`);
-        }
-        return null;
+        await model.ready;
+        model.title = name;
       }
+    });
+
+    // Update the 'renameChat' command status when the current widget changes or
+    // a side panel chat is opened.
+    tracker.currentChanged.connect(() => {
+      commands.notifyCommandChanged(CommandIDs.renameChat);
+    });
+    chatPanel?.chatOpened.connect(() => {
+      commands.notifyCommandChanged(CommandIDs.renameChat);
     });
 
     // The command to focus the input of the current chat widget.
@@ -1192,7 +1218,7 @@ const chatCommands: JupyterFrontEndPlugin<void> = {
           if (widget.area === 'sidebar' && chatPanel) {
             // The chat is the side panel.
             app.shell.activateById(chatPanel.id);
-            chatPanel.openIfLoaded(widget.model.name);
+            chatPanel.openIfLoaded(getChatPath(widget.model) ?? '');
           } else {
             // The chat is in the main area.
             app.shell.activateById(widget.id);
@@ -1339,27 +1365,80 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
     translator_: ITranslator | null,
     welcomeMessage: string | null
   ): MultiChatPanel => {
-    const { commands, serviceManager } = app;
+    const { serviceManager } = app;
     const translator = translator_ ?? nullTranslator;
 
     const chatFileExtension = chatFileType.extensions[0];
 
-    // Get the chat in default directory
+    // The titles read from the chat files, cached by path with the file's last
+    // modification time, to avoid reading again the files that did not change.
+    const titlesCache = new Map<
+      string,
+      { lastModified: string; title: string | undefined }
+    >();
+
+    // Get the title of a chat file (stored in its metadata), using the cache.
+    const getTitle = async (
+      file: Contents.IModel
+    ): Promise<string | undefined> => {
+      // Avoid getting content from opened chat.
+      const loaded = chatPanel.getLoadedModel(file.path);
+      if (loaded && 'title' in loaded) {
+        return (loaded as ILabChatModel).title;
+      }
+      // Check for cache.
+      const cached = titlesCache.get(file.path);
+      if (cached && cached.lastModified === file.last_modified) {
+        return cached.title;
+      }
+      // Load the file content to get the title.
+      try {
+        const model = await serviceManager.contents.get(file.path, {
+          content: true,
+          type: 'file',
+          format: 'text'
+        });
+        const title = getChatTitleFromContent(model.content);
+        titlesCache.set(file.path, {
+          lastModified: file.last_modified,
+          title
+        });
+        return title;
+      } catch (e) {
+        // Not cached, to retry on the next update.
+        console.warn(`Cannot read the title of the chat '${file.path}'`, e);
+        return undefined;
+      }
+    };
+
+    // Get the chats in default directory, mapping their paths to their names:
+    // their title if they have one, or their file name otherwise.
     const getChatNames = async () => {
       const dirContents = await serviceManager.contents.get(
         widgetConfig.config.defaultDirectory ?? '',
         { content: true }
       );
-      const names: { [name: string]: string } = {};
-      for (const file of dirContents.content) {
-        if (
+      const files = (dirContents.content as Contents.IModel[]).filter(
+        file =>
           (file.type === 'file' || file.type === chatFileType.contentType) &&
           file.name.endsWith(chatFileExtension)
-        ) {
-          const nameWithoutExt = file.name.replace(chatFileExtension, '');
-          names[nameWithoutExt] = file.path;
+      );
+
+      // Drop the cached titles of the files that are no longer listed.
+      const paths = new Set(files.map(file => file.path));
+      for (const path of titlesCache.keys()) {
+        if (!paths.has(path)) {
+          titlesCache.delete(path);
         }
       }
+
+      const names: { [path: string]: string } = {};
+      await Promise.all(
+        files.map(async file => {
+          names[file.path] =
+            (await getTitle(file)) ?? file.name.replace(chatFileExtension, '');
+        })
+      );
       return names;
     };
 
@@ -1375,11 +1454,6 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
           path,
           widgetConfig.config.defaultDirectory
         );
-      },
-      renameChat: (oldPath: string) => {
-        return commands.execute(CommandIDs.renameChat, {
-          oldPath
-        }) as Promise<string | null>;
       },
       chatCommandRegistry: chatCommandRegistry ?? undefined,
       attachmentOpenerRegistry: attachmentOpenerRegistry ?? undefined,
@@ -1406,33 +1480,28 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
         chatPanel.updateChatList();
         if (change.oldValue?.path) {
           // Dispose of the model if the chat is loaded in the side panel.
-          const oldName = getDisplayName(
-            change.oldValue.path,
-            widgetConfig.config.defaultDirectory
-          );
-          chatPanel.unsetLoadedModel(oldName);
+          chatPanel.unsetLoadedModel(change.oldValue.path);
         }
       }
-      const updateActions = ['new', 'rename'];
+      // A saved file may have a new title.
+      const updateActions = ['new', 'rename', 'save'];
       if (
         updateActions.includes(change.type) &&
         change.newValue?.path?.endsWith(chatFileType.extensions[0])
       ) {
         chatPanel.updateChatList();
-        // Update the displayed name if the current chat file is renamed.
+        // Update the path and the key of the chat if it is loaded in the side
+        // panel and its file is renamed. Its name follows the model name.
+        // The path must be updated here, since a loaded chat which is not
+        // displayed has no widget in the tracker.
         const oldPath = change.oldValue?.path;
         const newPath = change.newValue?.path;
-        if (oldPath && newPath) {
-          const oldName = getDisplayName(
-            oldPath,
-            widgetConfig.config.defaultDirectory
-          );
-          if (chatPanel.current?.name === oldName) {
-            chatPanel.current.name = getDisplayName(
-              newPath,
-              widgetConfig.config.defaultDirectory
-            );
+        if (oldPath && newPath && oldPath !== newPath) {
+          const model = chatPanel.getLoadedModel(oldPath);
+          if (model && getChatPath(model) !== undefined) {
+            (model as ILabChatModel).path = newPath;
           }
+          chatPanel.updateLoadedChat(oldPath, newPath);
         }
       }
     });

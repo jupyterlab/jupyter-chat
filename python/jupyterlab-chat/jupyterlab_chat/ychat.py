@@ -286,6 +286,14 @@ class YChat(YBaseDoc, BaseChatModel):
         with self._ydoc.transaction():
             self._ymetadata.update({name: metadata})
 
+    def delete_metadata(self, name: str):
+        """
+        Removes a metadata of the document.
+        """
+        with self._ydoc.transaction():
+            if name in self._ymetadata:
+                del self._ymetadata[name]
+
     def broadcast_writing_status(
         self,
         user: User,

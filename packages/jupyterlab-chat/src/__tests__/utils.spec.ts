@@ -3,7 +3,13 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { resolveChatRenamePath } from '../utils';
+import { IChatModel } from '@jupyter/chat';
+
+import {
+  getChatPath,
+  getChatTitleFromContent,
+  resolveChatRenamePath
+} from '../utils';
 
 describe('resolveChatRenamePath', () => {
   it('keeps a renamed chat in its original directory', () => {
@@ -32,5 +38,49 @@ describe('resolveChatRenamePath', () => {
     expect(resolveChatRenamePath('chats/2024/untitled.chat', 'test')).toBe(
       'chats/2024/test.chat'
     );
+  });
+});
+
+describe('getChatPath', () => {
+  it('returns the path of the model', () => {
+    const model = { name: 'Display name', path: 'chats/a.chat' };
+    expect(getChatPath(model as unknown as IChatModel)).toBe('chats/a.chat');
+  });
+
+  it('returns undefined if the model has no path', () => {
+    const model = { name: 'chats/a.chat' };
+    expect(getChatPath(model as unknown as IChatModel)).toBeUndefined();
+  });
+});
+
+describe('getChatTitleFromContent', () => {
+  it('reads the title from the chat file content', () => {
+    const content = JSON.stringify({
+      messages: [],
+      metadata: { id: 'abc', title: 'My chat' }
+    });
+    expect(getChatTitleFromContent(content)).toBe('My chat');
+  });
+
+  it('accepts already parsed content', () => {
+    expect(getChatTitleFromContent({ metadata: { title: 'My chat' } })).toBe(
+      'My chat'
+    );
+  });
+
+  it('returns undefined without a valid title', () => {
+    expect(
+      getChatTitleFromContent(JSON.stringify({ metadata: { id: 'abc' } }))
+    ).toBeUndefined();
+    expect(getChatTitleFromContent(JSON.stringify({}))).toBeUndefined();
+    expect(getChatTitleFromContent('')).toBeUndefined();
+    expect(getChatTitleFromContent('not json')).toBeUndefined();
+    expect(getChatTitleFromContent(null)).toBeUndefined();
+    expect(
+      getChatTitleFromContent({ metadata: { title: '  ' } })
+    ).toBeUndefined();
+    expect(
+      getChatTitleFromContent({ metadata: { title: 42 } })
+    ).toBeUndefined();
   });
 });

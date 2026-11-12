@@ -196,6 +196,17 @@ export class YChat extends YDocument<IChatChanges> {
   }
 
   /**
+   * Get a copy of a chat-level metadata entry.
+   *
+   * @param key - the metadata key.
+   * @returns the metadata value, or undefined if it is not set.
+   */
+  getMetadata(key: string): IMetadata | undefined {
+    const value = this._metadata.get(key);
+    return value === undefined ? undefined : JSONExt.deepCopy(value);
+  }
+
+  /**
    * Set (or update) a chat-level metadata entry. Used by the RTC-free transport
    * to apply `metadata` updates pushed by the server; the metadata observer then
    * emits the change to consumers.
@@ -203,6 +214,17 @@ export class YChat extends YDocument<IChatChanges> {
   setMetadata(key: string, value: IMetadata): void {
     this.transact(() => {
       this._metadata.set(key, value);
+    });
+  }
+
+  /**
+   * Delete a chat-level metadata entry.
+   *
+   * @param key - the metadata key.
+   */
+  deleteMetadata(key: string): void {
+    this.transact(() => {
+      this._metadata.delete(key);
     });
   }
 

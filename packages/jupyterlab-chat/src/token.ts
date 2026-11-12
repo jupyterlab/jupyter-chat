@@ -58,11 +58,27 @@ export const IChatToolbarFactory = new Token<ChatToolbarFactory>(
 );
 
 /**
- * The interface for the lab chat model, extending IChatModel with
+ * The interface for the lab chat model, extending IChatModel with file path,
  * Yjs-backed shared document access and message conversion.
  */
 export interface ILabChatModel extends IChatModel {
+  /**
+   * The path of the chat file.
+   */
+  path: string;
+  /**
+   * The title of the chat, stored in its metadata, or undefined if it has none.
+   * Setting an empty title removes it.
+   */
+  title: string | undefined;
+  /**
+   * The shared model of the chat.
+   */
   readonly sharedModel: YChat;
+  /**
+   * The method to convert a message content to YMessage.
+   * @param msg - The message content.
+   */
   toYMessage(msg: IMessageContent): IYmessage;
 }
 

@@ -11,7 +11,11 @@ from types import SimpleNamespace
 from jupyterlab_chat.models import User
 from jupyterlab_chat.websocket_handler import WSChatHandler
 from jupyterlab_chat.websocket_model import WsChatModel
-from jupyterlab_chat.ws_messages import ClientEditMessage, ClientSendMessage
+from jupyterlab_chat.ws_messages import (
+    ClientEditMessage,
+    ClientMetadataMessage,
+    ClientSendMessage,
+)
 
 # ---------------------------------------------------------------------------
 # Stubs
@@ -187,3 +191,56 @@ def test_update_message_without_mime_model_leaves_existing(tmp_path):
 
     stored = model.get_message("m1")
     assert stored.mime_model == {"data": {"text/plain": "original"}}
+
+
+# Chat metadata update
+def test_metadata_message_sets_saves_and_broadcasts(tmp_path):
+    """A metadata update is stored, saved to the file and broadcast."""
+    model, client, handler = _setup(tmp_path)
+
+    handler._handle_metadata_message(
+        ClientMetadataMessage(metadata={"title": "My chat"}), model
+    )
+
+    assert model.get_metadata()["title"] == "My chat"
+    content = json.loads((tmp_path / "chat.chat").read_text(encoding="utf-8"))
+    assert content["metadata"]["title"] == "My chat"
+    frames = _frames_of(client, "metadata")
+    assert frames == [
+        {"type": "server", "action": "metadata", "metadata": {"title": "My chat"}}
+    ]
+
+
+def test_metadata_message_with_none_removes_the_entry(tmp_path):
+    """A None value removes the entry, saves the file and broadcasts a null."""
+    model, client, handler = _setup(tmp_path)
+    handler._handle_metadata_message(
+        ClientMetadataMessage(metadata={"title": "My chat"}), model
+    )
+
+    handler._handle_metadata_message(
+        ClientMetadataMessage(metadata={"title": None}), model
+    )
+
+    assert "title" not in model.get_metadata()
+    content = json.loads((tmp_path / "chat.chat").read_text(encoding="utf-8"))
+    assert "title" not in content["metadata"]
+    frames = _frames_of(client, "metadata")
+    assert frames[-1] == {
+        "type": "server",
+        "action": "metadata",
+        "metadata": {"title": None},
+    }
+
+
+def test_metadata_message_cannot_change_the_chat_id(tmp_path):
+    """A client cannot overwrite the chat ID owned by the server."""
+    model, client, handler = _setup(tmp_path)
+    chat_id = model.get_id()
+
+    handler._handle_metadata_message(
+        ClientMetadataMessage(metadata={"id": "other"}), model
+    )
+
+    assert model.get_id() == chat_id
+    assert _frames_of(client, "metadata") == []

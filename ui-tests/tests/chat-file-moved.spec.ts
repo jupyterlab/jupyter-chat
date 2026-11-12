@@ -5,10 +5,11 @@
 
 import { expect, test } from '@jupyterlab/galata';
 
-import { openChat } from './test-utils';
+import { openChat, openChatToSide } from './test-utils';
 
 const OLD_PATH = 'chat-file-moved.chat';
-const NEW_PATH = 'chat-file-moved-renamed.chat';
+const NEW_PATH = 'chat-file-renamed.chat';
+const OTHER_PATH = 'chat-file-other.chat';
 const MSG1 = 'first message';
 const MSG2 = 'second message';
 
@@ -38,7 +39,7 @@ test.describe('#chatFileMoved', () => {
   });
 
   test.afterEach(async ({ page }) => {
-    for (const path of [OLD_PATH, NEW_PATH]) {
+    for (const path of [OLD_PATH, NEW_PATH, OTHER_PATH]) {
       if (await page.filebrowser.contents.fileExists(path)) {
         await page.filebrowser.contents.deleteFile(path);
       }
@@ -91,5 +92,43 @@ test.describe('#chatFileMoved', () => {
     const bodies = afterMove.messages.map((m: any) => m.body);
     expect(bodies).toContain(MSG1);
     expect(bodies).toContain(MSG2);
+  });
+
+  test('should follow the move of an inactive chat in the side panel', async ({
+    page
+  }) => {
+    await page.filebrowser.contents.uploadContent('{}', 'text', OTHER_PATH);
+    const sidePanel = await openChatToSide(page, OLD_PATH);
+    const chatToolbar = sidePanel.locator('.jp-chat-sidepanel-widget-toolbar');
+    await expect(chatToolbar.locator('.jp-chat-name')).toHaveText(
+      OLD_PATH.replace('.chat', '')
+    );
+
+    // Open another chat, the first one stays loaded but is no longer displayed.
+    await openChatToSide(page, OTHER_PATH);
+    await expect(chatToolbar.locator('.jp-chat-name')).toHaveText(
+      OTHER_PATH.replace('.chat', '')
+    );
+
+    // Move the inactive chat.
+    await page.evaluate(
+      async ({ oldPath, newPath }) => {
+        await window.jupyterapp.serviceManager.contents.rename(
+          oldPath,
+          newPath
+        );
+      },
+      { oldPath: OLD_PATH, newPath: NEW_PATH }
+    );
+
+    // Reopen it in the side panel, and move it to the main area: it opens the
+    // file at the new path.
+    await openChatToSide(page, NEW_PATH);
+    await expect(chatToolbar.locator('.jp-chat-name')).toHaveText(
+      NEW_PATH.replace('.chat', '')
+    );
+    await chatToolbar.getByTitle('Move the chat to the main area').click();
+    await expect(page.activity.getTabLocator(NEW_PATH)).toBeVisible();
+    expect(await page.filebrowser.contents.fileExists(OLD_PATH)).toBe(false);
   });
 });
