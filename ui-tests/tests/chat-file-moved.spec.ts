@@ -8,8 +8,8 @@ import { expect, test } from '@jupyterlab/galata';
 import { openChat, openChatToSide } from './test-utils';
 
 const OLD_PATH = 'chat-file-moved.chat';
-const NEW_PATH = 'chat-file-moved-renamed.chat';
-const OTHER_PATH = 'chat-file-moved-other.chat';
+const NEW_PATH = 'chat-file-renamed.chat';
+const OTHER_PATH = 'chat-file-other.chat';
 const MSG1 = 'first message';
 const MSG2 = 'second message';
 
@@ -101,13 +101,13 @@ test.describe('#chatFileMoved', () => {
     const sidePanel = await openChatToSide(page, OLD_PATH);
     const chatToolbar = sidePanel.locator('.jp-chat-sidepanel-widget-toolbar');
     await expect(chatToolbar.locator('.jp-chat-name')).toHaveText(
-      'chat-file-moved'
+      OLD_PATH.replace('.chat', '')
     );
 
     // Open another chat, the first one stays loaded but is no longer displayed.
     await openChatToSide(page, OTHER_PATH);
     await expect(chatToolbar.locator('.jp-chat-name')).toHaveText(
-      'chat-file-moved-other'
+      OTHER_PATH.replace('.chat', '')
     );
 
     // Move the inactive chat.
@@ -125,7 +125,7 @@ test.describe('#chatFileMoved', () => {
     // file at the new path.
     await openChatToSide(page, NEW_PATH);
     await expect(chatToolbar.locator('.jp-chat-name')).toHaveText(
-      'chat-file-moved-renamed'
+      NEW_PATH.replace('.chat', '')
     );
     await chatToolbar.getByTitle('Move the chat to the main area').click();
     await expect(page.activity.getTabLocator(NEW_PATH)).toBeVisible();
