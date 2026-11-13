@@ -18,9 +18,10 @@ import pytest_asyncio
 
 pytest.importorskip("jupyter_server_ydoc")
 
-from jupyter_server_ydoc.loaders import FileLoader  # noqa: E402
-from jupyter_server_ydoc.rooms import DocumentRoom  # noqa: E402
-from jupyter_server_ydoc.test_utils import (  # noqa: E402
+# jupyter_server_ydoc is untyped, and not installed in every environment.
+from jupyter_server_ydoc.loaders import FileLoader  # type: ignore[import-untyped,import-not-found] # noqa: E402
+from jupyter_server_ydoc.rooms import DocumentRoom  # type: ignore[import-untyped,import-not-found] # noqa: E402
+from jupyter_server_ydoc.test_utils import (  # type: ignore[import-untyped,import-not-found] # noqa: E402
     FakeContentsManager,
     FakeEventLogger,
     FakeFileIDManager,
@@ -90,7 +91,7 @@ def _client_sends_message(
     room: DocumentRoom, message: dict, index: int | None = None
 ) -> None:
     """Insert a message from a remote client, synchronized through Y updates."""
-    client_doc = Doc()
+    client_doc: Doc = Doc()
     client_doc.apply_update(room.ydoc.get_update())
     client_chat = YChat(client_doc)
     state = room.ydoc.get_state()
