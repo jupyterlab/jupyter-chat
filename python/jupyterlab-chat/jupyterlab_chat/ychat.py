@@ -12,7 +12,7 @@ from jupyter_ydoc.ybasedoc import YBaseDoc
 from collections.abc import Callable
 from typing import Any
 from uuid import uuid4
-from pycrdt import Array, ArrayEvent, Map, MapEvent, Subscription
+from pycrdt import Array, ArrayEvent, Map, Subscription
 
 from .models import (
     BaseChatModel,
@@ -41,7 +41,7 @@ WRITERS_AWARENESS_KEY = "writers"
 class YChat(YBaseDoc, BaseChatModel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.dirty = True
+        self._loading = False
         # Set by whoever resolves this document (e.g. the ChatManager) from the
         # collaboration room lifecycle event, which carries both fields. The
         # room id ("{format}:{type}:{file_id}") lets get_path() recover the file
@@ -55,11 +55,6 @@ class YChat(YBaseDoc, BaseChatModel):
         self._ydoc["metadata"] = self._ymetadata = Map()  # type:ignore[var-annotated]
         self._ymessages_subscription: Subscription | None = self._ymessages.observe(
             self._on_messages_change
-        )
-
-        # Observe the state to initialize the file as soon as the document is not dirty.
-        self._ystate_subscription: Subscription | None = self._ystate.observe(
-            self._initialize
         )
 
         # Lookup table to get message index from its ID.
@@ -183,6 +178,7 @@ class YChat(YBaseDoc, BaseChatModel):
             **asdict(new_message),
             time=timestamp,
             id=uid,
+            raw_time=False
         )
 
         # Execute all trigger action callbacks
@@ -353,11 +349,11 @@ class YChat(YBaseDoc, BaseChatModel):
     def _dispatch_message_event(
         self, callback: MessageObserverCallback, event: ArrayEvent
     ) -> None:
-        # Skip while the document is still loading its pre-existing messages,
-        # and skip events that contain a delete (a message reposition performed
-        # by `_set_timestamp` is a delete+insert of an existing message, not a
-        # new one).
-        if self.dirty:
+        # Skip while `set()` is reloading the pre-existing messages, and skip
+        # events that contain a delete (a message reposition performed by
+        # `_set_timestamp` is a delete+insert of an existing message, not a new
+        # one).
+        if self._loading:
             return
         if any("delete" in value.keys() for value in event.delta):  # type:ignore[attr-defined]
             return
@@ -473,6 +469,15 @@ class YChat(YBaseDoc, BaseChatModel):
         except json.JSONDecodeError:
             contents = dict()
 
+        # The observers run when the transaction exits, still inside the loading
+        # window.
+        self._loading = True
+        try:
+            self._set_content(contents)
+        finally:
+            self._loading = False
+
+    def _set_content(self, contents: dict) -> None:
         # Make sure the users are updated before the messages, for consistency.
         with self._ydoc.transaction():
             self._yusers.clear()
@@ -528,25 +533,6 @@ class YChat(YBaseDoc, BaseChatModel):
         if self._ymessages_subscription is not None:
             self._ymessages.unobserve(self._ymessages_subscription)
             self._ymessages_subscription = None
-        if self._ystate_subscription is not None:
-            self._ystate.unobserve(self._ystate_subscription)
-            self._ystate_subscription = None
-
-    def _initialize(self, event: MapEvent) -> None:
-        """
-        Called when the state changes, to create an id if it does not exist.
-        This function should be called only once when the dirty state is set to false.
-        """
-        if self.dirty:
-            return
-        # Read the raw metadata rather than get_id(): get_id() lazily creates an
-        # id, and this observer runs inside a read-only transaction where writes
-        # are forbidden. The (deferred) create_id below performs the write.
-        if self._ymetadata.get("id", None) is None:
-            self._schedule_callback(self.create_id)
-        if self._ystate_subscription is not None:
-            self._ystate.unobserve(self._ystate_subscription)
-            self._ystate_subscription = None
 
     def _on_messages_change(self, event: ArrayEvent) -> None:
         """
@@ -578,9 +564,9 @@ class YChat(YBaseDoc, BaseChatModel):
             # changing the index.
             self._indexes_by_id = {message["id"]: idx for idx, message in enumerate(self._get_messages())}
 
-        # Avoid updating the timestamp when reading the document the first time (dirty
-        # flag set to True)or when there is no new message.
-        if self.dirty or inserted_count == -1 or deleted_count == inserted_count:
+        # Avoid updating the timestamp when reloading the document content, or when
+        # there is no new message.
+        if self._loading or inserted_count == -1 or deleted_count == inserted_count:
             return
 
         for idx in range(index, index + inserted_count):
