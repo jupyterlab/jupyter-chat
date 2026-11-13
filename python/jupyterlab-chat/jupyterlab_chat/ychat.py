@@ -565,13 +565,14 @@ class YChat(YBaseDoc, BaseChatModel):
             self._indexes_by_id = {message["id"]: idx for idx, message in enumerate(self._get_messages())}
 
         # Avoid updating the timestamp when reloading the document content, or when
-        # there is no new message.
+        # there is no new message. Only the messages explicitly flagged by the
+        # client with `raw_time` are updated.
         if self._loading or inserted_count == -1 or deleted_count == inserted_count:
             return
 
         for idx in range(index, index + inserted_count):
             message_dict = self._ymessages[idx]
-            if message_dict and message_dict.get("raw_time", True):  # type:ignore[attr-defined]
+            if message_dict and message_dict.get("raw_time", False):  # type:ignore[attr-defined]
                 self._schedule_callback(self._set_timestamp, idx, timestamp)
 
     def _set_timestamp(self, msg_idx: int, timestamp: float) -> None:
@@ -593,5 +594,8 @@ class YChat(YBaseDoc, BaseChatModel):
             # current one, starting from the end of the list.
             new_idx = len(self._ymessages) - next((i for i, v in enumerate(self._get_messages()[::-1]) if v.get("time", 0) < timestamp), len(self._ymessages))
             if msg_idx != new_idx:
-                message = self._ymessages.pop(msg_idx)
-                self._ymessages.insert(new_idx, message)
+                # `pop()` returns the message content as a dict, it needs to be converted again.
+                message_dict = self._ymessages.pop(msg_idx)
+                if new_idx > msg_idx:
+                    new_idx -= 1
+                self._ymessages.insert(new_idx, Map(message_dict))
