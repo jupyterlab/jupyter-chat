@@ -124,10 +124,6 @@ def _insert_ymessage(chat: YChat, message: dict) -> None:
 
 def test_ychat_insert_classification_and_unobserve() -> None:
     chat = YChat()
-    # Give the document an id first so flipping `dirty` does not schedule
-    # `create_id()` (which needs a running event loop).
-    chat.set_id("test-chat")
-    chat.dirty = False  # simulate a fully-loaded document
     chat.set_user(User(username="human", name="H", display_name="H"))
     chat.set_user(User(username="bot", name="B", display_name="B", bot=True))
 
@@ -155,8 +151,6 @@ def test_ychat_insert_classification_and_unobserve() -> None:
 @pytest.mark.asyncio
 async def test_ychat_timestamp_update_preserves_insert_event() -> None:
     chat = YChat()
-    chat.set_id("test-chat")
-    chat.dirty = False
     events: list[ChatMessageEvent] = []
     chat.observe_messages(events.append)
 
