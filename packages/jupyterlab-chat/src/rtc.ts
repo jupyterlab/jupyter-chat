@@ -47,7 +47,7 @@ export const SERVER_SESSION_RTC_INFO_KEY = 'serverSessionRtcInfo';
 
 /**
  * RTC state assumed when the server published nothing (e.g. the
- * ``jupyterlab_chat`` server extension is not loaded): no RTC, WebSocket chat.
+ * ``jupyterlab_chat`` server extension is not loaded): no RTC.
  */
 const DEFAULT_RTC_INFO: IServerSessionRtcInfo = {
   enabled: false,
@@ -75,6 +75,14 @@ export function getServerSessionRtcInfo(): IServerSessionRtcInfo {
     );
     return DEFAULT_RTC_INFO;
   }
+}
+
+/**
+ * Whether the `jupyterlab_chat` server extension is loaded this session.
+ * It publishes the session RTC info, so a missing key means no chat backend.
+ */
+export function hasChatServer(): boolean {
+  return !!PageConfig.getOption(SERVER_SESSION_RTC_INFO_KEY);
 }
 
 /**

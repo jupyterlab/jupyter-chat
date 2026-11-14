@@ -338,24 +338,17 @@ export class LabChatModel
             this.setError(e);
             return;
           }
-          // Server unreachable (e.g. JupyterLite): fall back to the shared model.
+          // Server unreachable: fall back to the shared model.
           console.warn(
             'WS chat connection failed, falling back to shared model',
             e
           );
-          // Restore content from disk before wiring the change handler, so the
-          // initial population doesn't itself trigger a save. `ready` is
-          // resolved only after the load completes (see #532).
-          void this._loadContent().then(() => {
-            if (!this._sharedModel.id) {
-              this._sharedModel.id = UUID.uuid4();
-            }
-            const id = this._sharedModel.id;
-            // Any subsequent change must be saved by the frontend (no backend).
-            this._sharedModel.changed.connect(this._onServerLessChange, this);
-            this.setReady(id);
-          });
+          this._startServerless();
         });
+      return;
+    }
+    if (!this.collaborative) {
+      this._startServerless();
       return;
     }
     // The synced document's `id` metadata is the single source of truth for the
@@ -603,6 +596,24 @@ export class LabChatModel
   private _enforceAutosaveEnabled = () => {
     enforceAutosaveEnabled(this.sharedModel.awareness);
   };
+
+  /**
+   * Load and save the chat file from the frontend, when there is no backend.
+   */
+  private _startServerless(): void {
+    // Restore content from disk before wiring the change handler, so the
+    // initial population doesn't itself trigger a save. `ready` is
+    // resolved only after the load completes (see #532).
+    void this._loadContent().then(() => {
+      if (!this._sharedModel.id) {
+        this._sharedModel.id = UUID.uuid4();
+      }
+      const id = this._sharedModel.id;
+      // Any subsequent change must be saved by the frontend (no backend).
+      this._sharedModel.changed.connect(this._onServerLessChange, this);
+      this.setReady(id);
+    });
+  }
 
   /**
    * Triggered when there is no backend and a change occur in the shared model (e.g.

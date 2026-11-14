@@ -355,4 +355,85 @@ describe('LabChatModel', () => {
       expect(model.messages[0].renderedDelegate).toBe(delegateBefore);
     });
   });
+
+  describe('without a chat server', () => {
+    let webSocket: jest.SpyInstance;
+
+    beforeEach(() => {
+      webSocket = jest.spyOn(window, 'WebSocket');
+    });
+
+    afterEach(() => {
+      webSocket.mockRestore();
+    });
+
+    it('should load the chat file without opening a websocket', async () => {
+      const get = jest.fn().mockResolvedValue({
+        content: JSON.stringify({
+          messages: [
+            {
+              type: 'msg',
+              id: 'msg-1',
+              body: 'stored',
+              time: 1000,
+              sender: TEST_USER.username
+            }
+          ],
+          users: { [TEST_USER.username]: TEST_USER },
+          attachments: {},
+          metadata: { id: 'stored-id' }
+        })
+      });
+      const serverless = new LabChatModel({
+        widgetConfig: makeWidgetConfig(),
+        user: TEST_USER,
+        sharedModel: YChat.create(),
+        collaborative: false,
+        documentManager: { services: { contents: { get } } } as any
+      });
+      serverless.name = 'untitled.chat';
+      serverless.markDocumentSynced();
+
+      await expect(serverless.ready).resolves.toBe('stored-id');
+      expect(get).toHaveBeenCalledWith(
+        'untitled.chat',
+        expect.objectContaining({ content: true })
+      );
+      expect(serverless.messages).toHaveLength(1);
+      expect(serverless.messages[0].body).toBe('stored');
+      expect(webSocket).not.toHaveBeenCalled();
+      Signal.clearData(serverless);
+    });
+
+    it('should save the chat file when a message is sent', async () => {
+      const save = jest.fn().mockResolvedValue({});
+      const serverless = new LabChatModel({
+        widgetConfig: makeWidgetConfig(),
+        user: TEST_USER,
+        sharedModel: YChat.create(),
+        collaborative: false,
+        documentManager: {
+          services: {
+            contents: {
+              get: jest.fn().mockResolvedValue({ content: '' }),
+              save
+            }
+          }
+        } as any
+      });
+      serverless.name = 'untitled.chat';
+      serverless.markDocumentSynced();
+      await serverless.ready;
+
+      serverless.sendMessage({ body: 'hello' });
+      await new Promise(resolve => setTimeout(resolve, 600));
+
+      expect(save).toHaveBeenCalledTimes(1);
+      const [path, options] = save.mock.calls[0];
+      expect(path).toBe('untitled.chat');
+      expect(JSON.parse(options.content).messages[0].body).toBe('hello');
+      expect(webSocket).not.toHaveBeenCalled();
+      Signal.clearData(serverless);
+    });
+  });
 });
