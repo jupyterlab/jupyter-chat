@@ -161,6 +161,28 @@ describe('LabChatModel', () => {
       expect(model.messages[0].body).toBe('updated');
       expect(model.messages[0].edited).toBeUndefined();
     });
+
+    it('should remove the attachments when updated with an empty list', async () => {
+      const id = model.sendMessage({
+        body: 'original',
+        sender: TEST_USER,
+        attachments: [{ type: 'file', value: 'notes.md' }]
+      }) as string;
+      await flushPromises();
+      expect(model.messages[0].attachments).toHaveLength(1);
+
+      model.updateMessage(id, {
+        type: 'msg',
+        id,
+        body: 'original',
+        time: 1000,
+        sender: TEST_USER,
+        attachments: []
+      });
+      await flushPromises();
+
+      expect(model.messages[0].attachments).toBeUndefined();
+    });
   });
 
   describe('message attribute updates from shared model', () => {

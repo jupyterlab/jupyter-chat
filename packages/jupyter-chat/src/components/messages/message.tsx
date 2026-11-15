@@ -129,14 +129,13 @@ export function ChatMessageBase(props: ChatMessageProps): JSX.Element {
         return;
       }
 
-      // Update the message
-      const updatedMessage = { ...message };
-      if (newMessage.body) {
-        updatedMessage.body = newMessage.body;
-      }
-      if (newMessage.attachments) {
-        updatedMessage.attachments = newMessage.attachments;
-      }
+      // Update the message. The input model omits the attachments when there are
+      // none, so default to an empty list to drop the ones that were removed.
+      const updatedMessage = {
+        ...message,
+        body: newMessage.body ?? '',
+        attachments: newMessage.attachments ?? []
+      };
       if (newMessage.mentions) {
         updatedMessage.mentions = newMessage.mentions;
       }

@@ -120,7 +120,8 @@ export class WebSocketHandler {
     if (message.mime_model) {
       msg.mime_model = message.mime_model;
     }
-    if (message.attachments?.length) {
+    // An empty list is sent too, it removes the attachments of the message.
+    if (message.attachments) {
       msg.attachments = message.attachments;
     }
     if (message.mentions?.length) {
@@ -237,7 +238,7 @@ export class WebSocketHandler {
     if (msg.mime_model !== undefined) {
       content.mime_model = msg.mime_model;
     }
-    if (Array.isArray(msg.attachments) && msg.attachments.length) {
+    if (Array.isArray(msg.attachments)) {
       content.attachments = msg.attachments;
     }
     if (Array.isArray(msg.mentions) && msg.mentions.length) {

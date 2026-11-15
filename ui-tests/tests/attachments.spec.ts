@@ -9,6 +9,7 @@ import {
   createChat,
   exposeDepsJs,
   getPlugin,
+  hoverFirstMessage,
   openChat,
   openChatToSide
 } from './test-utils';
@@ -141,6 +142,49 @@ test.describe('#attachments', () => {
     await page.waitForCondition(
       async () => await page.activity.isTabActive('untitled.md')
     );
+  });
+
+  test('Should remove the attachment when editing a message', async ({
+    page,
+    tmpPath
+  }) => {
+    const chatPanel = await openChat(page, chatPath);
+    const input = chatPanel.locator('.jp-chat-input-container');
+
+    // Attach the markdown file from the temp directory and send the message.
+    await input.locator('.jp-chat-attach-button').click();
+    await page.waitForSelector('.jp-Dialog');
+    const items = page.locator('.jp-Dialog .jp-DirListing-item');
+    await items.first().locator('.jp-DirListing-itemName').dblclick();
+    await page.waitForCondition(
+      async () =>
+        (await items
+          .first()
+          .locator('.jp-DirListing-itemName')
+          .textContent()) !== tmpPath
+    );
+    const item = items.filter({ hasText: 'untitled.md' });
+    await item.hover();
+    await item.locator('input[type="checkbox"]').click();
+    await page.locator('.jp-Dialog button.jp-mod-accept').click();
+    await input.getByRole('combobox').pressSequentially('Hello');
+    await input.locator('.jp-chat-send-button').click();
+
+    const { message, messageContent } = await hoverFirstMessage(chatPanel);
+    await expect(message.locator('.jp-chat-attachment')).toHaveCount(1);
+
+    // Edit the message, remove its attachment and save.
+    await message.locator('button[aria-label="Edit"]').click();
+    const editInput = chatPanel.locator(
+      '.jp-chat-messages-container .jp-chat-input-container'
+    );
+    await editInput.locator('.jp-chat-attachment-remove').click();
+    await expect(editInput.locator('.jp-chat-attachment')).toHaveCount(0);
+    await editInput.locator('.jp-chat-save-edit-button').click();
+
+    // The message should keep its text and not have attachment anymore.
+    await expect(messageContent).toHaveText('Hello\n');
+    await expect(message.locator('.jp-chat-attachment')).toHaveCount(0);
   });
 
   test('Should select cells when opening a notebook attachment with cells', async ({
