@@ -139,6 +139,44 @@ describe('test chat model', () => {
     });
   });
 
+  describe('stacked messages', () => {
+    const time = Date.now() / 1000;
+    const messages = [
+      { id: 'm1', sender: { username: 'alice' } },
+      { id: 'm2', sender: { username: 'bob' }, deleted: true },
+      { id: 'm3', sender: { username: 'bob' } }
+    ].map(
+      (msg, idx) =>
+        ({
+          type: 'msg',
+          body: 'text',
+          time: time + idx,
+          ...msg
+        }) as IMessageContent
+    );
+
+    it('should not stack a message on a hidden deleted message', () => {
+      const model = new MockChatModel();
+      model.messagesInserted(0, messages);
+      expect(model.messages[2].stacked).toBe(false);
+    });
+
+    it('should stack a message on a shown deleted message', () => {
+      const model = new MockChatModel({ config: { showDeleted: true } });
+      model.messagesInserted(0, messages);
+      expect(model.messages[2].stacked).toBe(true);
+    });
+
+    it('should update the stacked messages when showDeleted changes', () => {
+      const model = new MockChatModel();
+      model.messagesInserted(0, messages);
+      model.config = { showDeleted: true };
+      expect(model.messages[2].stacked).toBe(true);
+      model.config = { showDeleted: false };
+      expect(model.messages[2].stacked).toBe(false);
+    });
+  });
+
   describe('model config', () => {
     it('should have empty config', () => {
       const model = new MockChatModel();
