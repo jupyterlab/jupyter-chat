@@ -462,9 +462,13 @@ export abstract class AbstractChatModel implements IChatModel {
     return this._config;
   }
   set config(value: Partial<IConfig>) {
-    const stackMessagesChanged =
-      'stackMessages' in value &&
-      this._config.stackMessages !== value.stackMessages;
+    // Hiding or showing the deleted messages also changes which message is the
+    // previous one in the list.
+    const stackingChanged =
+      ('stackMessages' in value &&
+        this._config.stackMessages !== value.stackMessages) ||
+      ('showDeleted' in value &&
+        this._config.showDeleted !== value.showDeleted);
 
     const unreadNotificationsChanged =
       'unreadNotifications' in value &&
@@ -476,11 +480,10 @@ export abstract class AbstractChatModel implements IChatModel {
 
     this.input.config = value;
     // Update the stacked status of the messages and the view.
-    if (stackMessagesChanged) {
+    if (stackingChanged) {
       if (this._config.stackMessages) {
         this._messages.slice(1).forEach((message, idx) => {
-          const previousUser = this._messages[idx].sender.username;
-          message.update({ stacked: previousUser === message.sender.username });
+          message.update({ stacked: this._isStacked(idx + 1) });
         });
       } else {
         this._messages.forEach(message => {
@@ -690,9 +693,7 @@ export abstract class AbstractChatModel implements IChatModel {
       const start = index === 0 ? 1 : index;
       const end = this._messages.length > lastIdx + 1 ? lastIdx + 1 : lastIdx;
       for (let idx = start; idx <= end; idx++) {
-        const message = this._messages[idx];
-        const previousUser = this._messages[idx - 1].sender.username;
-        message.update({ stacked: previousUser === message.sender.username });
+        this._messages[idx].update({ stacked: this._isStacked(idx) });
       }
     }
 
@@ -862,6 +863,21 @@ export abstract class AbstractChatModel implements IChatModel {
 
   private _onMessageChanged(msg: IMessage): void {
     this._messageChanged.emit(msg);
+  }
+
+  /**
+   * Whether the message at the given index has the same sender as the previous
+   * displayed message. Deleted messages are skipped when they are not shown.
+   */
+  private _isStacked(index: number): boolean {
+    const sender = this._messages[index].sender.username;
+    for (let idx = index - 1; idx >= 0; idx--) {
+      const previous = this._messages[idx];
+      if (!previous.deleted || this._config.showDeleted) {
+        return previous.sender.username === sender;
+      }
+    }
+    return false;
   }
 
   private _messages: IMessage[] = [];
