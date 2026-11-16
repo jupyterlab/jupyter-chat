@@ -72,6 +72,7 @@ import {
   YChat,
   chatFileType,
   getDisplayName,
+  hasChatServer,
   isCollaborative,
   resolveChatRenamePath
 } from 'jupyterlab-chat';
@@ -489,9 +490,11 @@ const docFactories: JupyterFrontEndPlugin<ChatWidgetFactory> = {
           selectionWatcher,
           documentManager: filebrowser?.model.manager,
           collaborative,
-          serverSettings: collaborative
-            ? undefined
-            : ServerConnection.makeSettings()
+          // No chat WebSocket without the server extension (e.g. JupyterLite).
+          serverSettings:
+            collaborative || !hasChatServer()
+              ? undefined
+              : ServerConnection.makeSettings()
         });
         app.docRegistry.addModelFactory(modelFactory);
       })

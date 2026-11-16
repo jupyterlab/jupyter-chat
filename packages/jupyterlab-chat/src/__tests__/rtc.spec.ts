@@ -8,6 +8,7 @@ import { PageConfig } from '@jupyterlab/coreutils';
 import {
   SERVER_SESSION_RTC_INFO_KEY,
   getServerSessionRtcInfo,
+  hasChatServer,
   isCollaborative
 } from '../rtc';
 
@@ -29,6 +30,27 @@ describe('getServerSessionRtcInfo', () => {
     expect(info.provider).toBeNull();
     expect(isCollaborative()).toBe(false);
     expect(getOption).toHaveBeenCalledWith(SERVER_SESSION_RTC_INFO_KEY);
+  });
+
+  it('reports no chat server when the key is absent', () => {
+    getOption.mockReturnValue('');
+    expect(hasChatServer()).toBe(false);
+  });
+
+  it('reports a chat server when the server published the key', () => {
+    getOption.mockReturnValue(
+      JSON.stringify({
+        enabled: false,
+        provider: null,
+        providerDetails: {
+          installed: [],
+          enabledByServer: [],
+          enabledByTrait: ['jupyter_server_documents']
+        }
+      })
+    );
+    expect(hasChatServer()).toBe(true);
+    expect(isCollaborative()).toBe(false);
   });
 
   it('reports collaborative when RTC is enabled', () => {
