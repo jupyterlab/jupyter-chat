@@ -845,7 +845,8 @@ export class LabChatModel
     if (msg.mime_model) {
       ymsg.mime_model = msg.mime_model;
     }
-    if (msg.attachments?.length) {
+    // Keep an empty list, to remove the attachments when updating a message.
+    if (msg.attachments) {
       ymsg.attachments = msg.attachments.map(att =>
         this._sharedModel.setAttachment(att)
       );

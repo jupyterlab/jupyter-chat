@@ -26,6 +26,8 @@ const REMOTE_USER = {
   initials: 'RU'
 };
 
+const flushPromises = () => new Promise(resolve => setTimeout(resolve, 0));
+
 function makeWidgetConfig(): IWidgetConfig {
   const owner = {} as IWidgetConfig;
   owner.config = {};
@@ -59,6 +61,44 @@ function makeHandler(model: LabChatModel): WebSocketHandler {
 function dispatch(handler: WebSocketHandler, frame: object): void {
   (handler as any)._handleMessage({ type: SERVER, ...frame });
 }
+
+describe('WebSocketHandler.updateMessage', () => {
+  const MESSAGE = {
+    type: 'msg' as const,
+    id: 'msg-1',
+    body: 'hello',
+    time: 1000,
+    sender: TEST_USER
+  };
+  let handler: WebSocketHandler;
+  let send: jest.Mock;
+
+  beforeEach(() => {
+    handler = makeHandler(makeModel());
+    send = jest.fn();
+    (handler as any)._socket = { send, close: jest.fn() };
+  });
+
+  afterEach(() => {
+    handler.dispose();
+  });
+
+  it('sends an empty attachments list, to remove the attachments', () => {
+    handler.updateMessage('msg-1', { ...MESSAGE, attachments: [] });
+
+    expect(JSON.parse(send.mock.calls[0][0])).toMatchObject({
+      action: 'edit',
+      id: 'msg-1',
+      attachments: []
+    });
+  });
+
+  it('does not send the attachments when they are not provided', () => {
+    handler.updateMessage('msg-1', MESSAGE);
+
+    expect(JSON.parse(send.mock.calls[0][0])).not.toHaveProperty('attachments');
+  });
+});
 
 describe('WebSocketHandler._handleMessage', () => {
   let model: LabChatModel;
@@ -100,6 +140,48 @@ describe('WebSocketHandler._handleMessage', () => {
       dispatch(handler, { action: 'writing', user: TEST_USER, state: true });
 
       expect(model.writers).toHaveLength(0);
+    });
+  });
+
+  describe('message frame', () => {
+    const ATTACHMENT = { type: 'file', value: 'notes.md' };
+    const MESSAGE = {
+      id: 'msg-1',
+      body: 'hello',
+      time: 1000,
+      sender: TEST_USER.username
+    };
+
+    it('removes the attachments of a message updated with an empty list', async () => {
+      dispatch(handler, {
+        action: 'message',
+        message: { ...MESSAGE, attachments: [ATTACHMENT] }
+      });
+      await flushPromises();
+      expect(model.messages[0].attachments).toEqual([ATTACHMENT]);
+
+      dispatch(handler, {
+        action: 'message',
+        message: { ...MESSAGE, attachments: [] }
+      });
+      await flushPromises();
+
+      expect(model.messages[0].attachments).toBeUndefined();
+    });
+
+    it('keeps the attachments of a message updated without the attachments', async () => {
+      dispatch(handler, {
+        action: 'message',
+        message: { ...MESSAGE, attachments: [ATTACHMENT] }
+      });
+      dispatch(handler, {
+        action: 'message',
+        message: { ...MESSAGE, body: 'updated' }
+      });
+      await flushPromises();
+
+      expect(model.messages[0].body).toBe('updated');
+      expect(model.messages[0].attachments).toEqual([ATTACHMENT]);
     });
   });
 
