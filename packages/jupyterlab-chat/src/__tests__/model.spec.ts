@@ -495,7 +495,7 @@ describe('LabChatModel', () => {
         collaborative: false,
         documentManager: { services: { contents: { get } } } as any
       });
-      serverless.name = 'untitled.chat';
+      serverless.path = 'untitled.chat';
       serverless.markDocumentSynced();
 
       await expect(serverless.ready).resolves.toBe('stored-id');
@@ -525,7 +525,7 @@ describe('LabChatModel', () => {
           }
         } as any
       });
-      serverless.name = 'untitled.chat';
+      serverless.path = 'untitled.chat';
       serverless.markDocumentSynced();
       await serverless.ready;
 
