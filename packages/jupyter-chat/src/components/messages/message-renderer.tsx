@@ -137,8 +137,10 @@ function MessageRendererBase(props: MessageRendererProps): JSX.Element {
       // The effect has been cleaned up while rendering, the renderer is not owned
       // by anybody anymore.
       if (cancelled) {
-        disposeRenderer(renderer);
-        renderer = null;
+        if (renderer) {
+          disposeRenderer(renderer);
+          renderer = null;
+        }
         props.rendered.resolve();
         return;
       }
