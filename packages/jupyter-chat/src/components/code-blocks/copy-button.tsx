@@ -4,7 +4,7 @@
  */
 
 import { copyIcon } from '@jupyterlab/ui-components';
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 
 import { TooltippedIconButton } from '../mui-extras';
 import { useTranslator } from '../../context';
@@ -28,6 +28,14 @@ export function CopyButton(props: CopyButtonProps): JSX.Element {
     isCopyDisabled ? CopyStatus.Disabled : CopyStatus.None
   );
   const timeoutId = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutId.current) {
+        clearTimeout(timeoutId.current);
+      }
+    };
+  }, []);
 
   const copy = useCallback(async () => {
     // ignore if we are already copying
@@ -71,7 +79,7 @@ export function CopyButton(props: CopyButtonProps): JSX.Element {
       tooltip={tooltip}
       placement="top"
       onClick={copy}
-      aria-label={trans.__('Copy to clipboard')}
+      aria-label={tooltip}
       inputToolbar={false}
     >
       <copyIcon.react height="16px" width="16px" />
