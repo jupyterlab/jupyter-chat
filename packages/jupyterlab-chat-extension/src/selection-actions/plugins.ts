@@ -87,7 +87,10 @@ export const selectionPopupPlugin: JupyterFrontEndPlugin<void> = {
         await app.commands.execute(CommandIDs.createAndOpen, {
           inSidePanel: true
         });
-        return chatPanel?.current?.model ?? null;
+        const model = chatPanel?.current?.model ?? null;
+        // Wait for the chat to be ready before an action writes to its input.
+        await model?.ready;
+        return model;
       } catch (e) {
         console.error('Failed to open a new chat', e);
         return null;
@@ -130,7 +133,7 @@ export const selectionPopupPlugin: JupyterFrontEndPlugin<void> = {
 
     app.commands.addCommand(CommandIDs.addToChat, {
       label: trans.__('Add selection to chat'),
-      caption: trans.__('Stage the editor selection in a chat input'),
+      caption: trans.__('Add the editor selection to a chat input'),
       describedBy: { args: { type: 'object', properties: {} } },
       isEnabled: () => {
         const source = controller.context();

@@ -112,7 +112,7 @@ function selectionOf(
 
 const makeDestination = (visible = true) =>
   ({
-    model: { input: { addPendingSnippet: jest.fn() } },
+    model: { input: {} },
     isVisible: visible,
     id: 'chat'
   }) as unknown as IChatPanel;
@@ -204,14 +204,15 @@ describe('SelectionPopupController', () => {
       const other = new FakeEditor('other\ncode');
       widget.node.remove();
       widget = makeWidget(editor, {
-        activeCell: { model: { id: 'c2' }, editor: other },
+        activeCell: { model: { id: 'c2', type: 'markdown' }, editor: other },
         widgets: [
-          { model: { id: 'c1' }, editor },
-          { model: { id: 'c2' }, editor: other }
+          { model: { id: 'c1', type: 'code' }, editor },
+          { model: { id: 'c2', type: 'markdown' }, editor: other }
         ]
       });
       watcher.select(selectionOf(editor, 0, 8, { cellId: 'c1' }));
       expect(popup.context?.cellId).toBe('c1');
+      expect(popup.context?.cellType).toBe('code');
       expect(popup.context?.selection.content).toBe('print(1)');
     });
   });
@@ -276,13 +277,30 @@ describe('SelectionPopupController', () => {
     it('should build the context from the current editor selection, made backwards or not', () => {
       // The watcher holds print(1); the user selected print(2) since.
       editor.select(17, 9);
-      expect(controller.beforeRun(action())).toMatchObject({
+      const context = controller.beforeRun(action());
+      expect(context).toMatchObject({
         path: 'a.py',
         selection: { start: [1, 0], end: [1, 7], content: 'print(2)' },
         inputModel: (destination as any).model.input,
         chatModel: (destination as any).model
       });
+      // A file has no cell.
+      expect(context?.cellId).toBeUndefined();
+      expect(context?.cellType).toBeUndefined();
       expect(popup.context).toBeNull();
+    });
+
+    it('should carry the id and the type of the active cell of a notebook', () => {
+      widget.node.remove();
+      widget = makeWidget(editor, {
+        activeCell: { model: { id: 'c1', type: 'raw' }, editor }
+      });
+      watcher.select(selectionOf(editor, 0, 8, { cellId: 'c1' }));
+      editor.select(0, 8);
+      expect(controller.beforeRun(action())).toMatchObject({
+        cellId: 'c1',
+        cellType: 'raw'
+      });
     });
 
     it('should hand the way to open a chat to the action only while there is none', () => {

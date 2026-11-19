@@ -117,8 +117,8 @@ the text selected in a notebook cell or in a file editor (see the `showSelection
 [setting](#chat-settings)). The built-in _Add to chat_ action is registered this way.
 
 An action receives a `SelectionActionContext`: the selection (`path`, `cellId` and
-`selection` with the range and the content) and the destination chat (`inputModel` and
-`chatModel`, `null` when no chat is open). When no chat is open and the chat panel is
+`cellType` for a notebook cell, and `selection` with the range and the content) and the
+destination chat (`inputModel` and `chatModel`, `null` when no chat is open). When no chat is open and the chat panel is
 available, the context also has `openNewChat()`, which creates a chat, opens it in the
 panel and resolves with its model (or `null` if it could not). The built-in action uses it
 to stay enabled with no chat; an action that does not need a chat can ignore it. Before
@@ -142,22 +142,20 @@ const selectionActionPlugin: JupyterFrontEndPlugin<void> = {
       label: 'Explain',
       isEnabled: context => context.inputModel !== null,
       run: context => {
-        context.inputModel?.addPendingSnippet?.({
-          path: context.path,
-          cellId: context.cellId,
-          selection: context.selection
-        });
+        const input = context.inputModel;
+        if (input) {
+          input.value = `${input.value}\nExplain this:\n\n${context.selection.content}`;
+          input.focus();
+        }
       }
     });
   }
 };
 ```
 
-`addPendingSnippet` returns `false`, and stages nothing, when the selected text is longer
-than `MAX_SNIPPET_LENGTH` (20,000 characters); the built-in action shows a warning then.
-An extension that replaces the _send_ item of the input toolbar should also count
-`pendingSnippets` and listen to `pendingSnippetsChanged`, or its button stays disabled when
-only a selection is staged.
+The built-in _Add to chat_ action writes the selection into the input as text (a header
+line and a code block) up to 20,000 characters, and adds it as an attachment of the
+notebook cell or of the file above that, up to 1,000,000 characters.
 
 The token is provided by `jupyterlab-chat-extension`. An extension using it must share
 `@jupyter/chat` with the host (`"bundled": false, "singleton": true` in the

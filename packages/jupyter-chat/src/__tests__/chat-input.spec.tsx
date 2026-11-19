@@ -13,10 +13,9 @@ import { createRoot, Root } from 'react-dom/client';
   globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }
 ).IS_REACT_ACT_ENVIRONMENT = true;
 
-import { SendButton } from '../components/input/buttons/send-button';
 import { ChatInput } from '../components/input/chat-input';
 import { ChatReactContext } from '../context';
-import { IConfig, PendingSnippet } from '../types';
+import { IConfig } from '../types';
 import { MockChatModel } from './mocks';
 
 const DEFAULT_PLACEHOLDER = 'Type a chat message, @ to mention...';
@@ -100,52 +99,9 @@ describe('ChatInput placeholder', () => {
   });
 });
 
-describe('ChatInput pending snippets', () => {
+describe('ChatInput value set while mounting', () => {
   let container: HTMLDivElement;
   let root: Root;
-
-  const SNIPPET: PendingSnippet = {
-    path: 'src/analysis/model.py',
-    cellId: '3f9a1c2e-0000-4000-8000-000000000000',
-    selection: { start: [2, 0], end: [4, 3], content: 'x = 1' }
-  };
-
-  const render = (stage?: PendingSnippet): MockChatModel => {
-    const model = new MockChatModel();
-    if (stage) {
-      model.input.addPendingSnippet?.(stage);
-    }
-    act(() => {
-      root.render(
-        <ChatReactContext.Provider
-          value={{ model, rmRegistry: {} as IRenderMimeRegistry }}
-        >
-          <ChatInput model={model.input} />
-          <SendButton model={model.input} chatModel={model} />
-        </ChatReactContext.Provider>
-      );
-    });
-    return model;
-  };
-
-  const chips = () => container.querySelectorAll('.jp-chat-pending-snippet');
-
-  const sendDisabled = (): boolean =>
-    (container.querySelector('.jp-chat-send-button') as HTMLButtonElement)
-      .disabled;
-
-  const pressEnter = async (): Promise<void> => {
-    const textarea = container.querySelector('[role="combobox"]')!;
-    await act(async () => {
-      textarea.dispatchEvent(
-        new KeyboardEvent('keydown', {
-          key: 'Enter',
-          bubbles: true,
-          cancelable: true
-        })
-      );
-    });
-  };
 
   beforeEach(() => {
     container = document.createElement('div');
@@ -160,37 +116,14 @@ describe('ChatInput pending snippets', () => {
     container.remove();
   });
 
-  it('should show a staged snippet and enable Send until it is removed', () => {
-    const model = render();
-    expect(chips()).toHaveLength(0);
-    expect(sendDisabled()).toBe(true);
-
-    act(() => {
-      model.input.addPendingSnippet?.(SNIPPET);
-    });
-    expect(chips()).toHaveLength(1);
-    expect(chips()[0].textContent).toBe('model.py · cell 3f9a1c2e · lines 3-5');
-    expect(sendDisabled()).toBe(false);
-
-    act(() => {
-      (
-        container.querySelector(
-          '.jp-chat-pending-snippet-remove button'
-        ) as HTMLElement
-      ).click();
-    });
-    expect(model.input.pendingSnippets).toEqual([]);
-    expect(chips()).toHaveLength(0);
-    expect(sendDisabled()).toBe(true);
-  });
-
-  it('should show a snippet staged between the first render and the effects', () => {
+  it('should show a value set between the first render and the effects', () => {
     const model = new MockChatModel();
-    // The render reads no snippet; the one staged right after it emitted nothing.
+    // The render reads an empty value; the one set right after it emitted
+    // before the input listened.
     jest
-      .spyOn(model.input, 'pendingSnippets', 'get')
-      .mockReturnValueOnce([])
-      .mockReturnValue([SNIPPET]);
+      .spyOn(model.input, 'value', 'get')
+      .mockReturnValueOnce('')
+      .mockReturnValue('From `a.py` lines 1-1:');
     act(() => {
       root.render(
         <ChatReactContext.Provider
@@ -200,13 +133,27 @@ describe('ChatInput pending snippets', () => {
         </ChatReactContext.Provider>
       );
     });
-    expect(chips()).toHaveLength(1);
+    const textarea = container.querySelector(
+      '[role="combobox"]'
+    ) as HTMLTextAreaElement;
+    expect(textarea.value).toBe('From `a.py` lines 1-1:');
   });
 
-  it('should send on Enter with a snippet and no text', async () => {
-    const model = render(SNIPPET);
-    const send = jest.spyOn(model.input, 'send');
-    await pressEnter();
-    expect(send).toHaveBeenCalledTimes(1);
+  it('should show an attachment added between the first render and the effects', () => {
+    const model = new MockChatModel();
+    jest
+      .spyOn(model.input, 'attachments', 'get')
+      .mockReturnValueOnce([])
+      .mockReturnValue([{ type: 'file', value: 'a.py' }]);
+    act(() => {
+      root.render(
+        <ChatReactContext.Provider
+          value={{ model, rmRegistry: {} as IRenderMimeRegistry }}
+        >
+          <ChatInput model={model.input} />
+        </ChatReactContext.Provider>
+      );
+    });
+    expect(container.querySelectorAll('.jp-chat-attachment')).toHaveLength(1);
   });
 });

@@ -21,13 +21,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { InputToolbarRegistry } from './toolbar-registry';
 import { submitInputMessage } from './submit-message';
 import { useChatCommands } from './use-chat-commands';
-import {
-  AttachmentPreviewList,
-  PendingSnippetPreviewList
-} from '../attachments';
+import { AttachmentPreviewList } from '../attachments';
 import { useChatContext, useTranslator } from '../../context';
 import { IInputModel, InputModel } from '../../input-model';
-import { IAttachment, PendingSnippet } from '../../types';
+import { IAttachment } from '../../types';
 
 const INPUT_BOX_CLASS = 'jp-chat-input-container';
 const INPUT_TEXTFIELD_CLASS = 'jp-chat-input-textfield';
@@ -56,9 +53,6 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
   const [attachments, setAttachments] = useState<IAttachment[]>(
     model.attachments
   );
-  const [pendingSnippets, setPendingSnippets] = useState<PendingSnippet[]>([
-    ...(model.pendingSnippets ?? [])
-  ]);
 
   const toolbarsContainerRef = useRef<HTMLDivElement>(null);
   const reactiveToolbarRef = useRef<ReactiveToolbar | null>(null);
@@ -80,7 +74,6 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
    * - focus requested
    * - config changed
    * - attachments changed
-   * - pending snippets changed
    */
   useEffect(() => {
     const inputChanged = (_: IInputModel, value: string) => {
@@ -106,22 +99,16 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     };
     model.attachmentsChanged?.connect(attachmentChanged);
 
-    const pendingSnippetsChanged = (
-      _: IInputModel,
-      snippets: PendingSnippet[]
-    ) => {
-      setPendingSnippets([...snippets]);
-    };
-    model.pendingSnippetsChanged?.connect(pendingSnippetsChanged);
-    // Pick up a snippet staged after the first render, before this effect connected.
-    setPendingSnippets([...(model.pendingSnippets ?? [])]);
+    // Pick up a value or an attachment set after the first render, before the
+    // signals above were connected.
+    setInput(model.value);
+    setAttachments([...model.attachments]);
 
     return () => {
       model.valueChanged?.disconnect(inputChanged);
       model.configChanged?.disconnect(configChanged);
       model.focusInputSignal?.disconnect(focusInputElement);
       model.attachmentsChanged?.disconnect(attachmentChanged);
-      model.pendingSnippetsChanged?.disconnect(pendingSnippetsChanged);
     };
   }, [model]);
 
@@ -353,8 +340,7 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
       (!sendWithShiftEnter && !event.shiftKey);
 
     // Do not send empty messages, and avoid adding new line in empty message.
-    const hasStaged = attachments.length > 0 || pendingSnippets.length > 0;
-    if (!inputExists && (!isSendCombination || !hasStaged)) {
+    if (!inputExists && (!isSendCombination || attachments.length === 0)) {
       event.stopPropagation();
       event.preventDefault();
       return;
@@ -387,29 +373,18 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
           overflow: 'hidden'
         }}
       >
-        {(attachments.length > 0 || pendingSnippets.length > 0) && (
+        {attachments.length > 0 && (
           <Box
             sx={{
               px: horizontalPadding,
               pt: 1,
-              pb: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 1
+              pb: 1
             }}
           >
-            {attachments.length > 0 && (
-              <AttachmentPreviewList
-                attachments={attachments}
-                onRemove={model.removeAttachment}
-              />
-            )}
-            {pendingSnippets.length > 0 && (
-              <PendingSnippetPreviewList
-                snippets={pendingSnippets}
-                onRemove={model.removePendingSnippet}
-              />
-            )}
+            <AttachmentPreviewList
+              attachments={attachments}
+              onRemove={model.removeAttachment}
+            />
           </Box>
         )}
         <Autocomplete

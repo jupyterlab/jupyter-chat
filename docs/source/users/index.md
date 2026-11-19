@@ -107,17 +107,25 @@ Attachments can then be opened by clicking on the preview icon.
 
 When the `showSelectionActions` [setting](#chat-settings) is enabled, selecting text in a
 notebook cell or in a file editor displays a small popup next to the selection. Its
-_Add to chat_ button stages the selection in the input of the current chat (or the first
+_Add to chat_ button writes the selection into the input of the current chat (or the first
 visible chat if the current one is hidden; when no chat is visible, the current one is
-brought to the front), where it is shown as a chip (file, cell and lines) until the
-message is sent. The message then contains the selected text in a code
-block, after the typed text, with the path of the file and the id of the cell. A staged
-selection can be removed from the chip, and the popup is dismissed with <kbd>Escape</kbd>
-or by clicking elsewhere.
+brought to the front): a line with the path of the file, the id of the cell and the lines,
+then the selected text in a code block. It is added after the text already typed, and the
+cursor is left below it, ready for a question. The text can be edited before it is sent,
+and clicking the button again adds the selection again. The popup is dismissed with
+<kbd>Escape</kbd> or by clicking elsewhere.
+
+The inserted text is sent like typed text, so chat commands act on it as on a paste: for
+example an `@name` in the selected code mentions that user.
+
+A selection longer than 20,000 characters is not written into the input: the notebook cell
+or the file is attached to the message instead (up to 1,000,000 characters; longer
+selections are not added). What an assistant reads from an attachment depends on it: some
+read the whole saved file.
 
 If no chat is open, the button creates a new chat (an `untitled.chat` file in the
 default directory, like the _Create a new chat_ button of the chat panel) and opens it in the chat
-panel, with the selection staged. The chat is not removed afterwards.
+panel, with the selection in its input. The chat is not removed afterwards.
 
 The same action is available from the command palette (_Add selection to chat_), which
 does not require the setting, and also creates a chat if none is open.

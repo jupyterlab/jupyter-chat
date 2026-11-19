@@ -147,7 +147,7 @@ export const CommandIDs = {
    */
   openWithMessage: 'jupyterlab-chat:openWithMessage',
   /**
-   * Stage the editor selection in a chat input.
+   * Add the editor selection to a chat input.
    */
   addToChat: 'jupyterlab-chat:addToChat'
 };

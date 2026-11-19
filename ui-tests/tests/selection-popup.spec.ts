@@ -45,7 +45,7 @@ test.describe('#selectionPopup', () => {
 
     const popup = page.locator('.jp-chat-selection-popup');
     const input = chatPanel.locator('.jp-chat-input-container');
-    const chip = input.locator('.jp-chat-pending-snippet');
+    const textarea = input.locator('[role="combobox"]');
     const sendButton = input.locator('.jp-chat-send-button');
     const messages = chatPanel.locator('.jp-chat-messages-container');
 
@@ -55,24 +55,30 @@ test.describe('#selectionPopup', () => {
 
     await popup.locator('.jp-chat-selection-popup-action').click();
     await expect(popup).toBeHidden();
-    await expect(chip).toHaveText(
-      new RegExp(`^${notebook.replace('.', '\\.')} · cell \\w{8} · lines 2-2$`)
+    // The selection is written into the input, and the cursor is left below it.
+    const fence = '```';
+    const path = `${tmpPath}/${notebook}`.replace(/\./g, '\\.');
+    await expect(textarea).toHaveValue(
+      new RegExp(
+        `^From \` ${path} \` \\(cell \` [\\w-]+ \`\\) lines 2-2:\n${fence}\nprint\n${fence}\n$`
+      )
     );
     await expect(sendButton).toBeEnabled();
+    await page.keyboard.type('What is this?');
+    await expect(textarea).toHaveValue(/```\nWhat is this\?$/);
 
     await sendButton.click();
     await expect(messages.locator('.jp-chat-message')).toHaveCount(1);
-    await expect(chip).toHaveCount(0);
+    await expect(textarea).toHaveValue('');
 
     const rendered = messages.locator(
       '.jp-chat-message .jp-chat-rendered-message'
     );
-    // The header holds the path of the notebook, the chip its name only.
     await expect(rendered).toContainText(`From ${tmpPath}/${notebook}`);
     await expect(rendered).toContainText('lines 2-2:');
     await expect(rendered.locator('pre code')).toHaveText('print\n');
 
-    // The palette command stages another selection too, and hides the popup.
+    // The palette command adds another selection too, and hides the popup.
     await cell.locator('.cm-line').first().click();
     await page.keyboard.press('Home');
     await page.keyboard.press('Shift+End');
@@ -80,7 +86,9 @@ test.describe('#selectionPopup', () => {
     await page.evaluate(() =>
       window.jupyterapp.commands.execute('jupyterlab-chat:addToChat')
     );
-    await expect(chip).toHaveCount(1);
+    await expect(textarea).toHaveValue(
+      /^From .* lines 1-1:\n```\na = 1\n```\n$/
+    );
     await expect(popup).toBeHidden();
   });
 });
@@ -123,15 +131,17 @@ test.describe('#selectionPopupWithoutChat', () => {
     await popup.locator('.jp-chat-selection-popup-action').click();
 
     // A new chat is created in the default directory and opened in the side
-    // panel, with the selection staged.
+    // panel, with the selection in its input.
     await page.waitForCondition(
       async () =>
         await page.filebrowser.contents.fileExists(`${CHAT_DIR}/untitled.chat`)
     );
     const sidePanel = page.locator('.jp-chat-sidepanel');
     await expect(sidePanel).toBeVisible();
-    await expect(sidePanel.locator('.jp-chat-pending-snippet')).toHaveText(
-      new RegExp(`^${notebook.replace('.', '\\.')} · cell \\w{8} · lines 2-2$`)
+    await expect(sidePanel.locator('[role="combobox"]')).toHaveValue(
+      new RegExp(
+        `^From \` .*${notebook.replace('.', '\\.')} \` .* lines 2-2:\n`
+      )
     );
   });
 });

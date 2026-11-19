@@ -10,9 +10,9 @@ import { Token } from '@lumino/coreutils';
 import { ISignal, Signal } from '@lumino/signaling';
 
 import { chatIcon } from '../icons';
-import { IInputModel, MAX_SNIPPET_LENGTH } from '../input-model';
+import { IInputModel } from '../input-model';
 import { IChatModel } from '../model';
-import { PendingSnippet } from '../types';
+import { IAttachment, IAttachmentSelection } from '../types';
 
 /**
  * The ID of the built-in "Add to chat" action.
@@ -52,7 +52,29 @@ export interface ISelectionActionRegistry {
 /**
  * The context handed to an action.
  */
-export type SelectionActionContext = PendingSnippet & {
+export type SelectionActionContext = {
+  /**
+   * The path of the document containing the selection, relative to
+   * `ContentsManager.root_dir` (`drive:path` for a document of another drive).
+   */
+  path: string;
+
+  /**
+   * The ID of the cell containing the selection, if the document is a notebook.
+   */
+  cellId?: string;
+
+  /**
+   * The type of the cell containing the selection, if the document is a
+   * notebook.
+   */
+  cellType?: 'code' | 'markdown' | 'raw';
+
+  /**
+   * The selected range and its content.
+   */
+  selection: IAttachmentSelection;
+
   /**
    * The chat input of the destination chat, or `null` if there is none.
    */
@@ -170,34 +192,155 @@ export namespace SelectionActionRegistry {
       id: ADD_TO_CHAT_ACTION_ID,
       label: trans.__('Add to chat'),
       icon: chatIcon,
-      isEnabled: ({ inputModel, openNewChat }) =>
-        !!inputModel?.addPendingSnippet || !!openNewChat,
-      run: async ({ inputModel, openNewChat, path, cellId, selection }) => {
-        const warnTooLong = () =>
+      isEnabled: ({ inputModel, openNewChat }) => !!inputModel || !!openNewChat,
+      run: async ({
+        inputModel,
+        openNewChat,
+        path,
+        cellId,
+        cellType,
+        selection
+      }) => {
+        const tooLong = () =>
           Notification.warning(
             trans.__(
               'The selection is longer than %1 characters and was not added to the chat.',
-              MAX_SNIPPET_LENGTH
+              Private.MAX_ATTACHED_LENGTH
             ),
             { autoClose: 5000 }
           );
-        // Do not open a chat for a selection that cannot be staged.
-        if (selection.content.length > MAX_SNIPPET_LENGTH) {
-          warnTooLong();
+        const notAttached = () =>
+          Notification.warning(
+            trans.__(
+              'The selection is longer than %1 characters and could not be attached to the chat.',
+              Private.MAX_INSERTED_LENGTH
+            ),
+            { autoClose: 5000 }
+          );
+        const length = selection.content.length;
+        const inline = length <= Private.MAX_INSERTED_LENGTH;
+        // Check what can be known before opening a chat for it.
+        if (length > Private.MAX_ATTACHED_LENGTH) {
+          tooLong();
+          return;
+        }
+        if (!inline && cellId !== undefined && !cellType) {
+          notAttached();
           return;
         }
         const input = inputModel ?? (await openNewChat?.())?.input;
-        if (!input?.addPendingSnippet) {
+        if (!input || input.isDisposed) {
           return;
         }
-        // Stage the fields explicitly: the context carries more than a snippet.
-        if (!input.addPendingSnippet({ path, cellId, selection })) {
-          warnTooLong();
+
+        if (inline) {
+          // The header comes first: it keeps a selection starting with "/" from
+          // being read as a slash command. The text is sent as typed text, so
+          // command providers such as mentions act on it, as on a paste.
+          const head = Private.trimEnd(input.value);
+          input.value =
+            (head ? `${head}\n\n` : '') +
+            Private.selectionText(path, cellId, selection) +
+            '\n';
+          input.cursorIndex = input.value.length;
+          input.focus();
           return;
         }
+
+        if (!input.addAttachment) {
+          notAttached();
+          return;
+        }
+        const attachment: IAttachment =
+          cellId !== undefined
+            ? {
+                type: 'notebook',
+                value: path,
+                mimetype: 'application/x-ipynb+json',
+                cells: [{ id: cellId, input_type: cellType!, selection }]
+              }
+            : { type: 'file', value: path, selection };
+        input.addAttachment(attachment);
+        Notification.info(
+          trans.__(
+            'The selection is longer than %1 characters: the file is attached instead.',
+            Private.MAX_INSERTED_LENGTH
+          ),
+          { autoClose: 5000 }
+        );
         input.focus();
       }
     });
     return registry;
+  }
+}
+
+namespace Private {
+  /**
+   * The maximum length, in UTF-16 code units, of a selection inserted in the
+   * chat input as text.
+   */
+  export const MAX_INSERTED_LENGTH = 20_000;
+
+  /**
+   * The maximum length of a selection added as an attachment instead: an
+   * attachment is stored in the chat document.
+   */
+  export const MAX_ATTACHED_LENGTH = 1_000_000;
+
+  /**
+   * The text inserted in the chat input for a selection: a header line with the
+   * path, the cell and the lines, then the content in a fenced block.
+   */
+  export function selectionText(
+    path: string,
+    cellId: string | undefined,
+    selection: IAttachmentSelection
+  ): string {
+    // Only an id that follows the nbformat rule is written.
+    const cell =
+      cellId && /^[\w-]{1,64}$/.test(cellId)
+        ? ` (cell ${codeSpan(cellId)})`
+        : '';
+    const range = ` lines ${selection.start[0] + 1}-${selection.end[0] + 1}`;
+    const { content } = selection;
+    const fence = '`'.repeat(Math.max(3, longestBacktickRun(content) + 1));
+    const newline = content.endsWith('\n') ? '' : '\n';
+    return (
+      `From ${codeSpan(path)}${cell}${range}:\n` +
+      `${fence}\n${content}${newline}${fence}`
+    );
+  }
+
+  /**
+   * The text without its trailing whitespace (`String.trimEnd` is not in the
+   * compilation target).
+   */
+  export function trimEnd(text: string): string {
+    let end = text.length;
+    while (end > 0 && /\s/.test(text[end - 1])) {
+      end--;
+    }
+    return text.slice(0, end);
+  }
+
+  /**
+   * The length of the longest run of backticks in a text.
+   */
+  function longestBacktickRun(text: string): number {
+    return (text.match(/`+/g) ?? []).reduce(
+      (longest, run) => Math.max(longest, run.length),
+      0
+    );
+  }
+
+  /**
+   * Wrap a text in a markdown code span that no backtick inside can end early,
+   * and that stays on one line.
+   */
+  function codeSpan(text: string): string {
+    const line = text.replace(/[\r\n\u2028\u2029]/g, ' ');
+    const ticks = '`'.repeat(longestBacktickRun(line) + 1);
+    return `${ticks} ${line} ${ticks}`;
   }
 }

@@ -173,9 +173,11 @@ export class SelectionPopupController {
       this._reveal(destination);
     }
     this._onDismissed();
+    const cell = (widget.content as Notebook).activeCell;
     return {
       path: widget.context.path,
-      cellId: (widget.content as Notebook).activeCell?.model.id,
+      cellId: cell?.model.id,
+      cellType: Private.cellType(cell?.model.type),
       selection,
       ...this._destinationContext(destination)
     };
@@ -198,11 +200,12 @@ export class SelectionPopupController {
     }
     // The selection of the watcher can belong to a cell that is not the active
     // one for up to 200 ms: do not use the active cell.
-    const editor = selection.cellId
+    const cell = selection.cellId
       ? (widget.content as Notebook).widgets.find(
           cell => cell.model.id === selection.cellId
-        )?.editor
-      : this._getEditor(widget);
+        )
+      : undefined;
+    const editor = selection.cellId ? cell?.editor : this._getEditor(widget);
     if (!editor) {
       return null;
     }
@@ -229,6 +232,7 @@ export class SelectionPopupController {
         context: {
           path: widget.context.path,
           cellId: selection.cellId,
+          cellType: Private.cellType(cell?.model.type),
           selection: snippet,
           ...this._destinationContext(destination)
         },
@@ -420,5 +424,18 @@ export namespace SelectionPopupController {
     context: SelectionActionContext;
     editor: IEditor;
     widget: DocumentWidget;
+  }
+}
+
+namespace Private {
+  /**
+   * The type of a cell, as an attachment of a notebook cell expects it.
+   */
+  export function cellType(
+    type: string | undefined
+  ): 'code' | 'markdown' | 'raw' | undefined {
+    return type === 'code' || type === 'markdown' || type === 'raw'
+      ? type
+      : undefined;
   }
 }

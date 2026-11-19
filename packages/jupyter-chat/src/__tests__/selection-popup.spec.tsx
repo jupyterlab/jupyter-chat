@@ -14,11 +14,13 @@ import {
   placeSelectionPopup,
   SelectionPopup
 } from '../widgets/selection-popup';
-import { PendingSnippet } from '../types';
-
-const SNIPPET: PendingSnippet = {
+const SOURCE = {
   path: 'a.py',
-  selection: { start: [0, 0], end: [0, 1], content: 'x' }
+  selection: {
+    start: [0, 0] as [number, number],
+    end: [0, 1] as [number, number],
+    content: 'x'
+  }
 };
 
 const RECT = { left: 100, top: 200, bottom: 220 };
@@ -27,7 +29,7 @@ const BOUNDS = { left: 0, top: 0, right: 800, bottom: 600 };
 const makeContext = (
   extra: Partial<SelectionActionContext> = {}
 ): SelectionActionContext => ({
-  ...SNIPPET,
+  ...SOURCE,
   inputModel: null,
   chatModel: null,
   ...extra
