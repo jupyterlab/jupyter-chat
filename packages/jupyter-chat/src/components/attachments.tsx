@@ -7,7 +7,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import { Box, Tooltip } from '@mui/material';
 import React from 'react';
 import { PathExt } from '@jupyterlab/coreutils';
-import { UUID } from '@lumino/coreutils';
 
 import { TooltippedIconButton } from './mui-extras';
 import { useChatContext, useTranslator } from '../context';
@@ -46,6 +45,17 @@ function getAttachmentDisplayName(attachment: IAttachment): string {
   return (attachment as any).value || 'Unknown attachment';
 }
 
+/**
+ * Generate a stable key for an attachment item.
+ */
+function getAttachmentKey(attachment: IAttachment, index: number): string {
+  if (attachment.type === 'notebook') {
+    const cellIds = attachment.cells?.map(c => c.id).join(',') ?? '';
+    return `notebook:${attachment.value}:${cellIds || index}`;
+  }
+  return `${attachment.type}:${attachment.value}:${index}`;
+}
+
 export type AttachmentsProps = {
   attachments: IAttachment[];
   onRemove?: (attachment: IAttachment) => void;
@@ -65,9 +75,9 @@ export function AttachmentPreviewList(props: AttachmentsProps): JSX.Element {
         columnGap: 2
       }}
     >
-      {props.attachments.map(attachment => (
+      {props.attachments.map((attachment, index) => (
         <AttachmentPreview
-          key={`${PathExt.basename(attachment.value)}-${UUID.uuid4()}`}
+          key={getAttachmentKey(attachment, index)}
           {...props}
           attachment={attachment}
         />
