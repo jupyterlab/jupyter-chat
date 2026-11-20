@@ -260,9 +260,10 @@ test.describe('#sidepanel', () => {
       const chatToolbar = sidePanel.locator(
         '.jp-chat-sidepanel-widget .jp-chat-sidepanel-widget-toolbar'
       );
-      await expect(chatToolbar.locator('.jp-chat-name')).toHaveText(
-        nestedPath.split('.')[0]
-      );
+      // The name is the file name, the full path being in the tooltip.
+      const chatName = chatToolbar.locator('.jp-chat-name');
+      await expect(chatName).toHaveText(FILENAME.split('.')[0]);
+      await expect(chatName).toHaveAttribute('title', nestedPath);
     });
 
     test('side panel should contain a button to move the chat', async ({
