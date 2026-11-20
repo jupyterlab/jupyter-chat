@@ -2,6 +2,38 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.26.1
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.26.0...5d0b4357c201c97be8b46099f673fb31c5a1be72))
+
+### Enhancements made
+
+- Allow sending with selection when input is empty [#577](https://github.com/jupyterlab/jupyter-chat/pull/577) ([@Yash990-bit](https://github.com/Yash990-bit), [@brichet](https://github.com/brichet))
+
+### Bugs fixed
+
+- Skip the chat WebSocket when there is no chat server [#585](https://github.com/jupyterlab/jupyter-chat/pull/585) ([@jtpio](https://github.com/jtpio), [@brichet](https://github.com/brichet))
+
+### Maintenance and upkeep improvements
+
+- Drop Python 3.10, add Python 3.15 [#582](https://github.com/jupyterlab/jupyter-chat/pull/582) ([@jtpio](https://github.com/jtpio), [@brichet](https://github.com/brichet))
+- Disconnect model.valueChanged on ChatInput unmount [#578](https://github.com/jupyterlab/jupyter-chat/pull/578) ([@Yash990-bit](https://github.com/Yash990-bit), [@brichet](https://github.com/brichet))
+
+### Other merged PRs
+
+- Bump the npm_and_yarn group across 2 directories with 3 updates [#579](https://github.com/jupyterlab/jupyter-chat/pull/579) ([@brichet](https://github.com/brichet))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-11-03&to=2026-11-19&type=c))
+
+@brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-11-03..2026-11-19&type=Issues)) | @jtpio ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2026-11-03..2026-11-19&type=Issues)) | @Yash990-bit ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3AYash990-bit+updated%3A2026-11-03..2026-11-19&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.26.0
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.25.3...021c6d38da6c154844e5e81867c19c89a138425a))
@@ -31,8 +63,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-10-21&to=2026-11-03&type=c))
 
 @brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-10-21..2026-11-03&type=Issues)) | @Darshan808 ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3ADarshan808+updated%3A2026-10-21..2026-11-03&type=Issues)) | @jtpio ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2026-10-21..2026-11-03&type=Issues)) | @krassowski ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Akrassowski+updated%3A2026-10-21..2026-11-03&type=Issues)) | @MUFFANUJ ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3AMUFFANUJ+updated%3A2026-10-21..2026-11-03&type=Issues)) | @Yash990-bit ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3AYash990-bit+updated%3A2026-10-21..2026-11-03&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.25.3
 
