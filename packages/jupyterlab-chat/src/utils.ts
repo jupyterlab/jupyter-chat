@@ -58,31 +58,6 @@ export function getChatPath(model: IChatModel): string | undefined {
 }
 
 /**
- * Return the name of the chat from its path.
- *
- * @param defaultDirectory - the default directory.
- * @param path - the path of the chat file.
- * @returns - the display name of the chat.
- */
-export function getDisplayName(
-  path: string,
-  defaultDirectory?: string
-): string {
-  const inDefault = defaultDirectory
-    ? !PathExt.relative(defaultDirectory, path).startsWith('..')
-    : true;
-
-  const pattern = new RegExp(`${chatFileType.extensions[0]}$`, 'g');
-  return (
-    inDefault
-      ? defaultDirectory
-        ? PathExt.relative(defaultDirectory, path)
-        : path
-      : '/' + path
-  ).replace(pattern, '');
-}
-
-/**
  * Resolve the target path for a chat rename.
  *
  * When the new name is a bare basename (the usual case when renaming via the

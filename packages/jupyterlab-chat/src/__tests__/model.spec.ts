@@ -57,15 +57,20 @@ describe('LabChatModel', () => {
   });
 
   describe('name', () => {
-    it('should be built from the path without title', () => {
-      model.path = 'chats/my-chat.chat';
-      expect(model.path).toBe('chats/my-chat.chat');
-      expect(model.name).toBe('chats/my-chat');
+    it('should be the file name without extension without title', () => {
+      model.path = 'chats/2024/my-chat.chat';
+      expect(model.path).toBe('chats/2024/my-chat.chat');
+      expect(model.name).toBe('my-chat');
     });
 
-    it('should be relative to the default directory', () => {
+    it('should only strip the trailing extension', () => {
+      model.path = 'a.chat.dir/b.chat.chat';
+      expect(model.name).toBe('b.chat');
+    });
+
+    it('should not depend on the default directory', () => {
       const widgetConfig = makeWidgetConfig();
-      widgetConfig.config = { defaultDirectory: 'chats' } as any;
+      widgetConfig.config = { defaultDirectory: 'other' } as any;
       const other = new LabChatModel({
         widgetConfig,
         user: TEST_USER,
@@ -88,11 +93,11 @@ describe('LabChatModel', () => {
       model.path = 'chats/renamed.chat';
       expect(model.name).toBe('My chat');
 
-      // An empty title falls back to the path.
+      // An empty title falls back to the file name.
       sharedModel.setMetadata('title', '  ');
-      expect(model.name).toBe('chats/renamed');
+      expect(model.name).toBe('renamed');
 
-      expect(names).toEqual(['My chat', 'chats/renamed']);
+      expect(names).toEqual(['My chat', 'renamed']);
     });
 
     it('should be the title of the synced document when ready', () => {
@@ -124,14 +129,14 @@ describe('LabChatModel', () => {
       expect(model.name).toBe('My chat');
     });
 
-    it('should fall back to the path when the title is emptied', () => {
+    it('should fall back to the file name when the title is emptied', () => {
       model.path = 'chats/my-chat.chat';
       model.title = 'My chat';
 
       model.title = '';
 
       expect(model.title).toBeUndefined();
-      expect(model.name).toBe('chats/my-chat');
+      expect(model.name).toBe('my-chat');
       expect(sharedModel.getSource().metadata).not.toHaveProperty('title');
     });
 

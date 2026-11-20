@@ -13,6 +13,7 @@ import { ISignal } from '@lumino/signaling';
 import React, { useEffect, useState } from 'react';
 
 import { useTranslator } from '../context';
+import { ChatsInfo } from '../types';
 
 /**
  * The default placeholder widget.
@@ -39,9 +40,10 @@ export namespace Placeholder {
    */
   export interface IProps {
     /**
-     * The initial chats, as an object mapping the chat keys to their names.
+     * The initial chats, as an object mapping the chat keys to their display
+     * information (name and optional tooltip).
      */
-    chatNames: { [key: string]: string };
+    chatNames: ChatsInfo;
     /**
      * A callback to open an existing chat by key.
      *
@@ -55,7 +57,7 @@ export namespace Placeholder {
     /**
      * An optional signal emitting when the chat list changes.
      */
-    chatNamesChanged?: ISignal<any, { [key: string]: string }>;
+    chatNamesChanged?: ISignal<any, ChatsInfo>;
     /**
      * An optional translation bundle.
      */
@@ -69,15 +71,13 @@ export namespace Placeholder {
 const PlaceholderComponent = (props: Placeholder.IProps): JSX.Element => {
   const trans = props.trans ?? useTranslator();
 
-  const [chatNames, setChatNames] = useState<{ [key: string]: string }>(
-    props.chatNames
-  );
+  const [chatNames, setChatNames] = useState<ChatsInfo>(props.chatNames);
 
   useEffect(() => {
     if (!props.chatNamesChanged) {
       return;
     }
-    const onChanged = (_: any, names: { [key: string]: string }) => {
+    const onChanged = (_: any, names: ChatsInfo) => {
       setChatNames(names);
     };
     props.chatNamesChanged.connect(onChanged);
@@ -87,7 +87,7 @@ const PlaceholderComponent = (props: Placeholder.IProps): JSX.Element => {
   }, [props.chatNamesChanged]);
 
   const chats = Object.entries(chatNames).sort(([, a], [, b]) =>
-    a.localeCompare(b)
+    a.name.localeCompare(b.name)
   );
 
   return (
@@ -107,11 +107,12 @@ const PlaceholderComponent = (props: Placeholder.IProps): JSX.Element => {
       {chats.length > 0 && (
         <div className="jp-chat-placeholder-list">
           <p>{trans.__('Open an existing chat:')}</p>
-          {chats.map(([key, name]) => (
+          {chats.map(([key, { name, tooltip }]) => (
             <div key={key}>
               <button
                 className="jp-chat-placeholder-chat-item"
                 onClick={() => props.open(key)}
+                title={tooltip ?? name}
               >
                 {name}
               </button>

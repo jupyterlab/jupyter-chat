@@ -41,7 +41,7 @@ import { TRANSLATION_DOMAIN } from '../context';
 import { chatIcon } from '../icons';
 import { IChatModel } from '../model';
 import { IChatPanel, IChatPlaceholderFactory } from '../tokens';
-import { ChatArea } from '../types';
+import { ChatArea, ChatsInfo } from '../types';
 
 const SIDEPANEL_CLASS = 'jp-chat-sidepanel';
 const ADD_BUTTON_CLASS = 'jp-chat-add';
@@ -269,9 +269,12 @@ export class MultiChatPanel extends PanelWithToolbar {
       if (
         loaded === model &&
         key in this._chatNames &&
-        this._chatNames[key] !== name
+        this._chatNames[key].name !== name
       ) {
-        this._chatNames = { ...this._chatNames, [key]: name };
+        this._chatNames = {
+          ...this._chatNames,
+          [key]: { ...this._chatNames[key], name }
+        };
         chatNamesChanged = true;
       }
     }
@@ -473,10 +476,7 @@ export class MultiChatPanel extends PanelWithToolbar {
   };
 
   private _chatOpened = new Signal<MultiChatPanel, IChatPanel>(this);
-  private _chatNamesChanged = new Signal<
-    MultiChatPanel,
-    { [key: string]: string }
-  >(this);
+  private _chatNamesChanged = new Signal<MultiChatPanel, ChatsInfo>(this);
   private _chatOptions: Omit<Chat.IOptions, 'model' | 'inputToolbarRegistry'>;
   private _inputToolbarFactory?: IInputToolbarRegistryFactory;
   private _chatToolbarFactory?: (
@@ -487,13 +487,13 @@ export class MultiChatPanel extends PanelWithToolbar {
   private _createModel?: (
     key?: string
   ) => Promise<MultiChatPanel.IOpenChatArgs>;
-  private _getChatNames?: () => Promise<{ [key: string]: string }>;
+  private _getChatNames?: () => Promise<ChatsInfo>;
   private _placeholderFactory?: IChatPlaceholderFactory;
   private _openChatWidget?: ReactWidget;
   private _chatSelectorPopup?: ChatSelectorPopup;
   private _loadedModels = new Map<string, IChatModel>();
   private _currentWidget?: SidePanelWidget | Widget;
-  private _chatNames: { [key: string]: string } = {};
+  private _chatNames: ChatsInfo = {};
   private _visibilityChanged = new Signal<MultiChatPanel, boolean>(this);
   private _trans: TranslationBundle;
 }
@@ -529,9 +529,10 @@ export namespace MultiChatPanel {
     /**
      * An optional callback to get the list of existing chats.
      *
-     * @returns an object mapping the chat keys to their display names.
+     * @returns an object mapping the chat keys to their display information
+     *   (name and optional tooltip).
      */
-    getChatNames?: () => Promise<{ [key: string]: string }>;
+    getChatNames?: () => Promise<ChatsInfo>;
     /**
      * An optional factory to create a placeholder widget displayed when no chat
      * is opened. Falls back to the default placeholder if not provided.

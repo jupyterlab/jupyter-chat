@@ -7,6 +7,7 @@ import {
   ActiveCellManager,
   AttachmentOpenerRegistry,
   ChatName,
+  ChatsInfo,
   IActiveCellManager,
   IAttachment,
   IAttachmentOpenerRegistry,
@@ -398,7 +399,7 @@ const chatToolbarFactoryPlugin: JupyterFrontEndPlugin<ChatToolbarFactory | null>
       toolbarRegistry.addFactory<IChatPanel>(
         FACTORY,
         'chatName',
-        panel => new ChatName({ model: panel.model })
+        panel => new ChatName({ model: panel.model, getTooltip: getChatPath })
       );
       const translator = translator_ ?? nullTranslator;
       return injectAreaArg(
@@ -1414,8 +1415,9 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
       }
     };
 
-    // Get the chats in default directory, mapping their paths to their names:
-    // their title if they have one, or their file name otherwise.
+    // Get the chats in default directory, mapping their paths to their names
+    // (their title if they have one, or their file name otherwise) and their
+    // paths as tooltip.
     const getChatNames = async () => {
       const dirContents = await serviceManager.contents.get(
         widgetConfig.config.defaultDirectory ?? '',
@@ -1435,11 +1437,15 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
         }
       }
 
-      const names: { [path: string]: string } = {};
+      const names: ChatsInfo = {};
       await Promise.all(
         files.map(async file => {
-          names[file.path] =
-            (await getTitle(file)) ?? file.name.replace(chatFileExtension, '');
+          names[file.path] = {
+            name:
+              (await getTitle(file)) ??
+              file.name.replace(chatFileExtension, ''),
+            tooltip: file.path
+          };
         })
       );
       return names;

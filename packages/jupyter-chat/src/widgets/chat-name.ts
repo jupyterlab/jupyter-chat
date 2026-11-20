@@ -19,8 +19,12 @@ export class ChatName extends Widget {
     super({ node: document.createElement('span') });
     this.addClass(CHAT_NAME_CLASS);
     this._model = options.model;
+    this._getTooltip = options.getTooltip;
     this._update();
     this._model.nameChanged.connect(this._update, this);
+    // The tooltip may depend on something else than the name (e.g. the path of
+    // the chat file), refresh it before it is displayed.
+    this.node.addEventListener('pointerenter', this._updateTooltip);
   }
 
   /**
@@ -38,6 +42,7 @@ export class ChatName extends Widget {
       return;
     }
     this._model.nameChanged.disconnect(this._update, this);
+    this.node.removeEventListener('pointerenter', this._updateTooltip);
     super.dispose();
   }
 
@@ -45,12 +50,19 @@ export class ChatName extends Widget {
    * Update the displayed name.
    */
   private _update(): void {
-    const name = this._model.name;
-    this.node.textContent = name;
-    this.node.title = name;
+    this.node.textContent = this._model.name;
+    this._updateTooltip();
   }
 
+  /**
+   * Update the tooltip, defaulting to the model name.
+   */
+  private _updateTooltip = (): void => {
+    this.node.title = this._getTooltip?.(this._model) || this._model.name;
+  };
+
   private _model: IChatModel;
+  private _getTooltip?: (model: IChatModel) => string | undefined;
 }
 
 /**
@@ -65,5 +77,10 @@ export namespace ChatName {
      * The model of the chat.
      */
     model: IChatModel;
+    /**
+     * An optional function returning the tooltip of the chat name (e.g. the
+     * path of the chat file). Defaults to the model name.
+     */
+    getTooltip?: (model: IChatModel) => string | undefined;
   }
 }

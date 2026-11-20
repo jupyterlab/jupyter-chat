@@ -10,6 +10,7 @@ import { ToolbarButton, PanelWithToolbar } from '@jupyterlab/ui-components';
 import { Widget } from '@lumino/widgets';
 
 import { IChatPlaceholderFactory } from '../tokens';
+import { ChatsInfo } from '../types';
 import { MultiChatPanel } from '../widgets/multichat-panel';
 import { defaultPlaceholder, Placeholder } from '../widgets/placeholder';
 import { MockChatModel } from './mocks';
@@ -244,9 +245,10 @@ describe('MultiChatPanel', () => {
     });
 
     it('should update the chat list with the new model name', async () => {
-      const getChatNames = jest
-        .fn()
-        .mockResolvedValue({ 'chats/a.chat': 'a', 'chats/b.chat': 'b' });
+      const getChatNames = jest.fn().mockResolvedValue({
+        'chats/a.chat': { name: 'a', tooltip: 'chats/a.chat' },
+        'chats/b.chat': { name: 'b', tooltip: 'chats/b.chat' }
+      });
       const factory: IChatPlaceholderFactory = {
         create: jest.fn().mockReturnValue(new Widget())
       };
@@ -259,7 +261,7 @@ describe('MultiChatPanel', () => {
 
       const props = (factory.create as jest.Mock).mock
         .calls[0][0] as Placeholder.IProps;
-      const emitted: { [key: string]: string }[] = [];
+      const emitted: ChatsInfo[] = [];
       props.chatNamesChanged!.connect((_, names) => emitted.push(names));
 
       const model = new MockChatModel();
@@ -267,8 +269,12 @@ describe('MultiChatPanel', () => {
       panel.open({ model, key: 'chats/a.chat' });
       model.name = 'My chat';
 
+      // The tooltip is kept when the name changes.
       expect(emitted).toEqual([
-        { 'chats/a.chat': 'My chat', 'chats/b.chat': 'b' }
+        {
+          'chats/a.chat': { name: 'My chat', tooltip: 'chats/a.chat' },
+          'chats/b.chat': { name: 'b', tooltip: 'chats/b.chat' }
+        }
       ]);
 
       // The unloaded chat is listed with the new name, without fetching the
@@ -277,8 +283,8 @@ describe('MultiChatPanel', () => {
       const calls = (factory.create as jest.Mock).mock.calls;
       const newProps = calls[calls.length - 1][0] as Placeholder.IProps;
       expect(newProps.chatNames).toEqual({
-        'chats/a.chat': 'My chat',
-        'chats/b.chat': 'b'
+        'chats/a.chat': { name: 'My chat', tooltip: 'chats/a.chat' },
+        'chats/b.chat': { name: 'b', tooltip: 'chats/b.chat' }
       });
       expect(getChatNames).toHaveBeenCalledTimes(1);
       panel.dispose();

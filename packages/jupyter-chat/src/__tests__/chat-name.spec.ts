@@ -41,4 +41,23 @@ describe('ChatName', () => {
     model.name = 'Renamed chat';
     expect(node.textContent).toBe('My chat');
   });
+
+  it('should use the tooltip function, refreshed on pointer enter', () => {
+    let path = 'chats/a.chat';
+    const chatName = new ChatName({ model, getTooltip: () => path });
+    expect(chatName.node.textContent).toBe('My chat');
+    expect(chatName.node.title).toBe('chats/a.chat');
+
+    // The tooltip can change without the name changing.
+    path = 'chats/b.chat';
+    chatName.node.dispatchEvent(new Event('pointerenter'));
+    expect(chatName.node.title).toBe('chats/b.chat');
+    chatName.dispose();
+  });
+
+  it('should default the tooltip to the name', () => {
+    const chatName = new ChatName({ model, getTooltip: () => undefined });
+    expect(chatName.node.title).toBe('My chat');
+    chatName.dispose();
+  });
 });

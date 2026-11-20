@@ -14,6 +14,7 @@ import { Message } from '@lumino/messaging';
 import React, { useEffect, useRef } from 'react';
 
 import { TRANSLATION_DOMAIN } from '../context';
+import { ChatsInfo } from '../types';
 
 const POPUP_CLASS = 'jp-chat-selector-popup';
 const POPUP_LIST_CLASS = 'jp-chat-selector-popup-list';
@@ -58,9 +59,10 @@ export class ChatSelectorPopup extends ReactWidget {
   /**
    * Update the list of available chats.
    *
-   * @param chats - an object mapping the chat keys to their display names.
+   * @param chats - an object mapping the chat keys to their display
+   *   information.
    */
-  updateChats(chats: { [key: string]: string }): void {
+  updateChats(chats: ChatsInfo): void {
     this._chats = chats;
     this._updateFilteredChats();
     this.update();
@@ -193,10 +195,10 @@ export class ChatSelectorPopup extends ReactWidget {
   render(): JSX.Element {
     return (
       <ChatSelectorList
-        chats={this._filteredChats.map(key => ({
-          key,
-          name: this._getName(key)
-        }))}
+        chats={this._filteredChats.map(key => {
+          const name = this._getName(key);
+          return { key, name, tooltip: this._chats[key]?.tooltip ?? name };
+        })}
         selectedKey={this._selectedKey}
         loadedModels={new Set(Object.keys(this._loadedModels))}
         onSelect={this._handleItemClick}
@@ -306,7 +308,7 @@ export class ChatSelectorPopup extends ReactWidget {
    * Get the display name of a chat, the loaded chat name taking precedence.
    */
   private _getName(key: string): string {
-    return this._loadedModels[key] ?? this._chats[key] ?? key;
+    return this._loadedModels[key] ?? this._chats[key]?.name ?? key;
   }
 
   private _handleItemClick = (key: string): void => {
@@ -340,7 +342,7 @@ export class ChatSelectorPopup extends ReactWidget {
     }
   };
 
-  private _chats: { [key: string]: string } = {};
+  private _chats: ChatsInfo = {};
   private _loadedModels: { [key: string]: string } = {};
   private _currentChat: string | null = null;
   private _query: string = '';
@@ -359,9 +361,9 @@ export class ChatSelectorPopup extends ReactWidget {
 export namespace ChatSelectorPopup {
   export interface IOptions {
     /**
-     * Object mapping the chat keys to their display names.
+     * Object mapping the chat keys to their display information.
      */
-    chats: { [key: string]: string };
+    chats: ChatsInfo;
     /**
      * Callback when a chat is selected, called with the chat key.
      */
@@ -385,7 +387,7 @@ export namespace ChatSelectorPopup {
  * Props for the ChatSelectorList component.
  */
 interface IChatSelectorListProps {
-  chats: { key: string; name: string }[];
+  chats: { key: string; name: string; tooltip: string }[];
   selectedKey: string | null;
   loadedModels: Set<string>;
   onSelect: (key: string) => void;
@@ -431,7 +433,7 @@ function ChatSelectorList({
 
   return (
     <ul ref={listRef} className={POPUP_LIST_CLASS}>
-      {chats.map(({ key, name }) => {
+      {chats.map(({ key, name, tooltip }) => {
         const isLoaded = loadedModels.has(key);
         return (
           <li
@@ -448,7 +450,7 @@ function ChatSelectorList({
                 <div className={POPUP_ITEM_LABEL_CLASS}>
                   <span
                     className="jp-chat-selector-popup-item-name"
-                    title={name}
+                    title={tooltip}
                   >
                     {name}
                   </span>

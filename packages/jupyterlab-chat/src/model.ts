@@ -15,7 +15,7 @@ import {
   IUser
 } from '@jupyter/chat';
 import type { IAwareness } from '@jupyter/ydoc';
-import { IChangedArgs } from '@jupyterlab/coreutils';
+import { IChangedArgs, PathExt } from '@jupyterlab/coreutils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { ServerConnection, User } from '@jupyterlab/services';
 import { PartialJSONObject, UUID } from '@lumino/coreutils';
@@ -23,8 +23,8 @@ import { Debouncer } from '@lumino/polling';
 import { ISignal, Signal } from '@lumino/signaling';
 
 import { enforceAutosaveEnabled } from './autosave';
-import { ILabChatConfig, ILabChatModel, IWidgetConfig } from './token';
-import { getDisplayName, validTitle, TITLE_METADATA_KEY } from './utils';
+import { chatFileType, ILabChatModel, IWidgetConfig } from './token';
+import { validTitle, TITLE_METADATA_KEY } from './utils';
 import { WebSocketHandler } from './websocket-handler';
 import { IChatChanges, IYmessage, YChat } from './ychat';
 
@@ -212,8 +212,6 @@ export class LabChatModel
 
     widgetConfig.configChanged.connect((_, config) => {
       this.config = config;
-      // The default name depends on the default directory.
-      this._updateName();
     });
 
     this.sharedModel.awareness.on('change', this.onAwarenessChange);
@@ -316,15 +314,11 @@ export class LabChatModel
 
   /**
    * Update the name of the chat: its title if it has one, or a name built from
-   * its path otherwise (relative to the default directory, without extension).
+   * its file name otherwise (without extension).
    */
   private _updateName(): void {
     this.name =
-      this.title ??
-      getDisplayName(
-        this._path,
-        (this.config as ILabChatConfig).defaultDirectory
-      );
+      this.title ?? PathExt.basename(this._path, chatFileType.extensions[0]);
   }
 
   // Declaring `set id` in this subclass shadows the base class's accessor
