@@ -282,3 +282,25 @@ export interface ISettings {} /* eslint-disable-line @typescript-eslint/no-empty
  * The area where the chat is displayed.
  */
 export type ChatArea = 'sidebar' | 'main';
+
+/**
+ * The display information of a chat, used to list the available chats.
+ *
+ * Declared as a type (not an interface) to be usable as a JSON value.
+ */
+export type IChatInfo = {
+  /**
+   * The name displayed for the chat.
+   */
+  name: string;
+  /**
+   * An optional tooltip for the chat (e.g. the path of the chat file).
+   * Defaults to the name.
+   */
+  tooltip?: string;
+};
+
+/**
+ * An object mapping the chat keys to their display information.
+ */
+export type ChatsInfo = Record<string, IChatInfo>;

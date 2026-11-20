@@ -45,9 +45,9 @@ test.describe('#invalid-chat-path', webSocketOnly, () => {
         // existence check in the open-chat command) and open it in the panel.
         const factory = app.docRegistry.getModelFactory('chat');
         const model = factory.createNew({});
-        model.name = unsafePath;
+        model.path = unsafePath;
         model.markDocumentSynced();
-        chatPanel.open({ model, displayName: 'invalid-chat' });
+        chatPanel.open({ model, key: unsafePath });
       },
       { unsafePath: UNSAFE_PATH, panelId: CHAT_PANEL_ID }
     );

@@ -3,7 +3,7 @@
  * Distributed under the terms of the Modified BSD License.
  */
 
-import { Notification, ReactWidget } from '@jupyterlab/apputils';
+import { DOMUtils, Notification, ReactWidget } from '@jupyterlab/apputils';
 import { Cell } from '@jupyterlab/cells';
 import { DirListing } from '@jupyterlab/filebrowser';
 import { DocumentWidget } from '@jupyterlab/docregistry';
@@ -51,7 +51,7 @@ export class ChatWidget extends ReactWidget {
     this.title.caption = trans.__('Jupyter Chat');
 
     this._chatOptions = options;
-    this.id = `jupyter-chat::widget::${options.model.name}`;
+    this.id = `jupyter-chat::widget::${DOMUtils.createDomID()}`;
     this.addClass('jp-chat-widget');
     this.node.addEventListener('click', (event: MouseEvent) => {
       const target = event.target as HTMLElement;

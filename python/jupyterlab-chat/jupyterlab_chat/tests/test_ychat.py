@@ -356,3 +356,15 @@ def test_unobserve_is_idempotent():
     chat.unobserve()
     chat.unobserve()
     assert _observer_count(chat) == 0
+
+
+def test_delete_metadata():
+    chat = YChat()
+    chat.set_metadata("title", "My chat")
+    assert chat.get_metadata()["title"] == "My chat"
+
+    chat.delete_metadata("title")
+    assert "title" not in chat.get_metadata()
+
+    # Deleting a missing entry is a no-op.
+    chat.delete_metadata("title")

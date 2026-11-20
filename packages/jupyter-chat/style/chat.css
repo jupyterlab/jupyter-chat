@@ -153,10 +153,10 @@
   flex-grow: 1;
 }
 
-.jp-chat-sidepanel-widget-toolbar > .jp-chat-sidepanel-widget-title {
+.jp-Toolbar > .jp-chat-name {
   display: block;
   align-content: center;
-  max-width: 16em;
+  max-width: 32em;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -165,4 +165,8 @@
   color: var(--jp-ui-font-color1);
   font-size: var(--jp-ui-font-size0);
   font-weight: bold;
+}
+
+.jp-chat-sidepanel-widget-toolbar > .jp-chat-name {
+  max-width: 16em;
 }
