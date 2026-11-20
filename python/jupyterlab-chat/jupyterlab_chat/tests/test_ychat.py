@@ -94,20 +94,31 @@ def test_create_id_updates_metadata_synchronously():
 
 
 @pytest.mark.asyncio
-async def test_initialize_creates_id():
+async def test_state_change_does_not_create_id():
+    # The document cannot know when its content has been loaded by the room, so
+    # an id created on a state change could overwrite the one stored on disk.
     chat = YChat()
 
     chat.dirty = False
+    chat.path = "test.chat"
     await asyncio.sleep(0)
 
-    assert chat._ymetadata.get("id") is not None
+    assert chat._ymetadata.get("id") is None
+
+
+def test_get_id_creates_id_if_missing():
+    chat = YChat()
+
+    document_id = chat.get_id()
+
+    assert document_id
+    assert chat._ymetadata.get("id") == document_id
+    assert chat.get_id() == document_id
 
 
 @pytest.mark.asyncio
 async def test_raw_message_timestamp_is_updated():
     chat = YChat()
-    chat.set_id("test-chat")
-    chat.dirty = False
     timestamp = 123.0
 
     with patch("jupyterlab_chat.ychat.time.time", return_value=timestamp):
@@ -328,12 +339,12 @@ def _observer_count(chat: YChat) -> int:
 def test_unobserve_removes_init_observers():
     """unobserve() must remove the observers registered in __init__.
 
-    __init__ registers `_on_messages_change` and `_initialize` observers whose
-    bound-method callbacks hold a reference to `self`. If unobserve() does not
-    remove them, the YChat cannot be released (memory leak).
+    __init__ registers the `_on_messages_change` observer whose bound-method
+    callback holds a reference to `self`. If unobserve() does not
+    remove it, the YChat cannot be released (memory leak).
     """
     chat = YChat()
-    # __init__ registers observers on messages and state.
+    # __init__ registers an observer on messages.
     assert _observer_count(chat) > 0
 
     chat.unobserve()
