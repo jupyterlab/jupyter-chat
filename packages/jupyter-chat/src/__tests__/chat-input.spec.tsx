@@ -98,3 +98,62 @@ describe('ChatInput placeholder', () => {
     expect(placeholder()).toBe(DEFAULT_PLACEHOLDER);
   });
 });
+
+describe('ChatInput value set while mounting', () => {
+  let container: HTMLDivElement;
+  let root: Root;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+  });
+
+  afterEach(() => {
+    act(() => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
+  it('should show a value set between the first render and the effects', () => {
+    const model = new MockChatModel();
+    // The render reads an empty value; the one set right after it emitted
+    // before the input listened.
+    jest
+      .spyOn(model.input, 'value', 'get')
+      .mockReturnValueOnce('')
+      .mockReturnValue('From `a.py` lines 1-1:');
+    act(() => {
+      root.render(
+        <ChatReactContext.Provider
+          value={{ model, rmRegistry: {} as IRenderMimeRegistry }}
+        >
+          <ChatInput model={model.input} />
+        </ChatReactContext.Provider>
+      );
+    });
+    const textarea = container.querySelector(
+      '[role="combobox"]'
+    ) as HTMLTextAreaElement;
+    expect(textarea.value).toBe('From `a.py` lines 1-1:');
+  });
+
+  it('should show an attachment added between the first render and the effects', () => {
+    const model = new MockChatModel();
+    jest
+      .spyOn(model.input, 'attachments', 'get')
+      .mockReturnValueOnce([])
+      .mockReturnValue([{ type: 'file', value: 'a.py' }]);
+    act(() => {
+      root.render(
+        <ChatReactContext.Provider
+          value={{ model, rmRegistry: {} as IRenderMimeRegistry }}
+        >
+          <ChatInput model={model.input} />
+        </ChatReactContext.Provider>
+      );
+    });
+    expect(container.querySelectorAll('.jp-chat-attachment')).toHaveLength(1);
+  });
+});

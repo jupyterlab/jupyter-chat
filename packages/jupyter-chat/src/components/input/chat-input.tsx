@@ -99,6 +99,11 @@ export function ChatInput(props: ChatInput.IProps): JSX.Element {
     };
     model.attachmentsChanged?.connect(attachmentChanged);
 
+    // Pick up a value or an attachment set after the first render, before the
+    // signals above were connected.
+    setInput(model.value);
+    setAttachments([...model.attachments]);
+
     return () => {
       model.valueChanged?.disconnect(inputChanged);
       model.configChanged?.disconnect(configChanged);
