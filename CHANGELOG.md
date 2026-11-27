@@ -2,6 +2,25 @@
 
 <!-- <START NEW CHANGELOG ENTRY> -->
 
+## 0.26.2
+
+([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.26.1...39d33768ed2d2452a3814ef0d152778a8c32120c))
+
+### Bugs fixed
+
+- Do not rely on dirty state anymore [#584](https://github.com/jupyterlab/jupyter-chat/pull/584) ([@brichet](https://github.com/brichet), [@Copilot](https://github.com/Copilot), [@jtpio](https://github.com/jtpio))
+
+### Contributors to this release
+
+The following people contributed discussions, new ideas, code and documentation contributions, and review.
+See [our definition of contributors](https://github-activity.readthedocs.io/en/latest/use/#how-does-this-tool-define-contributions-in-the-reports).
+
+([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-11-19&to=2026-11-27&type=c))
+
+@brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-11-19..2026-11-27&type=Issues)) | @Copilot ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3ACopilot+updated%3A2026-11-19..2026-11-27&type=Issues)) | @jtpio ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2026-11-19..2026-11-27&type=Issues))
+
+<!-- <END NEW CHANGELOG ENTRY> -->
+
 ## 0.26.1
 
 ([Full Changelog](https://github.com/jupyterlab/jupyter-chat/compare/@jupyter/chat@0.26.0...5d0b4357c201c97be8b46099f673fb31c5a1be72))
@@ -31,8 +50,6 @@ See [our definition of contributors](https://github-activity.readthedocs.io/en/l
 ([GitHub contributors page for this release](https://github.com/jupyterlab/jupyter-chat/graphs/contributors?from=2026-11-03&to=2026-11-19&type=c))
 
 @brichet ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Abrichet+updated%3A2026-11-03..2026-11-19&type=Issues)) | @jtpio ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3Ajtpio+updated%3A2026-11-03..2026-11-19&type=Issues)) | @Yash990-bit ([activity](https://github.com/search?q=repo%3Ajupyterlab%2Fjupyter-chat+involves%3AYash990-bit+updated%3A2026-11-03..2026-11-19&type=Issues))
-
-<!-- <END NEW CHANGELOG ENTRY> -->
 
 ## 0.26.0
 
