@@ -599,3 +599,7 @@ class YChat(YBaseDoc, BaseChatModel):
                 if new_idx > msg_idx:
                     new_idx -= 1
                 self._ymessages.insert(new_idx, Map(message_dict))
+                self._indexes_by_id = {
+                    message["id"]: idx
+                    for idx, message in enumerate(self._get_messages())
+                }
