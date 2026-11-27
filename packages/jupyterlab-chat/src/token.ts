@@ -22,7 +22,17 @@ import { ChatWidgetFactory } from './factory';
 import { IYmessage, YChat } from './ychat';
 
 /**
+ * The content type of the chat document, used by the shared model and the
+ * collaborative content provider.
+ */
+export const CHAT_CONTENT_TYPE = 'chat';
+
+/**
  * The file type for a chat document.
+ *
+ * The contents service reports a `.chat` entry with `type: 'file'`, and the
+ * file browser only matches registered file types with the same content type.
+ * Registering `'file'` here lets the browser find the chat icon.
  */
 export const chatFileType: DocumentRegistry.IFileType = {
   name: 'chat',
@@ -30,7 +40,7 @@ export const chatFileType: DocumentRegistry.IFileType = {
   mimeTypes: ['text/json', 'application/json'],
   extensions: ['.chat'],
   fileFormat: 'text',
-  contentType: 'chat',
+  contentType: 'file',
   icon: chatIcon
 };
 

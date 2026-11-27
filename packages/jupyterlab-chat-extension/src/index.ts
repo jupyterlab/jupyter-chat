@@ -70,6 +70,7 @@ import {
   LabChatPanel,
   WidgetConfig,
   YChat,
+  CHAT_CONTENT_TYPE,
   chatFileType,
   getDisplayName,
   hasChatServer,
@@ -143,7 +144,7 @@ async function createChatModel(
   const sharedModel = contentProvider?.sharedModelFactory.createNew({
     path: fileModel.path,
     format: fileModel.format,
-    contentType: chatFileType.contentType,
+    contentType: CHAT_CONTENT_TYPE,
     collaborative: true
   }) as YChat | undefined;
 
@@ -157,7 +158,7 @@ async function createChatModel(
     // this the chat would only become usable when the document first becomes
     // clean, which can be a second later (or never).
     const provider = contentProvider.providers.get(
-      `${fileModel.format}:${chatFileType.contentType}:${fileModel.path}`
+      `${fileModel.format}:${CHAT_CONTENT_TYPE}:${fileModel.path}`
     );
     provider?.ready
       .then(() => chatModel.markDocumentSynced())
@@ -1356,7 +1357,7 @@ const chatPanel: JupyterFrontEndPlugin<MultiChatPanel> = {
       const names: { [name: string]: string } = {};
       for (const file of dirContents.content) {
         if (
-          (file.type === 'file' || file.type === chatFileType.contentType) &&
+          (file.type === 'file' || file.type === CHAT_CONTENT_TYPE) &&
           file.name.endsWith(chatFileExtension)
         ) {
           const nameWithoutExt = file.name.replace(chatFileExtension, '');
