@@ -26,5 +26,6 @@ header:
     - 'LICENSE'
     - 'yarn.lock'
     - '**/_version.py'
+    - 'docs/requirements.txt'
 
-  comment: on-failure
+  comment: never
